@@ -1,24 +1,78 @@
 {
   "expo": {
-    "name": "Trump-Card-game",
-    "slug": "Trump-Card-game",
+    "name": "Aetheria: Legends Unbound",
+    "slug": "aetheria-legends-unbound",
+    "scheme": "aetheria",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "landscape",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash/splash-landscape.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#06030F"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.trumpcard.game",
+      "associatedDomains": ["applinks:cardgame-17a73.firebaseapp.com"]
     },
     "android": {
+      "navigationBarColor": "#06030F",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#06030F",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.trumpcard.game",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "cardgame-17a73.firebaseapp.com",
+              "pathPrefix": "/__/auth/action"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-audio",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#06030F",
+          "image": "./assets/splash/splash-landscape.png",
+          "resizeMode": "cover",
+          "dark": {
+            "backgroundColor": "#06030F",
+            "image": "./assets/splash/splash-landscape.png"
+          }
+        }
+      ],
+      "expo-video",
+      "expo-sharing",
+      "expo-web-browser"
+    ],
+    "owner": "ziriverse",
+    "extra": {
+      "eas": {
+        "projectId": "ce58691c-6e39-4fc7-b26e-2cecf1865ca7"
+      }
     }
   }
 }

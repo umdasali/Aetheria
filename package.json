@@ -3,16 +3,45 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
+    "@emailjs/react-native": "^5.1.0",
+    "@expo/vector-icons": "^15.1.1",
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-navigation/bottom-tabs": "^7.16.1",
+    "@react-navigation/native": "^7.2.4",
+    "@react-navigation/native-stack": "^7.15.1",
+    "@react-navigation/stack": "^7.9.2",
+    "@supabase/supabase-js": "^2.107.0",
     "expo": "~56.0.4",
+    "expo-audio": "~56.0.11",
+    "expo-auth-session": "~56.0.13",
+    "expo-crypto": "~56.0.4",
+    "expo-file-system": "^56.0.7",
+    "expo-linear-gradient": "^56.0.4",
+    "expo-navigation-bar": "~56.0.3",
+    "expo-sharing": "~56.0.15",
+    "expo-splash-screen": "~56.0.10",
     "expo-status-bar": "~56.0.4",
+    "expo-video": "~56.1.2",
+    "expo-web-browser": "~56.0.5",
     "react": "19.2.3",
-    "react-native": "0.85.3"
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "^2.31.2",
+    "react-native-reanimated": "^4.3.1",
+    "react-native-safe-area-context": "^5.8.0",
+    "react-native-screens": "^4.25.2",
+    "react-native-view-shot": "5.1.0",
+    "react-native-worklets": "^0.8.1",
+    "zustand": "^5.0.13"
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "babel-preset-expo": "^56.0.12",
+    "typescript": "~6.0.3"
+  }
 }
