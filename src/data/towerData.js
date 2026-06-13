@@ -8,9 +8,21 @@ export const TOWER_BOSS_INTERVAL = 10;   // boss every 10 floors
 // Floor 10 → ~1.9×  |  Floor 50 → ~3.1×  |  Floor 100 → ~4.0×  |  Floor 200 → ~5.2×
 export const STAT_SCALE_PER_FLOOR = 0.30; // coefficient for sqrt formula (not linear %)
 
+// ─── Milestone descriptions ───────────────────────────────────────────────────
+// Every milestone is also a boss floor so badge styling, enemy group, and the
+// progress bar all agree on what counts as a milestone.
+export const FLOOR_MILESTONES = [
+  { floor: 10,  label: '🗡️ Floor 10',   title: 'First Summit'         },
+  { floor: 50,  label: '🔥 Floor 50',   title: 'Halfway Champion'     },
+  { floor: 100, label: '👑 Floor 100',  title: 'Tower Sovereign'      },
+  { floor: 150, label: '💫 Floor 150',  title: 'Celestial Ascendant'  },
+  { floor: 200, label: '⭐ Floor 200',  title: 'Tower Master'         },
+];
+const MILESTONE_FLOORS = new Set(FLOOR_MILESTONES.map(m => m.floor));
+
 // ─── Floor type helpers ───────────────────────────────────────────────────────
 export const isBossFloor      = (f) => f % TOWER_BOSS_INTERVAL === 0;
-export const isMilestoneFloor = (f) => f % 50 === 0;
+export const isMilestoneFloor = (f) => MILESTONE_FLOORS.has(f);
 
 // Pre-split ENEMY_GROUPS into boss / regular pools once at module load
 const _bossGroups    = ENEMY_GROUPS.filter(g => g.enemies.some(e => e.tier === 'boss'));
@@ -63,17 +75,6 @@ export function getTowerFloorReward(floor) {
     coins: 2    + Math.floor(floor / 4),
   };
 }
-
-// ─── Milestone descriptions ───────────────────────────────────────────────────
-export const FLOOR_MILESTONES = [
-  { floor: 10,  label: '🗡️ Floor 10',   reward: 'First Summit'         },
-  { floor: 25,  label: '⚔️ Floor 25',   reward: 'Abyss Walker'         },
-  { floor: 50,  label: '🔥 Floor 50',   reward: 'Halfway Champion'     },
-  { floor: 75,  label: '🌀 Floor 75',   reward: 'Void Climber'         },
-  { floor: 100, label: '👑 Floor 100',  reward: 'Tower Sovereign'      },
-  { floor: 150, label: '💫 Floor 150',  reward: 'Celestial Ascendant'  },
-  { floor: 200, label: '⭐ Floor 200',  reward: 'Tower Master'         },
-];
 
 // ─── Weekly reset helper ──────────────────────────────────────────────────────
 /**

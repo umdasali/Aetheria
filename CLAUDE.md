@@ -364,7 +364,7 @@ Weekly reset on Sunday. Progress tracked in store (`towerHighestFloor`, `towerCu
 
 ```
 base      = attacker.atk × skillMultiplier
-defFactor = 1 + (defender.def / 500)
+defFactor = 1 + (defender.def / (defender.def + 500)) × 1.5   // asymptotic, caps near 1.5
 isCrit    = Math.random() < (attacker.crit / 1000)
 critMult  = attacker has SMITE ? 2.0 : 1.75
 variance  = 0.9 + Math.random() × 0.2
@@ -579,7 +579,7 @@ CARD_W = floor((H - BODY_PAD × 2) × (220 / 320))
 Hero progression:
 - **Level up**: costs gold, max level 10 (base), extended to 30 via transcendence
 - **Fusion**: 3 copies + gold → rank up (C→B→A→S). S is the hard cap. SOVEREIGN is a pre-defined rarity (1 per faction, 5 total) identified by `hero.sovereign = true` — it cannot be reached through fusion.
-- **Transcendence**: 5 copies + gold → +10 level cap (up to L30)
+- **Transcendence**: 5 copies + gold → +5 level cap per transcendence (up to L30, 4 transcendences max)
 - **Share**: captures HeroCard via react-native-view-shot + expo-sharing
 
 ### SummonScreen

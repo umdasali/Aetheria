@@ -7,18 +7,12 @@
     "orientation": "landscape",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/splash/splash-landscape.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#06030F"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.trumpcard.game",
-      "associatedDomains": ["applinks:cardgame-17a73.firebaseapp.com"]
+      "buildNumber": "1"
     },
     "android": {
-      "navigationBarColor": "#06030F",
       "adaptiveIcon": {
         "backgroundColor": "#06030F",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -26,31 +20,29 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.trumpcard.game",
+      "versionCode": 1,
       "permissions": [
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
-      ],
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "https",
-              "host": "cardgame-17a73.firebaseapp.com",
-              "pathPrefix": "/__/auth/action"
-            }
-          ],
-          "category": ["BROWSABLE", "DEFAULT"]
-        }
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ],
       "expo-audio",
       [
         "expo-splash-screen",
@@ -66,7 +58,8 @@
       ],
       "expo-video",
       "expo-sharing",
-      "expo-web-browser"
+      "expo-font",
+      "expo-asset"
     ],
     "owner": "ziriverse",
     "extra": {

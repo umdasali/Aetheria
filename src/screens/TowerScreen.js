@@ -1,11 +1,12 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Animated, Dimensions, Image,
+  Animated, Dimensions, Image, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import useGameStore from '../store/gameStore';
 import {
   getTowerEnemyGroup, getTowerFloorReward,
@@ -39,9 +40,9 @@ function getResetCountdown() {
   const now  = new Date();
   const day  = now.getDay();
   const next = new Date(now);
-  // Reset is on Sunday (day 0). From any other day, count days until next Sunday.
-  // From Sunday itself, count 7 days to the same time next week.
-  const daysUntil = day === 0 ? 7 : 7 - day;
+  // Reset happens when the week key (Monday-based, see getCurrentWeekKey) rolls
+  // over — i.e. Monday 00:00 local. Count days until the next Monday (day 1).
+  const daysUntil = day === 1 ? 7 : (8 - day) % 7;
   next.setDate(now.getDate() + daysUntil);
   next.setHours(0, 0, 0, 0);
   const ms = next - now;
@@ -227,9 +228,28 @@ const sc = StyleSheet.create({
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function TowerScreen({ navigation }) {
-  const { towerCurrentFloor, towerHighestFloor, towerCoins, checkTowerWeekReset } = useGameStore();
-  useEffect(() => { checkTowerWeekReset(); }, []);
+  const team                = useGameStore(s => s.team);
+  const towerCurrentFloor   = useGameStore(s => s.towerCurrentFloor);
+  const towerHighestFloor   = useGameStore(s => s.towerHighestFloor);
+  const towerCoins          = useGameStore(s => s.towerCoins);
+  const checkTowerWeekReset = useGameStore(s => s.checkTowerWeekReset);
 
+  // Live countdown + reset check. useFocusEffect (not mount-only useEffect):
+  // the Tower→Battle→Victory→Tower loop pops back to this same instance, so a
+  // mount effect would never re-run when the player crosses the weekly boundary
+  // mid-session. The 60s tick keeps the "Resets in…" label from going stale.
+  const [, setClockTick] = useState(0);
+  useFocusEffect(useCallback(() => {
+    checkTowerWeekReset();
+    const id = setInterval(() => {
+      checkTowerWeekReset();
+      setClockTick(t => t + 1);
+    }, 60000);
+    return () => clearInterval(id);
+  }, [checkTowerWeekReset]));
+
+  // towerCurrentFloor === MAX+1 means every floor is cleared this week
+  const conquered   = towerCurrentFloor > TOWER_MAX_FLOOR;
   const floor       = Math.min(towerCurrentFloor, TOWER_MAX_FLOOR);
   const enemies     = getTowerEnemyGroup(floor);
   const reward      = getTowerFloorReward(floor);
@@ -266,6 +286,15 @@ export default function TowerScreen({ navigation }) {
   }, []);
 
   const handleEnter = () => {
+    if (conquered) return;
+    if (!team || team.length === 0) {
+      Alert.alert(
+        'No Team Selected',
+        'Add heroes to your team before entering the Tower.',
+        [{ text: 'OK' }],
+      );
+      return;
+    }
     AudioManager.playButtonSFX();
     navigation.navigate('Battle', {
       chapterEnemies: enemies,
@@ -282,7 +311,8 @@ export default function TowerScreen({ navigation }) {
   const btn = isMilestone ? [C.GOLD_DARK, C.GOLD]
             : isBoss      ? [C.DANGER_DARK, C.DANGER]
             :               [C.PRIMARY_DARK, C.PRIMARY];
-  const lbl = isMilestone ? `⚡ MILESTONE  FLOOR ${floor}`
+  const lbl = conquered   ? `🏆 TOWER CONQUERED — RESETS IN ${resetIn}`
+            : isMilestone ? `⚡ MILESTONE  FLOOR ${floor}`
             : isBoss      ? `💀 BOSS FLOOR  ${floor}`
             :               `ENTER  FLOOR  ${floor}`;
 
@@ -323,14 +353,24 @@ export default function TowerScreen({ navigation }) {
                 <Text style={[s.pillTxt, { color: C.PRIMARY_LIGHT }]}>{towerCoins} coins</Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={s.shopBtn}
-              onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('TowerShop'); }}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="storefront-outline" size={13} color={C.GOLD} />
-              <Text style={s.shopTxt}>SHOP</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              <TouchableOpacity
+                style={s.shopBtn}
+                onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Leaderboard'); }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="podium-outline" size={13} color={C.CYAN} />
+                <Text style={[s.shopTxt, { color: C.CYAN }]}>RANKS</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={s.shopBtn}
+                onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('TowerShop'); }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="storefront-outline" size={13} color={C.GOLD} />
+                <Text style={s.shopTxt}>SHOP</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -445,12 +485,17 @@ export default function TowerScreen({ navigation }) {
             </View>
 
             {/* ── ENTER button ── */}
-            <TouchableOpacity style={s.enterBtn} onPress={handleEnter} activeOpacity={0.87}>
+            <TouchableOpacity
+              style={[s.enterBtn, conquered && { opacity: 0.55 }]}
+              onPress={handleEnter}
+              disabled={conquered}
+              activeOpacity={0.87}
+            >
               <Animated.View style={[s.enterGlow, { backgroundColor: diff.color + '38', opacity: glow }]} />
               <LinearGradient colors={btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.enterInner}>
-                <Ionicons name="flash" size={15} color="#fff" />
+                <Ionicons name={conquered ? 'trophy' : 'flash'} size={15} color={C.TEXT} />
                 <Text style={s.enterTxt}>{lbl}</Text>
-                <Ionicons name="chevron-forward" size={13} color="rgba(255,255,255,0.55)" />
+                {!conquered && <Ionicons name="chevron-forward" size={13} color={C.TEXT_ON_DARK_SOFT} />}
               </LinearGradient>
             </TouchableOpacity>
 

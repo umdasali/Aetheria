@@ -1,8 +1,8 @@
 import { supabase } from './supabaseConfig';
 
 // ── Cached auth state (updated by onAuthStateChange) ─────────────────────────
-// Mirrors Firebase's auth.currentUser pattern — synchronous reads from cache,
-// real-time updates via the listener below.
+// Cached so callers can read the current user synchronously; the listener below
+// keeps it fresh and notifies subscribers in real time.
 
 let _cachedUser = null;
 const _listeners = new Set();
@@ -44,12 +44,6 @@ export async function resendVerification(email) {
   if (error) throw error;
 }
 
-export async function reloadUser() {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) return null;
-  return data.user;
-}
-
 export async function resetPassword(email) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: 'https://ziriverse.com/reset-password',
@@ -65,4 +59,27 @@ export async function signOut() {
 export async function getUID() {
   const { data } = await supabase.auth.getSession();
   return data.session?.user?.id ?? null;
+}
+
+// ── Account deletion (store-compliance requirement) ───────────────────────────
+// Permanently removes the signed-in user's cloud save AND auth record.
+// The auth.users row can't be deleted with the anon key, so this calls a
+// server-side SECURITY DEFINER RPC named `delete_account` that deletes
+// auth.users WHERE id = auth.uid(). That function MUST be provisioned in the
+// Supabase project — see supabase/migrations/0001_init.sql. The caller is
+// responsible for wiping local state (resetStore) after this resolves.
+export async function deleteAccount() {
+  const uid = await getUID();
+  if (!uid) throw new Error('Not signed in');
+
+  // 1. Delete the cloud save row first (RLS lets a user delete their own row).
+  const { error: saveErr } = await supabase.from('game_saves').delete().eq('user_id', uid);
+  if (saveErr) throw saveErr;
+
+  // 2. Delete the auth user via the server-side RPC.
+  const { error: rpcErr } = await supabase.rpc('delete_account');
+  if (rpcErr) throw rpcErr;
+
+  // 3. Clear the local session/token cache.
+  await supabase.auth.signOut();
 }

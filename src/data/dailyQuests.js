@@ -9,7 +9,7 @@ export const QUEST_DEFS = [
     desc:   'Win 3 battles (any mode)',
     icon:   'trophy-outline',
     target: 3,
-    reward: { gems: 30, gold: 500 },
+    reward: { gems: 10, gold: 500 },
   },
   {
     id:     'use_trump',
@@ -17,7 +17,7 @@ export const QUEST_DEFS = [
     desc:   'Use a Trump Card 5 times',
     icon:   'thunderstorm-outline',
     target: 5,
-    reward: { gems: 50, gold: 0 },
+    reward: { gems: 15, gold: 0 },
   },
   {
     id:     'clear_stage',
@@ -25,7 +25,7 @@ export const QUEST_DEFS = [
     desc:   'Clear 1 Story stage',
     icon:   'book-outline',
     target: 1,
-    reward: { gems: 20, gold: 1000 },
+    reward: { gems: 8, gold: 1000 },
   },
   {
     id:     'hero_summon',
@@ -33,7 +33,7 @@ export const QUEST_DEFS = [
     desc:   'Perform at least 1 summon',
     icon:   'sparkles-outline',
     target: 1,
-    reward: { gems: 30, gold: 500 },
+    reward: { gems: 10, gold: 500 },
   },
   {
     id:     'hero_level',
@@ -41,10 +41,10 @@ export const QUEST_DEFS = [
     desc:   'Level up any hero once',
     icon:   'arrow-up-circle-outline',
     target: 1,
-    reward: { gems: 25, gold: 200 },
+    reward: { gems: 7, gold: 200 },
   },
 ];
 
-// Total daily reward if all 5 are claimed: 140 gems + 2200 gold
+// Total daily reward if all 5 are claimed: 50 gems + 2200 gold
 export const TOTAL_DAILY_GEMS = QUEST_DEFS.reduce((s, q) => s + q.reward.gems, 0);
 export const TOTAL_DAILY_GOLD = QUEST_DEFS.reduce((s, q) => s + q.reward.gold, 0);

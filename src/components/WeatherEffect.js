@@ -4,8 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { C } from '../theme/colors';
 
 // ── Cloud assets (fog / bg_002 only) ─────────────────────────────────────────
-const CLOUD_IMG_1 = require('../../assets/background-assets/cloud-1.png');
-const CLOUD_IMG_2 = require('../../assets/background-assets/cloud-2.png');
+const CLOUD_IMG_1 = require('../../assets/background-assets/cloud-1.webp');
+const CLOUD_IMG_2 = require('../../assets/background-assets/cloud-2.webp');
 
 const { width: W, height: H } = Dimensions.get('window');
 const DROP_COUNT = 15;

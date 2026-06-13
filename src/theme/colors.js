@@ -91,9 +91,33 @@ export const C = {
   FLASH_PURPLE: 'rgba(192,132,252,0.45)',           // A-rank reveal flash
   SHIMMER:      'rgba(255,255,255,0.40)',           // Shimmer sweep highlight
   FLASH_LIGHT:  '#C8D8FF',                         // Lightning flash overlay (WeatherEffect)
+  FLASH_WHITE:  '#FFFFFF',                          // Crit / Trump impact screen flash (animated opacity)
 
   // ── Slider / control surface ──────────────────────────────────────────────
   THUMB: 'rgba(255,255,255,0.92)',   // Slider thumb — stands out on dark track
+
+  // ── Extra glass / overlay steps ───────────────────────────────────────────
+  GLASS_8:     'rgba(255,255,255,0.25)',  // prominent chip border / semi-visible
+  OVERLAY_MID:  'rgba(0,0,0,0.45)',       // video-skip / floating button bg
+  OVERLAY_VOID: 'rgba(6,2,18,0.78)',      // deep-purple modal / tutorial overlay
+
+  // ── Leaderboard medal palette ─────────────────────────────────────────────
+  MEDAL_GOLD:        '#FFD700',                // gold rank (= SOVEREIGN_GOLD value)
+  MEDAL_GOLD_DIM:    '#7A5500',                // subdued gold label color
+  MEDAL_GOLD_BG:     'rgba(255,215,0,0.08)',   // gold row tint
+  MEDAL_GOLD_GLOW:   'rgba(255,215,0,0.35)',   // gold shadow / glow
+  MEDAL_GOLD_SHIMMER:'rgba(255,215,0,0.10)',   // shimmer sweep in champion card
+  GRAD_CHAMPION:     ['#2A1800', '#1A0E00'],   // champion card dark-gold gradient bg
+
+  MEDAL_SILVER:      '#C8C8D4',
+  MEDAL_SILVER_DIM:  '#484860',
+  MEDAL_SILVER_BG:   'rgba(200,200,212,0.06)',
+  MEDAL_SILVER_GLOW: 'rgba(200,200,212,0.20)',
+
+  MEDAL_BRONZE:      '#E0905A',
+  MEDAL_BRONZE_DIM:  '#6B3A1A',
+  MEDAL_BRONZE_BG:   'rgba(224,144,90,0.07)',
+  MEDAL_BRONZE_GLOW: 'rgba(224,144,90,0.22)',
 
   // ── Streak fire accent ────────────────────────────────────────────────────
   STREAK_ORANGE:        '#FF6B35',

@@ -54,7 +54,7 @@ const PRELOAD_SOURCES = [
 ];
 
 export default function LoadingScreen({ navigation }) {
-  const { hasSeenOnboarding } = useGameStore();
+  const hasSeenOnboarding = useGameStore(s => s.hasSeenOnboarding);
   const progressAnim = useRef(new Animated.Value(0)).current;
   const tipFade      = useRef(new Animated.Value(1)).current;
   const screenFade   = useRef(new Animated.Value(0)).current;

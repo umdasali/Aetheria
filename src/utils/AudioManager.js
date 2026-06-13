@@ -7,8 +7,8 @@ let _sfxVolume   = 0.75;
 // ── Home BGM ──────────────────────────────────────────────────────────────────
 
 const HOME_TRACKS = [
-  require('../../assets/audio/home/BGM-Home_001.mp3'),
-  require('../../assets/audio/home/BGM-Home_002.mp3'),
+  require('../../assets/audio/home/BGM-Home_001.m4a'),
+  require('../../assets/audio/home/BGM-Home_002.m4a'),
 ];
 
 let _homePlayer = null;
@@ -26,8 +26,8 @@ function getHomePlayer() {
 // ── Story BGM ─────────────────────────────────────────────────────────────────
 
 const STORY_TRACKS = [
-  require('../../assets/audio/story-mode/story_BGM-1.mp3'),
-  require('../../assets/audio/story-mode/story_BGM-2.mp3'),
+  require('../../assets/audio/story-mode/story_BGM-1.m4a'),
+  require('../../assets/audio/story-mode/story_BGM-2.m4a'),
 ];
 
 let _storyPlayer = null;
@@ -44,7 +44,7 @@ function getStoryPlayer() {
 
 // ── Collection BGM ────────────────────────────────────────────────────────────
 
-const COLLECTION_BGM = require('../../assets/audio/Collection/collection_BGM.mp3');
+const COLLECTION_BGM = require('../../assets/audio/Collection/collection_BGM.m4a');
 
 let _collectionPlayer = null;
 
@@ -59,7 +59,7 @@ function getCollectionPlayer() {
 
 // ── Battle BGM ────────────────────────────────────────────────────────────────
 
-const BATTLE_BGM = require('../../assets/audio/battleScreen/bgm_001.mp3');
+const BATTLE_BGM = require('../../assets/audio/battleScreen/bgm_001.m4a');
 
 let _battlePlayer = null;
 

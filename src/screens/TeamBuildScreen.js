@@ -28,14 +28,12 @@ const PRESET_LABELS = ['Ⅰ', 'Ⅱ', 'Ⅲ'];
 const FACTION_KEYS = ['All', ...Object.keys(FACTIONS)];
 
 export default function TeamBuildScreen({ navigation }) {
-  const {
-    ownedHeroes,
-    team,
-    savedTeams,
-    activeTeamPreset,
-    deployPreset,
-    saveTeamPreset,
-  } = useGameStore();
+  const ownedHeroes      = useGameStore(s => s.ownedHeroes);
+  const team             = useGameStore(s => s.team);
+  const savedTeams       = useGameStore(s => s.savedTeams);
+  const activeTeamPreset = useGameStore(s => s.activeTeamPreset);
+  const deployPreset     = useGameStore(s => s.deployPreset);
+  const saveTeamPreset   = useGameStore(s => s.saveTeamPreset);
 
   const [tab,    setTab]    = useState(0);
   const [filter, setFilter] = useState('All');

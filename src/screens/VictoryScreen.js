@@ -12,6 +12,7 @@ import { getHeroById } from '../data/heroes';
 import { RANK } from '../theme/colors';
 import { FACTIONS } from '../data/heroes';
 import { STAGE_ORDER, getStageById, isStageUnlocked, stageGoldReward } from '../data/story';
+import { TOWER_MAX_FLOOR } from '../data/towerData';
 import { ASCENSION_ITEMS } from '../data/ascensionItems';
 import { ENEMY_GROUPS } from '../data/enemies';
 import useGameStore from '../store/gameStore';
@@ -26,13 +27,15 @@ const COIN_IMG = require('../../assets/currency/coin.png');
 function Particle({ color, delay, duration, x, size }) {
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.loop(
+    const loop = Animated.loop(
       Animated.sequence([
         Animated.delay(delay),
         Animated.timing(anim, { toValue: 1, duration, useNativeDriver: true }),
         Animated.timing(anim, { toValue: 0, duration: 0, useNativeDriver: true }),
       ])
-    ).start();
+    );
+    loop.start();
+    return () => loop.stop();
   }, []);
   const ty      = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -(H * 0.7)] });
   const opacity = anim.interpolate({ inputRange: [0, 0.07, 0.76, 1], outputRange: [0, 0.85, 0.35, 0] });
@@ -51,8 +54,11 @@ export default function VictoryScreen({ navigation, route }) {
     battleResult, stageId, rewards, enemyGroup, fromStory,
     practiceMode, wasReplay, practiceGotBonus, xpGained = 0,
     towerMode = false, towerFloor = 0, towerRewards = null, towerAscensionDrop = null,
-  } = route.params;
-  const { completedChapters, ownedHeroes, heroCollection, dailyStreak } = useGameStore();
+  } = route.params || {};
+  const completedChapters = useGameStore(s => s.completedChapters);
+  const ownedHeroes       = useGameStore(s => s.ownedHeroes);
+  const heroCollection    = useGameStore(s => s.heroCollection);
+  const dailyStreak       = useGameStore(s => s.dailyStreak);
 
   const isWin     = battleResult === 'win';
   const accentClr = isWin ? C.GOLD : C.DANGER;
@@ -93,7 +99,13 @@ export default function VictoryScreen({ navigation, route }) {
   const levelUpScale = useRef(new Animated.Value(0.4)).current;
   const levelUpFade  = useRef(new Animated.Value(0)).current;
   const xpFlash      = useRef(new Animated.Value(0)).current;
+  const glowLoopRef  = useRef(null);
+  const xpTimersRef  = useRef([]);          // pending XP-sequence timeouts
+  const xpCleanupRef = useRef(() => {});    // removes listener + stops shimmer
   const [displayXP,  setDisplayXP] = useState(beforeState.currentXP);
+  // Track width measured at layout — lets the XP bar animate as a native-driven
+  // left-anchored scaleX instead of a JS-thread width animation
+  const [xpTrackW,   setXpTrackW]  = useState(0);
 
   // Next stage
   const nextStage = (() => {
@@ -131,11 +143,12 @@ export default function VictoryScreen({ navigation, route }) {
       Animated.timing(btnFade, { toValue: 1, duration: 360, useNativeDriver: true }),
     ]).start();
 
-    // Icon glow loop
-    Animated.loop(Animated.sequence([
+    // Icon glow loop — reference stored so cleanup can stop it on unmount
+    glowLoopRef.current = Animated.loop(Animated.sequence([
       Animated.timing(glowPulse, { toValue: 0.75, duration: 1300, useNativeDriver: true }),
       Animated.timing(glowPulse, { toValue: 0.20, duration: 1300, useNativeDriver: true }),
-    ])).start();
+    ]));
+    glowLoopRef.current.start();
 
     // XP sequence — fires after rewards have faded in
     if (isWin && xpGained > 0) {
@@ -148,8 +161,12 @@ export default function VictoryScreen({ navigation, route }) {
           Animated.timing(shimmerAnim, { toValue: -1, duration: 0,   useNativeDriver: true }),
         ])
       );
+      xpCleanupRef.current = () => {
+        shimmerLoop.stop();
+        xpCountAnim.removeListener(listenerId);
+      };
 
-      setTimeout(() => {
+      xpTimersRef.current.push(setTimeout(() => {
         // +XP badge springs in
         Animated.parallel([
           Animated.spring(xpBadgeScale, { toValue: 1, friction: 5, tension: 130, useNativeDriver: true }),
@@ -163,7 +180,7 @@ export default function VictoryScreen({ navigation, route }) {
           Animated.parallel([
             Animated.timing(xpBarAnim, {
               toValue: 1, duration: 700,
-              easing: Easing.out(Easing.cubic), useNativeDriver: false,
+              easing: Easing.out(Easing.cubic), useNativeDriver: true,
             }),
             Animated.timing(xpCountAnim, {
               toValue: beforeState.nextLevelXP, duration: 700,
@@ -181,42 +198,41 @@ export default function VictoryScreen({ navigation, route }) {
             ]).start();
 
             // Phase 2: reset bar + counter to 0, then fill to new level progress
-            setTimeout(() => {
+            xpTimersRef.current.push(setTimeout(() => {
               xpBarAnim.setValue(0);
               xpCountAnim.setValue(0);
               Animated.parallel([
                 Animated.timing(xpBarAnim, {
                   toValue: afterState.progress, duration: 800,
-                  easing: Easing.out(Easing.cubic), useNativeDriver: false,
+                  easing: Easing.out(Easing.cubic), useNativeDriver: true,
                 }),
                 Animated.timing(xpCountAnim, {
                   toValue: afterState.currentXP, duration: 800,
                   easing: Easing.out(Easing.cubic), useNativeDriver: false,
                 }),
-              ]).start(() => {
-                shimmerLoop.stop();
-                xpCountAnim.removeListener(listenerId);
-              });
-            }, 350);
+              ]).start(() => xpCleanupRef.current());
+            }, 350));
           });
         } else {
           // Simple: before → after within the same level
           Animated.parallel([
             Animated.timing(xpBarAnim, {
               toValue: afterState.progress, duration: 1100,
-              easing: Easing.out(Easing.cubic), useNativeDriver: false,
+              easing: Easing.out(Easing.cubic), useNativeDriver: true,
             }),
             Animated.timing(xpCountAnim, {
               toValue: afterState.currentXP, duration: 1100,
               easing: Easing.out(Easing.cubic), useNativeDriver: false,
             }),
-          ]).start(() => {
-            shimmerLoop.stop();
-            xpCountAnim.removeListener(listenerId);
-          });
+          ]).start(() => xpCleanupRef.current());
         }
-      }, 1500);
+      }, 1500));
     }
+    return () => {
+      glowLoopRef.current?.stop();
+      xpTimersRef.current.forEach(clearTimeout);
+      xpCleanupRef.current();
+    };
   }, []);
 
   // Navigation
@@ -225,6 +241,8 @@ export default function VictoryScreen({ navigation, route }) {
     navigation.replace('Narration', { stage: nextStage, enemyGroup: grp });
   };
   const handleRetry = () => {
+    // Practice battles have no stage — relaunch the practice battle directly
+    if (practiceMode) { navigation.replace('Battle', { practiceMode: true }); return; }
     const curStage = getStageById(stageId);
     if (curStage && enemyGroup) navigation.replace('Narration', { stage: curStage, enemyGroup, autoSkip: true });
     else navigation.navigate('Story');
@@ -334,7 +352,11 @@ export default function VictoryScreen({ navigation, route }) {
                   {towerMode && (
                     <View style={S.towerPill}>
                       <Ionicons name="layers-outline" size={11} color={C.CYAN} />
-                      <Text style={S.towerPillTxt}>Floor {towerFloor} Cleared  →  Floor {towerFloor + 1} Unlocked</Text>
+                      <Text style={S.towerPillTxt}>
+                        {towerFloor >= TOWER_MAX_FLOOR
+                          ? `Floor ${towerFloor} Cleared  →  🏆 Tower Conquered!`
+                          : `Floor ${towerFloor} Cleared  →  Floor ${towerFloor + 1} Unlocked`}
+                      </Text>
                     </View>
                   )}
 
@@ -413,12 +435,22 @@ export default function VictoryScreen({ navigation, route }) {
 
                       {/* Bar + level bubble */}
                       <View style={S.xpBarRow}>
-                        <View style={S.xpTrack}>
+                        <View style={S.xpTrack} onLayout={e => setXpTrackW(e.nativeEvent.layout.width)}>
                           <Animated.View style={[S.xpGlow, {
-                            width: xpBarAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+                            width: '100%', opacity: xpTrackW ? 1 : 0,
+                            transform: [
+                              { translateX: -xpTrackW / 2 },
+                              { scaleX: xpBarAnim },
+                              { translateX: xpTrackW / 2 },
+                            ],
                           }]} />
                           <Animated.View style={[S.xpFill, {
-                            width: xpBarAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+                            width: '100%', opacity: xpTrackW ? 1 : 0,
+                            transform: [
+                              { translateX: -xpTrackW / 2 },
+                              { scaleX: xpBarAnim },
+                              { translateX: xpTrackW / 2 },
+                            ],
                           }]}>
                             <LinearGradient
                               colors={[C.PRIMARY_DARK, C.PRIMARY, C.PRIMARY_LIGHT]}
@@ -461,7 +493,7 @@ export default function VictoryScreen({ navigation, route }) {
                   <TouchableOpacity style={S.primaryBtn} onPress={handleNextFloor} activeOpacity={0.85}>
                     <LinearGradient colors={[C.GOLD_DARK, C.GOLD]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
                       <Ionicons name="layers" size={14} color="#fff" />
-                      <Text style={S.primaryBtnTxt}>Next Floor</Text>
+                      <Text style={S.primaryBtnTxt}>{towerFloor >= TOWER_MAX_FLOOR ? 'Back to Tower' : 'Next Floor'}</Text>
                       <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.8)" />
                     </LinearGradient>
                   </TouchableOpacity>
@@ -548,7 +580,7 @@ const S = StyleSheet.create({
   modeBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
     borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2,
-    borderWidth: 1, borderColor: C.BORDER, backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: C.BORDER, backgroundColor: C.GLASS_3,
   },
   modeBadgeTxt: { fontSize: 7, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 0.6 },
   divider: { height: 1, marginBottom: 8, borderRadius: 1 },
@@ -563,7 +595,7 @@ const S = StyleSheet.create({
   },
   chipImg: { width: 26, height: 26 },
   chipAmt: { fontSize: 20, fontWeight: '900' },
-  chipLbl: { fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: '600', alignSelf: 'flex-end', marginBottom: 2 },
+  chipLbl: { fontSize: 10, color: C.TEXT_ON_DARK_MUTED, fontWeight: '600', alignSelf: 'flex-end', marginBottom: 2 },
 
   // Hero reward — compact horizontal row
   heroRow: {
@@ -591,7 +623,7 @@ const S = StyleSheet.create({
   // XP section
   xpSection: {
     gap: 6, padding: 10, borderRadius: 10, overflow: 'hidden',
-    backgroundColor: 'rgba(124,58,237,0.10)',
+    backgroundColor: C.PRIMARY_GLOW,
     borderWidth: 1, borderColor: C.PRIMARY + '35',
   },
   xpHeadRow:  { flexDirection: 'row', alignItems: 'center', gap: 5 },
@@ -616,7 +648,7 @@ const S = StyleSheet.create({
   xpBarRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   xpTrack: {
     flex: 1, height: 8, borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden', position: 'relative',
+    backgroundColor: C.GLASS_5, overflow: 'hidden', position: 'relative',
   },
   xpGlow: {
     position: 'absolute', top: -3, bottom: -3, left: 0,
@@ -625,7 +657,7 @@ const S = StyleSheet.create({
   xpFill: { position: 'absolute', top: 0, bottom: 0, left: 0, borderRadius: 4, overflow: 'hidden' },
   xpShimmer: {
     position: 'absolute', top: 0, bottom: 0, width: 26,
-    backgroundColor: 'rgba(255,255,255,0.28)', borderRadius: 4,
+    backgroundColor: C.GLASS_8, borderRadius: 4,
     transform: [{ skewX: '-20deg' }],
   },
   lvBubble: {
@@ -668,8 +700,8 @@ const S = StyleSheet.create({
   secondaryBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: C.GLASS_7,
+    backgroundColor: C.GLASS_3,
   },
-  secondaryBtnTxt: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.65)' },
+  secondaryBtnTxt: { fontSize: 12, fontWeight: '700', color: C.TEXT_ON_DARK },
 });

@@ -24,10 +24,20 @@ const { width: W, height: H } = Dimensions.get('window');
 const BODY_PAD = 14;
 
 export default function HeroDetailScreen({ route, navigation }) {
-  const { heroId } = route.params;
-  const { ownedHeroes, team, addToTeam, getHeroData, levelUpHero, gold,
-          trackQuestProgress, fuseHero, transcendHero, getEffectiveRank,
-          ascendHero, ascensionInventory, convertExcessCopies } = useGameStore();
+  const { heroId } = route.params || {};
+  const ownedHeroes         = useGameStore(s => s.ownedHeroes);
+  const team                = useGameStore(s => s.team);
+  const addToTeam           = useGameStore(s => s.addToTeam);
+  const getHeroData         = useGameStore(s => s.getHeroData);
+  const levelUpHero         = useGameStore(s => s.levelUpHero);
+  const gold                = useGameStore(s => s.gold);
+  const trackQuestProgress  = useGameStore(s => s.trackQuestProgress);
+  const fuseHero            = useGameStore(s => s.fuseHero);
+  const transcendHero       = useGameStore(s => s.transcendHero);
+  const getEffectiveRank    = useGameStore(s => s.getEffectiveRank);
+  const ascendHero          = useGameStore(s => s.ascendHero);
+  const ascensionInventory  = useGameStore(s => s.ascensionInventory);
+  const convertExcessCopies = useGameStore(s => s.convertExcessCopies);
   const [fusionMsg,    setFusionMsg]    = useState('');
   const [transcendMsg, setTranscendMsg] = useState('');
   const [ascendMsg,    setAscendMsg]    = useState('');
@@ -147,7 +157,9 @@ export default function HeroDetailScreen({ route, navigation }) {
   const canAffordTranscend= canTranscend && gold >= transcendCost;
 
   // ── Ascension ─────────────────────────────────────────────────────────────
-  const ascItemId      = RANK_TO_ASCENSION_ITEM_ID[effectiveRankKey] ?? null;
+  // Use the sovereign-aware rankKey (L136) so Sovereigns require Aetheria's Core,
+  // not the S-rank Feather — matches the ascendHero routing in the store.
+  const ascItemId      = RANK_TO_ASCENSION_ITEM_ID[rankKey] ?? null;
   const requiredItem   = ascItemId ? getAscensionItemById(ascItemId) : null;
   const ownedItemCount = requiredItem ? ((ascensionInventory ?? {})[requiredItem.id] || 0) : 0;
   const canAscend      = owned && ascension < ASCENSION_MAX && ownedItemCount >= 1;

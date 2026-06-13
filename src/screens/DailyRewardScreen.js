@@ -122,7 +122,9 @@ function DayCard({ reward, state, scale }) {
 
 export default function DailyRewardScreen({ navigation }) {
   const { top: topInset, bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
-  const { dailyStreak, lastClaimDate, claimDailyReward } = useGameStore();
+  const dailyStreak      = useGameStore(s => s.dailyStreak);
+  const lastClaimDate    = useGameStore(s => s.lastClaimDate);
+  const claimDailyReward = useGameStore(s => s.claimDailyReward);
 
   const today     = todayStr();
   const canClaim  = lastClaimDate !== today;

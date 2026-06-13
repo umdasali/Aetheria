@@ -33,7 +33,12 @@ import WorldMapScreen    from './src/screens/WorldMapScreen';
 import DailyQuestScreen  from './src/screens/DailyQuestScreen';
 import TowerScreen       from './src/screens/TowerScreen';
 import TowerShopScreen   from './src/screens/TowerShopScreen';
+import ShopScreen        from './src/screens/ShopScreen';
 import CloudAuthScreen   from './src/screens/CloudAuthScreen';
+import PullHistoryScreen  from './src/screens/PullHistoryScreen';
+import AchievementScreen  from './src/screens/AchievementScreen';
+import LeaderboardScreen  from './src/screens/LeaderboardScreen';
+import EventScreen        from './src/screens/EventScreen';
 
 // Hold the native splash until LoadingScreen signals it's ready
 SplashScreen.preventAutoHideAsync();
@@ -67,7 +72,7 @@ export default function App() {
             screenOptions={{
               headerShown: false,
               animation: 'fade',
-              contentStyle: { backgroundColor: '#000' },
+              contentStyle: { backgroundColor: C.BG_SCREEN },
             }}
           >
             {/* Loading is always the entry point — replaces itself with Home when done */}
@@ -94,7 +99,12 @@ export default function App() {
             <Stack.Screen name="DailyQuests" component={DailyQuestScreen} options={{ animation: 'fade' }} />
             <Stack.Screen name="Tower"       component={TowerScreen}      options={{ animation: 'fade' }} />
             <Stack.Screen name="TowerShop"   component={TowerShopScreen}  options={{ animation: 'fade' }} />
+            <Stack.Screen name="Shop"        component={ShopScreen}       options={{ animation: 'fade' }} />
             <Stack.Screen name="CloudAuth"   component={CloudAuthScreen}  options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="PullHistory"  component={PullHistoryScreen}  options={{ animation: 'fade' }} />
+            <Stack.Screen name="Achievements" component={AchievementScreen}  options={{ animation: 'fade' }} />
+            <Stack.Screen name="Leaderboard"  component={LeaderboardScreen}  options={{ animation: 'fade' }} />
+            <Stack.Screen name="Events"       component={EventScreen}        options={{ animation: 'fade' }} />
           </Stack.Navigator>
         </NavigationContainer>
 
@@ -187,7 +197,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.DANGER,
   },
   quitBtnNo: {
-    backgroundColor: C.PRIMARY_GLOW,
+    backgroundColor: C.GLASS_3,
     borderWidth: 1,
     borderColor: C.BORDER_STRONG,
   },

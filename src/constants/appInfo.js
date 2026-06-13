@@ -5,6 +5,7 @@ export const APP_INFO = {
   name:         'Aetheria: Legends Unbound',
   studio:       'Ziriverse',
   website:      'www.ziriverse.com',
+  privacyUrl:   'https://ziriverse.com/privacy',
   version:      '1.0.0',
   year:         '2025',
   heroCount:    HEROES.length,       // auto-updates as heroes.js grows

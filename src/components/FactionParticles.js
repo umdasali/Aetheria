@@ -12,6 +12,7 @@ const EFFECT = {
   SUNSPIRE:  'sparkle',
   VERDANIA:  'leaf',
   VOIDMARK:  'void',
+  KHEMARA:   'sparkle',   // sand & moon — pale dust motes glinting in moonlight
 };
 
 // ─── Color palettes ───────────────────────────────────────────────────────────

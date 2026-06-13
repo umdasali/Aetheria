@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Image, Animated, Dimensions, Modal, Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -12,6 +12,7 @@ import useGameStore from '../store/gameStore';
 import { HEROES, FACTIONS } from '../data/heroes';
 import { CHAPTER_DEFS } from '../data/story';
 import { QUEST_DEFS } from '../data/dailyQuests';
+import { ACHIEVEMENT_DEFS } from '../data/achievements';
 import { WEATHER_BACKGROUNDS } from '../data/backgrounds';
 import { ASCENSION_ITEMS } from '../data/ascensionItems';
 import WeatherEffect from '../components/WeatherEffect';
@@ -22,7 +23,7 @@ import HeroCard from '../components/HeroCard';
 const { width: W, height: H } = Dimensions.get('window');
 
 // ── Sidebar grid constants ────────────────────────────────────────────────────
-// SIDEBAR_W − PANEL_PAD×2 − SIDE_GAP = CELL_W×2  (exact fit, no fractional px)
+// 2-column grid: CELL_W = (SIDEBAR_W − PANEL_PAD×2 − GAP) / 2
 const SIDEBAR_W  = 164;
 const PANEL_PAD  = 12;
 
@@ -35,19 +36,44 @@ const SIDE_MENU = [
   { key: 'daily',   image: require('../../assets/currency/packs.png'),    label: 'Daily',  a11yLabel: 'Claim Daily Reward', badge: false, accent: C.CYAN,          screen: 'DailyReward' },
   { key: 'quests',  image: require('../../assets/home/quest.png'),        label: 'Quests', a11yLabel: 'Daily Quests',       badge: false, accent: C.SUCCESS,       screen: 'DailyQuests' },
   { key: 'team',    image: require('../../assets/home/team.png'),         label: 'Team',   a11yLabel: 'Build Team',         badge: false, accent: C.PRIMARY_LIGHT, screen: 'TeamBuild'   },
-  { key: 'world',   image: require('../../assets/home/world-map.png'),    label: 'World',  a11yLabel: 'World Map',          badge: false, accent: C.SECONDARY,     screen: 'WorldMap'    },
-  // { key: 'tower',   icon: 'layers-outline',                               label: 'Tower',  badge: false, accent: C.GOLD,          screen: 'Tower'       },
+  { key: 'world',        image: require('../../assets/home/world-map.png'),  label: 'World',    a11yLabel: 'World Map',        badge: false, accent: C.SECONDARY,     screen: 'WorldMap'     },
+  { key: 'events',       image: require('../../assets/home/events.png'),       label: 'Events',   a11yLabel: 'Limited Events',   badge: false, accent: C.GOLD,          screen: 'Events'       },
+  { key: 'achievements', image: require('../../assets/home/achieve.png'),      label: 'Achieve',  a11yLabel: 'Achievements',     badge: false, accent: C.PRIMARY_LIGHT, screen: 'Achievements' },
+  { key: 'rankings',     image: require('../../assets/home/ranking.png'),      label: 'Rankings', a11yLabel: 'Leaderboards',     badge: false, accent: C.CYAN,          screen: 'Leaderboard'  },
 ];
 
 export default function HomeScreen({ navigation }) {
-  const {
-    gems, gold, lastClaimDate, dailyQuests, ownedHeroes, team, completedChapters, heroCollection,
-    dailyStreak, playerProfile, isChapterCompleted, towerCurrentFloor, towerHighestFloor,
-    pendingMilestoneReward, clearMilestoneReward, getDailyQuestProgress,
-  } = useGameStore();
+  // Per-property selectors — the screen only re-renders when a value it reads changes
+  const gems                      = useGameStore(s => s.gems);
+  const gold                      = useGameStore(s => s.gold);
+  const lastClaimDate             = useGameStore(s => s.lastClaimDate);
+  const dailyQuests               = useGameStore(s => s.dailyQuests);
+  const ownedHeroes               = useGameStore(s => s.ownedHeroes);
+  const team                      = useGameStore(s => s.team);
+  const completedChapters         = useGameStore(s => s.completedChapters);
+  const heroCollection            = useGameStore(s => s.heroCollection);
+  const dailyStreak               = useGameStore(s => s.dailyStreak);
+  const playerProfile             = useGameStore(s => s.playerProfile);
+  const isChapterCompleted        = useGameStore(s => s.isChapterCompleted);
+  const towerCurrentFloor         = useGameStore(s => s.towerCurrentFloor);
+  const towerHighestFloor         = useGameStore(s => s.towerHighestFloor);
+  const pendingMilestoneReward    = useGameStore(s => s.pendingMilestoneReward);
+  const clearMilestoneReward      = useGameStore(s => s.clearMilestoneReward);
+  const getDailyQuestProgress     = useGameStore(s => s.getDailyQuestProgress);
+  const achievements              = useGameStore(s => s.achievements);
+  const pendingAchievementUnlocks = useGameStore(s => s.pendingAchievementUnlocks);
+  const clearAchievementUnlocks   = useGameStore(s => s.clearAchievementUnlocks);
 
   const [milestoneVisible, setMilestoneVisible] = useState(false);
   const milestoneHero = pendingMilestoneReward?.hero ?? null;
+
+  const [achieveVisible, setAchieveVisible] = useState(false);
+  const unlockedDefs = useMemo(
+    () => pendingAchievementUnlocks
+      .map(id => ACHIEVEMENT_DEFS.find(d => d.id === id))
+      .filter(Boolean),
+    [pendingAchievementUnlocks],
+  );
 
   const { level: playerLevel, currentXP, nextLevelXP, progress } = useMemo(
     () => calcPlayerLevel({ completedChapters, ownedHeroes, heroCollection, dailyStreak }),
@@ -56,10 +82,24 @@ export default function HomeScreen({ navigation }) {
   const xpCurrent = Math.round(progress * 100);
   const xpLabel   = `EXP  ${currentXP} / ${nextLevelXP}`;
 
-  // Badge state — kept fresh via useFocusEffect so values update immediately
-  // when the user returns from DailyRewardScreen or DailyQuestScreen.
+  // Badge state — daily/quests require manual refresh on focus.
+  // Achievements are derived directly via useMemo so they react instantly to store changes.
   const [canClaim, setCanClaim]               = useState(false);
   const [hasClaimableQuests, setHasClaimableQuests] = useState(false);
+
+  const hasClaimableAchievements = useMemo(
+    () => ACHIEVEMENT_DEFS.some(d => {
+      const a = achievements[d.id];
+      return (a?.progress ?? 0) >= d.target && !a?.claimed;
+    }),
+    [achievements],
+  );
+
+  // Stable handler so memoized SideItems don't re-render when HomeScreen does
+  const handleSideNavigate = useCallback((screen) => {
+    AudioManager.playButtonSFX();
+    navigation.navigate(screen);
+  }, [navigation]);
 
   const refreshBadges = useCallback(() => {
     const d = new Date();
@@ -165,6 +205,11 @@ export default function HomeScreen({ navigation }) {
     if (pendingMilestoneReward) setMilestoneVisible(true);
   }, [pendingMilestoneReward]));
 
+  // Show achievement unlock toast whenever new achievements are queued
+  useFocusEffect(useCallback(() => {
+    if (pendingAchievementUnlocks.length > 0) setAchieveVisible(true);
+  }, [pendingAchievementUnlocks]));
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 700, useNativeDriver: true }),
@@ -246,12 +291,14 @@ export default function HomeScreen({ navigation }) {
                 icon={require('../../assets/currency/gem.png')}
                 value={gems}
                 tint={C.PRIMARY_LIGHT}
+                onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Shop'); }}
               />
               <View style={styles.currSep} />
               <CurrencyChip
                 icon={require('../../assets/currency/gold.png')}
                 value={gold}
                 tint={C.GOLD}
+                onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Shop'); }}
               />
               {/* <View style={styles.currSep} /> */}
               {/* <CurrencyChip
@@ -272,6 +319,9 @@ export default function HomeScreen({ navigation }) {
               <TouchableOpacity style={styles.topIconBtn}>
                 <Ionicons name="mail-outline" size={17} color="rgba(255,255,255,0.8)" />
               </TouchableOpacity> */}
+              <TouchableOpacity style={styles.topIconBtn} onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Shop'); }} accessibilityLabel="Open Shop" accessibilityRole="button">
+                <Ionicons name="storefront" size={17} color={C.GOLD} />
+              </TouchableOpacity>
               <TouchableOpacity style={styles.topIconBtn} onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Settings'); }} accessibilityLabel="Open Settings" accessibilityRole="button">
                 <Ionicons name="settings-outline" size={17} color="rgba(255,255,255,0.8)" />
               </TouchableOpacity>
@@ -293,8 +343,9 @@ export default function HomeScreen({ navigation }) {
                   <SideItem
                     key={k}
                     {...item}
-                    badge={k === 'daily' ? canClaim : k === 'quests' ? hasClaimableQuests : item.badge}
-                    onPress={screen ? () => { AudioManager.playButtonSFX(); navigation.navigate(screen); } : undefined}
+                    badge={k === 'daily' ? canClaim : k === 'quests' ? hasClaimableQuests : k === 'achievements' ? hasClaimableAchievements : item.badge}
+                    screen={screen}
+                    onNavigate={handleSideNavigate}
                   />
                 ))}
               </View>
@@ -324,6 +375,101 @@ export default function HomeScreen({ navigation }) {
 
         </Animated.View>
       </SafeAreaView>
+
+      {/* ── Achievement unlock modal ── */}
+      <Modal
+        visible={achieveVisible && unlockedDefs.length > 0}
+        transparent
+        animationType="fade"
+        onRequestClose={() => { setAchieveVisible(false); clearAchievementUnlocks(); }}
+      >
+        <View style={styles.msOverlay}>
+          <View style={styles.achCard}>
+            <LinearGradient colors={[C.BG_MID, C.BG_DEEP]} style={StyleSheet.absoluteFill} />
+            {/* Purple top accent bar */}
+            <View style={[styles.msAccent, { backgroundColor: C.PRIMARY_LIGHT }]} />
+
+            {/* Header row */}
+            <View style={styles.achHeader}>
+              <View style={styles.achIconCircle}>
+                <Ionicons name="ribbon" size={22} color={C.PRIMARY_LIGHT} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.achBadge}>
+                  {unlockedDefs.length === 1 ? 'ACHIEVEMENT UNLOCKED' : `${unlockedDefs.length} ACHIEVEMENTS UNLOCKED`}
+                </Text>
+                <Text style={styles.achSubtitle}>Visit Achievements to claim your rewards</Text>
+              </View>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.achDivider} />
+
+            {/* Achievement list — scrollable if many */}
+            <ScrollView
+              style={styles.achList}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8 }}
+            >
+              {unlockedDefs.map(def => (
+                <View key={def.id} style={styles.achRow}>
+                  <LinearGradient
+                    colors={[C.PRIMARY + '18', C.PRIMARY + '08']}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.achRowIcon}>
+                    <Ionicons name={def.icon ?? 'trophy-outline'} size={18} color={C.PRIMARY_LIGHT} />
+                  </View>
+                  <View style={styles.achRowInfo}>
+                    <Text style={styles.achRowTitle}>{def.title}</Text>
+                    <Text style={styles.achRowDesc} numberOfLines={1}>{def.desc}</Text>
+                  </View>
+                  {(def.reward?.gems > 0 || def.reward?.gold > 0) && (
+                    <View style={styles.achRowReward}>
+                      {def.reward.gems > 0 && (
+                        <Text style={styles.achRowGems}>+{def.reward.gems} 💎</Text>
+                      )}
+                      {def.reward.gold > 0 && (
+                        <Text style={styles.achRowGold}>+{def.reward.gold} 🪙</Text>
+                      )}
+                    </View>
+                  )}
+                </View>
+              ))}
+            </ScrollView>
+
+            {/* Action row */}
+            <View style={styles.achActions}>
+              <TouchableOpacity
+                style={styles.achBtnClose}
+                activeOpacity={0.75}
+                onPress={() => { setAchieveVisible(false); clearAchievementUnlocks(); }}
+              >
+                <Text style={styles.achBtnCloseTxt}>CLOSE</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.achBtnView}
+                activeOpacity={0.82}
+                onPress={() => {
+                  setAchieveVisible(false);
+                  clearAchievementUnlocks();
+                  navigation.navigate('Achievements');
+                }}
+              >
+                <LinearGradient
+                  colors={C.GRAD_PINK}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={styles.achBtnViewInner}
+                >
+                  <Ionicons name="ribbon-outline" size={13} color="#fff" />
+                  <Text style={styles.achBtnViewTxt}>VIEW ACHIEVEMENTS</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* ── Milestone reward modal ── */}
       <Modal
@@ -405,13 +551,15 @@ export default function HomeScreen({ navigation }) {
 
 // ─────────────────────────── Sub-components ────────────────────────────────
 
-function CurrencyChip({ icon, value, tint }) {
+function CurrencyChip({ icon, value, tint, onPress }) {
   return (
     <TouchableOpacity
       style={styles.currChip}
       activeOpacity={0.8}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      accessibilityLabel="Add currency"
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityLabel="Open shop"
       accessibilityRole="button"
     >
       <Image source={icon} style={styles.currIcon} resizeMode="contain" />
@@ -423,7 +571,8 @@ function CurrencyChip({ icon, value, tint }) {
   );
 }
 
-function SideItem({ icon, image, label, a11yLabel, badge, accent, onPress }) {
+const SideItem = memo(function SideItem({ icon, image, label, a11yLabel, badge, accent, screen, onNavigate }) {
+  const onPress = screen ? () => onNavigate(screen) : undefined;
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -445,35 +594,31 @@ function SideItem({ icon, image, label, a11yLabel, badge, accent, onPress }) {
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.72} style={styles.sideItem} accessibilityLabel={a11yLabel || label} accessibilityRole="button">
 
-      {/* Card face */}
+      {/* Card face — vertical compact */}
       <View style={[styles.sideFace, { borderColor: accent + '45' }]}>
         <LinearGradient
           colors={['rgba(6,2,18,0.92)', 'rgba(10,4,24,0.84)']}
           style={StyleSheet.absoluteFill}
         />
-
-        {/* Left accent stripe */}
-        <View style={[styles.sideStripe, { backgroundColor: accent }]} />
+        {/* Top accent line */}
+        <View style={[styles.sideTopLine, { backgroundColor: accent }]} />
 
         {/* Icon box */}
         <View style={[styles.sideIconWrap, { backgroundColor: accent + '20' }]}>
           {badge && (
             <Animated.View
               pointerEvents="none"
-              style={[StyleSheet.absoluteFill, { borderRadius: 9, backgroundColor: accent, opacity: iconGlow }]}
+              style={[StyleSheet.absoluteFill, { borderRadius: 8, backgroundColor: accent, opacity: iconGlow }]}
             />
           )}
           {image
             ? <Image source={image} style={styles.sideIcon} resizeMode="contain" />
-            : <Ionicons name={icon} size={20} color={accent} />
+            : <Ionicons name={icon} size={18} color={accent} />
           }
         </View>
 
         {/* Label */}
-        <Text style={styles.sideLabel} numberOfLines={1}>{label}</Text>
-
-        {/* Chevron */}
-        <Ionicons name="chevron-forward" size={11} color={accent + '70'} style={styles.sideChevron} />
+        <Text style={[styles.sideLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
       </View>
 
       {/* Badge dot + pulsing ring */}
@@ -487,7 +632,7 @@ function SideItem({ icon, image, label, a11yLabel, badge, accent, onPress }) {
       )}
     </TouchableOpacity>
   );
-}
+});
 
 function ActionPanel({ tag, accent, title, sub, thumb, progressRatio, badge, onPress, accessibilityLabel: a11yLabel }) {
   return (
@@ -630,17 +775,17 @@ const styles = StyleSheet.create({
   leftSidebar: {
     width: SIDEBAR_W,
     justifyContent: 'center',
-    paddingVertical: 14,    // top + bottom breathing room
-    // no paddingHorizontal — panel padding handles inset
+    paddingVertical: 8,
   },
 
-  // Glass panel — vertical list
+  // Glass panel — 2-column compact grid
   sidePanel: {
     borderRadius: 14,
     overflow: 'hidden',
     padding: PANEL_PAD,
-    flexDirection: 'column',
-    gap: 7,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
     position: 'relative',
   },
   sidePanelBorder: {
@@ -649,22 +794,25 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.10)',
   },
 
-  // Full-width row item
+  // 2-column grid cell — width fills exactly half minus gap
   sideItem: {
-    width: '100%',
-    height: 50,
+    width: (SIDEBAR_W - PANEL_PAD * 2 - 6) / 2,
+    height: 56,
     position: 'relative',
   },
 
-  // Card face — horizontal flex
+  // Card face — vertical compact
   sideFace: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
     borderRadius: 10,
     overflow: 'hidden',
     borderWidth: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.40,
@@ -672,34 +820,30 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
-  // Left accent stripe
-  sideStripe: {
-    width: 3,
-    alignSelf: 'stretch',
+  // Top accent line (replaces left stripe)
+  sideTopLine: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    height: 2, borderTopLeftRadius: 10, borderTopRightRadius: 10,
   },
 
   // Icon container
   sideIconWrap: {
-    width: 34, height: 34,
-    borderRadius: 9,
+    width: 28, height: 28,
+    borderRadius: 8,
     alignItems: 'center', justifyContent: 'center',
-    marginLeft: 8,
     overflow: 'hidden',
     position: 'relative',
   },
-  sideIcon: { width: 22, height: 22 },
+  sideIcon: { width: 18, height: 18 },
 
   // Label
   sideLabel: {
-    flex: 1,
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '800',
-    color: 'rgba(255,255,255,0.88)',
     letterSpacing: 0.5,
-    marginLeft: 8,
+    textAlign: 'center',
   },
-
-  sideChevron: { marginRight: 10 },
 
   // Badge — floats outside top-right corner
   sideBadgeWrap: {
@@ -837,5 +981,84 @@ const styles = StyleSheet.create({
   },
   msBtnText: {
     fontSize: 14, fontWeight: '900', color: '#fff', letterSpacing: 2,
+  },
+
+  // ── Achievement unlock modal ──────────────────────────────────────────────
+  achCard: {
+    width: Math.min(W * 0.56, 440),
+    maxHeight: H * 0.82,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: C.PRIMARY_LIGHT + '44',
+    shadowColor: C.PRIMARY,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 14,
+  },
+  achHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: 18, paddingTop: 18, paddingBottom: 14,
+  },
+  achIconCircle: {
+    width: 42, height: 42, borderRadius: 21,
+    backgroundColor: C.PRIMARY + '28',
+    borderWidth: 1.5, borderColor: C.PRIMARY_LIGHT + '55',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  achBadge: {
+    fontSize: 11, fontWeight: '900', color: C.PRIMARY_LIGHT,
+    letterSpacing: 2.5, marginBottom: 3,
+  },
+  achSubtitle: {
+    fontSize: 9, color: C.TEXT_MUTED, fontStyle: 'italic',
+  },
+  achDivider: {
+    height: 1, backgroundColor: C.PRIMARY + '33',
+    marginHorizontal: 18, marginBottom: 4,
+  },
+  achList: {
+    maxHeight: H * 0.44,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  achRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderRadius: 10, overflow: 'hidden',
+    borderWidth: 1, borderColor: C.PRIMARY + '28',
+    paddingHorizontal: 12, paddingVertical: 10,
+  },
+  achRowIcon: {
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: C.PRIMARY + '22',
+    borderWidth: 1, borderColor: C.PRIMARY_LIGHT + '40',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  achRowInfo: { flex: 1, gap: 3 },
+  achRowTitle: { fontSize: 11, fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
+  achRowDesc:  { fontSize: 9,  fontWeight: '500', color: C.TEXT_MUTED },
+  achRowReward: { alignItems: 'flex-end', gap: 3 },
+  achRowGems: { fontSize: 10, fontWeight: '800', color: C.PRIMARY_LIGHT },
+  achRowGold: { fontSize: 10, fontWeight: '800', color: C.GOLD },
+  achActions: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 18, paddingTop: 10, paddingBottom: 18,
+  },
+  achBtnClose: {
+    paddingHorizontal: 18, paddingVertical: 12,
+    borderRadius: 10, borderWidth: 1, borderColor: C.BORDER,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  achBtnCloseTxt: {
+    fontSize: 11, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1,
+  },
+  achBtnView: { flex: 1, borderRadius: 10, overflow: 'hidden' },
+  achBtnViewInner: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 7, paddingVertical: 12,
+  },
+  achBtnViewTxt: {
+    fontSize: 11, fontWeight: '900', color: '#fff', letterSpacing: 1.5,
   },
 });

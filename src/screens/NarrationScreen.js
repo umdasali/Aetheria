@@ -22,13 +22,15 @@ const N_PARTS = 14;
 function Particle({ color, delay, duration, x, size }) {
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.loop(
+    const loop = Animated.loop(
       Animated.sequence([
         Animated.delay(delay),
         Animated.timing(anim, { toValue: 1, duration, useNativeDriver: true }),
         Animated.timing(anim, { toValue: 0, duration: 0,        useNativeDriver: true }),
       ])
-    ).start();
+    );
+    loop.start();
+    return () => loop.stop();
   }, []);
   const ty      = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -(H * 0.65)] });
   const opacity = anim.interpolate({ inputRange: [0, 0.07, 0.78, 1], outputRange: [0, 0.9, 0.38, 0] });
@@ -45,14 +47,22 @@ function Particle({ color, delay, duration, x, size }) {
 // ─── NarrationScreen ──────────────────────────────────────────────────────────
 export default function NarrationScreen({ navigation, route }) {
   const { top: topInset, bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
-  const { stage, enemyGroup, autoSkip } = route.params;
+  const { stage, enemyGroup, autoSkip } = route.params || {};
+  // Guard against a missing/malformed nav entry (restored state, etc.) — the
+  // mount effect below navigates away and the component early-returns null.
+  const invalidParams = !stage || !Array.isArray(enemyGroup?.enemies) || enemyGroup.enemies.length === 0;
 
-  const chapter   = CHAPTER_DEFS.find(c => c.id === stage.chapterId);
-  const mainEnemy = enemyGroup.enemies[enemyGroup.enemies.length - 1];
-  const enemyImg  = getEnemyImage(mainEnemy.imageKey);
-  const isBoss    = stage.part === 3;
+  const chapter   = CHAPTER_DEFS.find(c => c.id === stage?.chapterId);
+  const mainEnemy = enemyGroup?.enemies?.[(enemyGroup?.enemies?.length || 1) - 1];
+  const enemyImg  = mainEnemy ? getEnemyImage(mainEnemy.imageKey) : null;
+  const isBoss    = stage?.part === 3;
   const chColor   = chapter?.color  || C.PRIMARY;
   const chAccent  = chapter?.accent || C.PRIMARY_LIGHT;
+  // chColor is used only for ambient/atmospheric effects (gradient tints, glow, decorative line).
+  // chFg is the interactive foreground color — always uses chAccent which is guaranteed to be
+  // a bright, visible hue. Chapters 21-25 have near-black chColor values that would render
+  // text, borders, and icons invisible against the dark background.
+  const chFg      = chAccent;
 
   const [dlgIdx,     setDlgIdx]     = useState(0);
   const [shown,      setShown]      = useState('');
@@ -88,39 +98,49 @@ export default function NarrationScreen({ navigation, route }) {
     ]).start();
 
     // Float
-    Animated.loop(Animated.sequence([
+    const floatLoop = Animated.loop(Animated.sequence([
       Animated.timing(floatY, { toValue: -13, duration: 2900, useNativeDriver: true }),
       Animated.timing(floatY, { toValue:   0, duration: 2900, useNativeDriver: true }),
-    ])).start();
+    ]));
+    floatLoop.start();
 
     // Glow
-    Animated.loop(Animated.sequence([
+    const glowLoop = Animated.loop(Animated.sequence([
       Animated.timing(glowPulse, { toValue: 0.68, duration: 1800, useNativeDriver: true }),
       Animated.timing(glowPulse, { toValue: 0.18, duration: 1800, useNativeDriver: true }),
-    ])).start();
+    ]));
+    glowLoop.start();
 
     // Decorative line
-    Animated.loop(Animated.sequence([
+    const lineLoop = Animated.loop(Animated.sequence([
       Animated.timing(linePulse, { toValue: 1.0, duration: 1600, useNativeDriver: true }),
       Animated.timing(linePulse, { toValue: 0.4, duration: 1600, useNativeDriver: true }),
-    ])).start();
+    ]));
+    lineLoop.start();
 
     // Cursor blink
     cursorRef.current = setInterval(() => setShowCursor(v => !v), 480);
 
     return () => {
+      floatLoop.stop();
+      glowLoop.stop();
+      lineLoop.stop();
       clearInterval(typeTimer.current);
       clearInterval(cursorRef.current);
     };
   }, []);
 
   // ── Battle button pulse ───────────────────────────────────────────────────
+  const btnPulseLoop = useRef(null);
   const pulseBattleBtn = useCallback(() => {
-    Animated.loop(Animated.sequence([
+    btnPulseLoop.current?.stop();
+    btnPulseLoop.current = Animated.loop(Animated.sequence([
       Animated.timing(btnPulse, { toValue: 1.07, duration: 620, useNativeDriver: true }),
       Animated.timing(btnPulse, { toValue: 1.00, duration: 620, useNativeDriver: true }),
-    ])).start();
+    ]));
+    btnPulseLoop.current.start();
   }, []);
+  useEffect(() => () => btnPulseLoop.current?.stop(), []);
 
   // ── Typewriter + slide-in per dialogue ───────────────────────────────────
   const startDlg = useCallback((idx) => {
@@ -151,6 +171,10 @@ export default function NarrationScreen({ navigation, route }) {
   }, [stage, pulseBattleBtn]);
 
   useEffect(() => {
+    if (invalidParams) {
+      navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Home');
+      return;
+    }
     // If this is a retry, skip narration and go straight to battle
     if (autoSkip) {
       navigation.replace('Battle', {
@@ -163,6 +187,9 @@ export default function NarrationScreen({ navigation, route }) {
     }
     startDlg(0);
   }, []);
+
+  // Invalid entry — render nothing; the mount effect navigates away.
+  if (invalidParams) return null;
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const skipTyping = () => {
@@ -196,7 +223,7 @@ export default function NarrationScreen({ navigation, route }) {
   // ── Derived ───────────────────────────────────────────────────────────────
   const isLast    = dlgIdx === stage.dialogues.length - 1;
   const partLabel = isBoss ? '☠  BOSS FIGHT' : stage.part === 2 ? '⚔  ELITE FIGHT' : '⚡  BATTLE';
-  const partColor = isBoss ? C.DANGER : chColor;
+  const partColor = isBoss ? C.DANGER : chFg;
 
   const particles = Array.from({ length: N_PARTS }, (_, i) => ({
     delay:    i * 360,
@@ -304,8 +331,8 @@ export default function NarrationScreen({ navigation, route }) {
             <Animated.View style={{ transform: [{ translateY: dlgSlide }], opacity: dlgFade }}>
               {/* Speaker + counter */}
               <Animated.View style={[S.spkRow, { transform: [{ scale: spkScale }] }]}>
-                <View style={[S.spkBadge, { borderColor: chColor, backgroundColor: chColor + '22' }]}>
-                  <Text style={[S.spkTxt, { color: chColor }]}>
+                <View style={[S.spkBadge, { borderColor: chFg, backgroundColor: chColor + '22' }]}>
+                  <Text style={[S.spkTxt, { color: chFg }]}>
                     {stage.dialogues[dlgIdx].speaker.toUpperCase()}
                   </Text>
                 </View>
@@ -314,7 +341,7 @@ export default function NarrationScreen({ navigation, route }) {
 
               {/* Typewriter text + cursor */}
               <Text style={S.dlgTxt}>
-                {shown}{typing && showCursor ? <Text style={{ color: chColor }}>▌</Text> : ''}
+                {shown}{typing && showCursor ? <Text style={{ color: chFg }}>▌</Text> : ''}
               </Text>
 
               {typing && <Text style={S.tapHint}>tap anywhere to skip</Text>}
@@ -325,7 +352,7 @@ export default function NarrationScreen({ navigation, route }) {
           <View style={S.dotsRow}>
             {stage.dialogues.map((_, i) => (
               <View key={i} style={[S.dot, {
-                backgroundColor: i === dlgIdx ? chColor : chColor + '2E',
+                backgroundColor: i === dlgIdx ? chFg : chFg + '2E',
                 width: i === dlgIdx ? 18 : 6,
               }]} />
             ))}
@@ -343,11 +370,11 @@ export default function NarrationScreen({ navigation, route }) {
             )}
 
             {!isLast ? (
-              <TouchableOpacity style={[S.nextBtn, { borderColor: chColor + 'AA' }]} onPress={handleNext}>
-                <Text style={[S.nextTxt, { color: chColor }]}>
+              <TouchableOpacity style={[S.nextBtn, { borderColor: chFg + 'AA' }]} onPress={handleNext}>
+                <Text style={[S.nextTxt, { color: chFg }]}>
                   {typing ? 'Skip' : 'Next'}
                 </Text>
-                <Ionicons name={typing ? 'play-skip-forward' : 'chevron-forward'} size={17} color={chColor} />
+                <Ionicons name={typing ? 'play-skip-forward' : 'chevron-forward'} size={17} color={chFg} />
               </TouchableOpacity>
             ) : (
               <Animated.View style={{ transform: [{ scale: btnPulse }] }}>

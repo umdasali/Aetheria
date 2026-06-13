@@ -20,6 +20,8 @@ const ELEMENT_ICONS = {
   Void:     '🌀',
   Holy:     '☀️',
   Physical: '💪',
+  Sand:     '🏜️',
+  Moon:     '🌙',
 };
 
 const CARD_W = 220;

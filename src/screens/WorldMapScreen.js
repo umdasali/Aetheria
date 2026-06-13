@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  View, Text, Image, TouchableOpacity, ScrollView,
+  View, Text, Image, TouchableOpacity, ScrollView, FlatList,
   Animated, Dimensions, StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,17 +12,30 @@ import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
 
 const { width: W, height: H } = Dimensions.get('window');
-const WORLD_MAP = require('../../assets/worldMap/world-map.png');
+const WORLD_MAP = require('../../assets/worldMap/world-map.webp');
 
-// ── Hero grid sizing (right column, 5 columns) ───────────────────────────────
+// ── Hero grid sizing (right column, 2 columns) ───────────────────────────────
 const LEFT_COL_W  = Math.floor(W * 0.33);
 const OUTER_PAD   = 14;
 const COL_GAP     = 12;
-const RIGHT_COL_W = W - LEFT_COL_W - 1 - OUTER_PAD * 2 - COL_GAP;
-const GRID_COLS   = 5;
-const GRID_GAP    = 8;
-const CARD_W      = Math.floor((RIGHT_COL_W - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS);
-const CARD_H      = Math.floor(CARD_W * 1.30);
+// fsBody (row, gap:COL_GAP) holds THREE children — left ScrollView, the 1px
+// fsSep separator, and fsRight — so there are TWO inter-child gaps to subtract,
+// plus the 1px separator. Undercounting these made the grid overflow.
+const RIGHT_COL_W = W - LEFT_COL_W - 1 - OUTER_PAD * 2 - COL_GAP * 2;
+const GRID_COLS   = 2;
+const GRID_GAP    = 14;
+// Hero art is PORTRAIT — keep the card at the same portrait aspect the rest of
+// the app uses (≈1.42, like the Collection cards) so `cover` fills it without
+// cropping the sides. Size is driven by height so a full portrait card always
+// fits the grid area (≤ ~50% of screen height); the row centers and the list
+// scrolls for additional rows.
+const CARD_ASPECT = 1.45;
+const GRID_MAX_H  = Math.floor(H * 0.50);
+const CARD_W      = Math.min(
+  Math.floor((RIGHT_COL_W - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS),  // fill 2-up
+  Math.floor(GRID_MAX_H / CARD_ASPECT),                                // but keep height bounded
+);
+const CARD_H      = Math.floor(CARD_W * CARD_ASPECT);
 
 // ── Faction lore, region metadata & sovereign ────────────────────────────────
 const FACTION_META = {
@@ -91,34 +104,58 @@ const FACTION_META = {
       roleLore: 'No coronation. No law. She rules because nothing that challenged her survived the attempt. In Voidmark, that is the only qualification that counts.',
     },
   },
+  KHEMARA: {
+    climate: 'Endless Dunes & Silver Nights',
+    element: '🏜️ Sand  🌙 Moon',
+    specialties: ['Lunar Judgment', 'Dynastic Rule', 'Sand & Dust', 'Moonlit Magic'],
+    lore: 'A vast desert dominion of obelisks, sunken tombs, and dunes that swallow whole armies — a realm of scorching days and cold silver nights where the moon is worshipped and the dead are honored as gods. Khemara does not appear on any map a traveler can buy; its borders open only to those who already know the way. At its heart sits Nefara Khonsu, goddess and pharaoh in one, crowned by the full desert moon during a ceremony no outsider has ever witnessed. Her court measures time in dynasties, not years, and her judgment falls as silently as moonlight on sand. Those who seek Khemara do not find it. It decides whether to find them.',
+    ruler: {
+      heroId: 'hero_054',
+      name: 'Nefara Khonsu',
+      title: 'The Moon-Queen of Khemara',
+      status: 'RULER',
+      roleLore: 'Goddess and pharaoh of the sand realm, crowned by the full desert moon itself. She cannot be summoned or won — she descends only for those who seek her court directly, and weighs all who stand before her in the dark.',
+    },
+  },
 };
 
 // ── Touch zones — derived from FACTION_MARKERS centers ───────────────────────
-// Horizontal boundaries sit at midpoints between adjacent marker X values.
-// Vertical coverage reflects each faction's position on the map.
-//   GLACIARA  x=12%  → 0  –25%   full height
-//   SUNSPIRE  x=38%  → 25%–48%   upper portion (y=19%)
-//   VERDANIA  x=57%  → 48%–65%   mid-to-full height
-//   EMBERVEIL x=73%  → 65%–86%   lower portion  (y=68%)
-//   VOIDMARK  x=99%  → 86%–100%  full height
+// Positions match the six painted regions on world-map.webp:
+//   GLACIARA  top-left      (ice / aurora)
+//   EMBERVEIL bottom-left   (volcano / lava)
+//   VERDANIA  center        (great tree / forest)
+//   SUNSPIRE  top-center-R  (white floating city)
+//   KHEMARA   top-right     (pyramids / desert)
+//   VOIDMARK  bottom-right  (purple void)
+// Tap zones tile the whole map with no gaps or overlaps — each rectangle
+// contains its faction's marker pin (see FACTION_MARKERS). Three vertical
+// bands (top 0–30% / mid 30–53% / bottom 53–100%), each split left↔right at
+// the midpoint between the two markers that share the band.
 const FACTION_ZONES = {
-  GLACIARA:  { left: W * 0.00, top: H * 0.03, width: W * 0.25, height: H * 0.94 },
-  SUNSPIRE:  { left: W * 0.25, top: H * 0.03, width: W * 0.23, height: H * 0.46 },
-  VERDANIA:  { left: W * 0.47, top: H * 0.15, width: W * 0.18, height: H * 0.82 },
-  EMBERVEIL: { left: W * 0.65, top: H * 0.38, width: W * 0.21, height: H * 0.59 },
-  VOIDMARK:  { left: W * 0.84, top: H * 0.03, width: W * 0.16, height: H * 0.94 },
+  // Top band — GLACIARA (left) | SUNSPIRE (right)
+  GLACIARA:  { left: W * 0.00, top: H * 0.00, width: W * 0.62, height: H * 0.30 },
+  SUNSPIRE:  { left: W * 0.62, top: H * 0.00, width: W * 0.38, height: H * 0.30 },
+  // Mid band — VERDANIA (left) | VOIDMARK (right)
+  VERDANIA:  { left: W * 0.00, top: H * 0.30, width: W * 0.78, height: H * 0.23 },
+  VOIDMARK:  { left: W * 0.78, top: H * 0.30, width: W * 0.22, height: H * 0.23 },
+  // Bottom band — EMBERVEIL (left) | KHEMARA (right)
+  EMBERVEIL: { left: W * 0.00, top: H * 0.53, width: W * 0.50, height: H * 0.47 },
+  KHEMARA:   { left: W * 0.50, top: H * 0.53, width: W * 0.50, height: H * 0.47 },
 };
 
 // ── Marker pin centers — subtract half marker size (24) to center ─────────────
 const FACTION_MARKERS = {
-  GLACIARA:  { left: Math.floor(W * 0.12) - 24, top: Math.floor(H * 0.46) - 24 },
-  SUNSPIRE:  { left: Math.floor(W * 0.38) - 24, top: Math.floor(H * 0.19) - 24 },
-  VERDANIA:  { left: Math.floor(W * 0.57) - 24, top: Math.floor(H * 0.46) - 24 },
-  EMBERVEIL: { left: Math.floor(W * 0.73) - 24, top: Math.floor(H * 0.68) - 24 },
-  VOIDMARK:  { left: Math.floor(W * 0.99) - 24, top: Math.floor(H * 0.45) - 24 },
+  GLACIARA:  { left: Math.floor(W * 0.45) - 24, top: Math.floor(H * 0.22) - 24 },
+  EMBERVEIL: { left: Math.floor(W * 0.16) - 24, top: Math.floor(H * 0.66) - 24 },
+  VERDANIA:  { left: Math.floor(W * 0.60) - 24, top: Math.floor(H * 0.40) - 24 },
+  SUNSPIRE:  { left: Math.floor(W * 0.80) - 24, top: Math.floor(H * 0.15) - 24 },
+  VOIDMARK:   { left: Math.floor(W * 0.95) - 24, top: Math.floor(H * 0.40) - 24 },
+  KHEMARA:  { left: Math.floor(W * 0.82) - 24, top: Math.floor(H * 0.66) - 24 },
 };
 
-const FACTION_KEYS = ['GLACIARA', 'SUNSPIRE', 'VERDANIA', 'EMBERVEIL', 'VOIDMARK'];
+// Order = overlap priority (later wins). SUNSPIRE last so its top-center pin
+// takes precedence over VERDANIA where their zones meet.
+const FACTION_KEYS = ['GLACIARA', 'EMBERVEIL', 'KHEMARA', 'VOIDMARK', 'VERDANIA', 'SUNSPIRE'];
 
 // ── Status badge color per role ───────────────────────────────────────────────
 const STATUS_COLORS = {
@@ -128,6 +165,54 @@ const STATUS_COLORS = {
 };
 
 // ── Full-screen faction detail ────────────────────────────────────────────────
+// ── Faction hero grid item — memoized so panel re-renders don't repaint the grid ──
+const FactionHeroCard = React.memo(function FactionHeroCard({ hero, owned, color, onHeroPress }) {
+  const r = RANK[hero.rank];
+  return (
+    <TouchableOpacity
+      style={S.heroCard}
+      onPress={() => onHeroPress(hero)}
+      activeOpacity={0.8}
+    >
+      {/* Card portrait */}
+      <View style={[S.heroCardFrame, { borderColor: owned ? color + '99' : C.BORDER }]}>
+        <Image source={hero.image} style={S.heroCardImg} />
+
+        {/* Lock overlay for unowned */}
+        {!owned && (
+          <View style={S.lockOverlay}>
+            <View style={S.lockIcon}>
+              <Ionicons name="lock-closed" size={14} color={C.TEXT_MUTED} />
+            </View>
+          </View>
+        )}
+
+        {/* Rank badge */}
+        <View style={[S.rankBadge, { backgroundColor: r.bg, shadowColor: r.glow }]}>
+          <Text style={[S.rankText, { color: r.text }]}>{hero.rank}</Text>
+        </View>
+
+        {/* Owned green dot */}
+        {owned && <View style={[S.ownedDot, { backgroundColor: C.SUCCESS }]} />}
+
+        {/* Bottom name gradient */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.75)']}
+          style={S.heroCardGrad}
+        />
+        <Text style={S.heroCardNameOverlay} numberOfLines={1}>
+          {hero.name.split(' ')[0]}
+        </Text>
+      </View>
+
+      {/* Class label below card */}
+      <Text style={[S.heroCardClass, { color: owned ? C.TEXT_SOFT : C.TEXT_DISABLED }]} numberOfLines={1}>
+        {hero.class}
+      </Text>
+    </TouchableOpacity>
+  );
+});
+
 function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPress }) {
   const meta        = FACTION_META[faction];
   const factionData = FACTIONS[faction];
@@ -256,59 +341,26 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
             <Text style={S.championsSubtitle}>{heroes.length} heroes in {faction}</Text>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
+          <FlatList
+            data={heroes}
+            keyExtractor={h => h.id}
+            numColumns={GRID_COLS}
+            renderItem={({ item }) => (
+              <FactionHeroCard
+                hero={item}
+                owned={ownedHeroes.includes(item.id)}
+                color={color}
+                onHeroPress={onHeroPress}
+              />
+            )}
+            style={S.heroList}
+            columnWrapperStyle={S.heroGridRow}
             contentContainerStyle={S.heroGrid}
-          >
-            {heroes.map((hero) => {
-              const owned = ownedHeroes.includes(hero.id);
-              const r = RANK[hero.rank];
-              return (
-                <TouchableOpacity
-                  key={hero.id}
-                  style={S.heroCard}
-                  onPress={() => onHeroPress(hero)}
-                  activeOpacity={0.8}
-                >
-                  {/* Card portrait */}
-                  <View style={[S.heroCardFrame, { borderColor: owned ? color + '99' : C.BORDER }]}>
-                    <Image source={hero.image} style={S.heroCardImg} />
-
-                    {/* Lock overlay for unowned */}
-                    {!owned && (
-                      <View style={S.lockOverlay}>
-                        <View style={S.lockIcon}>
-                          <Ionicons name="lock-closed" size={14} color={C.TEXT_MUTED} />
-                        </View>
-                      </View>
-                    )}
-
-                    {/* Rank badge */}
-                    <View style={[S.rankBadge, { backgroundColor: r.bg, shadowColor: r.glow }]}>
-                      <Text style={[S.rankText, { color: r.text }]}>{hero.rank}</Text>
-                    </View>
-
-                    {/* Owned green dot */}
-                    {owned && <View style={[S.ownedDot, { backgroundColor: C.SUCCESS }]} />}
-
-                    {/* Bottom name gradient */}
-                    <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.75)']}
-                      style={S.heroCardGrad}
-                    />
-                    <Text style={S.heroCardNameOverlay} numberOfLines={1}>
-                      {hero.name.split(' ')[0]}
-                    </Text>
-                  </View>
-
-                  {/* Class label below card */}
-                  <Text style={[S.heroCardClass, { color: owned ? C.TEXT_SOFT : C.TEXT_DISABLED }]} numberOfLines={1}>
-                    {hero.class}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+            showsVerticalScrollIndicator={false}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={4}
+          />
         </View>
 
       </View>
@@ -318,7 +370,7 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
 
 // ── World Map Screen ──────────────────────────────────────────────────────────
 export default function WorldMapScreen({ navigation }) {
-  const { ownedHeroes } = useGameStore();
+  const ownedHeroes = useGameStore(s => s.ownedHeroes);
   const [selectedFaction, setSelectedFaction] = useState(null);
 
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -331,12 +383,14 @@ export default function WorldMapScreen({ navigation }) {
 
   // Continuous breathing glow on all marker rings
   useEffect(() => {
-    Animated.loop(
+    const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(glowPulse, { toValue: 1, duration: 1500, useNativeDriver: true }),
         Animated.timing(glowPulse, { toValue: 0, duration: 1500, useNativeDriver: true }),
       ])
-    ).start();
+    );
+    loop.start();
+    return () => loop.stop();
   }, []);
 
   const openPanel = useCallback((faction) => {
@@ -770,12 +824,17 @@ const S = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Hero grid (flex-wrap 2D layout)
+  // Hero grid (virtualized FlatList, 2 columns)
+  heroList: {
+    flex: 1,           // fill remaining column height so tall rosters scroll, not overflow
+  },
   heroGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: GRID_GAP,
     paddingBottom: 8,
+  },
+  heroGridRow: {
+    gap: GRID_GAP,
+    justifyContent: 'center',
   },
   heroCard: {
     width: CARD_W,

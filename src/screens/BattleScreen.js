@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Animated, Image, Modal, Alert, Dimensions,
+  Animated, Image, Modal, Alert, Dimensions, BackHandler,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,8 +10,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
 import { HEROES, FACTIONS } from '../data/heroes';
+import HeroCard from '../components/HeroCard';
 import { ENEMY_GROUPS, ENEMY_IMAGES } from '../data/enemies';
+import { stageGoldReward } from '../data/story';
 import { ASCENSION_STAT_MULT } from '../data/ascensionItems';
+import { isBossFloor } from '../data/towerData';
 import { C } from '../theme/colors';
 import {
   calculateDamage, applyTrumpCard, applyHealSkill,
@@ -54,6 +57,8 @@ const mkUnit = (raw) => ({
   lastDamage:    0,
   lastCrit:      false,
   damageKey:     0,
+  lastHeal:      0,
+  healKey:       0,
   statusEffects: [],
   enraged:       false,
 });
@@ -65,23 +70,49 @@ const STATUS_DISPLAY = {
   chill:   { label: 'CHI', color: C.CYAN    },
   shatter: { label: 'DEF-', color: C.DANGER  },
   weaken:  { label: 'ATK-', color: C.PRIMARY },
+  stun:    { label: '⚡STN', color: C.GOLD   },
 };
 
 const mkAnims = () =>
   Array.from({ length: 3 }, () => ({
-    shake: new Animated.Value(0),
-    flash: new Animated.Value(0),
-    scale: new Animated.Value(1),
+    shake:  new Animated.Value(0),
+    flash:  new Animated.Value(0),
+    scale:  new Animated.Value(1),
+    lungeX: new Animated.Value(0),
   }));
+
+// Boss enrage: first time a boss drops to/below 50% HP its ATK surges.
+// Pure helper so both player actions AND DOT ticks can trigger it.
+const applyEnrage = (teamArr) => {
+  let msg = null;
+  const team = teamArr.map((e) => {
+    if (e.tier === 'boss' && !e.enraged && e.currentHp > 0 && (e.currentHp / e.maxHp) <= 0.50) {
+      msg = `⚡ ${e.name} is ENRAGED! Attack power surges!`;
+      return { ...e, atk: Math.floor(e.atk * 1.30), enraged: true };
+    }
+    return e;
+  });
+  return { team, msg };
+};
 
 // ─── BattleScreen ─────────────────────────────────────────────────────────────
 
 export default function BattleScreen({ navigation, route }) {
-  const {
-    team, completeChapter, getHeroData, hasSeenBattleTutorial, seenBattleTutorial,
-    completedChapters, practiceBonusClaimed, claimPracticeBonus, addGems, addGold,
-    trackQuestProgress, completeTowerFloor,
-  } = useGameStore();
+  // Per-property selectors — avoids whole-store re-renders during battle animations
+  const team                      = useGameStore(s => s.team);
+  const completeChapter           = useGameStore(s => s.completeChapter);
+  const getHeroData               = useGameStore(s => s.getHeroData);
+  const hasSeenBattleTutorial     = useGameStore(s => s.hasSeenBattleTutorial);
+  const seenBattleTutorial        = useGameStore(s => s.seenBattleTutorial);
+  const completedChapters         = useGameStore(s => s.completedChapters);
+  const practiceBonusClaimed      = useGameStore(s => s.practiceBonusClaimed);
+  const claimPracticeBonus        = useGameStore(s => s.claimPracticeBonus);
+  const addGems                   = useGameStore(s => s.addGems);
+  const addGold                   = useGameStore(s => s.addGold);
+  const trackQuestProgress        = useGameStore(s => s.trackQuestProgress);
+  const completeTowerFloor        = useGameStore(s => s.completeTowerFloor);
+  const trackAchievementProgress  = useGameStore(s => s.trackAchievementProgress);
+  const setMaxAchievementProgress = useGameStore(s => s.setMaxAchievementProgress);
   const [showTutorial, setShowTutorial] = useState(!hasSeenBattleTutorial);
   const [hydrated, setHydrated] = useState(() => useGameStore.persist.hasHydrated());
 
@@ -136,12 +167,32 @@ export default function BattleScreen({ navigation, route }) {
   const [battleResult,   setBattleResult]   = useState(null);
   const [isAnimating,    setIsAnimating]    = useState(false);
   const [selectedEnemy,  setSelectedEnemy]  = useState(0);
+  // Trump Card cinematic cut-in — holds the casting hero while the overlay plays
+  const [trumpCutIn,     setTrumpCutIn]     = useState(null);
+  // Enemy skill cut-in — bosses/mini-bosses get a menacing slam when they unleash a skill
+  const [enemyCutIn,     setEnemyCutIn]     = useState(null);
 
   const aiRunning       = useRef(false);
   const resultTimerRef  = useRef(null);
+  // Round-robin pointer so every living enemy gets turns (boss included)
+  const enemyActorRef   = useRef(-1);
   const playerAnims = useRef(mkAnims()).current;
   const enemyAnims  = useRef(mkAnims()).current;
-  const resultAnim  = useRef(new Animated.Value(0)).current;
+  // Whole-arena impact shake + full-screen flash (cosmetic overlays only —
+  // these never gate the visibility of cards, so a missed frame is harmless)
+  const arenaShakeX = useRef(new Animated.Value(0)).current;
+  const screenFlash = useRef(new Animated.Value(0)).current;
+
+  // If this screen mounted before AsyncStorage hydration finished, the teams
+  // were built from the default (pre-hydration) store — rebuild them once.
+  const wasUnhydrated = useRef(!useGameStore.persist.hasHydrated());
+  useEffect(() => {
+    if (hydrated && wasUnhydrated.current) {
+      wasUnhydrated.current = false;
+      setPlayerTeam(buildPlayers());
+      setEnemyTeam(buildEnemies());
+    }
+  }, [hydrated, buildPlayers, buildEnemies]);
 
   // Battle BGM — start when screen gains focus, stop the moment it loses focus
   useFocusEffect(useCallback(() => {
@@ -151,6 +202,28 @@ export default function BattleScreen({ navigation, route }) {
 
   // Cancel pending victory navigation if the screen unmounts (e.g. quit during the 750ms delay)
   useEffect(() => () => { clearTimeout(resultTimerRef.current); }, []);
+
+  // Shared quit confirmation — used by both the Quit button and hardware back.
+  const confirmQuit = useCallback(() => {
+    Alert.alert(
+      'Quit Battle?',
+      'Your progress in this battle will be lost.',
+      [
+        { text: 'Stay', style: 'cancel' },
+        { text: 'Quit', style: 'destructive', onPress: () => navigation.goBack() },
+      ]
+    );
+  }, [navigation]);
+
+  // Intercept Android hardware back so it can't silently abandon the battle —
+  // route it through the same Quit confirmation instead of popping the screen.
+  useFocusEffect(useCallback(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      confirmQuit();
+      return true; // consume the event
+    });
+    return () => sub.remove();
+  }, [confirmQuit]));
 
   // ── Animations ────────────────────────────────────────────────────────────
 
@@ -171,14 +244,42 @@ export default function BattleScreen({ navigation, route }) {
     ]).start();
   }, []);
 
-  const triggerAttack = useCallback((anims, idx) => {
+  const triggerAttack = useCallback((anims, idx, direction = 0) => {
     const a = anims[Math.min(idx, 2)];
     if (!a) return;
-    Animated.sequence([
-      Animated.timing(a.scale, { toValue: 1.09, duration: 100, useNativeDriver: true }),
-      Animated.timing(a.scale, { toValue: 1.0,  duration: 150, useNativeDriver: true }),
-    ]).start();
+    const animations = [
+      Animated.sequence([
+        Animated.timing(a.scale, { toValue: 1.09, duration: 100, useNativeDriver: true }),
+        Animated.timing(a.scale, { toValue: 1.0,  duration: 150, useNativeDriver: true }),
+      ]),
+    ];
+    if (direction !== 0 && a.lungeX) {
+      animations.push(Animated.sequence([
+        Animated.timing(a.lungeX, { toValue: direction * 14, duration: 90,  useNativeDriver: true }),
+        Animated.timing(a.lungeX, { toValue: 0,              duration: 140, useNativeDriver: true }),
+      ]));
+    }
+    Animated.parallel(animations).start();
   }, []);
+
+  // Whole-arena shake — symmetric translateX around 0 (pure transform, native-safe).
+  const triggerShake = useCallback((mag = 8) => {
+    arenaShakeX.setValue(0);
+    Animated.sequence([
+      Animated.timing(arenaShakeX, { toValue: -mag,        duration: 38, useNativeDriver: true }),
+      Animated.timing(arenaShakeX, { toValue: mag,         duration: 38, useNativeDriver: true }),
+      Animated.timing(arenaShakeX, { toValue: -mag * 0.6,  duration: 38, useNativeDriver: true }),
+      Animated.timing(arenaShakeX, { toValue: mag * 0.45,  duration: 38, useNativeDriver: true }),
+      Animated.timing(arenaShakeX, { toValue: 0,           duration: 38, useNativeDriver: true }),
+    ]).start();
+  }, [arenaShakeX]);
+
+  // Full-screen white flash — jump to peak via setValue, then fade to 0.
+  // Fade-OUT direction is the proven-safe pattern on the New Architecture.
+  const triggerScreenFlash = useCallback((peak = 0.4) => {
+    screenFlash.setValue(peak);
+    Animated.timing(screenFlash, { toValue: 0, duration: 240, useNativeDriver: true }).start();
+  }, [screenFlash]);
 
   const showResult = useCallback((r, meta = {}) => {
     setBattleResult(r);
@@ -203,6 +304,9 @@ export default function BattleScreen({ navigation, route }) {
       if (towerMode) {
         const { ascensionDrop } = completeTowerFloor(towerFloor, towerRewards);
         trackQuestProgress('win_battles');
+        trackAchievementProgress('battlesWon', 1);
+        setMaxAchievementProgress('towerHighestFloor', towerFloor);
+        if (isBossFloor(towerFloor)) trackAchievementProgress('towerBossesDefeated', 1);
         showResult('win', { wasReplay: false, xpGained: 0, towerMode: true, towerFloor, towerRewards, towerAscensionDrop: ascensionDrop });
         return true;
       }
@@ -222,20 +326,36 @@ export default function BattleScreen({ navigation, route }) {
       if (practiceGotBonus)        xpGained += 200;
 
       // Commit rewards BEFORE navigating so VictoryScreen reads updated state
-      if (chapterId && !wasReplay) completeChapter(chapterId, chapterRewards.gems, chapterRewards.heroId);
+      if (chapterId && !wasReplay) {
+        completeChapter(chapterId, chapterRewards.gems, chapterRewards.heroId);
+      } else if (chapterId && wasReplay) {
+        // Replays earn gold only — VictoryScreen and the stage card both
+        // advertise this ("REPLAY · GOLD ONLY"), so actually grant it.
+        addGold(stageGoldReward(chapterId % 10));
+      }
 
       // Quest tracking
       trackQuestProgress('win_battles');
+      // Replays count too — the daily quest is "clear a stage", and players who
+      // finished all 75 stages have no first-clears left to complete it with.
       if (fromStory) trackQuestProgress('clear_stage');
+      trackAchievementProgress('battlesWon', 1);
+      // stagesCleared is tracked inside completeChapter; don't double-count here
 
       showResult('win', { wasReplay, practiceGotBonus, xpGained });
       return true;
     }
-    if (allDefeated(players)) { showResult('lose', { wasReplay: false, xpGained: 0 }); return true; }
+    if (allDefeated(players)) {
+      // Pass mode flags so VictoryScreen routes Retry / Back correctly
+      // (a tower defeat must not dump the player into Story Mode).
+      showResult('lose', { wasReplay: false, xpGained: 0, towerMode, towerFloor, towerRewards });
+      return true;
+    }
     return false;
   }, [showResult, chapterId, chapterRewards, completeChapter, completedChapters,
       practiceMode, practiceBonusClaimed, claimPracticeBonus, addGems, addGold,
-      towerMode, towerFloor, towerRewards, completeTowerFloor, trackQuestProgress, fromStory]);
+      towerMode, towerFloor, towerRewards, completeTowerFloor, trackQuestProgress,
+      trackAchievementProgress, setMaxAchievementProgress, fromStory]);
 
   const firstLiving = (arr) => {
     for (let i = 0; i < arr.length; i++) if (arr[i].currentHp > 0) return i;
@@ -259,32 +379,58 @@ export default function BattleScreen({ navigation, route }) {
       // ── Tick enemy status effects (burn/poison DOTs, buff expiry) ──────────
       const dotMsgs = [];
       let effectsProcessed = false;
-      let curEnemyTeam = enemyTeam.map((e) => {
+      let curEnemyTeam = enemyTeam.map((e, i) => {
         if (e.currentHp <= 0 || !(e.statusEffects || []).length) return e;
         effectsProcessed = true;
-        const { unit, messages } = processStatusEffects(e);
+        const { unit, dotDamage, messages } = processStatusEffects(e);
         dotMsgs.push(...messages);
+        // DOT damage gets the same hit feedback as an attack: floating
+        // damage number (via damageKey) + hit flash — it used to be silent.
+        if (dotDamage > 0) {
+          setTimeout(() => triggerHit(enemyAnims, i), 60);
+          return { ...unit, lastDamage: dotDamage, lastCrit: false, damageKey: (e.damageKey || 0) + 1 };
+        }
         return unit;
       });
       if (effectsProcessed) {
+        // A DOT tick can push a boss below 50% — enrage must trigger here too,
+        // not only on player actions.
+        const enr = applyEnrage(curEnemyTeam);
+        curEnemyTeam = enr.team;
+        if (enr.msg) dotMsgs.unshift(enr.msg);
         setEnemyTeam(curEnemyTeam);
         if (dotMsgs.length > 0) setStatusMsg(dotMsgs[0]);
-        // Tick player regen passives on this path to match the other two exit paths
+        // Apply player regen so checkEnd sees the post-regen state (DOT could finish
+        // an already-weakened enemy, regen could keep a player alive at the same tick).
         const regenPlayers = playerTeam.map((p) => {
           if (p.currentHp <= 0) return p;
           return processStatusEffects(p).unit;
         });
-        setPlayerTeam(regenPlayers);
         if (checkEnd(regenPlayers, curEnemyTeam)) {
+          // Game over from DOT — commit regen state and exit
+          setPlayerTeam(regenPlayers);
           aiRunning.current = false;
           setIsAnimating(false);
           return;
         }
         setCurrentTurnIdx(nextPlayerIdx(regenPlayers, currentTurnIdx));
+        // Game continues: don't setPlayerTeam here — the AI action block below
+        // rebuilds np from playerTeam and applies regen itself before setting state.
       }
 
-      const actorIdx = curEnemyTeam.findIndex((e) => e.currentHp > 0);
-      const actor    = actorIdx >= 0 ? curEnemyTeam[actorIdx] : null;
+      // ── Round-robin actor selection ──────────────────────────────────────
+      // Rotate through living enemies so every enemy gets turns. Previously
+      // only the FIRST living enemy ever acted, which meant a boss listed
+      // last never attacked until its mobs were dead — and stun counters on
+      // non-acting enemies froze forever.
+      const len = curEnemyTeam.length;
+      let actorIdx = -1;
+      for (let k = 1; k <= len; k++) {
+        const idx = (enemyActorRef.current + k) % len;
+        if (curEnemyTeam[idx]?.currentHp > 0) { actorIdx = idx; break; }
+      }
+      const actor = actorIdx >= 0 ? curEnemyTeam[actorIdx] : null;
+      if (actorIdx >= 0) enemyActorRef.current = actorIdx;
 
       if (!actor) {
         aiRunning.current = false;
@@ -357,13 +503,21 @@ export default function BattleScreen({ navigation, route }) {
           lastDmg = damage;
           msg = `${actor.name} attacks${isCrit ? ' — CRITICAL!' : ''}`;
           setTimeout(() => triggerHit(playerAnims, targetIdx), 80);
-          triggerAttack(enemyAnims, actorIdx);
+          triggerAttack(enemyAnims, actorIdx, 1);
+          if (isCrit) { triggerScreenFlash(0.28); triggerShake(6); }
         }
         energyAfter = Math.min(MAX_ENERGY, actorEnergy + 20);
       } else if (aiAction.action === 'skill') {
         const skill     = actor.skills[aiAction.skillIdx];
         const skillCost = ENEMY_SKILL_COSTS[aiAction.skillIdx] ?? ENEMY_SKILL_COSTS[0];
         if (skill) {
+          // Signature moment for elites: a boss/mini-boss unleashing a skill gets a
+          // menacing full-screen cut-in + impact shake. Regular mobs stay quick so the
+          // pace doesn't drown in cinematics.
+          if (actor.tier === 'boss' || actor.tier === 'mini-boss') {
+            setEnemyCutIn({ ...actor, _skillName: skill.name });
+            triggerShake(10);
+          }
           const { damage, isCrit, blocked, dodged } = calculateDamage(actor, target, skill.damage);
           if (blocked) {
             np[targetIdx] = { ...np[targetIdx], shield: Math.max(0, np[targetIdx].shield - 1) };
@@ -380,7 +534,8 @@ export default function BattleScreen({ navigation, route }) {
             lastDmg = damage;
             msg = `${actor.name}: ${skill.name}${isCrit ? ' — CRIT!' : ''}`;
             setTimeout(() => triggerHit(playerAnims, targetIdx), 80);
-            triggerAttack(enemyAnims, actorIdx);
+            triggerAttack(enemyAnims, actorIdx, 1);
+            if (isCrit) { triggerScreenFlash(0.28); triggerShake(6); }
           }
           energyAfter = Math.max(0, actorEnergy - skillCost + 15);
         }
@@ -420,12 +575,15 @@ export default function BattleScreen({ navigation, route }) {
     }, AI_DELAY_MS);
 
     return () => clearTimeout(timer);
+  // Intentional stale closure: only re-trigger when the turn flips or the battle ends.
+  // Including playerTeam/enemyTeam would re-fire mid-turn as those are mutated inside this effect.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnemyTurn, battleResult]);
 
   // ── Player action ─────────────────────────────────────────────────────────
 
   const executeAction = useCallback((actionType, skillIdx = 0) => {
-    if (isEnemyTurn || isAnimating || battleResult) return;
+    if (isEnemyTurn || isAnimating || battleResult || enemyCutIn) return;
     const hero = playerTeam[currentTurnIdx];
     if (!hero || hero.currentHp <= 0) return;
 
@@ -440,7 +598,7 @@ export default function BattleScreen({ navigation, route }) {
     let msg       = '';
 
     setIsAnimating(true);
-    triggerAttack(playerAnims, currentTurnIdx);
+    triggerAttack(playerAnims, currentTurnIdx, -1);
     AudioManager.playAttackSFX();
 
     if (actionType === 'attack') {
@@ -460,12 +618,14 @@ export default function BattleScreen({ navigation, route }) {
         ne[tgtIdx] = applyOnHitDebuff(hero, ne[tgtIdx], false);
         if (EFFECT_MECHANICS[hero.effect] === 'lifedrain') {
           const drain = Math.floor(damage * 0.15);
-          np[currentTurnIdx] = { ...np[currentTurnIdx], currentHp: Math.min(np[currentTurnIdx].maxHp, np[currentTurnIdx].currentHp + drain) };
+          np[currentTurnIdx] = { ...np[currentTurnIdx], currentHp: Math.min(np[currentTurnIdx].maxHp, np[currentTurnIdx].currentHp + drain), lastHeal: drain, healKey: (np[currentTurnIdx].healKey || 0) + 1 };
         }
         msg = `${hero.name} attacks${isCrit ? ' — CRITICAL HIT!' : '!'}`;
         setTimeout(() => triggerHit(enemyAnims, tgtIdx), 100);
+        if (isCrit) { triggerScreenFlash(0.32); triggerShake(7); }
+        // Energy only on a connected hit — not on dodge or block
+        newEnergy = Math.min(MAX_ENERGY, newEnergy + 15);
       }
-      newEnergy = Math.min(MAX_ENERGY, newEnergy + 15);
 
     } else if (actionType === 'skill') {
       const skill = hero.skills[skillIdx];
@@ -481,11 +641,13 @@ export default function BattleScreen({ navigation, route }) {
       if (skill.damage > 0) {
         const isAoe = /all|enemies|every/i.test(skill.description || '');
         if (isAoe) {
+          let aoeHit = false;
           ne = ne.map((e, i) => {
             if (e.currentHp <= 0) return e;
             const { damage, isCrit, blocked, dodged } = calculateDamage(hero, e, skill.damage);
             if (blocked) return { ...e, shield: Math.max(0, e.shield - 1) };
             if (dodged) return e;
+            aoeHit = true;
             setTimeout(() => triggerHit(enemyAnims, i), 80 + i * 70);
             let updated = { ...e, currentHp: Math.max(0, e.currentHp - damage), lastDamage: damage, lastCrit: isCrit, damageKey: (e.damageKey || 0) + 1 };
             updated = applyOnHitDebuff(hero, updated, true);
@@ -494,9 +656,11 @@ export default function BattleScreen({ navigation, route }) {
           if (EFFECT_MECHANICS[hero.effect] === 'lifedrain') {
             const totalDmg = ne.reduce((sum, e) => sum + (e.lastDamage || 0), 0);
             const drain = Math.floor(totalDmg * 0.15);
-            if (drain > 0) np[currentTurnIdx] = { ...np[currentTurnIdx], currentHp: Math.min(np[currentTurnIdx].maxHp, np[currentTurnIdx].currentHp + drain) };
+            if (drain > 0) np[currentTurnIdx] = { ...np[currentTurnIdx], currentHp: Math.min(np[currentTurnIdx].maxHp, np[currentTurnIdx].currentHp + drain), lastHeal: drain, healKey: (np[currentTurnIdx].healKey || 0) + 1 };
           }
           msg = `${hero.name}: ${skill.name} — All enemies!`;
+          // Grant energy only if at least one enemy was actually hit
+          if (aoeHit) newEnergy = Math.min(MAX_ENERGY, newEnergy + 10);
         } else {
           const { damage, isCrit, blocked, dodged } = calculateDamage(hero, ne[tgtIdx], skill.damage);
           if (blocked) {
@@ -509,10 +673,13 @@ export default function BattleScreen({ navigation, route }) {
             ne[tgtIdx] = applyOnHitDebuff(hero, ne[tgtIdx], true);
             if (EFFECT_MECHANICS[hero.effect] === 'lifedrain') {
               const drain = Math.floor(damage * 0.15);
-              np[currentTurnIdx] = { ...np[currentTurnIdx], currentHp: Math.min(np[currentTurnIdx].maxHp, np[currentTurnIdx].currentHp + drain) };
+              np[currentTurnIdx] = { ...np[currentTurnIdx], currentHp: Math.min(np[currentTurnIdx].maxHp, np[currentTurnIdx].currentHp + drain), lastHeal: drain, healKey: (np[currentTurnIdx].healKey || 0) + 1 };
             }
             msg = `${hero.name}: ${skill.name}${isCrit ? ' — CRIT!' : ''}`;
             setTimeout(() => triggerHit(enemyAnims, tgtIdx), 100);
+            if (isCrit) { triggerScreenFlash(0.32); triggerShake(7); }
+            // Energy only on a connected hit
+            newEnergy = Math.min(MAX_ENERGY, newEnergy + 10);
           }
         }
       } else {
@@ -523,35 +690,54 @@ export default function BattleScreen({ navigation, route }) {
           );
           msg = `${hero.name}: ${skill.name} — Shielded!`;
         } else {
-          np  = applyHealSkill(hero, np);
+          const preHealHps = np.map(p => p.currentHp);
+          np = applyHealSkill(hero, np);
+          np = np.map((p, i) => {
+            const healAmt = p.currentHp - preHealHps[i];
+            if (healAmt > 0) return { ...p, lastHeal: healAmt, healKey: (p.healKey || 0) + 1 };
+            return p;
+          });
           msg = `${hero.name}: ${skill.name} — Healed!`;
         }
+        // Heals and shields always succeed — always grant energy
+        newEnergy = Math.min(MAX_ENERGY, newEnergy + 10);
       }
-      newEnergy = Math.min(MAX_ENERGY, newEnergy + 10);
 
     } else if (actionType === 'trump') {
       if (newEnergy < MAX_ENERGY) { setStatusMsg('Need 100 energy!'); setIsAnimating(false); return; }
       const res = applyTrumpCard(hero, np, ne);
       np = res.allies;
       ne = res.enemies;
+      // Lifedrain procs on trump damage too (Trump Cards are skills)
+      if (EFFECT_MECHANICS[hero.effect] === 'lifedrain') {
+        const totalDmg = ne.reduce((sum, e) => sum + (e.lastDamage || 0), 0);
+        const drain = Math.floor(totalDmg * 0.15);
+        if (drain > 0) np[currentTurnIdx] = {
+          ...np[currentTurnIdx],
+          currentHp: Math.min(np[currentTurnIdx].maxHp, np[currentTurnIdx].currentHp + drain),
+          lastHeal: drain, healKey: (np[currentTurnIdx].healKey || 0) + 1,
+        };
+      }
       // Fire hit animations immediately — useNativeDriver means they run on the
       // native thread, so no JS-thread stagger is needed and fewer timers = less lag.
       ne.forEach((e, i) => { if ((e.lastDamage || 0) > 0) triggerHit(enemyAnims, i); });
       msg = `${hero.name}: ${hero.trumpCard.name}!`;
       newEnergy = 0;
+      // Signature moment: full-screen cinematic cut-in + heavy impact feedback.
+      // Capture the post-fusion rank so the card shows its true rarity, not base.
+      const hd = getHeroData(hero.id);
+      const cutInRank = hero.sovereign ? 'SOVEREIGN' : (hd?.effectiveRank || hero.rank);
+      setTrumpCutIn({ ...hero, _effRank: cutInRank });
+      triggerScreenFlash(0.55);
+      triggerShake(14);
       trackQuestProgress('use_trump');
+      trackAchievementProgress('trumpCardsUsed', 1);
     }
 
-    // ── Boss enrage: first time a boss drops to/below 50% HP ──────────────────
-    const enrageMessages = [];
-    ne = ne.map((e) => {
-      if (e.tier === 'boss' && !e.enraged && e.currentHp > 0 && (e.currentHp / e.maxHp) <= 0.50) {
-        enrageMessages.push(`⚡ ${e.name} is ENRAGED! Attack power surges!`);
-        return { ...e, atk: Math.floor(e.atk * 1.30), enraged: true };
-      }
-      return e;
-    });
-    if (enrageMessages.length > 0) msg = enrageMessages[0];
+    // ── Boss enrage check (player-action path; DOT path checks separately) ────
+    const enr = applyEnrage(ne);
+    ne = enr.team;
+    if (enr.msg) msg = enr.msg;
 
     // ── Turn limit ──────────────────────────────────────────────────────────────
     const newTurnCount = turnCount + 1;
@@ -563,35 +749,24 @@ export default function BattleScreen({ navigation, route }) {
     setTurnCount(newTurnCount);
 
     setTimeout(() => {
-      if (newTurnCount >= TURN_LIMIT) {
-        setStatusMsg('⏰ Turn limit reached — enemies endure...');
-        showResult('lose', { wasReplay: false, xpGained: 0 });
-      } else if (!checkEnd(np, ne)) {
-        setIsEnemyTurn(true);
+      // Win check BEFORE turn limit — a killing blow on the 50th action must
+      // count as a victory, not a timeout loss.
+      if (!checkEnd(np, ne)) {
+        if (newTurnCount >= TURN_LIMIT) {
+          setStatusMsg('⏰ Turn limit reached — enemies endure...');
+          showResult('lose', { wasReplay: false, xpGained: 0, towerMode, towerFloor, towerRewards });
+        } else {
+          setIsEnemyTurn(true);
+        }
       }
       setIsAnimating(false);
     }, 500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEnemyTurn, isAnimating, battleResult, playerTeam, enemyTeam,
+  }, [isEnemyTurn, isAnimating, battleResult, enemyCutIn, playerTeam, enemyTeam,
       energy, currentTurnIdx, selectedEnemy, turnCount,
-      checkEnd, triggerHit, triggerAttack, trackQuestProgress, showResult]);
-
-  const retryBattle = () => {
-    setBattleResult(null);
-    resultAnim.setValue(0);
-    aiRunning.current = false;
-    setPlayerTeam(buildPlayers());
-    setEnemyTeam(buildEnemies());
-    setEnergy(0);
-    setTurnNumber(1);
-    setTurnCount(0);
-    setCurrentTurnIdx(0);
-    setIsEnemyTurn(false);
-    setIsAnimating(false);
-    setStatusMsg('Battle Start!');
-    setSelectedEnemy(0);
-    AudioManager.startBattleBGM();
-  };
+      towerMode, towerFloor, towerRewards,
+      checkEnd, triggerHit, triggerAttack, triggerShake, triggerScreenFlash,
+      trackQuestProgress, trackAchievementProgress, showResult]);
 
   // ── Rehydration guard — brief spinner while AsyncStorage loads ───────────
 
@@ -623,6 +798,9 @@ export default function BattleScreen({ navigation, route }) {
   const skill1      = activeHero?.skills?.[1];
   const trumpName   = activeHero?.trumpCard?.name || 'Ultimate';
   const ultiReady   = energy >= MAX_ENERGY;
+  // Lock all player input while a cut-in plays (the enemy cut-in fades out after
+  // the AI hands control back, so isAnimating alone would leave buttons live).
+  const inputLocked = isAnimating || !!enemyCutIn;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -636,16 +814,7 @@ export default function BattleScreen({ navigation, route }) {
         <View style={S.header}>
           <TouchableOpacity
             style={S.quitBtn}
-            onPress={() =>
-              Alert.alert(
-                'Quit Battle?',
-                'Your progress in this battle will be lost.',
-                [
-                  { text: 'Stay',  style: 'cancel' },
-                  { text: 'Quit',  style: 'destructive', onPress: () => navigation.goBack() },
-                ]
-              )
-            }
+            onPress={confirmQuit}
             activeOpacity={0.8}
           >
             <LinearGradient
@@ -663,7 +832,7 @@ export default function BattleScreen({ navigation, route }) {
             </Text>
           </View>
 
-          <Text style={S.turnLabel}>Turn {turnNumber}  ·  <Text style={S.turnCountLabel}>{turnCount}/{TURN_LIMIT}</Text></Text>
+          <Text style={S.turnLabel}>Round {turnNumber}  ·  <Text style={S.turnCountLabel}>Act {turnCount}/{TURN_LIMIT}</Text></Text>
 
           <View style={S.energyWrap}>
             <Text style={S.energyLbl}>⚡ {energy}/{MAX_ENERGY}</Text>
@@ -688,7 +857,7 @@ export default function BattleScreen({ navigation, route }) {
         </View>
 
         {/* ══ ARENA ══ */}
-        <View style={S.arena}>
+        <Animated.View style={[S.arena, { transform: [{ translateX: arenaShakeX }] }]}>
 
           {/* — Enemy side — */}
           <View style={S.teamSide}>
@@ -703,8 +872,9 @@ export default function BattleScreen({ navigation, route }) {
                   shakeAnim={enemyAnims[i]?.shake}
                   flashAnim={enemyAnims[i]?.flash}
                   scaleAnim={enemyAnims[i]?.scale}
-                  onPress={e.currentHp > 0 ? () => setSelectedEnemy(i) : undefined}
-                  accessibilityLabel={e.currentHp > 0 ? `Target ${e.name}` : undefined}
+                  lungeAnim={enemyAnims[i]?.lungeX}
+                  onPress={e.currentHp > 0 && !inputLocked ? () => setSelectedEnemy(i) : undefined}
+                  accessibilityLabel={e.currentHp > 0 && !inputLocked ? `Target ${e.name}` : undefined}
                   accessibilityRole="button"
                 />
               ))}
@@ -728,15 +898,16 @@ export default function BattleScreen({ navigation, route }) {
                   shakeAnim={playerAnims[i]?.shake}
                   flashAnim={playerAnims[i]?.flash}
                   scaleAnim={playerAnims[i]?.scale}
+                  lungeAnim={playerAnims[i]?.lungeX}
                   // tap a living non-active hero to switch who attacks this turn
-                  canSwitch={!isEnemyTurn && !isAnimating && h.currentHp > 0 && i !== currentTurnIdx}
+                  canSwitch={!isEnemyTurn && !inputLocked && h.currentHp > 0 && i !== currentTurnIdx}
                   onPress={
-                    !isEnemyTurn && !isAnimating && h.currentHp > 0 && i !== currentTurnIdx
+                    !isEnemyTurn && !inputLocked && h.currentHp > 0 && i !== currentTurnIdx
                       ? () => setCurrentTurnIdx(i)
                       : undefined
                   }
                   accessibilityLabel={
-                    !isEnemyTurn && !isAnimating && h.currentHp > 0 && i !== currentTurnIdx
+                    !isEnemyTurn && !inputLocked && h.currentHp > 0 && i !== currentTurnIdx
                       ? `Switch to ${h.name}`
                       : undefined
                   }
@@ -746,7 +917,7 @@ export default function BattleScreen({ navigation, route }) {
             </View>
           </View>
 
-        </View>
+        </Animated.View>
 
         {/* ══ BOTTOM: STATUS + ACTIONS (transparent) ══ */}
         <View style={S.bottomArea}>
@@ -774,7 +945,7 @@ export default function BattleScreen({ navigation, route }) {
                       sub={`ATK ${activeHero.atk}  ·  +15⚡`}
                       colors={[C.PRIMARY_DARK, C.PRIMARY]}
                       onPress={() => executeAction('attack')}
-                      disabled={isAnimating}
+                      disabled={inputLocked}
                       accessibilityLabel="Normal attack"
                       accessibilityRole="button"
                     />
@@ -787,7 +958,7 @@ export default function BattleScreen({ navigation, route }) {
                           ? [C.CYAN, C.PRIMARY_DARK]
                           : [C.TEXT_DISABLED, C.TEXT_MUTED]}
                         onPress={() => executeAction('skill', 0)}
-                        disabled={isAnimating || energy < skill0.cost * 20}
+                        disabled={inputLocked || energy < skill0.cost * 20}
                         dimmed={energy < skill0.cost * 20}
                         accessibilityLabel={`Use ${skill0.name}`}
                         accessibilityRole="button"
@@ -811,7 +982,7 @@ export default function BattleScreen({ navigation, route }) {
                           ? [C.SECONDARY, C.PRIMARY_DARK]
                           : [C.TEXT_DISABLED, C.TEXT_MUTED]}
                         onPress={() => executeAction('skill', 1)}
-                        disabled={isAnimating || energy < skill1.cost * 20}
+                        disabled={inputLocked || energy < skill1.cost * 20}
                         dimmed={energy < skill1.cost * 20}
                         accessibilityLabel={`Use ${skill1.name}`}
                         accessibilityRole="button"
@@ -823,7 +994,7 @@ export default function BattleScreen({ navigation, route }) {
                       sub={ultiReady ? '⚡ READY!' : `Trump  ·  100⚡`}
                       colors={ultiReady ? C.GRAD_GOLD : [C.TEXT_DISABLED, C.TEXT_MUTED]}
                       onPress={() => executeAction('trump')}
-                      disabled={isAnimating || !ultiReady}
+                      disabled={inputLocked || !ultiReady}
                       dimmed={!ultiReady}
                       glow={ultiReady}
                       accessibilityLabel="Use Trump Card"
@@ -840,7 +1011,7 @@ export default function BattleScreen({ navigation, route }) {
         <Modal visible={showTutorial} transparent animationType="fade">
           <View style={S.tutOverlay}>
             <View style={S.tutCard}>
-              <LinearGradient colors={['#0E0525', '#180840']} style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={[C.BG_BASE, C.BG_MID]} style={StyleSheet.absoluteFill} />
               <View style={[S.tutAccent, { backgroundColor: C.PRIMARY }]} />
 
               <Text style={S.tutTitle}>BATTLE BASICS</Text>
@@ -884,6 +1055,18 @@ export default function BattleScreen({ navigation, route }) {
 
       </SafeAreaView>
 
+      {/* ══ FULL-SCREEN WHITE FLASH (crit / Trump impact) ══ */}
+      <Animated.View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, S.screenFlash, { opacity: screenFlash }]}
+      />
+
+      {/* ══ TRUMP CARD CINEMATIC CUT-IN ══ */}
+      <TrumpCutIn hero={trumpCutIn} onDone={() => setTrumpCutIn(null)} />
+
+      {/* ══ ENEMY SKILL CUT-IN (bosses / mini-bosses) ══ */}
+      <EnemyCutIn enemy={enemyCutIn} onDone={() => setEnemyCutIn(null)} />
+
     </View>
   );
 }
@@ -902,6 +1085,7 @@ function _cardEqual(prev, next) {
     prev.unit.damageKey  === next.unit.damageKey   &&
     prev.unit.lastDamage === next.unit.lastDamage  &&
     prev.unit.lastCrit   === next.unit.lastCrit    &&
+    prev.unit.healKey    === next.unit.healKey     &&
     prev.unit.shield     === next.unit.shield      &&
     prev.unit.stunned    === next.unit.stunned     &&
     prev.isActive        === next.isActive         &&
@@ -912,13 +1096,63 @@ function _cardEqual(prev, next) {
   );
 }
 
-const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSelected, factionColor, shakeAnim, flashAnim, scaleAnim, onPress, canSwitch, accessibilityLabel, accessibilityRole }) {
+const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSelected, factionColor, shakeAnim, flashAnim, scaleAnim, lungeAnim, onPress, canSwitch, accessibilityLabel, accessibilityRole }) {
   // Stable fallback Animated values so we never create new objects in render
-  const _shake = useRef(new Animated.Value(0)).current;
-  const _scale = useRef(new Animated.Value(1)).current;
+  const _shake  = useRef(new Animated.Value(0)).current;
+  const _scale  = useRef(new Animated.Value(1)).current;
+  const _lungeX = useRef(new Animated.Value(0)).current;
 
   const hpRatio  = unit.maxHp > 0 ? Math.max(0, unit.currentHp / unit.maxHp) : 0;
   const defeated = unit.currentHp <= 0;
+
+  // Ghost HP trail — amber bar that lingers at the old HP level, then catches up
+  const prevHpRatioRef = useRef(hpRatio);
+  const [ghostRatio, setGhostRatio] = useState(hpRatio);
+  useEffect(() => {
+    if (hpRatio < prevHpRatioRef.current) {
+      setGhostRatio(prevHpRatioRef.current);
+      const t = setTimeout(() => setGhostRatio(hpRatio), 500);
+      prevHpRatioRef.current = hpRatio;
+      return () => clearTimeout(t);
+    }
+    prevHpRatioRef.current = hpRatio;
+    setGhostRatio(hpRatio);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hpRatio]);
+
+  // Primary status → glow color. Stun wins; otherwise the first active effect.
+  const stunned     = (unit.stunned || 0) > 0;
+  const primaryFx   = (unit.statusEffects || [])[0];
+  const statusColor = stunned
+    ? STATUS_DISPLAY.stun.color
+    : (primaryFx && STATUS_DISPLAY[primaryFx.type] ? STATUS_DISPLAY[primaryFx.type].color : null);
+
+  // Pulsing status aura — loops opacity while a status is active. This is a pure
+  // overlay; if a frame is ever dropped the card underneath stays fully visible.
+  const glowPulse = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!statusColor || defeated) { glowPulse.setValue(0); return; }
+    glowPulse.setValue(0.3);
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(glowPulse, { toValue: 0.7,  duration: 720, useNativeDriver: true }),
+      Animated.timing(glowPulse, { toValue: 0.25, duration: 720, useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, [statusColor, defeated, glowPulse]);
+
+  // Stun stars — a small cluster that spins above the head while stunned.
+  const stunSpin = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!stunned || defeated) return;
+    stunSpin.setValue(0);
+    const loop = Animated.loop(
+      Animated.timing(stunSpin, { toValue: 1, duration: 1400, useNativeDriver: true })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [stunned, defeated, stunSpin]);
+  const stunRotate = stunSpin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   const imgSrc = side === 'enemy'
     ? (unit.imageKey && ENEMY_IMAGES[unit.imageKey] ? ENEMY_IMAGES[unit.imageKey] : null)
@@ -954,6 +1188,8 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
       <View style={S.hpBarRow}>
         <Text style={S.hpLabel}>HP</Text>
         <View style={S.hpBarBg}>
+          {/* Ghost trail — lingers at old HP, then catches up */}
+          <View style={[S.hpGhostFill, { width: `${ghostRatio * 100}%` }]} />
           <LinearGradient
             colors={hpBarColors}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
@@ -971,6 +1207,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           opacity: defeated ? 0.4 : 1,
           transform: [
             { translateX: shakeAnim ?? _shake },
+            { translateX: lungeAnim ?? _lungeX },
             { scale:      scaleAnim ?? _scale },
           ],
         },
@@ -981,6 +1218,27 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           <View style={[S.cardImg, S.cardImgFb]}>
             <Text style={{ fontSize: 28 }}>{side === 'enemy' ? '👹' : '⚔️'}</Text>
           </View>
+        )}
+
+        {/* Pulsing status aura — color keyed to the active status effect */}
+        {statusColor && !defeated && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              { borderRadius: 10, borderWidth: 2.5, borderColor: statusColor, opacity: glowPulse },
+            ]}
+          />
+        )}
+
+        {/* Spinning stun stars (above the head) */}
+        {stunned && !defeated && (
+          <Animated.View
+            pointerEvents="none"
+            style={[S.stunStars, { transform: [{ rotate: stunRotate }] }]}
+          >
+            <Text style={S.stunStarText}>✦  ✦  ✦</Text>
+          </Animated.View>
         )}
 
         {/* Hit flash */}
@@ -1022,9 +1280,17 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           </View>
         )}
 
-        {/* Status effect badges */}
-        {(unit.statusEffects || []).length > 0 && !defeated && (
+        {/* Status effect badges (statusEffects array + stun counter) */}
+        {((unit.statusEffects || []).length > 0 || (unit.stunned || 0) > 0) && !defeated && (
           <View style={S.statusEffectRow}>
+            {(unit.stunned || 0) > 0 && (() => {
+              const d = STATUS_DISPLAY.stun;
+              return (
+                <View style={[S.statusEffectBadge, { backgroundColor: d.color + '33', borderColor: d.color }]}>
+                  <Text style={[S.statusEffectText, { color: d.color }]}>{d.label}</Text>
+                </View>
+              );
+            })()}
             {unit.statusEffects.map((fx, i) => {
               const d = STATUS_DISPLAY[fx.type];
               if (!d) return null;
@@ -1039,6 +1305,8 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
 
         {/* Floating damage */}
         <FloatingDamage value={unit.lastDamage} isCrit={unit.lastCrit} trigger={unit.damageKey} />
+        {/* Floating heal */}
+        <FloatingHeal value={unit.lastHeal} trigger={unit.healKey} />
 
         {/* Name strip */}
         <View style={S.cardNameStrip}>
@@ -1094,6 +1362,170 @@ const FloatingDamage = React.memo(function FloatingDamage({ value, isCrit, trigg
   );
 }, (prev, next) => prev.trigger === next.trigger);
 
+// ─── FloatingHeal ─────────────────────────────────────────────────────────────
+
+const FloatingHeal = React.memo(function FloatingHeal({ value, trigger }) {
+  const yAnim  = useRef(new Animated.Value(0)).current;
+  const opAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!trigger || !value) return;
+    yAnim.setValue(0);
+    opAnim.setValue(1);
+    Animated.parallel([
+      Animated.timing(yAnim,  { toValue: -(IMG_H * 0.55), duration: 750, useNativeDriver: true }),
+      Animated.sequence([
+        Animated.delay(350),
+        Animated.timing(opAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
+      ]),
+    ]).start();
+  }, [trigger]);
+
+  if (!value) return null;
+  return (
+    <Animated.Text style={[
+      S.floatHeal,
+      { transform: [{ translateY: yAnim }], opacity: opAnim },
+    ]}>
+      +{value}
+    </Animated.Text>
+  );
+}, (prev, next) => prev.trigger === next.trigger);
+
+// ─── TrumpCutIn ───────────────────────────────────────────────────────────────
+// Full-screen cinematic when a Trump Card fires: the hero portrait slams in from
+// the left, the name + trump banner sweeps in from the right, then the whole
+// thing fades out. Purely cosmetic overlay (pointerEvents none) layered above the
+// battle — the Trump's damage has already been applied underneath, so nothing
+// here gates game logic. Native-safe: all entrances are transforms, and the only
+// opacity move is a fade-OUT from a setValue(1) start.
+
+const TrumpCutIn = React.memo(function TrumpCutIn({ hero, onDone }) {
+  const fade   = useRef(new Animated.Value(1)).current;
+  const slideX = useRef(new Animated.Value(0)).current;  // portrait, from left
+  const nameX  = useRef(new Animated.Value(0)).current;  // banner, from right
+
+  useEffect(() => {
+    if (!hero) return;
+    fade.setValue(1);
+    slideX.setValue(-W * 0.6);
+    nameX.setValue(W * 0.55);
+    const seq = Animated.sequence([
+      Animated.parallel([
+        Animated.spring(slideX, { toValue: 0, friction: 6.5, tension: 75, useNativeDriver: true }),
+        Animated.spring(nameX,  { toValue: 0, friction: 7,   tension: 60, useNativeDriver: true }),
+      ]),
+      Animated.delay(430),
+      Animated.timing(fade, { toValue: 0, duration: 280, useNativeDriver: true }),
+    ]);
+    seq.start(({ finished }) => { if (finished) onDone?.(); });
+    return () => seq.stop();
+  // onDone is stable enough; re-run only when a new hero casts.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hero]);
+
+  if (!hero) return null;
+  const fc = FACTIONS[hero.faction]?.color || C.PRIMARY;
+  // Size the actual collectible card to fill most of the screen height.
+  const cutCardH = Math.min(SH * 0.84, 360);
+  const cutCardW = Math.round(cutCardH * (220 / 320));
+
+  return (
+    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, S.cutInRoot, { opacity: fade }]}>
+      {/* dark vignette */}
+      <View style={S.cutInBackdrop} />
+
+      {/* diagonal faction energy band behind the card */}
+      <View style={[S.cutInBand, { backgroundColor: fc + '22', borderColor: fc }]} />
+
+      {/* the real Trump Card slams in from the left */}
+      <Animated.View style={[S.cutInCardWrap, { transform: [{ translateX: slideX }] }]}>
+        <HeroCard hero={hero} effectiveRank={hero._effRank} width={cutCardW} compact />
+      </Animated.View>
+
+      {/* name + trump banner sweeps in from the right */}
+      <Animated.View style={[S.cutInTextWrap, { transform: [{ translateX: nameX }] }]}>
+        <Text style={S.cutInLabel}>TRUMP CARD</Text>
+        <View style={[S.cutInRule, { backgroundColor: fc }]} />
+        <Text style={[S.cutInHeroName, { color: fc }]} numberOfLines={1}>{hero.name}</Text>
+        <Text style={S.cutInTrumpName} numberOfLines={2}>{hero.trumpCard?.name}</Text>
+      </Animated.View>
+    </Animated.View>
+  );
+}, (prev, next) => prev.hero === next.hero);
+
+// ─── EnemyCutIn ───────────────────────────────────────────────────────────────
+// Mirror of TrumpCutIn for elite enemies: the enemy portrait slams in from the
+// RIGHT, a danger-red banner sweeps in from the LEFT, then it fades. Faster than
+// the player's Trump cut-in since enemies act often. Same native-safe rules:
+// entrances are transforms; the only opacity move is a fade-OUT from setValue(1).
+
+const EnemyCutIn = React.memo(function EnemyCutIn({ enemy, onDone }) {
+  const fade   = useRef(new Animated.Value(1)).current;
+  const slideX = useRef(new Animated.Value(0)).current;  // portrait, from right
+  const nameX  = useRef(new Animated.Value(0)).current;  // banner, from left
+
+  useEffect(() => {
+    if (!enemy) return;
+    fade.setValue(1);
+    slideX.setValue(W * 0.6);
+    nameX.setValue(-W * 0.55);
+    const seq = Animated.sequence([
+      Animated.parallel([
+        Animated.spring(slideX, { toValue: 0, friction: 6.5, tension: 85, useNativeDriver: true }),
+        Animated.spring(nameX,  { toValue: 0, friction: 7,   tension: 70, useNativeDriver: true }),
+      ]),
+      Animated.delay(300),
+      Animated.timing(fade, { toValue: 0, duration: 240, useNativeDriver: true }),
+    ]);
+    seq.start(({ finished }) => { if (finished) onDone?.(); });
+    return () => seq.stop();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enemy]);
+
+  if (!enemy) return null;
+  const isBoss = enemy.tier === 'boss';
+  const accent = isBoss ? C.DANGER : C.SECONDARY;
+  const imgSrc = enemy.imageKey && ENEMY_IMAGES[enemy.imageKey] ? ENEMY_IMAGES[enemy.imageKey] : null;
+  // Fit the portrait frame to most of the screen height.
+  const frameH = Math.min(SH * 0.80, 340);
+  const frameW = Math.round(frameH * 0.82);
+
+  return (
+    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, S.cutInRoot, { opacity: fade }]}>
+      {/* dark vignette */}
+      <View style={S.cutInBackdrop} />
+
+      {/* diagonal danger band behind the portrait */}
+      <View style={[S.enemyCutInBand, { backgroundColor: accent + '22', borderColor: accent }]} />
+
+      {/* danger banner sweeps in from the left */}
+      <Animated.View style={[S.enemyCutInTextWrap, { transform: [{ translateX: nameX }] }]}>
+        <Text style={[S.cutInLabel, { color: accent, textAlign: 'right' }]}>
+          {isBoss ? '☠  BOSS ASSAULT' : '⚠  ENEMY SKILL'}
+        </Text>
+        <View style={[S.cutInRule, S.enemyCutInRule, { backgroundColor: accent }]} />
+        <Text style={[S.cutInHeroName, S.enemyCutInName, { color: accent }]} numberOfLines={1}>{enemy.name}</Text>
+        <Text style={[S.cutInTrumpName, S.enemyCutInSkill]} numberOfLines={2}>{enemy._skillName}</Text>
+      </Animated.View>
+
+      {/* enemy portrait slams in from the right */}
+      <Animated.View style={[S.enemyCutInCardWrap, { transform: [{ translateX: slideX }] }]}>
+        <View style={[S.enemyCutInFrame, { width: frameW, height: frameH, borderColor: accent }]}>
+          {imgSrc ? (
+            <Image source={imgSrc} style={S.cutInFillImg} resizeMode="cover" />
+          ) : (
+            <View style={[S.cutInFillImg, S.cutInPortraitFb]}>
+              <Text style={{ fontSize: 56 }}>👹</Text>
+            </View>
+          )}
+          <LinearGradient colors={['transparent', C.BG_VOID]} style={S.enemyCutInFade} />
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+}, (prev, next) => prev.enemy === next.enemy);
+
 // ─── PillBtn ──────────────────────────────────────────────────────────────────
 
 const PillBtn = React.memo(function PillBtn({ label, sub, colors, onPress, disabled, dimmed, glow, accessibilityLabel, accessibilityRole }) {
@@ -1138,7 +1570,7 @@ const S = StyleSheet.create({
   },
   quitBtn:      { borderRadius: 8, overflow: 'hidden' },
   quitBtnInner: { paddingHorizontal: 14, paddingVertical: 7 },
-  quitText:     { fontSize: 12, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
+  quitText:     { fontSize: 12, fontWeight: '800', color: C.TEXT, letterSpacing: 0.5 },
 
   headerMid:   { flex: 1 },
   headerTitle: { fontSize: 13, fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
@@ -1196,8 +1628,9 @@ const S = StyleSheet.create({
     width: CARD_W, gap: 4, marginBottom: 3,
   },
   hpLabel:  { fontSize: 8, fontWeight: '800', color: C.TEXT_SOFT, letterSpacing: 0.3 },
-  hpBarBg:  { flex: 1, height: 5, backgroundColor: C.BG_BOTTOM, borderRadius: 3, overflow: 'hidden' },
-  hpBarFill:{ height: 5, borderRadius: 3 },
+  hpBarBg:     { flex: 1, height: 5, backgroundColor: C.BG_BOTTOM, borderRadius: 3, overflow: 'hidden' },
+  hpBarFill:   { height: 5, borderRadius: 3 },
+  hpGhostFill: { position: 'absolute', top: 0, left: 0, height: 5, backgroundColor: C.WARNING, borderRadius: 3, opacity: 0.45 },
 
   card: {
     width: CARD_W,
@@ -1231,23 +1664,23 @@ const S = StyleSheet.create({
     borderWidth: 1, borderColor: C.PRIMARY,
     zIndex: 10,
   },
-  switchHintText: { fontSize: 6, color: C.PRIMARY, fontWeight: '900', letterSpacing: 0.5 },
+  switchHintText: { fontSize: 8, color: C.PRIMARY, fontWeight: '900', letterSpacing: 0.5 },
 
   targetBadge: {
     position: 'absolute', top: 4, left: 4,
-    backgroundColor: 'rgba(217,119,6,0.25)',
+    backgroundColor: C.GOLD_GLOW,
     borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2,
     borderWidth: 1, borderColor: C.GOLD,
     zIndex: 10,
   },
-  targetBadgeText: { fontSize: 6, color: C.GOLD, fontWeight: '900', letterSpacing: 0.5 },
+  targetBadgeText: { fontSize: 8, color: C.GOLD, fontWeight: '900', letterSpacing: 0.5 },
 
   cardNameStrip: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: 'rgba(0,0,0,0.52)',
+    backgroundColor: C.OVERLAY_4,
     paddingVertical: 3, paddingHorizontal: 4,
   },
-  cardName: { fontSize: 8, color: '#fff', fontWeight: '700', textAlign: 'center' },
+  cardName: { fontSize: 8, color: C.TEXT, fontWeight: '700', textAlign: 'center' },
 
   statusEffectRow: {
     position: 'absolute',
@@ -1267,9 +1700,25 @@ const S = StyleSheet.create({
     paddingVertical: 1,
   },
   statusEffectText: {
-    fontSize: 6,
+    fontSize: 7,
     fontWeight: '900',
     letterSpacing: 0.3,
+  },
+
+  stunStars: {
+    position: 'absolute',
+    top: 4, left: 0, right: 0,
+    alignItems: 'center',
+    zIndex: 16,
+  },
+  stunStarText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: C.GOLD,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 
   floatDmg: {
@@ -1282,10 +1731,114 @@ const S = StyleSheet.create({
     textShadowRadius: 3,
     zIndex: 20,
   },
+  floatHeal: {
+    position: 'absolute',
+    bottom: 22,
+    alignSelf: 'center',
+    fontSize: 14,
+    fontWeight: '900',
+    color: C.SUCCESS,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    zIndex: 21,
+  },
   defeatedOv: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: C.SHIMMER,
     alignItems: 'center', justifyContent: 'center',
+  },
+
+  // ── Full-screen impact flash ──
+  screenFlash: {
+    backgroundColor: C.FLASH_WHITE,
+    zIndex: 40,
+  },
+
+  // ── Trump Card cinematic cut-in ──
+  cutInRoot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 50,
+  },
+  cutInBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: C.OVERLAY_VOID,
+  },
+  cutInBand: {
+    position: 'absolute',
+    left: -W * 0.1, right: -W * 0.1,
+    height: Math.floor(SH * 0.46),
+    borderTopWidth: 2, borderBottomWidth: 2,
+    transform: [{ rotate: '-8deg' }],
+  },
+  cutInCardWrap: {
+    marginLeft: Math.floor(W * 0.06),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cutInTextWrap: {
+    flex: 1,
+    paddingLeft: Math.floor(W * 0.05),
+    paddingRight: Math.floor(W * 0.06),
+  },
+  cutInLabel: {
+    fontSize: 12, fontWeight: '900', letterSpacing: 4,
+    color: C.TEXT_ON_DARK_MUTED,
+  },
+  cutInRule: {
+    width: 54, height: 3, borderRadius: 2,
+    marginTop: 8, marginBottom: 10,
+  },
+  cutInHeroName: {
+    fontSize: 16, fontWeight: '800', letterSpacing: 1,
+    marginBottom: 6,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  cutInTrumpName: {
+    fontSize: Math.min(34, Math.floor(SH * 0.095)),
+    fontWeight: '900', letterSpacing: 0.5,
+    color: C.TEXT,
+    textShadowColor: 'rgba(0,0,0,0.85)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+  },
+  cutInPortraitFb: { backgroundColor: C.BG_MID, alignItems: 'center', justifyContent: 'center' },
+  cutInFillImg:    { width: '100%', height: '100%' },
+
+  // ── Enemy skill cut-in (mirror: portrait right, banner left, danger red) ──
+  enemyCutInBand: {
+    position: 'absolute',
+    left: -W * 0.1, right: -W * 0.1,
+    height: Math.floor(SH * 0.46),
+    borderTopWidth: 2, borderBottomWidth: 2,
+    transform: [{ rotate: '8deg' }],
+  },
+  enemyCutInTextWrap: {
+    flex: 1,
+    alignItems: 'flex-end',
+    paddingRight: Math.floor(W * 0.05),
+    paddingLeft: Math.floor(W * 0.06),
+  },
+  enemyCutInRule:  { alignSelf: 'flex-end' },
+  enemyCutInName:  { textAlign: 'right' },
+  enemyCutInSkill: { textAlign: 'right' },
+  enemyCutInCardWrap: {
+    marginRight: Math.floor(W * 0.06),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  enemyCutInFrame: {
+    borderRadius: 14,
+    borderWidth: 2.5,
+    overflow: 'hidden',
+    backgroundColor: C.BG_MID,
+  },
+  enemyCutInFade: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    height: '38%',
   },
 
   // ── Bottom area (transparent) ──
@@ -1358,10 +1911,10 @@ const S = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
-  pillBtnLabel:    { fontSize: 11, fontWeight: '800', color: '#fff', letterSpacing: 0.2 },
-  pillBtnLabelDim: { color: 'rgba(255,255,255,0.38)' },
-  pillBtnSub:      { fontSize: 8, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginTop: 1 },
-  pillBtnSubDim:   { color: 'rgba(255,255,255,0.28)' },
+  pillBtnLabel:    { fontSize: 11, fontWeight: '800', color: C.TEXT, letterSpacing: 0.2 },
+  pillBtnLabelDim: { color: C.TEXT_DISABLED },
+  pillBtnSub:      { fontSize: 8, color: C.TEXT_ON_DARK, fontWeight: '600', marginTop: 1 },
+  pillBtnSubDim:   { color: C.TEXT_ON_DARK_DIM },
 
   enemyThinking: {
     flex: 1, textAlign: 'center',
@@ -1383,7 +1936,7 @@ const S = StyleSheet.create({
   // ── Energy tutorial modal ──
   tutOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(6,2,18,0.78)',
+    backgroundColor: C.OVERLAY_VOID,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1398,11 +1951,11 @@ const S = StyleSheet.create({
   },
   tutAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 3 },
   tutTitle: {
-    fontSize: 16, fontWeight: '900', color: '#fff',
+    fontSize: 16, fontWeight: '900', color: C.TEXT,
     letterSpacing: 3.5, textAlign: 'center', marginBottom: 2,
   },
   tutSub: {
-    fontSize: 9, color: 'rgba(255,255,255,0.45)',
+    fontSize: 9, color: C.TEXT_ON_DARK_MUTED,
     textAlign: 'center', letterSpacing: 0.5, marginBottom: 14,
   },
   tutRows:    { gap: 8, marginBottom: 16 },
@@ -1413,9 +1966,9 @@ const S = StyleSheet.create({
     borderWidth: 1,
   },
   tutRowText:  { flex: 1 },
-  tutRowLabel: { fontSize: 11, fontWeight: '800', color: '#fff', letterSpacing: 0.3 },
-  tutRowDesc:  { fontSize: 9, color: 'rgba(255,255,255,0.52)', marginTop: 1 },
+  tutRowLabel: { fontSize: 11, fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
+  tutRowDesc:  { fontSize: 9, color: C.TEXT_ON_DARK_SOFT, marginTop: 1 },
   tutBtn:      { borderRadius: 10, overflow: 'hidden' },
   tutBtnInner: { paddingVertical: 12, alignItems: 'center' },
-  tutBtnTxt:   { fontSize: 12, fontWeight: '900', color: '#fff', letterSpacing: 1.5 },
+  tutBtnTxt:   { fontSize: 12, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
 });

@@ -11,7 +11,7 @@ import {
   signUp, signIn, resetPassword,
   resendVerification,
 } from '../cloud/auth';
-import { downloadSave, uploadSave } from '../cloud/cloudSave';
+import { downloadSave, uploadSave, resolveConflict } from '../cloud/cloudSave';
 import useGameStore from '../store/gameStore';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -79,6 +79,27 @@ const RESEND_COOLDOWN = 60;
 const { width: W, height: H } = Dimensions.get('window');
 const CARD_W = Math.min(W * 0.88, 720);
 
+function PrimaryBtn({ label, onPress, disabled, loading }) {
+  return (
+    <TouchableOpacity
+      style={[s.btn, (disabled || loading) && s.btnDisabled]}
+      onPress={onPress}
+      activeOpacity={0.82}
+      disabled={disabled || loading}
+    >
+      <LinearGradient
+        colors={disabled || loading ? [C.BG_CARD, C.BG_CARD] : C.GRAD_PINK}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={s.btnGrad}
+      >
+        {loading
+          ? <ActivityIndicator size="small" color="#fff" />
+          : <Text style={s.btnTxt}>{label}</Text>}
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+}
+
 export default function CloudAuthScreen({ navigation }) {
   const [step,        setStep]       = useState('login'); // login | signup | forgot | verify
   const [email,       setEmail]      = useState('');
@@ -129,8 +150,10 @@ export default function CloudAuthScreen({ navigation }) {
       const { data: cloudSave } = await withTimeout(downloadSave(), SYNC_TIMEOUT_MS);
 
       if (cloudSave) {
-        useGameStore.setState({ ...cloudSave, cloudAccountEmail: user.email, localUserId: currentUid });
-        await withTimeout(uploadSave({ ...cloudSave, cloudAccountEmail: user.email }), SYNC_TIMEOUT_MS);
+        const local = useGameStore.getState();
+        const merged = resolveConflict(local, cloudSave);
+        useGameStore.setState({ ...merged, cloudAccountEmail: user.email, localUserId: currentUid });
+        await withTimeout(uploadSave({ ...merged, cloudAccountEmail: user.email }), SYNC_TIMEOUT_MS);
       } else {
         const local = useGameStore.getState();
         if (local.localUserId === currentUid) {
@@ -145,6 +168,9 @@ export default function CloudAuthScreen({ navigation }) {
       }
     } catch (e) {
       console.warn('[CloudAuth] sync error:', e?.message ?? e?.code);
+      setLoading(false);
+      setInfo('Signed in. Sync failed — your progress may not be current.');
+      return;
     }
     navigation.goBack();
   };
@@ -252,25 +278,6 @@ export default function CloudAuthScreen({ navigation }) {
     </TouchableOpacity>
   );
 
-  const PrimaryBtn = ({ label, onPress, disabled }) => (
-    <TouchableOpacity
-      style={[s.btn, (disabled || loading) && s.btnDisabled]}
-      onPress={onPress}
-      activeOpacity={0.82}
-      disabled={disabled || loading}
-    >
-      <LinearGradient
-        colors={disabled || loading ? [C.BG_CARD, C.BG_CARD] : C.GRAD_PINK}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-        style={s.btnGrad}
-      >
-        {loading
-          ? <ActivityIndicator size="small" color="#fff" />
-          : <Text style={s.btnTxt}>{label}</Text>}
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-
   // ── Step renders ──────────────────────────────────────────────────────────
   const renderRight = () => {
     if (step === 'login') return (
@@ -289,7 +296,7 @@ export default function CloudAuthScreen({ navigation }) {
         <View style={s.errorArea}>
           {error ? <Text style={s.errorTxt}>{error}</Text> : null}
         </View>
-        <PrimaryBtn label="SIGN IN" onPress={handleLogin}
+        <PrimaryBtn label="SIGN IN" onPress={handleLogin} loading={loading}
           disabled={!email.trim() || !password} />
         <View style={s.linksRow}>
           <TouchableOpacity onPress={() => goToStep('signup')} style={s.linkBtn}>
@@ -323,7 +330,7 @@ export default function CloudAuthScreen({ navigation }) {
         <View style={s.errorArea}>
           {error ? <Text style={s.errorTxt}>{error}</Text> : null}
         </View>
-        <PrimaryBtn label="CREATE ACCOUNT" onPress={handleSignUp}
+        <PrimaryBtn label="CREATE ACCOUNT" onPress={handleSignUp} loading={loading}
           disabled={!email.trim() || !password || !confirm} />
         <TouchableOpacity onPress={() => goToStep('login')} style={s.linkBtn}>
           <Text style={s.linkTxt}>Back to Sign In</Text>
@@ -344,7 +351,7 @@ export default function CloudAuthScreen({ navigation }) {
           {error ? <Text style={s.errorTxt}>{error}</Text> : null}
           {info  ? <Text style={s.infoTxt}>{info}</Text>  : null}
         </View>
-        <PrimaryBtn label="SEND RESET EMAIL" onPress={handleForgot}
+        <PrimaryBtn label="SEND RESET EMAIL" onPress={handleForgot} loading={loading}
           disabled={!email.trim()} />
         <TouchableOpacity onPress={() => goToStep('login')} style={s.linkBtn}>
           <Text style={s.linkTxt}>Back to Sign In</Text>
@@ -372,7 +379,7 @@ export default function CloudAuthScreen({ navigation }) {
           {error ? <Text style={s.errorTxt}>{error}</Text> : null}
           {info  ? <Text style={s.infoTxt}>{info}</Text>  : null}
         </View>
-        <PrimaryBtn label="I'VE VERIFIED — CONTINUE" onPress={handleCheckVerified} />
+        <PrimaryBtn label="I'VE VERIFIED — CONTINUE" onPress={handleCheckVerified} loading={loading} />
         <View style={s.linksRow}>
           <TouchableOpacity
             onPress={handleResend}

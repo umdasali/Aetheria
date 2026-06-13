@@ -12,50 +12,40 @@ import { C, RANK } from '../theme/colors';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import AudioManager from '../utils/AudioManager';
 import HeroCard from '../components/HeroCard';
-import FactionParticles from '../components/FactionParticles';
+import { getActiveEvents, STANDARD_BANNER } from '../data/events';
 
 const WISH_VIDEO = require('../../assets/video/wish-animation.mp4');
 
 const { width: W, height: H } = Dimensions.get('window');
 const GEM_IMG = require('../../assets/currency/gem.png');
-const bannerImg = require('../../assets/banner/summon-banner.jpg');
 
 // ── Pull config ───────────────────────────────────────────────────────────────
 const SINGLE_COST = 50;
 const MULTI_COST  = 450;
 const PITY_LIMIT  = 90;
 
-const RANK_ODDS = [
-  { rank: 'C', weight: 44 },
-  { rank: 'B', weight: 30 },
-  { rank: 'A', weight: 22 },
-  { rank: 'S', weight: 4  },
-];
-
-// Base rates as fractions (out of 1) derived from RANK_ODDS weights (total = 100)
+// Base rates as fractions (out of 1): S 4% / A 22% / B 30% / C 44%
 const BASE_S_RATE = 4  / 100; // 0.04
 const BASE_A_RATE = 22 / 100; // 0.22
 const BASE_B_RATE = 30 / 100; // 0.30
 // BASE_C_RATE = 44/100 — C fills whatever probability remains
 
-const pickRank = (pity) => {
-  // pity is incremented AFTER each non-S draw, so after 89 failures pity === 89.
-  // Checking >= PITY_LIMIT - 1 fires the guarantee on draw #90, not draw #91.
-  if (pity >= PITY_LIMIT - 1) return 'S';
+// pity is incremented AFTER each non-S draw. Soft-pity thresholds scale with
+// the banner's pity limit so event banners (80 pulls) ramp at the same
+// proportional points as the standard banner (90 pulls).
+const pickRank = (pity, limit = PITY_LIMIT) => {
+  if (pity >= limit - 1) return 'S';
 
-  // Soft pity: S rate ramps up at 50 and 70 pulls
   let sRate;
-  if (pity >= 70) sRate = 0.15;
-  else if (pity >= 50) sRate = 0.08;
+  if      (pity >= Math.floor(limit * 0.78)) sRate = 0.15; // ~70/90, ~62/80
+  else if (pity >= Math.floor(limit * 0.56)) sRate = 0.08; // ~50/90, ~44/80
   else sRate = BASE_S_RATE;
 
   const rand = Math.random();
   if (rand < sRate) return 'S';
 
-  // Redistribute the remaining probability (1 - sRate) proportionally across A, B, C
-  // using the original non-S total (1 - BASE_S_RATE = 0.96) as the reference.
-  const nonSTotal = 1 - BASE_S_RATE; // 0.96
-  const remaining = 1 - sRate;       // shrinks as soft pity kicks in
+  const nonSTotal = 1 - BASE_S_RATE;
+  const remaining = 1 - sRate;
   const scale     = remaining / nonSTotal;
 
   const aRate = BASE_A_RATE * scale;
@@ -66,28 +56,110 @@ const pickRank = (pity) => {
   return 'C';
 };
 
-// ownedSet filters the sovereign pool so already-owned sovereigns aren't re-rolled.
-// When the unowned sovereign pool is empty (player owns all), the 20% proc is folded
-// directly into the regular S draw — the effective S-rank rate stays unchanged.
-const performSummon = (count, currentPity, ownedSet = new Set()) => {
-  const heroes = [];
-  let pity = currentPity;
+// ── Genshin / WuWa-style banner system ───────────────────────────────────────
+//
+// Event banners (rateUpHeroIds non-empty):
+//   • 50/50 on every S pull: either the featured rate-up hero OR an off-banner S.
+//   • Losing 50/50 sets guarantee = true → the NEXT S on this banner is 100% the
+//     rate-up hero, regardless of random roll.
+//   • Off-banner S pool = standard banner's featured S heroes (minus the current
+//     rate-up), mirroring the Genshin "standard 5-star" pool.
+//   • A / B / C pulls come exclusively from the banner's featuredLowerIds when
+//     provided, so the player only gets heroes relevant to this event.
+//
+// Standard banner (rateUpHeroIds empty):
+//   • No 50/50 system. Sovereign heroes have a 20 % proc from the S pool.
+//   • guarantee state is ignored and unchanged.
+//
+// Parameters:
+//   isGuaranteed    – current guarantee flag for this banner (from store)
+//   featuredLowerIds – hero IDs for A/B/C pool on this banner (event only)
+//   pityLimit       – hard pity cap for this banner
+//
+const performSummon = (
+  count,
+  currentPity,
+  ownedSet        = new Set(),
+  rateUpHeroIds   = [],
+  isGuaranteed    = false,
+  featuredLowerIds = [],
+  pityLimit       = PITY_LIMIT,
+) => {
+  const results   = [];
+  let pity        = currentPity;
+  let guaranteed  = isGuaranteed;
+
+  // Off-banner S pool (event banners only): standard-banner featured S heroes,
+  // excluding the current rate-up heroes so the player never loses the 50/50
+  // and still ends up with the featured hero.
+  const buildOffBannerPool = () => {
+    const pool = STANDARD_BANNER.featuredSRankIds
+      .map(id => HEROES.find(h => h.id === id))
+      .filter(h => h && !rateUpHeroIds.includes(h.id));
+    return pool.length
+      ? pool
+      : HEROES.filter(h => h.rank === 'S' && !h.sovereign && !h.shopExclusive && !rateUpHeroIds.includes(h.id));
+  };
+  // Computed once per performSummon call, only if an event banner S roll happens.
+  let offBannerPool = null;
+  const getOffBannerPool = () => { return offBannerPool || (offBannerPool = buildOffBannerPool()); };
+
   for (let i = 0; i < count; i++) {
-    const rank = pickRank(pity);
+    const wasPityPull = pity >= pityLimit - 1;
+    const rank        = pickRank(pity, pityLimit);
+    const isPity      = wasPityPull && rank === 'S';
     if (rank === 'S') pity = 0; else pity++;
+
     let pool;
+    let isFeatured = false;
+
     if (rank === 'S') {
-      const sovereignPool = HEROES.filter(h => h.rank === 'S' && h.sovereign && !ownedSet.has(h.id));
-      const regularPool   = HEROES.filter(h => h.rank === 'S' && !h.sovereign);
-      pool = (sovereignPool.length > 0 && Math.random() < 0.20)
-        ? sovereignPool
-        : (regularPool.length ? regularPool : HEROES.filter(h => h.rank === 'S'));
+      const rateUpPool = rateUpHeroIds.length
+        ? HEROES.filter(h => rateUpHeroIds.includes(h.id))
+        : [];
+
+      if (rateUpPool.length > 0) {
+        // ── Event banner: 50/50 guarantee system ───────────────────────────
+        const wonRateUp = guaranteed || Math.random() < 0.50;
+        if (wonRateUp) {
+          pool        = rateUpPool;
+          isFeatured  = true;
+          guaranteed  = false; // win resets the guarantee
+        } else {
+          // Lost the 50/50 → give off-banner S, set guarantee for next pull
+          pool       = getOffBannerPool();
+          guaranteed = true;
+        }
+      } else {
+        // ── Standard banner: sovereign proc system ──────────────────────────
+        // shopExclusive sovereigns (e.g. hero_054) must never appear in gacha.
+        const sovereignPool = HEROES.filter(h => h.rank === 'S' && h.sovereign && !h.shopExclusive && !ownedSet.has(h.id));
+        const regularPool   = HEROES.filter(h => h.rank === 'S' && !h.sovereign && !h.shopExclusive);
+
+        if (sovereignPool.length > 0 && Math.random() < 0.20) {
+          pool = sovereignPool;
+        } else {
+          pool = regularPool.length ? regularPool : HEROES.filter(h => h.rank === 'S' && !h.shopExclusive);
+        }
+      }
     } else {
-      pool = HEROES.filter(h => h.rank === rank);
+      // ── Non-S ranks ────────────────────────────────────────────────────────
+      if (featuredLowerIds.length > 0) {
+        // Event banner: restrict to the banner's defined lower pool for this rank
+        const eventPool = featuredLowerIds
+          .map(id => HEROES.find(h => h.id === id))
+          .filter(h => h && h.rank === rank);
+        pool = eventPool.length ? eventPool : HEROES.filter(h => h.rank === rank && !h.shopExclusive);
+      } else {
+        pool = HEROES.filter(h => h.rank === rank && !h.shopExclusive);
+      }
     }
-    heroes.push(pool[Math.floor(Math.random() * pool.length)]);
+
+    const hero = pool[Math.floor(Math.random() * pool.length)];
+    results.push({ hero, isPity, isFeatured });
   }
-  return { heroes, newPity: pity };
+
+  return { results, newPity: pity, newGuaranteed: guaranteed };
 };
 
 // ── Featured hero (first S-rank) ─────────────────────────────────────────────
@@ -270,7 +342,7 @@ const OrnateWishBtn = ({ onPress, disabled, borderCol, gradColors, label, sub, c
   );
 };
 
-const SmallCardFront = ({ hero, isNew, width }) => {
+const SmallCardFront = ({ hero, isNew, isFeatured, width }) => {
   const r = RANK[hero.rank];
   const height = Math.floor(width * 320 / 220);
   return (
@@ -280,6 +352,12 @@ const SmallCardFront = ({ hero, isNew, width }) => {
         colors={['transparent', 'transparent', 'rgba(0,0,0,0.88)']}
         style={StyleSheet.absoluteFill}
       />
+      {/* FEATURED star badge — top-left, only for rate-up S pulls */}
+      {isFeatured && (
+        <View style={s.scFeatured}>
+          <Text style={s.scFeaturedTxt}>★</Text>
+        </View>
+      )}
       <View style={[s.scRank, { backgroundColor: r.bg }]}>
         <Text style={[s.scRankTxt, { color: r.text }]}>{hero.rank}</Text>
       </View>
@@ -294,15 +372,43 @@ const SmallCardFront = ({ hero, isNew, width }) => {
 };
 
 // ── Main screen ───────────────────────────────────────────────────────────────
-export default function SummonScreen({ navigation }) {
+export default function SummonScreen({ navigation, route }) {
   const { top: topInset, bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
-  const { gems, spendGems, addHero, ownedHeroes, pity, setPity, trackQuestProgress } = useGameStore();
+  // Per-property selectors — keeps pull-reveal animations free of unrelated re-renders
+  const gems                     = useGameStore(s => s.gems);
+  const spendGems                = useGameStore(s => s.spendGems);
+  const addHero                  = useGameStore(s => s.addHero);
+  const ownedHeroes              = useGameStore(s => s.ownedHeroes);
+  const pity                     = useGameStore(s => s.pity);
+  const setPity                  = useGameStore(s => s.setPity);
+  const trackQuestProgress       = useGameStore(s => s.trackQuestProgress);
+  const addToPullHistory         = useGameStore(s => s.addToPullHistory);
+  const trackAchievementProgress = useGameStore(s => s.trackAchievementProgress);
+  const eventPity                = useGameStore(s => s.eventPity);
+  const setEventPity             = useGameStore(s => s.setEventPity);
+  const eventGuarantee           = useGameStore(s => s.eventGuarantee);
+  const setEventGuarantee        = useGameStore(s => s.setEventGuarantee);
 
-  const [pullPhase,   setPullPhase]   = useState('banner');
-  const [pullResults, setPullResults] = useState([]);
-  const [revealCount, setRevealCount] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [allRevealed, setAllRevealed] = useState(false);
+  const [pullPhase,      setPullPhase]      = useState('banner');
+  const [pullResults,    setPullResults]    = useState([]);
+  const [revealCount,    setRevealCount]    = useState(0);
+  const [isAnimating,    setIsAnimating]    = useState(false);
+  const [allRevealed,    setAllRevealed]    = useState(false);
+  const [selectedBanner, setSelectedBanner] = useState(() => {
+    const openId = route?.params?.openBannerId;
+    if (openId && getActiveEvents().some(e => e.id === openId)) return openId;
+    return 'standard';
+  });
+  const [featuredIdx,  setFeaturedIdx]  = useState(0);
+  const featFadeAnim = useRef(new Animated.Value(1)).current;
+
+  const activeEvents    = getActiveEvents();
+  const activeEvent     = activeEvents.find(e => e.id === selectedBanner) || null;
+  const activePity      = activeEvent ? (eventPity[activeEvent.id] || 0) : pity;
+  const activePityLimit = activeEvent ? (activeEvent.pityLimit || 80) : PITY_LIMIT;
+  // true when the player has already lost the 50/50 on this event banner;
+  // their next S pull is guaranteed to be the featured rate-up hero.
+  const activeGuarantee = activeEvent ? (eventGuarantee[activeEvent.id] || false) : false;
 
   // ── Animated values ──────────────────────────────────────────────────────
   const transAnim   = useRef(new Animated.Value(0)).current;
@@ -311,8 +417,6 @@ export default function SummonScreen({ navigation }) {
   const flashPurp   = useRef(new Animated.Value(0)).current;
   const shakeAnim   = useRef(new Animated.Value(0)).current;
   const tapHintAnim = useRef(new Animated.Value(1)).current;
-  const borderPulse = useRef(new Animated.Value(0)).current;
-  const shimmerX    = useRef(new Animated.Value(-160)).current;
 
   const cardAnims = useRef(
     Array.from({ length: 10 }, () => ({
@@ -336,24 +440,7 @@ export default function SummonScreen({ navigation }) {
   const videoTransitioned   = useRef(false);
   const transitionToRevealRef = useRef(null);
 
-  // ── Banner ambient loops ─────────────────────────────────────────────────
-  useEffect(() => {
-    const bLoop = Animated.loop(Animated.sequence([
-      Animated.timing(borderPulse, { toValue: 1,   duration: 1800, useNativeDriver: true }),
-      Animated.timing(borderPulse, { toValue: 0.3, duration: 1800, useNativeDriver: true }),
-    ]));
-    const sLoop = Animated.loop(Animated.sequence([
-      Animated.timing(shimmerX, {
-        toValue: W * 0.56, duration: 2800,
-        easing: Easing.linear, useNativeDriver: true,
-      }),
-      Animated.delay(1800),
-      Animated.timing(shimmerX, { toValue: -160, duration: 0, useNativeDriver: true }),
-    ]));
-    bLoop.start();
-    sLoop.start();
-    return () => { bLoop.stop(); sLoop.stop(); };
-  }, []);
+  // Banner ambient animation loops removed — background stays static.
 
   // ── Star particles ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -375,6 +462,23 @@ export default function SummonScreen({ navigation }) {
 
   // ── SFX timer cleanup on unmount ──────────────────────────────────────────
   useEffect(() => () => sfxTimers.current.forEach(clearTimeout), []);
+
+  // ── Standard banner: auto-cycle featured S-rank heroes ────────────────────
+  useEffect(() => {
+    if (selectedBanner !== 'standard') {
+      featFadeAnim.setValue(1);
+      setFeaturedIdx(0);
+      return;
+    }
+    const LIMIT = STANDARD_BANNER.featuredSRankIds.length;
+    const t = setInterval(() => {
+      Animated.timing(featFadeAnim, { toValue: 0, duration: 280, useNativeDriver: true }).start(() => {
+        setFeaturedIdx(prev => (prev + 1) % LIMIT);
+        Animated.timing(featFadeAnim, { toValue: 1, duration: 380, useNativeDriver: true }).start();
+      });
+    }, 3500);
+    return () => clearInterval(t);
+  }, [selectedBanner]);
 
   // ── Tap hint pulse ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -434,6 +538,13 @@ export default function SummonScreen({ navigation }) {
       Animated.timing(flashPurp, { toValue: 0, duration: 480, useNativeDriver: true }),
     ]).start();
   }, [flashPurp]);
+
+  const switchFeatured = useCallback((idx) => {
+    Animated.timing(featFadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
+      setFeaturedIdx(idx);
+      Animated.timing(featFadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+    });
+  }, [featFadeAnim]);
 
   // ── Card reveal ───────────────────────────────────────────────────────────
   const doRevealCard = useCallback((idx) => {
@@ -584,17 +695,48 @@ export default function SummonScreen({ navigation }) {
     setIsAnimating(true);
     AudioManager.playButtonSFX();
 
-    const { heroes, newPity } = performSummon(count, pity, new Set(ownedHeroes));
+    const rateUpIds        = activeEvent ? (activeEvent.rateUpHeroIds   || []) : [];
+    const featuredLowerIds = activeEvent ? (activeEvent.featuredLowerIds || []) : [];
+    const { results: summonResults, newPity, newGuaranteed } = performSummon(
+      count, activePity, new Set(ownedHeroes),
+      rateUpIds, activeGuarantee, featuredLowerIds, activePityLimit,
+    );
     const ownedSet   = new Set(ownedHeroes);
     const seenInPull = new Set();
-    const tagged = heroes.map(hero => {
+    const tagged = summonResults.map(({ hero, isPity: wasPity, isFeatured }) => {
       const isNew = !ownedSet.has(hero.id) && !seenInPull.has(hero.id);
       seenInPull.add(hero.id);
-      return { hero, isNew };
+      return { hero, isNew, isPity: wasPity, isFeatured };
     });
-    heroes.forEach(h => addHero(h.id));
-    setPity(newPity);
+    summonResults.forEach(r => addHero(r.hero.id));
+
+    // Update pity counter and guarantee flag for the active banner
+    if (activeEvent) {
+      setEventPity(activeEvent.id, newPity);
+      setEventGuarantee(activeEvent.id, newGuaranteed);
+    } else {
+      setPity(newPity);
+    }
+
+    // Quest + achievement tracking
     trackQuestProgress('hero_summon');
+    trackAchievementProgress('totalSummons', count);
+    trackAchievementProgress('gemsSpent', cost);
+
+    // Track S-rank acquisitions for achievements
+    const newSRanks = tagged.filter(t => t.isNew && t.hero.rank === 'S').length;
+    if (newSRanks > 0) trackAchievementProgress('sRanksOwned', newSRanks);
+
+    // Record pull history
+    addToPullHistory(tagged.map(t => ({
+      heroId:     t.hero.id,
+      heroName:   t.hero.name,
+      rank:       t.hero.rank,
+      isPity:     t.isPity,
+      isFeatured: t.isFeatured,
+      bannerType: activeEvent ? activeEvent.id : 'standard',
+    })));
+
     setPullResults(tagged);
     setRevealCount(0);
     setAllRevealed(false);
@@ -604,7 +746,12 @@ export default function SummonScreen({ navigation }) {
     // Play wish animation video first, then transition to reveal
     videoPlayer.replay();
     setPullPhase('video');
-  }, [gems, isAnimating, spendGems, pity, ownedHeroes, addHero, videoPlayer]);
+  }, [
+    gems, isAnimating, spendGems, pity, ownedHeroes, addHero, videoPlayer,
+    activeEvent, activePity, activeGuarantee, activePityLimit,
+    setEventPity, setEventGuarantee,
+    trackQuestProgress, trackAchievementProgress, addToPullHistory,
+  ]);
 
   const handleRevealTap = useCallback(() => {
     if (isAnimating || pullResults.length === 1) return;
@@ -672,7 +819,7 @@ export default function SummonScreen({ navigation }) {
           <Animated.View style={[StyleSheet.absoluteFill, { opacity: frontOp }]}>
             {isSingle
               ? <HeroCard hero={item.hero} width={cardW} />
-              : <SmallCardFront hero={item.hero} isNew={item.isNew} width={cardW} />
+              : <SmallCardFront hero={item.hero} isNew={item.isNew} isFeatured={item.isFeatured} width={cardW} />
             }
           </Animated.View>
           {/* Rank glow ring */}
@@ -682,7 +829,12 @@ export default function SummonScreen({ navigation }) {
           />
         </View>
 
-        {/* NEW badge below card (single mode only) */}
+        {/* Badges below card (single mode only) */}
+        {isSingle && item.isFeatured && (
+          <Animated.View style={[s.singleFeatured, { opacity: frontOp }]}>
+            <Text style={s.singleFeaturedTxt}>★ FEATURED HERO ★</Text>
+          </Animated.View>
+        )}
         {isSingle && item.isNew && (
           <Animated.View style={[s.singleNew, { opacity: frontOp }]}>
             <Text style={s.singleNewTxt}>✦ NEW HERO UNLOCKED ✦</Text>
@@ -735,101 +887,200 @@ export default function SummonScreen({ navigation }) {
 
   // ── Phase: banner ─────────────────────────────────────────────────────────
   const renderBanner = () => {
-    const feat     = FEATURED;
-    const pityPct  = Math.min(pity / PITY_LIMIT, 1);
+    const standardSHeroes     = STANDARD_BANNER.featuredSRankIds.map(id => HEROES.find(h => h.id === id)).filter(Boolean);
+    const standardLowerHeroes = STANDARD_BANNER.featuredLowerIds.map(id => HEROES.find(h => h.id === id)).filter(Boolean);
+    const feat     = activeEvent
+      ? (HEROES.find(h => h.id === activeEvent.featuredHeroId) || FEATURED)
+      : (standardSHeroes[featuredIdx] || FEATURED);
+    const pityPct  = Math.min(activePity / activePityLimit, 1);
     const leftColW = CARD_W + BODY_PAD * 2;
 
     return (
-      <View style={s.bannerLayout}>
-        <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
-        <FactionParticles faction={feat.faction} />
+      <View style={{ flex: 1 }}>
+        {/* ── Banner tabs (standard + active events) ─────────────────────── */}
+        {activeEvents.length > 0 && (
+          <View style={s.bannerTabs}>
+            <TouchableOpacity
+              style={[s.bannerTab, selectedBanner === 'standard' && s.bannerTabActive]}
+              onPress={() => setSelectedBanner('standard')}
+              activeOpacity={0.8}
+            >
+              <Text style={[s.bannerTabTxt, selectedBanner === 'standard' && s.bannerTabTxtActive]}>
+                STANDARD
+              </Text>
+            </TouchableOpacity>
+            {activeEvents.map(ev => (
+              <TouchableOpacity
+                key={ev.id}
+                style={[s.bannerTab, selectedBanner === ev.id && s.bannerTabActive, { borderColor: ev.accentColor }]}
+                onPress={() => setSelectedBanner(ev.id)}
+                activeOpacity={0.8}
+              >
+                <View style={[s.bannerTabDot, { backgroundColor: ev.accentColor }]} />
+                <Text style={[s.bannerTabTxt, selectedBanner === ev.id && { color: ev.accentColor }]}
+                  numberOfLines={1}
+                >
+                  {ev.name.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
-        {/* LEFT: HeroCard */}
+        <View style={[s.bannerLayout, { flex: 1 }]}>
+        <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
+
+        {/* LEFT: HeroCard (fades when cycling on standard banner) */}
         <View style={[s.bannerLeft, { width: leftColW }]}>
-          {/* <HeroCard hero={bannerImg} width={CARD_W} /> */}
-          <Image source={bannerImg} style={{ width: CARD_W, height: 250, borderRadius: 12 }} resizeMode="cover" />
+          <Animated.View style={{ opacity: selectedBanner === 'standard' ? featFadeAnim : 1 }}>
+            <HeroCard hero={feat} width={CARD_W} />
+          </Animated.View>
+          {selectedBanner === 'standard' && (
+            <View style={s.featDots}>
+              {standardSHeroes.map((_, i) => (
+                <TouchableOpacity key={i} onPress={() => switchFeatured(i)} activeOpacity={0.7}>
+                  <View style={[s.featDot, i === featuredIdx && s.featDotActive]} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
 
-        {/* RIGHT: title + 2 sub-columns */}
+        {/* RIGHT: 2 sub-columns */}
         <View style={s.bannerRight}>
-
-          {/* Title */}
-          <View style={s.bannerTitleWrap}>
-            <View style={{ overflow: 'hidden' }}>
-              <Text style={s.bannerTitle}>TEMPORAL NEXUS</Text>
-              <Animated.View
-                pointerEvents="none"
-                style={[s.shimmerBar, { transform: [{ translateX: shimmerX }] }]}
-              >
-                <LinearGradient
-                  colors={['transparent', C.SHIMMER, 'transparent']}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                  style={{ width: 90, height: 28 }}
-                />
-              </Animated.View>
-            </View>
-            <View style={s.bannerLimitedRow}>
-              <View style={s.limitedDot} />
-              <Text style={s.bannerLimitedTxt}>LIMITED BANNER</Text>
-              <View style={s.limitedDot} />
-            </View>
-          </View>
 
           {/* Sub-columns row */}
           <View style={s.bannerSubCols}>
 
             {/* Info col: rates + pity */}
             <View style={s.bannerInfoCol}>
-              <View style={s.infoCard}>
-                <Text style={s.infoCardTitle}>SUMMON RATES</Text>
-                <View style={s.ratesRow}>
-                  {/* Sovereign — within S pulls, 20% chance ≈ 0.8% overall */}
-                  <View style={s.rateItem}>
-                    <View style={[s.rateRankPill, { backgroundColor: RANK.SOVEREIGN.bg, paddingHorizontal: 6, paddingVertical: 6 }]}>
-                      <Text style={[s.rateRankLbl, { color: RANK.SOVEREIGN.text, fontSize: 7 }]}>SOV</Text>
-                    </View>
-                    <Text style={s.ratePct}>0.8%</Text>
+              {selectedBanner === 'standard' ? (
+                <View style={s.infoCard}>
+                  <Text style={s.infoCardTitle}>FEATURED POOL</Text>
+                  <Text style={s.featSectionLabel}>S RANK</Text>
+                  <View style={s.featMinis}>
+                    {standardSHeroes.map((h, i) => (
+                      <TouchableOpacity
+                        key={h.id}
+                        style={[s.featMiniS, { borderColor: i === featuredIdx ? RANK[h.rank].glow : RANK[h.rank].glow + '44' }]}
+                        onPress={() => switchFeatured(i)}
+                        activeOpacity={0.8}
+                      >
+                        <Image source={h.image} style={s.featMiniImg} />
+                        {i === featuredIdx && (
+                          <View pointerEvents="none" style={[StyleSheet.absoluteFill, s.featMiniActiveRing, { borderColor: RANK[h.rank].glow }]} />
+                        )}
+                      </TouchableOpacity>
+                    ))}
                   </View>
-                  {[...RANK_ODDS].reverse().map(({ rank, weight }) => {
-                    const r = RANK[rank];
-                    return (
-                      <View key={rank} style={s.rateItem}>
-                        <View style={[s.rateRankPill, { backgroundColor: r.bg }]}>
-                          <Text style={[s.rateRankLbl, { color: r.text }]}>{rank}</Text>
+                  <Text style={[s.featSectionLabel, { marginTop: 6 }]}>A / B RANK</Text>
+                  <View style={s.featMinis}>
+                    {standardLowerHeroes.map(h => (
+                      <View key={h.id} style={[s.featMiniAB, { borderColor: RANK[h.rank].glow + '55' }]}>
+                        <Image source={h.image} style={s.featMiniImg} />
+                        <View style={[s.featMiniRankBadge, { backgroundColor: RANK[h.rank].bg }]}>
+                          <Text style={[s.featMiniRankTxt, { color: RANK[h.rank].text }]}>{h.rank}</Text>
                         </View>
-                        <Text style={s.ratePct}>{weight}%</Text>
                       </View>
-                    );
-                  })}
+                    ))}
+                  </View>
                 </View>
-              </View>
+              ) : (
+                <View style={s.infoCard}>
+                  <Text style={s.infoCardTitle}>FEATURED POOL</Text>
+                  <Text style={s.featSectionLabel}>S RANK  ·  RATE UP</Text>
+                  <View style={s.featMinis}>
+                    {(activeEvent?.rateUpHeroIds ?? []).map(id => {
+                      const h = HEROES.find(hero => hero.id === id);
+                      if (!h) return null;
+                      return (
+                        <View key={h.id} style={[s.featMiniS, { borderColor: RANK[h.rank].glow }]}>
+                          <Image source={h.image} style={s.featMiniImg} />
+                          <View pointerEvents="none" style={[StyleSheet.absoluteFill, s.featMiniActiveRing, { borderColor: RANK[h.rank].glow }]} />
+                        </View>
+                      );
+                    })}
+                  </View>
+                  <Text style={[s.featSectionLabel, { marginTop: 6 }]}>A / B / C RANK</Text>
+                  <View style={s.featMinis}>
+                    {(activeEvent?.featuredLowerIds ?? []).map(id => {
+                      const h = HEROES.find(hero => hero.id === id);
+                      if (!h) return null;
+                      return (
+                        <View key={h.id} style={[s.featMiniAB, { borderColor: RANK[h.rank].glow + '55' }]}>
+                          <Image source={h.image} style={s.featMiniImg} />
+                          <View style={[s.featMiniRankBadge, { backgroundColor: RANK[h.rank].bg }]}>
+                            <Text style={[s.featMiniRankTxt, { color: RANK[h.rank].text }]}>{h.rank}</Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
 
               <View style={s.infoCard}>
                 <View style={s.pityHeader}>
                   <Text style={s.infoCardTitle}>PITY COUNTER</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                    {pity >= 70 && (
+                    {activePity >= Math.floor(activePityLimit * 0.78) && (
                       <View style={[s.pityWarnBadge, { backgroundColor: C.HP + '22', borderColor: C.HP }]}>
                         <Text style={[s.pityWarnTxt, { color: C.HP }]}>NEAR PITY</Text>
                       </View>
                     )}
-                    <Text style={s.pityCount}>{pity} / {PITY_LIMIT}</Text>
+                    <Text style={s.pityCount}>{activePity} / {activePityLimit}</Text>
                   </View>
                 </View>
                 <View style={s.pityBg}>
                   <View style={[s.pityFill, {
                     width: `${pityPct * 100}%`,
-                    backgroundColor: pity >= 70 ? C.HP : C.PRIMARY_LIGHT,
+                    backgroundColor: activePity >= Math.floor(activePityLimit * 0.78) ? C.HP : C.PRIMARY_LIGHT,
                   }]} />
                 </View>
+
+                {/* 50/50 guarantee indicator — only shown on event banners */}
+                {activeEvent && (
+                  <View style={[
+                    s.guaranteeRow,
+                    activeGuarantee
+                      ? { backgroundColor: C.GOLD + '18', borderColor: C.GOLD }
+                      : { backgroundColor: C.PRIMARY + '12', borderColor: C.PRIMARY_LIGHT + '55' },
+                  ]}>
+                    <Text style={[
+                      s.guaranteeTxt,
+                      { color: activeGuarantee ? C.GOLD : C.TEXT_MUTED },
+                    ]}>
+                      {activeGuarantee ? '★ NEXT S: GUARANTEED FEATURED' : '◈ NEXT S: 50/50'}
+                    </Text>
+                  </View>
+                )}
+
                 <Text style={s.pityHint}>
-                  50+ pulls: S rate 8%  ·  70+ pulls: S rate 15%{'\n'}Guaranteed S-Rank at {PITY_LIMIT} pulls
+                  {Math.floor(activePityLimit * 0.56)}+ pulls: S rate 8%  ·  {Math.floor(activePityLimit * 0.78)}+ pulls: S rate 15%{'\n'}
+                  {activeEvent
+                    ? `Featured hero guaranteed within ${activePityLimit} pulls`
+                    : `Guaranteed S-Rank at ${activePityLimit} pulls`}
                 </Text>
               </View>
             </View>
 
-            {/* Buttons col: wish×1, wish×10 */}
+            {/* Buttons col: banner name + wish×1 + wish×10 */}
             <View style={s.bannerBtnCol}>
+
+              {/* Banner name + type label */}
+              <View style={s.btnColHeader}>
+                <Text style={[s.btnColBannerName, { color: activeEvent ? activeEvent.accentColor : C.PRIMARY_LIGHT }]} numberOfLines={1}>
+                  {activeEvent ? activeEvent.name.toUpperCase() : 'TEMPORAL NEXUS'}
+                </Text>
+                <View style={s.bannerLimitedRow}>
+                  <View style={[s.limitedDot, { backgroundColor: activeEvent ? activeEvent.accentColor : C.GOLD }]} />
+                  <Text style={[s.bannerLimitedTxt, { color: activeEvent ? activeEvent.accentColor : C.GOLD }]}>
+                    {activeEvent ? 'LIMITED BANNER' : 'STANDARD BANNER'}
+                  </Text>
+                  <View style={[s.limitedDot, { backgroundColor: activeEvent ? activeEvent.accentColor : C.GOLD }]} />
+                </View>
+              </View>
+
               <OrnateWishBtn
                 onPress={() => doPull(1)}
                 disabled={gems < SINGLE_COST || isAnimating}
@@ -852,6 +1103,7 @@ export default function SummonScreen({ navigation }) {
             </View>
 
           </View>
+        </View>
         </View>
       </View>
     );
@@ -905,6 +1157,19 @@ export default function SummonScreen({ navigation }) {
 
         {/* Summary row */}
         <View style={s.summaryRow}>
+          {/* Featured chip — S-rank rate-up heroes on event banners */}
+          {(() => {
+            const count = pullResults.filter(i => i.isFeatured).length;
+            if (!count) return null;
+            return (
+              <View key="FEAT" style={[s.sumChip, { borderColor: C.GOLD }]}>
+                <View style={[s.sumDot, { backgroundColor: C.GOLD }]}>
+                  <Text style={[s.sumDotTxt, { color: '#1A0A00', fontSize: 8 }]}>★</Text>
+                </View>
+                <Text style={[s.sumCount, { color: C.GOLD }]}>×{count}</Text>
+              </View>
+            );
+          })()}
           {/* Sovereign chip — heroes with sovereign flag */}
           {(() => {
             const count = pullResults.filter(i => i.hero?.sovereign).length;
@@ -966,6 +1231,15 @@ export default function SummonScreen({ navigation }) {
           <Image source={GEM_IMG} style={s.headerGemImg} />
           <Text style={s.gemsTxt}>{gems}</Text>
         </View>
+        {pullPhase === 'banner' && (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('PullHistory')}
+            style={s.historyBtn}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="time-outline" size={20} color="rgba(255,255,255,0.85)" />
+          </TouchableOpacity>
+        )}
       </LinearGradient>
 
       {/* Phase content */}
@@ -999,9 +1273,9 @@ const s = StyleSheet.create({
   videoOverlay: { zIndex: 100 },
   videoSkipRow: {
     position: 'absolute', bottom: 28, right: 24,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: C.OVERLAY_MID,
     borderRadius: 20, paddingHorizontal: 16, paddingVertical: 7,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+    borderWidth: 1, borderColor: C.GLASS_8,
   },
   videoSkipTxt: {
     color: 'rgba(255,255,255,0.85)', fontSize: 11,
@@ -1012,16 +1286,16 @@ const s = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 12, paddingBottom: 10,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.14)',
+    borderBottomWidth: 1, borderBottomColor: C.GLASS_7,
   },
   headerBack:  { padding: 4, marginRight: 6 },
   headerTitle: { fontSize: 18, fontWeight: '900', color: '#fff', letterSpacing: 4 },
   headerSub:   { fontSize: 10, color: 'rgba(255,255,255,0.65)', marginTop: 1 },
   gemsChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 14,
+    backgroundColor: C.GLASS_7, borderRadius: 14,
     paddingHorizontal: 10, paddingVertical: 5,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+    borderWidth: 1, borderColor: C.GLASS_8,
   },
   gemsTxt:      { color: C.GOLD, fontSize: 14, fontWeight: '700' },
   headerGemImg: { width: 16, height: 16, resizeMode: 'contain' },
@@ -1032,11 +1306,12 @@ const s = StyleSheet.create({
   bannerLeft: { overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   bannerCardWrap: { marginTop: 8 },
 
-  bannerTitleWrap: { alignItems: 'flex-start', paddingTop: 4, paddingBottom: 4 },
-  bannerTitle: {
-    fontSize: 20, fontWeight: '900', color: C.PRIMARY_LIGHT, letterSpacing: 5,
+  // ── Button-column banner header ────────────────────────────────────────────
+  btnColHeader: { alignItems: 'center', paddingBottom: 4 },
+  btnColBannerName: {
+    fontSize: 16, fontWeight: '900', letterSpacing: 3, textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.7)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
-  shimmerBar: { position: 'absolute', top: 0, left: 0, height: 28 },
   bannerLimitedRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 4 },
   bannerLimitedTxt: { fontSize: 10, color: C.GOLD, fontWeight: '700', letterSpacing: 3 },
   limitedDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: C.GOLD },
@@ -1057,7 +1332,7 @@ const s = StyleSheet.create({
 
   infoCard: {
     borderRadius: 10, padding: 10,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: C.GLASS_4,
     borderWidth: 1, borderColor: C.BORDER,
   },
   infoCardTitle: { fontSize: 9, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 2, marginBottom: 6 },
@@ -1173,16 +1448,89 @@ const s = StyleSheet.create({
     fontSize: 7, color: C.SUCCESS, fontWeight: '900', letterSpacing: 0.5,
     textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
+  scFeatured: {
+    position: 'absolute', top: 4, left: 4,
+    backgroundColor: C.GOLD + 'CC', borderRadius: 3,
+    paddingHorizontal: 3, paddingVertical: 1,
+  },
+  scFeaturedTxt: { fontSize: 8, color: '#1A0A00', fontWeight: '900' },
 
-  // ── Single card new badge ──────────────────────────────────────────────────
+  // ── Single card badges ─────────────────────────────────────────────────────
+  singleFeatured: {
+    marginTop: 8, alignSelf: 'center',
+    backgroundColor: C.GOLD + '22', borderRadius: 6,
+    paddingHorizontal: 14, paddingVertical: 5,
+    borderWidth: 1, borderColor: C.GOLD,
+  },
+  singleFeaturedTxt: { color: C.GOLD, fontSize: 11, fontWeight: '900', letterSpacing: 2 },
   singleNew: {
-    marginTop: 10, alignSelf: 'center',
+    marginTop: 6, alignSelf: 'center',
     backgroundColor: C.SUCCESS + '22', borderRadius: 6,
     paddingHorizontal: 14, paddingVertical: 5,
     borderWidth: 1, borderColor: C.SUCCESS,
   },
   singleNewTxt: { color: C.SUCCESS, fontSize: 11, fontWeight: '800', letterSpacing: 2 },
 
+  // ── 50/50 guarantee row (pity card) ────────────────────────────────────────
+  guaranteeRow: {
+    marginTop: 6, borderRadius: 5, borderWidth: 1,
+    paddingHorizontal: 8, paddingVertical: 4,
+    alignItems: 'center',
+  },
+  guaranteeTxt: { fontSize: 8, fontWeight: '900', letterSpacing: 1 },
+
   // ── Star particle ──────────────────────────────────────────────────────────
   starDot: { position: 'absolute', backgroundColor: 'white' },
+
+  // ── History button (header) ────────────────────────────────────────────────
+  historyBtn: {
+    marginLeft: 8, padding: 6,
+    borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.10)',
+  },
+
+  // ── Banner tabs ────────────────────────────────────────────────────────────
+  bannerTabs: {
+    flexDirection: 'row', gap: 6,
+    paddingHorizontal: 10, paddingVertical: 6,
+    backgroundColor: C.BG_DEEP,
+    borderBottomWidth: 1, borderBottomColor: C.BORDER_SUBTLE,
+  },
+  bannerTab: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 12, paddingVertical: 5,
+    borderRadius: 6, borderWidth: 1, borderColor: C.BORDER,
+    backgroundColor: C.GLASS_3,
+  },
+  bannerTabActive: {
+    backgroundColor: C.PRIMARY + '22',
+    borderColor: C.PRIMARY_LIGHT,
+  },
+  bannerTabTxt: {
+    fontSize: 9, fontWeight: '800', letterSpacing: 1.5,
+    color: C.TEXT_MUTED,
+  },
+  bannerTabTxtActive: {
+    color: C.PRIMARY_LIGHT,
+  },
+  bannerTabDot: {
+    width: 6, height: 6, borderRadius: 3,
+  },
+
+  // ── Standard banner: featured pool ────────────────────────────────────────
+  featDots:      { flexDirection: 'row', gap: 5, justifyContent: 'center', paddingTop: 5 },
+  featDot:       { width: 5, height: 5, borderRadius: 3, backgroundColor: C.GLASS_5 },
+  featDotActive: { width: 14, backgroundColor: C.PRIMARY_LIGHT },
+
+  featSectionLabel: { fontSize: 8, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1.5, marginBottom: 4 },
+  featMinis:        { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
+  featMiniS: {
+    width: 48, height: 48, borderRadius: 8, overflow: 'hidden', borderWidth: 2,
+  },
+  featMiniAB: {
+    width: 32, height: 32, borderRadius: 5, overflow: 'hidden', borderWidth: 1.5,
+  },
+  featMiniImg:        { width: '100%', height: '100%' },
+  featMiniActiveRing: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 8, borderWidth: 2 },
+  featMiniRankBadge:  { position: 'absolute', bottom: 1, right: 1, paddingHorizontal: 2, borderRadius: 2 },
+  featMiniRankTxt:    { fontSize: 6, fontWeight: '900' },
 });

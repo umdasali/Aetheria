@@ -35,7 +35,8 @@ function useResetCountdown() {
 }
 
 export default function DailyQuestScreen({ navigation }) {
-  const { getDailyQuestProgress, claimQuestReward } = useGameStore();
+  const getDailyQuestProgress = useGameStore(s => s.getDailyQuestProgress);
+  const claimQuestReward      = useGameStore(s => s.claimQuestReward);
   const { progress, claimed } = getDailyQuestProgress();
   const resetIn = useResetCountdown();
 

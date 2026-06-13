@@ -43,10 +43,15 @@ function getDominantFaction(ownedHeroIds) {
 
 export default function ProfileScreen({ navigation }) {
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
-  const {
-    ownedHeroes, team, gems, completedChapters, heroCollection, dailyStreak,
-    playerProfile, playerUid, towerHighestFloor,
-  } = useGameStore();
+  const ownedHeroes       = useGameStore(s => s.ownedHeroes);
+  const team              = useGameStore(s => s.team);
+  const gems              = useGameStore(s => s.gems);
+  const completedChapters = useGameStore(s => s.completedChapters);
+  const heroCollection    = useGameStore(s => s.heroCollection);
+  const dailyStreak       = useGameStore(s => s.dailyStreak);
+  const playerProfile     = useGameStore(s => s.playerProfile);
+  const playerUid         = useGameStore(s => s.playerUid);
+  const towerHighestFloor = useGameStore(s => s.towerHighestFloor);
 
   const { level, currentXP, nextLevelXP, progress } = useMemo(
     () => calcPlayerLevel({ completedChapters, ownedHeroes, heroCollection, dailyStreak }),

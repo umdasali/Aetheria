@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { uploadSave } from './cloudSave';
+import { isSignedIn } from './auth';
 
 const SYNC_DELAY = 30_000;   // 30s debounce window
 const MAX_DELAY  = 300_000;  // 5 min max retry delay
@@ -21,7 +22,7 @@ export function triggerSync() {
 
 async function _doSync() {
   _timer = null;
-  if (!_getState) return;
+  if (!_getState || !isSignedIn()) return;
   const result = await uploadSave(_getState());
   if (result.ok) {
     _retryCount = 0;
@@ -41,6 +42,10 @@ export async function syncNow(getStateFn) {
   if (result.ok) {
     _retryCount = 0;
     await AsyncStorage.setItem(LAST_SYNC_KEY, Date.now().toString());
+  } else {
+    _retryCount++;
+    const delay = Math.min(SYNC_DELAY * Math.pow(2, _retryCount), MAX_DELAY);
+    _timer = setTimeout(_doSync, delay);
   }
   return result;
 }

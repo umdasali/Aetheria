@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, Image,
 } from 'react-native';
@@ -19,8 +19,44 @@ const SIDEBAR_W  = 172;
 const PART_LABEL = ['', 'Part  I', 'Part  II', 'Part  III'];
 const PART_ICON  = ['', 'shield-outline', 'flame-outline', 'skull'];
 
+// ── Chapter tab — memoized so only the tabs whose state changed re-render ────
+const ChapterTab = memo(function ChapterTab({ ch, accessible, done, active, onSelect }) {
+  const tabColor = ch.color || C.PRIMARY;
+  return (
+    <TouchableOpacity
+      style={[styles.chTab, active && { borderColor: tabColor }]}
+      onPress={() => { if (accessible) onSelect(ch.id); }}
+      activeOpacity={accessible ? 0.8 : 1}
+    >
+      <LinearGradient
+        colors={active ? [tabColor + '30', tabColor + '18'] : ['transparent', 'transparent']}
+        style={styles.chTabGrad}
+      >
+        <View style={styles.chTabTop}>
+          <View style={[styles.chNumBadge, { backgroundColor: active ? tabColor + '30' : C.PRIMARY_GLOW }]}>
+            <Text style={[styles.chNum, { color: active ? tabColor : C.TEXT_MUTED }]}>{ch.id}</Text>
+          </View>
+          {done ? (
+            <Ionicons name="checkmark-circle" size={14} color={done && active ? tabColor : C.SUCCESS} />
+          ) : !accessible ? (
+            <Ionicons name="lock-closed" size={13} color={C.TEXT_DISABLED} />
+          ) : null}
+        </View>
+        <Text style={[styles.chTabTitle, active && { color: '#fff' }]} numberOfLines={1}>
+          {ch.title}
+        </Text>
+        <Text style={[styles.chTabSub, active && { color: 'rgba(255,255,255,0.65)' }]} numberOfLines={2}>
+          {ch.subtitle}
+        </Text>
+        {active && <View style={[styles.chTabAccent, { backgroundColor: tabColor }]} />}
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+});
+
 export default function StoryScreen({ navigation }) {
-  const { completedChapters, isChapterCompleted } = useGameStore();
+  const completedChapters  = useGameStore(s => s.completedChapters);
+  const isChapterCompleted = useGameStore(s => s.isChapterCompleted);
   const [selectedChId, setSelectedChId] = useState(1);
 
   const isUnlocked  = (sid) => isStageUnlocked(sid, completedChapters);
@@ -68,44 +104,21 @@ export default function StoryScreen({ navigation }) {
   const chAccent     = selectedCh?.accent || C.PRIMARY_LIGHT;
 
   // ── Chapter tab ────────────────────────────────────────────────────────────
-  const renderChTab = (ch) => {
-    const accessible = isChAccessible(ch.id);
-    const done       = isChapterCompleted(ch.id);
-    const active     = selectedChId === ch.id;
-    const tabColor   = ch.color || C.PRIMARY;
+  const handleSelectCh = useCallback((chId) => {
+    AudioManager.playButtonSFX();
+    setSelectedChId(chId);
+  }, []);
 
-    return (
-      <TouchableOpacity
-        key={ch.id}
-        style={[styles.chTab, active && { borderColor: tabColor }]}
-        onPress={() => { if (accessible) { AudioManager.playButtonSFX(); setSelectedChId(ch.id); } }}
-        activeOpacity={accessible ? 0.8 : 1}
-      >
-        <LinearGradient
-          colors={active ? [tabColor + '30', tabColor + '18'] : ['transparent', 'transparent']}
-          style={styles.chTabGrad}
-        >
-          <View style={styles.chTabTop}>
-            <View style={[styles.chNumBadge, { backgroundColor: active ? tabColor + '30' : C.PRIMARY_GLOW }]}>
-              <Text style={[styles.chNum, { color: active ? tabColor : C.TEXT_MUTED }]}>{ch.id}</Text>
-            </View>
-            {done ? (
-              <Ionicons name="checkmark-circle" size={14} color={done && active ? tabColor : C.SUCCESS} />
-            ) : !accessible ? (
-              <Ionicons name="lock-closed" size={13} color={C.TEXT_DISABLED} />
-            ) : null}
-          </View>
-          <Text style={[styles.chTabTitle, active && { color: '#fff' }]} numberOfLines={1}>
-            {ch.title}
-          </Text>
-          <Text style={[styles.chTabSub, active && { color: 'rgba(255,255,255,0.65)' }]} numberOfLines={2}>
-            {ch.subtitle}
-          </Text>
-          {active && <View style={[styles.chTabAccent, { backgroundColor: tabColor }]} />}
-        </LinearGradient>
-      </TouchableOpacity>
-    );
-  };
+  const renderChTab = (ch) => (
+    <ChapterTab
+      key={ch.id}
+      ch={ch}
+      accessible={isChAccessible(ch.id)}
+      done={isChapterCompleted(ch.id)}
+      active={selectedChId === ch.id}
+      onSelect={handleSelectCh}
+    />
+  );
 
   // ── Part card ──────────────────────────────────────────────────────────────
   const renderPartCard = (stage) => {

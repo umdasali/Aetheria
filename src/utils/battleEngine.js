@@ -53,6 +53,11 @@ export const EFFECT_MECHANICS = {
   DIVINE_SHIELD:   'fortify',
   SOVEREIGNTY:     'fortify',
   SMITE:           'smite',
+  // ── Khemara — sand & moon flavor aliases ──────────────────────────────────
+  MOONLIGHT:       'regen',
+  LUNAR_GRACE:     'regen',
+  SANDFLAY:        'shatter',
+  DUSTSHROUD:      'evasion',
 };
 
 const DEBUFF_SET = new Set(['stun', 'burn', 'poison', 'chill', 'shatter', 'weaken']);
@@ -63,7 +68,13 @@ const addOrRefreshEffect = (unit, effect) => {
   const effects = [...(unit.statusEffects || [])];
   const idx = effects.findIndex((fx) => fx.type === effect.type);
   if (idx >= 0) {
-    effects[idx] = { ...effects[idx], duration: Math.max(effects[idx].duration, effect.duration) };
+    // Refresh keeps the stronger of both: a weak hero's reapplication must not
+    // overwrite a strong burn's tick value (and vice versa for duration).
+    effects[idx] = {
+      ...effects[idx],
+      duration: Math.max(effects[idx].duration, effect.duration),
+      value:    Math.max(effects[idx].value ?? 0, effect.value ?? 0),
+    };
   } else {
     effects.push(effect);
   }
@@ -103,7 +114,9 @@ export const calculateDamage = (attacker, defender, multiplier) => {
   const defEff     = effectiveUnit(defender);
   const base       = eff.atk * multiplier;
   const defFactor  = 1 + (defEff.def / (defEff.def + 500)) * 1.5;
-  const critChance = (eff.crit || 0) / 1000;
+  // Cap at 60%: the crit stat is multiplied by level/rank/ascension in
+  // buildPlayers, so an uncapped crit/1000 hits 100% by mid-game.
+  const critChance = Math.min(0.6, (eff.crit || 0) / 1000);
   const isCrit     = Math.random() < critChance;
 
   // Smite passive: 2.0× crit multiplier instead of 1.75×
@@ -130,19 +143,29 @@ export const applyTrumpCard = (hero, allies, enemies) => {
     updatedEnemies = enemies.map((e) => {
       if (e.currentHp <= 0) return e;
       const { damage, isCrit } = calculateDamage(hero, e, tc.damage);
-      return {
+      let updated = {
         ...e,
         currentHp:  Math.max(0, e.currentHp - damage),
         lastDamage: damage,
         lastCrit:   isCrit,
         damageKey:  (e.damageKey || 0) + 1,
       };
+      // Trump Cards are skills — proc hero's on-hit debuff (50% chance) on each enemy hit
+      if (damage > 0) updated = applyOnHitDebuff(hero, updated, true);
+      return updated;
     });
   }
 
+  // Prefix-anchored keyword match: `\bheal` matches "heal", "heals", "healing".
+  // A full-word `\bheal\b` regex silently missed the plural verb forms every
+  // trump effect string actually uses ("heals all allies 25% HP", "stuns all
+  // enemies"), disabling the secondary effect of nearly every Trump Card
+  // (verified: 0/53 trumps healed under \bheal\b vs 47/53 with prefix match).
   const eff = (tc.effect || '').toLowerCase();
-  if (eff.includes('heal')) {
-    const m   = eff.match(/(\d+)%/);
+  const hasKeyword = (word) => new RegExp(`\\b${word}`).test(eff);
+
+  if (hasKeyword('heal') || hasKeyword('restore') || hasKeyword('recover')) {
+    const m   = eff.match(/(\d+)\s*%/);
     const pct = m ? parseInt(m[1], 10) / 100 : 0.2;
     updatedAllies = updatedAllies.map((a) => {
       if (a.currentHp <= 0) return a;
@@ -150,7 +173,7 @@ export const applyTrumpCard = (hero, allies, enemies) => {
     });
   }
 
-  if (eff.includes('shield')) {
+  if (hasKeyword('shield') || hasKeyword('barrier')) {
     const m       = eff.match(/(\d+)\s*(?:hits?)/);
     const shields = m ? parseInt(m[1], 10) : 1;
     updatedAllies = updatedAllies.map((a) => {
@@ -159,12 +182,14 @@ export const applyTrumpCard = (hero, allies, enemies) => {
     });
   }
 
-  if (eff.includes('stun')) {
+  if (hasKeyword('stun') || hasKeyword('paralyze') || hasKeyword('paralyz')) {
     const m     = eff.match(/(\d+)\s*turn/);
     const turns = m ? parseInt(m[1], 10) : 1;
     updatedEnemies = updatedEnemies.map((e) => {
       if (e.currentHp <= 0) return e;
-      return { ...e, stunned: (e.stunned || 0) + turns };
+      // Non-stacking: refresh to the trump's turn count (1–2), don't add onto an
+      // existing stun — additive stacking made stun-locks last far too long.
+      return { ...e, stunned: Math.max(e.stunned || 0, turns) };
     });
   }
 
@@ -210,10 +235,13 @@ export const applyOnHitDebuff = (hero, target, isSkill) => {
 
   switch (mechanic) {
     case 'stun':
-      return { ...target, stunned: (target.stunned || 0) + 1 };
+      // Non-stacking: a proc guarantees the target skips its next turn, but never
+      // accumulates. Procs used to add +1 each (50% per skill hit), which chain-locked
+      // enemies for several turns — the "stun feels longer" problem.
+      return { ...target, stunned: Math.max(target.stunned || 0, 1) };
     case 'burn':
       return addOrRefreshEffect(target, {
-        type: 'burn', duration: 3,
+        type: 'burn', duration: 2,
         value: Math.floor((hero.atk || 0) * 0.08),
       });
     case 'poison':
@@ -292,7 +320,11 @@ export const getSmartAIAction = (enemy, playerTeam, actorEnergy = 0, skillCosts 
 
   if (!living.length) return null;
 
-  const primary = living[0];
+  // 20% chance to pick a random living hero instead of always targeting the weakest,
+  // preventing degenerate strategies where one low-HP hero permanently absorbs all aggro.
+  const primary = living.length > 1 && Math.random() < 0.20
+    ? living[Math.floor(Math.random() * living.length)]
+    : living[0];
 
   const canAfford = (idx) => actorEnergy >= (skillCosts[idx] ?? skillCosts[0]);
 

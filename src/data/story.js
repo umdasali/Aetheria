@@ -72,7 +72,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',    text: 'The first battle of a legendary war had begun on the frost-touched frontier.' },
     ],
     enemyGroupId: 101,
-    rewards: { gems: 20, heroId: null },
+    rewards: { gems: 8, heroId: null },
   },
   {
     id: 102, chapterId: 1, part: 2,
@@ -87,7 +87,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the organized void battalion, the heroes prepared for their hardest fight yet.' },
     ],
     enemyGroupId: 102,
-    rewards: { gems: 35, heroId: null },
+    rewards: { gems: 15, heroId: null },
   },
   {
     id: 103, chapterId: 1, part: 3,
@@ -102,7 +102,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Glacial Empress, the heroes unleashed every Trump Card at their disposal.' },
     ],
     enemyGroupId: 103,
-    rewards: { gems: 65, heroId: 'hero_031' },
+    rewards: { gems: 30, heroId: 'hero_031' },
   },
 
   // ── CHAPTER 2: ASHEN INFERNO ───────────────────────────────────────────────
@@ -119,7 +119,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Into the ashen inferno, the heroes charged against the first wave of fire-born warriors.' },
     ],
     enemyGroupId: 201,
-    rewards: { gems: 25, heroId: null },
+    rewards: { gems: 8, heroId: null },
   },
   {
     id: 202, chapterId: 2, part: 2,
@@ -134,7 +134,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Surrounded by fire walls, the heroes faced the Inferno Warden in a battle of pure will.' },
     ],
     enemyGroupId: 202,
-    rewards: { gems: 42, heroId: null },
+    rewards: { gems: 15, heroId: null },
   },
   {
     id: 203, chapterId: 2, part: 3,
@@ -149,7 +149,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Pyrevex, the heroes fought in the heart of an erupting caldera, their Trump Cards blazing.' },
     ],
     enemyGroupId: 203,
-    rewards: { gems: 75, heroId: null },
+    rewards: { gems: 30, heroId: null },
   },
 
   // ── CHAPTER 3: DAWN OF RADIANCE ────────────────────────────────────────────
@@ -166,7 +166,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Into the fallen sacred ground, the heroes fought corrupted paladins who had once been their allies.' },
     ],
     enemyGroupId: 301,
-    rewards: { gems: 30, heroId: null },
+    rewards: { gems: 8, heroId: null },
   },
   {
     id: 302, chapterId: 3, part: 2,
@@ -181,7 +181,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the corrupted Forest Knight, the heroes fought at the gates of the last uncorrupted sanctum.' },
     ],
     enemyGroupId: 302,
-    rewards: { gems: 50, heroId: null },
+    rewards: { gems: 15, heroId: null },
   },
   {
     id: 303, chapterId: 3, part: 3,
@@ -196,7 +196,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Aurariel, the heroes fought not just for survival — but to prove existence was worth fighting for.' },
     ],
     enemyGroupId: 303,
-    rewards: { gems: 85, heroId: 'hero_006' },
+    rewards: { gems: 30, heroId: 'hero_006' },
   },
 
   // ── CHAPTER 4: THORNWALL ───────────────────────────────────────────────────
@@ -213,7 +213,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Into the corrupted ancient forest, the heroes fought beasts that were once beloved guardians.' },
     ],
     enemyGroupId: 401,
-    rewards: { gems: 35, heroId: null },
+    rewards: { gems: 8, heroId: null },
   },
   {
     id: 402, chapterId: 4, part: 2,
@@ -228,7 +228,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Crimson Widow Queen, the heroes fought to break through the living thorn barrier.' },
     ],
     enemyGroupId: 402,
-    rewards: { gems: 58, heroId: null },
+    rewards: { gems: 15, heroId: null },
   },
   {
     id: 403, chapterId: 4, part: 3,
@@ -243,7 +243,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Thornqueen Sylva, the heroes fought to free both the forest and its tragic guardian.' },
     ],
     enemyGroupId: 403,
-    rewards: { gems: 95, heroId: null },
+    rewards: { gems: 30, heroId: null },
   },
 
   // ── CHAPTER 5: VERDANT RUIN ────────────────────────────────────────────────
@@ -260,7 +260,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Through clouds of corrupted bloom spores, the heroes pushed toward the devouring heart of the infestation.' },
     ],
     enemyGroupId: 501,
-    rewards: { gems: 40, heroId: null },
+    rewards: { gems: 8, heroId: null },
   },
   {
     id: 502, chapterId: 5, part: 2,
@@ -275,7 +275,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Frostveil Sorceress, the heroes raced to defeat a foe who had already studied them.' },
     ],
     enemyGroupId: 502,
-    rewards: { gems: 65, heroId: null },
+    rewards: { gems: 15, heroId: null },
   },
   {
     id: 503, chapterId: 5, part: 3,
@@ -290,7 +290,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Verdara, the heroes fought to extinguish the corruption at its very source before it devoured the world.' },
     ],
     enemyGroupId: 503,
-    rewards: { gems: 105, heroId: null },
+    rewards: { gems: 30, heroId: null },
   },
 
   // ── CHAPTER 6: SHADOWBLOOM ─────────────────────────────────────────────────
@@ -307,7 +307,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'The heroes struck first, silencing the sirens\' dark song before the ghouls could fully awaken.' },
     ],
     enemyGroupId: 601,
-    rewards: { gems: 45, heroId: null },
+    rewards: { gems: 10, heroId: null },
   },
   {
     id: 602, chapterId: 6, part: 2,
@@ -322,7 +322,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Fallen Valkyrie, the heroes fought through ancient loss and corrupted grace.' },
     ],
     enemyGroupId: 602,
-    rewards: { gems: 72, heroId: null },
+    rewards: { gems: 20, heroId: null },
   },
   {
     id: 603, chapterId: 6, part: 3,
@@ -337,7 +337,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Nyx Shadowbloom, the heroes fought to reclaim the World Tree\'s stolen soul.' },
     ],
     enemyGroupId: 603,
-    rewards: { gems: 115, heroId: null },
+    rewards: { gems: 38, heroId: null },
   },
 
   // ── CHAPTER 7: ABYSSAL GATE ────────────────────────────────────────────────
@@ -354,7 +354,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Void Legions, the heroes raced to stem the abyssal tide before the gate fully opened.' },
     ],
     enemyGroupId: 701,
-    rewards: { gems: 50, heroId: null },
+    rewards: { gems: 10, heroId: null },
   },
   {
     id: 702, chapterId: 7, part: 2,
@@ -369,7 +369,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the seeing Prophet, the heroes fought with pure instinct, giving him no future to read.' },
     ],
     enemyGroupId: 702,
-    rewards: { gems: 80, heroId: null },
+    rewards: { gems: 20, heroId: null },
   },
   {
     id: 703, chapterId: 7, part: 3,
@@ -384,7 +384,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Abyss Sovereign, the heroes unleashed the complete power of their Trump Cards in a single moment.' },
     ],
     enemyGroupId: 703,
-    rewards: { gems: 128, heroId: 'hero_010' },
+    rewards: { gems: 38, heroId: 'hero_010' },
   },
 
   // ── CHAPTER 8: ECLIPSE RISING ──────────────────────────────────────────────
@@ -401,7 +401,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Racing against the darkening sky, the heroes tore through the Eclipse vanguard with desperate speed.' },
     ],
     enemyGroupId: 801,
-    rewards: { gems: 55, heroId: null },
+    rewards: { gems: 10, heroId: null },
   },
   {
     id: 802, chapterId: 8, part: 2,
@@ -416,7 +416,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Void Samurai, the heroes answered art with unity — five voices speaking as one blade.' },
     ],
     enemyGroupId: 802,
-    rewards: { gems: 88, heroId: null },
+    rewards: { gems: 20, heroId: null },
   },
   {
     id: 803, chapterId: 8, part: 3,
@@ -431,7 +431,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Radiant Dragon Emperor, the heroes fought against blinding divine light with Trump Cards blazing from every shadow element.' },
     ],
     enemyGroupId: 803,
-    rewards: { gems: 140, heroId: null },
+    rewards: { gems: 38, heroId: null },
   },
 
   // ── CHAPTER 9: CELESTIAL FRACTURE ─────────────────────────────────────────
@@ -448,7 +448,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Through a realm caught between heaven and void, the heroes fought corrupted celestials on both fronts.' },
     ],
     enemyGroupId: 901,
-    rewards: { gems: 60, heroId: null },
+    rewards: { gems: 10, heroId: null },
   },
   {
     id: 902, chapterId: 9, part: 2,
@@ -463,7 +463,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Clockwork Commander, the heroes used chaos to defeat the machine\'s perfect order.' },
     ],
     enemyGroupId: 902,
-    rewards: { gems: 95, heroId: null },
+    rewards: { gems: 20, heroId: null },
   },
   {
     id: 903, chapterId: 9, part: 3,
@@ -478,7 +478,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Celestial Valkor, five factions united to defend the very definition of existence itself.' },
     ],
     enemyGroupId: 903,
-    rewards: { gems: 152, heroId: null },
+    rewards: { gems: 38, heroId: null },
   },
 
   // ── CHAPTER 10: VOID QUEEN'S REIGN ────────────────────────────────────────
@@ -495,7 +495,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',    text: 'Against the divided vanguard, the heroes divided themselves to counter three coordinated corruptions.' },
     ],
     enemyGroupId: 1001,
-    rewards: { gems: 65, heroId: null },
+    rewards: { gems: 10, heroId: null },
   },
   {
     id: 1002, chapterId: 10, part: 2,
@@ -510,7 +510,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Nature Assassin, the heroes flooded her sensor network with overwhelming simultaneous action.' },
     ],
     enemyGroupId: 1002,
-    rewards: { gems: 105, heroId: null },
+    rewards: { gems: 20, heroId: null },
   },
   {
     id: 1003, chapterId: 10, part: 3,
@@ -525,7 +525,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',    text: "Against Queen Nythera, the heroes stormed the stolen celestial throne with every weapon they possessed." },
     ],
     enemyGroupId: 1003,
-    rewards: { gems: 165, heroId: null },
+    rewards: { gems: 38, heroId: null },
   },
 
   // ── CHAPTER 11: TITAN'S MARCH ─────────────────────────────────────────────
@@ -542,7 +542,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the titan vanguard, the heroes raced to defeat each wave before exhaustion could set in.' },
     ],
     enemyGroupId: 1101,
-    rewards: { gems: 72, heroId: null },
+    rewards: { gems: 13, heroId: null },
   },
   {
     id: 1102, chapterId: 11, part: 2,
@@ -557,7 +557,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Berserker King, the heroes raced to end the fight before his rage could make him unstoppable.' },
     ],
     enemyGroupId: 1102,
-    rewards: { gems: 115, heroId: null },
+    rewards: { gems: 25, heroId: null },
   },
   {
     id: 1103, chapterId: 11, part: 3,
@@ -572,7 +572,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Titan King, the heroes executed a precision assault against the burning core that sustained his terrible power.' },
     ],
     enemyGroupId: 1103,
-    rewards: { gems: 180, heroId: 'hero_014' },
+    rewards: { gems: 47, heroId: 'hero_014' },
   },
 
   // ── CHAPTER 12: TIME'S END ─────────────────────────────────────────────────
@@ -589,7 +589,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Fighting in stuttering time, the heroes learned to trust instinct over their own distorted perception.' },
     ],
     enemyGroupId: 1201,
-    rewards: { gems: 80, heroId: null },
+    rewards: { gems: 13, heroId: null },
   },
   {
     id: 1202, chapterId: 12, part: 2,
@@ -604,7 +604,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the deathless Revenant, the heroes struck with enough force to break even a god\'s temporal reset.' },
     ],
     enemyGroupId: 1202,
-    rewards: { gems: 125, heroId: null },
+    rewards: { gems: 25, heroId: null },
   },
   {
     id: 1203, chapterId: 12, part: 3,
@@ -619,7 +619,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',    text: 'Against the God of Time, the heroes burned every ounce of power before Chronos could undo it.' },
     ],
     enemyGroupId: 1203,
-    rewards: { gems: 195, heroId: null },
+    rewards: { gems: 47, heroId: null },
   },
 
   // ── CHAPTER 13: ETERNAL WINTER ────────────────────────────────────────────
@@ -636,7 +636,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Ready or not, the heroes stepped into the Frostbound Monarch\'s eternal winter for the final battle.' },
     ],
     enemyGroupId: 1301,
-    rewards: { gems: 88, heroId: null },
+    rewards: { gems: 13, heroId: null },
   },
   {
     id: 1302, chapterId: 13, part: 2,
@@ -651,7 +651,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Storm Siren, the heroes fought to silence a voice that commanded the end of all weather.' },
     ],
     enemyGroupId: 1302,
-    rewards: { gems: 135, heroId: null },
+    rewards: { gems: 25, heroId: null },
   },
   {
     id: 1303, chapterId: 13, part: 3,
@@ -666,7 +666,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Frostbound Monarch, the heroes fought with every lesson, every scar, every Trump Card earned.' },
     ],
     enemyGroupId: 1303,
-    rewards: { gems: 210, heroId: null },
+    rewards: { gems: 47, heroId: null },
   },
 
   // ── CHAPTER 14: CRIMSON EMPIRE ────────────────────────────────────────────
@@ -683,7 +683,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Into Seraphine\'s court, the heroes fought knowing their every past victory had fed their current enemy.' },
     ],
     enemyGroupId: 1401,
-    rewards: { gems: 95, heroId: null },
+    rewards: { gems: 13, heroId: null },
   },
   {
     id: 1402, chapterId: 14, part: 2,
@@ -698,7 +698,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the empowered Widow Queen, the heroes fought to cut off Seraphine\'s power conduit from its source.' },
     ],
     enemyGroupId: 1402,
-    rewards: { gems: 148, heroId: null },
+    rewards: { gems: 25, heroId: null },
   },
   {
     id: 1403, chapterId: 14, part: 3,
@@ -713,7 +713,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Crimson Empress, the heroes fought with combinations of power she had never anticipated in all her planning.' },
     ],
     enemyGroupId: 1403,
-    rewards: { gems: 228, heroId: null },
+    rewards: { gems: 47, heroId: null },
   },
 
   // ── CHAPTER 15: WORLD'S LAST HOUR ─────────────────────────────────────────
@@ -730,7 +730,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the World Eater\'s herald, the heroes fought to remain real in a universe being eaten alive.' },
     ],
     enemyGroupId: 1501,
-    rewards: { gems: 105, heroId: null },
+    rewards: { gems: 13, heroId: null },
   },
   {
     id: 1502, chapterId: 15, part: 2,
@@ -745,7 +745,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'At the threshold of oblivion, the heroes met the last guardian with Trump Cards blazing at full power.' },
     ],
     enemyGroupId: 1502,
-    rewards: { gems: 160, heroId: null },
+    rewards: { gems: 25, heroId: null },
   },
   {
     id: 1503, chapterId: 15, part: 3,
@@ -760,7 +760,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Five factions stood as one before an entity that had consumed entire universes. This was the end — or a new beginning.' },
     ],
     enemyGroupId: 1503,
-    rewards: { gems: 250, heroId: null },
+    rewards: { gems: 47, heroId: null },
   },
 
   // ── CHAPTER 16: CATHEDRAL OF CHAINS ──────────────────────────────────────
@@ -777,7 +777,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Into the Cathedral of Chains, the heroes chased a darkness that had been patient for centuries — watching, feeding, and waiting.' },
     ],
     enemyGroupId: 1601,
-    rewards: { gems: 115, heroId: null },
+    rewards: { gems: 16, heroId: null },
   },
   {
     id: 1602, chapterId: 16, part: 2,
@@ -792,7 +792,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Against the Stone Keeper, the heroes fought a guardian of living earth, timing every blow to the brief moment before its massive stone fists struck the cathedral floor.' },
     ],
     enemyGroupId: 1602,
-    rewards: { gems: 172, heroId: null },
+    rewards: { gems: 30, heroId: null },
   },
   {
     id: 1603, chapterId: 16, part: 3,
@@ -807,7 +807,9 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Against Visalia the Crimson, the heroes confronted the true architect behind every shadow of the war — and gave her no more time to feed.' },
     ],
     enemyGroupId: 1603,
-    rewards: { gems: 268, heroId: 'hero_037' },
+    // hero_046 (Kaiden Rhayne, A-rank VOIDMARK) — S-rank drops are suppressed
+    // by completeChapter, so an S hero here would silently never be granted.
+    rewards: { gems: 55, heroId: 'hero_046' },
   },
 
   // ── CHAPTER 17: THE HOLLOW CROWN ──────────────────────────────────────────
@@ -824,7 +826,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Into the unnamed kingdom, the heroes fought soldiers whose loyalty endured beyond death, beyond erasure, beyond the edge of recorded history.' },
     ],
     enemyGroupId: 1701,
-    rewards: { gems: 125, heroId: null },
+    rewards: { gems: 16, heroId: null },
   },
   {
     id: 1702, chapterId: 17, part: 2,
@@ -839,7 +841,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Against Lady Silkgrave, the heroes fought a queen whose loneliness had transformed into something vast enough to fill an entire abandoned kingdom.' },
     ],
     enemyGroupId: 1702,
-    rewards: { gems: 185, heroId: null },
+    rewards: { gems: 30, heroId: null },
   },
   {
     id: 1703, chapterId: 17, part: 3,
@@ -854,7 +856,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Against the Crownless King, the heroes fought in the darkness of erased history — their Trump Cards blazing with the names of those who were never allowed to be remembered.' },
     ],
     enemyGroupId: 1703,
-    rewards: { gems: 285, heroId: 'hero_038' },
+    rewards: { gems: 55, heroId: 'hero_038' },
   },
 
   // ── CHAPTER 18: DIVIDED HEAVEN ────────────────────────────────────────────
@@ -871,7 +873,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Through the volcanic monastery, the heroes fought forge-cultists protecting a goddess in the process of becoming something beyond all categories of power.' },
     ],
     enemyGroupId: 1801,
-    rewards: { gems: 135, heroId: null },
+    rewards: { gems: 16, heroId: null },
   },
   {
     id: 1802, chapterId: 18, part: 2,
@@ -886,7 +888,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Against the Furnace Saint, the heroes met zealotry made physical — and answered it with the only thing stronger than faith: five factions acting as one.' },
     ],
     enemyGroupId: 1802,
-    rewards: { gems: 200, heroId: null },
+    rewards: { gems: 30, heroId: null },
   },
   {
     id: 1803, chapterId: 18, part: 3,
@@ -901,7 +903,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Against Mother Eclipse, five factions faced a being that was the sum of all opposites — and answered the impossible with every last Trump Card they possessed.' },
     ],
     enemyGroupId: 1803,
-    rewards: { gems: 305, heroId: 'hero_039' },
+    rewards: { gems: 55, heroId: 'hero_039' },
   },
 
   // ── CHAPTER 19: THE LIVING ARCHIVE ────────────────────────────────────────
@@ -918,7 +920,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Through a library that read its visitors, the heroes pursued a devourer that had consumed more knowledge than entire civilizations could produce in a thousand years.' },
     ],
     enemyGroupId: 1901,
-    rewards: { gems: 148, heroId: null },
+    rewards: { gems: 16, heroId: null },
   },
   {
     id: 1902, chapterId: 19, part: 2,
@@ -933,7 +935,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Against the Void-Touched Navigator, the heroes fought a man half-lost between worlds — and whole-heartedly defending the wrong master out of enforced loyalty.' },
     ],
     enemyGroupId: 1902,
-    rewards: { gems: 215, heroId: null },
+    rewards: { gems: 30, heroId: null },
   },
   {
     id: 1903, chapterId: 19, part: 3,
@@ -948,7 +950,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Against the Archive Devourer, the heroes wrote a new chapter — one that had never appeared in any text the ancient beast had ever consumed in all its endless centuries.' },
     ],
     enemyGroupId: 1903,
-    rewards: { gems: 325, heroId: 'hero_040' },
+    rewards: { gems: 55, heroId: 'hero_040' },
   },
 
   // ── CHAPTER 20: BEFORE THE FIRST BREATH ───────────────────────────────────
@@ -965,7 +967,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Stepping into the dreaming substrate beneath all reality, the heroes prepared for the battle that would determine whether existence itself continued forward.' },
     ],
     enemyGroupId: 2001,
-    rewards: { gems: 160, heroId: null },
+    rewards: { gems: 16, heroId: null },
   },
   {
     id: 2002, chapterId: 20, part: 2,
@@ -980,7 +982,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Against the Last Marionette, the heroes fought the most sorrowful guardian they had ever faced — and honored her performance by matching it with everything they had.' },
     ],
     enemyGroupId: 2002,
-    rewards: { gems: 232, heroId: null },
+    rewards: { gems: 30, heroId: null },
   },
   {
     id: 2003, chapterId: 20, part: 3,
@@ -995,7 +997,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',  text: 'Against the First Dream, the heroes gave everything — not to destroy, but to show something ancient and vast that the world it dreamed was worth preserving. This was the true final hour.' },
     ],
     enemyGroupId: 2003,
-    rewards: { gems: 350, heroId: null },
+    rewards: { gems: 55, heroId: null },
   },
 
   // ── CHAPTER 21: SHADOW SOVEREIGN ──────────────────────────────────────────────
@@ -1012,7 +1014,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Into the creeping shadow at the edge of reality, the heroes charged to meet the forces of a sovereign who had been patient for centuries.' },
     ],
     enemyGroupId: 2101,
-    rewards: { gems: 175, heroId: null },
+    rewards: { gems: 20, heroId: null },
   },
   {
     id: 2102, chapterId: 21, part: 2,
@@ -1027,7 +1029,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'The kitsune specter danced between dimensions, and the heroes hunted the single point of truth within her illusions.' },
     ],
     enemyGroupId: 2102,
-    rewards: { gems: 252, heroId: null },
+    rewards: { gems: 36, heroId: null },
   },
   {
     id: 2103, chapterId: 21, part: 3,
@@ -1042,7 +1044,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Shadow Sovereign, the heroes gave everything they had — not as five factions, but as one unified force that shadow had never encountered before.' },
     ],
     enemyGroupId: 2103,
-    rewards: { gems: 380, heroId: 'hero_049' },
+    rewards: { gems: 62, heroId: 'hero_049' },
   },
 
   // ── CHAPTER 22: THE COSMIC WEAVE ──────────────────────────────────────────────
@@ -1059,7 +1061,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Across the crystallised star field, the heroes fought creatures born from dead light — remnants of a star being consumed for power.' },
     ],
     enemyGroupId: 2201,
-    rewards: { gems: 190, heroId: null },
+    rewards: { gems: 20, heroId: null },
   },
   {
     id: 2202, chapterId: 22, part: 2,
@@ -1074,7 +1076,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Obsidian Scholar, the heroes battled a mage whose greatest weapon was knowledge assembled from things that should not have survived their own extinction.' },
     ],
     enemyGroupId: 2202,
-    rewards: { gems: 272, heroId: null },
+    rewards: { gems: 36, heroId: null },
   },
   {
     id: 2203, chapterId: 22, part: 3,
@@ -1089,7 +1091,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Caelestra the Cosmic Weaver, the heroes fought to prove that one living world was worth more than all the preserved memories of the dead.' },
     ],
     enemyGroupId: 2203,
-    rewards: { gems: 410, heroId: 'hero_044' },
+    rewards: { gems: 62, heroId: 'hero_044' },
   },
 
   // ── CHAPTER 23: DEMON GLACIER ──────────────────────────────────────────────────
@@ -1106,7 +1108,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Into the frozen underworld\'s emergence corridor, the heroes pushed — racing against a barrier that was dissolving with every minute they spent deliberating.' },
     ],
     enemyGroupId: 2301,
-    rewards: { gems: 208, heroId: null },
+    rewards: { gems: 20, heroId: null },
   },
   {
     id: 2302, chapterId: 23, part: 2,
@@ -1121,7 +1123,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Lysse the Youngest, the heroes battled a scholar of the Crimson bloodline who had confused curiosity with permission.' },
     ],
     enemyGroupId: 2302,
-    rewards: { gems: 295, heroId: null },
+    rewards: { gems: 36, heroId: null },
   },
   {
     id: 2303, chapterId: 23, part: 3,
@@ -1136,7 +1138,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Glacidra the Frost Demon, the heroes fought not a creature of cold but a living argument that warmth should not exist — and they answered that argument with everything they had.' },
     ],
     enemyGroupId: 2303,
-    rewards: { gems: 442, heroId: 'hero_042' },
+    rewards: { gems: 62, heroId: 'hero_042' },
   },
 
   // ── CHAPTER 24: THE ELDER CRIMSON ─────────────────────────────────────────────
@@ -1153,7 +1155,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'The heroes fought through a domain that predated every kingdom they had ever heard of, defending a threshold held by the eldest of a line that had never truly ended.' },
     ],
     enemyGroupId: 2401,
-    rewards: { gems: 225, heroId: null },
+    rewards: { gems: 20, heroId: null },
   },
   {
     id: 2402, chapterId: 24, part: 2,
@@ -1168,7 +1170,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against the Fae Enchantress, the heroes battled a guardian who had turned the very atmosphere into a weapon, and dismantled it layer by layer.' },
     ],
     enemyGroupId: 2402,
-    rewards: { gems: 318, heroId: null },
+    rewards: { gems: 36, heroId: null },
   },
   {
     id: 2403, chapterId: 24, part: 3,
@@ -1183,7 +1185,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Lady Lyssiel the Elder Crimson, the heroes faced the source of a bloodline that had endured everything — and discovered what it meant to face something that had genuinely never been defeated before.' },
     ],
     enemyGroupId: 2403,
-    rewards: { gems: 475, heroId: 'hero_048' },
+    rewards: { gems: 62, heroId: 'hero_048' },
   },
 
   // ── CHAPTER 25: THE FIRST ENTITY ──────────────────────────────────────────────
@@ -1200,7 +1202,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Into the primordial dark beyond all named history, the heroes walked toward something that had existed before their world had a name — and tried to understand why it had finally decided to look.' },
     ],
     enemyGroupId: 2501,
-    rewards: { gems: 245, heroId: null },
+    rewards: { gems: 20, heroId: null },
   },
   {
     id: 2502, chapterId: 25, part: 2,
@@ -1215,7 +1217,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against Briar the Elder, the heroes fought the final guardian of a threshold between the known world and something that had never been named — and tried to prove they deserved to cross it.' },
     ],
     enemyGroupId: 2502,
-    rewards: { gems: 345, heroId: null },
+    rewards: { gems: 36, heroId: null },
   },
   {
     id: 2503, chapterId: 25, part: 3,
@@ -1230,7 +1232,7 @@ export const STORY_STAGES = [
       { speaker: 'Narrator',   text: 'Against The Origin — the First Entity of Aetheria — the heroes gave the only answer they had: the full, undiluted fact of their existence, unified across five factions, burning bright enough that something older than time itself might choose to let it continue.' },
     ],
     enemyGroupId: 2503,
-    rewards: { gems: 510, heroId: null },
+    rewards: { gems: 62, heroId: null },
   },
 ];
 

@@ -28,13 +28,16 @@ const FACTION_FILTERS = [
   { key: 'SUNSPIRE',  label: 'Sunspire'   },
   { key: 'VERDANIA',  label: 'Verdania'   },
   { key: 'VOIDMARK',  label: 'Voidmark'   },
+  { key: 'KHEMARA',   label: 'Khemara'    },
 ];
 
 const SORT_OPTIONS = ['Default', 'Rank', 'Name'];
 const RANK_ORDER   = { SOVEREIGN: -1, S: 0, A: 1, B: 2, C: 3 };
 
 export default function CollectionScreen({ navigation }) {
-  const { ownedHeroes, team, heroCollection } = useGameStore();
+  const ownedHeroes    = useGameStore(s => s.ownedHeroes);
+  const team           = useGameStore(s => s.team);
+  const heroCollection = useGameStore(s => s.heroCollection);
   const [filter,   setFilter]   = useState('All');
   const [sortBy,   setSortBy]   = useState('Default');
   const [showSort, setShowSort] = useState(false);
@@ -64,6 +67,12 @@ export default function CollectionScreen({ navigation }) {
     }, [])
   );
 
+  // Stable press handler — keeps HeroGridCard memoization effective across re-renders
+  const handleHeroPress = useCallback((heroId) => {
+    AudioManager.playButtonSFX();
+    navigation.navigate('HeroDetail', { heroId });
+  }, [navigation]);
+
   // Stable renderItem — only re-created when the dependencies that affect card rendering change.
   const renderItem = useCallback(({ item: hero }) => (
     <HeroGridCard
@@ -71,9 +80,9 @@ export default function CollectionScreen({ navigation }) {
       owned={isOwned(hero.id)}
       onTeam={inTeam(hero.id)}
       effectiveRank={heroCollection[hero.id]?.effectiveRank ?? hero.rank}
-      onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('HeroDetail', { heroId: hero.id }); }}
+      onPress={handleHeroPress}
     />
-  ), [isOwned, inTeam, navigation, heroCollection]);
+  ), [isOwned, inTeam, handleHeroPress, heroCollection]);
 
   return (
     <View style={styles.root}>
@@ -210,7 +219,7 @@ const HeroGridCard = memo(function HeroGridCard({ hero, owned, onTeam, effective
   return (
     <TouchableOpacity
       style={[styles.gridCard, !owned && styles.gridCardLocked, onTeam && styles.gridCardInTeam]}
-      onPress={onPress}
+      onPress={() => onPress(hero.id)}
       activeOpacity={0.82}
     >
       {/* Faction-tinted skeleton — visible immediately while portrait decodes */}

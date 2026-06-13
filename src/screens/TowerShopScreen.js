@@ -30,11 +30,15 @@ const ASC_IMG_H = Math.round(CARD_H * 0.37);
 const BDL_IMG_H = Math.round(CARD_H * 0.28);
 
 // ─── Currency bundles ─────────────────────────────────────────────────────────
+// Gem pricing: a full weekly 1→200 climb yields ~5,425 coins. At ~2.5-3 coins
+// per gem that caps shop gems at ~2,000/week — in line with quest/boss income.
+// (The old 0.3 coins/gem rate made the tower worth ~17k gems/week and broke
+// the gacha economy.)
 const BUNDLES = [
-  { id: 'gems_30',   type: 'gems', amount: 30,   cost: 10, label: '30 Gems',    img: GEM_IMG,  color: C.PRIMARY_LIGHT },
-  { id: 'gems_80',   type: 'gems', amount: 80,   cost: 25, label: '80 Gems',    img: GEM_IMG,  color: C.PRIMARY,       tag: 'VALUE' },
-  { id: 'gold_500',  type: 'gold', amount: 500,  cost: 5,  label: '500 Gold',   img: GOLD_IMG, color: C.GOLD },
-  { id: 'gold_1500', type: 'gold', amount: 1500, cost: 12, label: '1,500 Gold', img: GOLD_IMG, color: C.GOLD,          tag: 'BEST' },
+  { id: 'gems_30',   type: 'gems', amount: 30,   cost: 90,  label: '30 Gems',    img: GEM_IMG,  color: C.PRIMARY_LIGHT },
+  { id: 'gems_80',   type: 'gems', amount: 80,   cost: 200, label: '80 Gems',    img: GEM_IMG,  color: C.PRIMARY,       tag: 'VALUE' },
+  { id: 'gold_500',  type: 'gold', amount: 500,  cost: 5,   label: '500 Gold',   img: GOLD_IMG, color: C.GOLD },
+  { id: 'gold_1500', type: 'gold', amount: 1500, cost: 12,  label: '1,500 Gold', img: GOLD_IMG, color: C.GOLD,          tag: 'BEST' },
 ];
 
 // ─── Ascension Item Card ──────────────────────────────────────────────────────
@@ -289,7 +293,10 @@ const bc = StyleSheet.create({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function TowerShopScreen({ navigation }) {
-  const { towerCoins, ascensionInventory, purchaseAscensionItem, buyTowerBundle } = useGameStore();
+  const towerCoins            = useGameStore(s => s.towerCoins);
+  const ascensionInventory    = useGameStore(s => s.ascensionInventory);
+  const purchaseAscensionItem = useGameStore(s => s.purchaseAscensionItem);
+  const buyTowerBundle        = useGameStore(s => s.buyTowerBundle);
   const [activeTab, setActiveTab] = useState('asc');
 
   const toastAnim = useRef(new Animated.Value(0)).current;

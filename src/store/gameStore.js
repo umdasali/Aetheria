@@ -6,11 +6,13 @@ import { DAILY_REWARDS } from '../data/dailyRewards';
 import { QUEST_DEFS } from '../data/dailyQuests';
 import { HEROES } from '../data/heroes';
 import { CHAPTER_DEFS, stageGoldReward } from '../data/story';
-import { getCurrentWeekKey, isBossFloor } from '../data/towerData';
+import { getCurrentWeekKey, isBossFloor, TOWER_MAX_FLOOR } from '../data/towerData';
 import {
   ASCENSION_ITEMS, ASCENSION_MAX, RANK_TO_ASCENSION_ITEM_ID,
 } from '../data/ascensionItems';
+import { getShopPackById } from '../data/shopPacks';
 import { CURRENT_VERSION, migrate } from './migrations';
+import { ACHIEVEMENT_DEFS } from '../data/achievements';
 import { sanitizeState } from './sanitizeState';
 import { initSyncQueue, triggerSync } from '../cloud/syncQueue';
 
@@ -53,11 +55,11 @@ function pickAscensionDrop(maxQty) {
 const INITIAL_STATE = {
   schemaVersion:         CURRENT_VERSION,
   cloudAccountEmail:     null,
-  localUserId:           null,   // Firebase UID that owns this local save; null = unclaimed
+  localUserId:           null,   // Supabase user id that owns this local save; null = unclaimed
   playerUid:             null,   // Persistent display UID shown on profile; generated once
   ownedHeroes:           ['hero_002', 'hero_004', 'hero_005', 'hero_016'],
   team:                  ['hero_002', 'hero_004', 'hero_005'],
-  gems:                  450,
+  gems:                  150,
   gold:                  10000,
   pity:                  0,
   lastClaimDate:         null,
@@ -81,6 +83,8 @@ const INITIAL_STATE = {
     lost_butterfly:  0,
     broken_wing:     0,
   },
+  // Shop purchase counts, keyed by pack id (repeatable packs increment).
+  shopPurchases: {},
   playerProfile: {
     name:            'Commander',
     signature:       '',
@@ -101,6 +105,17 @@ const INITIAL_STATE = {
     hero_016: { level: 1, copies: 1, effectiveRank: null, transcendence: 0 },
   },
   lastKnownTimestamp: 0,
+
+  // ── Feature: Pull History ──────────────────────────────────────────────────
+  pullHistory: [],   // newest first, max 300 entries
+
+  // ── Feature: Achievements ─────────────────────────────────────────────────
+  achievements:              {},   // { [achievementId]: { progress, claimed } }
+  pendingAchievementUnlocks: [],   // IDs queued for toast display
+
+  // ── Feature: Event Banners ────────────────────────────────────────────────
+  eventPity:      {},   // { [eventId]: number }
+  eventGuarantee: {},   // { [eventId]: boolean } — true = next S on that banner is guaranteed rate-up
 };
 
 const useGameStore = create(
@@ -240,7 +255,9 @@ const useGameStore = create(
               (_, i) => (i + 1) * 5,
             );
             const claimed = state.milestonesClaimed || [];
-            const newMilestone = milestones.find(m => fullChapterCount === m && !claimed.includes(m));
+            // >= (not ===) so a milestone skipped by a cloud-restore/merge is
+            // still claimable on the next chapter completion (one per win).
+            const newMilestone = milestones.find(m => fullChapterCount >= m && !claimed.includes(m));
             if (newMilestone) {
               const currentOwned = get().ownedHeroes || [];
               const eligible = HEROES.filter(h => ['A', 'B', 'C'].includes(h.rank));
@@ -260,6 +277,24 @@ const useGameStore = create(
             }
           }
         } catch (e) { console.warn('[GameStore] Chapter reward error:', e); }
+
+        // ── Achievement tracking ─────────────────────────────────────────────
+        try {
+          // Stage cleared counter (all 3 parts of every chapter)
+          get().trackAchievementProgress('stagesCleared', 1);
+          // Chapter milestone achievements (fire on part 3 completion)
+          if (part === 3) {
+            const fullChapterCount = CHAPTER_DEFS
+              .filter(ch => [1, 2, 3].every(p => newCompleted.includes(ch.id * 100 + p)))
+              .length;
+            for (const milestone of [5, 10, 15, 20, 25]) {
+              if (fullChapterCount >= milestone) {
+                get().trackAchievementProgress(`chaptersCleared_${milestone}`, 1);
+              }
+            }
+          }
+        } catch (e) { console.warn('[GameStore] Achievement tracking error:', e); }
+
         triggerSync();
       },
 
@@ -377,6 +412,12 @@ const useGameStore = create(
       // ── Tower actions ───────────────────────────────────────────────────────
 
       completeTowerFloor: (floor, rewards) => {
+        // Reject invalid floors: beyond the cap, or replaying a floor below the
+        // current one (e.g. re-entering floor 200 after the tower is conquered).
+        // Without this, floor 200 is an infinite gem/gold/coin farm.
+        if (floor > TOWER_MAX_FLOOR || floor < get().towerCurrentFloor) {
+          return { ascensionDrop: null };
+        }
         let ascensionDrop = null;
         if (isBossFloor(floor)) {
           const { itemId, qty } = pickAscensionDrop(2);
@@ -516,6 +557,8 @@ const useGameStore = create(
         const state = get();
         const item  = ASCENSION_ITEMS.find(i => i.id === itemId);
         if (!item) return { ok: false, reason: 'invalid_item' };
+        // Store is the validation layer — never trust caller-provided qty
+        qty = Math.max(1, Math.floor(Number(qty) || 1));
         const totalCost = item.price * qty;
         if (state.towerCoins < totalCost) return { ok: false, reason: 'coins' };
         const inv = { ...state.ascensionInventory, [itemId]: (state.ascensionInventory[itemId] || 0) + qty };
@@ -533,8 +576,11 @@ const useGameStore = create(
         const ascension    = data.ascension || 0;
         if (ascension >= ASCENSION_MAX) return { ok: false, reason: 'max' };
 
-        const effectiveRank = data.effectiveRank || hero.rank;
-        const itemId        = RANK_TO_ASCENSION_ITEM_ID[effectiveRank];
+        // Sovereign heroes are stored as rank 'S' + sovereign:true (fusion caps at S,
+        // so effectiveRank never becomes 'SOVEREIGN'). Route them to Aetheria's Core
+        // explicitly; otherwise the SOVEREIGN→aetheria_core mapping is unreachable.
+        const rankForItem = hero.sovereign ? 'SOVEREIGN' : (data.effectiveRank || hero.rank);
+        const itemId      = RANK_TO_ASCENSION_ITEM_ID[rankForItem];
         if (!itemId) return { ok: false, reason: 'invalid_rank' };
 
         const inv = { ...state.ascensionInventory };
@@ -552,6 +598,34 @@ const useGameStore = create(
         return { ok: true, newTier: ascension + 1 };
       },
 
+      // Apply a shop pack's rewards atomically. Payment is resolved BEFORE this
+      // call by src/shop/purchaseHandler.js (gem-spend or IAP), so this is a pure
+      // grant: hero (+1 copy if repeatable/owned), gems, gold, Aetheria's Core.
+      grantShopPack: (packId) => {
+        const pack = getShopPackById(packId);
+        if (!pack) return { ok: false, reason: 'invalid_pack' };
+
+        // addHero handles new-vs-owned (+1 copy) and does its own set().
+        if (pack.heroId) get().addHero(pack.heroId);
+
+        const state = get();
+        const g     = pack.grant || {};
+        const inv   = { ...state.ascensionInventory };
+        if (g.cores) inv.aetheria_core = (inv.aetheria_core || 0) + g.cores;
+
+        const counts = { ...(state.shopPurchases || {}) };
+        counts[packId] = (counts[packId] || 0) + 1;
+
+        set({
+          gems:               state.gems + (g.gems || 0),
+          gold:               state.gold + (g.gold || 0),
+          ascensionInventory: inv,
+          shopPurchases:      counts,
+        });
+        triggerSync();
+        return { ok: true, count: counts[packId] };
+      },
+
       getEffectiveRank: (heroId) => {
         const data = get().heroCollection[heroId];
         if (!data?.effectiveRank) {
@@ -560,6 +634,127 @@ const useGameStore = create(
         }
         return data.effectiveRank;
       },
+
+      // ── Pull History ────────────────────────────────────────────────────────
+
+      // entries: Array<{ heroId, heroName, rank, isPity, bannerType }>
+      addToPullHistory: (entries) => {
+        const pulledAt = new Date().toISOString();
+        set(state => {
+          const newEntries = entries.map(e => ({
+            heroId:     e.heroId,
+            heroName:   e.heroName,
+            rank:       e.rank,
+            isPity:     e.isPity || false,
+            bannerType: e.bannerType || 'standard',
+            pulledAt,
+          }));
+          const combined = [...newEntries, ...(state.pullHistory || [])];
+          return { pullHistory: combined.slice(0, 300) };
+        });
+      },
+
+      // ── Achievements ────────────────────────────────────────────────────────
+
+      // key: trackKey from ACHIEVEMENT_DEFS, delta: amount to add (default 1)
+      trackAchievementProgress: (key, delta = 1) => {
+        set(state => {
+          const defs = ACHIEVEMENT_DEFS.filter(d => d.trackKey === key);
+          if (!defs.length) return {};
+
+          const achievements = { ...state.achievements };
+          const newUnlocks   = [];
+
+          for (const def of defs) {
+            const current = achievements[def.id] || { progress: 0, claimed: false };
+            if (current.claimed) continue;
+
+            const newProgress = Math.min(
+              (current.progress || 0) + delta,
+              def.target,
+            );
+            const justUnlocked = newProgress >= def.target && (current.progress || 0) < def.target;
+
+            achievements[def.id] = { ...current, progress: newProgress };
+            if (justUnlocked) newUnlocks.push(def.id);
+          }
+
+          if (!newUnlocks.length) return { achievements };
+          return {
+            achievements,
+            pendingAchievementUnlocks: [
+              ...state.pendingAchievementUnlocks,
+              ...newUnlocks,
+            ],
+          };
+        });
+      },
+
+      // Like trackAchievementProgress but uses Math.max instead of addition.
+      // Use for achievements where progress = a high-water mark (e.g. towerHighestFloor).
+      setMaxAchievementProgress: (key, value) => {
+        set(state => {
+          const defs = ACHIEVEMENT_DEFS.filter(d => d.trackKey === key);
+          if (!defs.length) return {};
+
+          const achievements = { ...state.achievements };
+          const newUnlocks   = [];
+
+          for (const def of defs) {
+            const current = achievements[def.id] || { progress: 0, claimed: false };
+            if (current.claimed) continue;
+
+            const newProgress = Math.min(
+              Math.max(current.progress || 0, value),
+              def.target,
+            );
+            if (newProgress === (current.progress || 0)) continue;
+
+            const justUnlocked = newProgress >= def.target && (current.progress || 0) < def.target;
+            achievements[def.id] = { ...current, progress: newProgress };
+            if (justUnlocked) newUnlocks.push(def.id);
+          }
+
+          if (!newUnlocks.length) return { achievements };
+          return {
+            achievements,
+            pendingAchievementUnlocks: [
+              ...state.pendingAchievementUnlocks,
+              ...newUnlocks,
+            ],
+          };
+        });
+      },
+
+      claimAchievementReward: (achievementId) => {
+        const state = get();
+        const def   = ACHIEVEMENT_DEFS.find(d => d.id === achievementId);
+        if (!def) return false;
+        const entry = state.achievements[achievementId];
+        if (!entry || entry.progress < def.target || entry.claimed) return false;
+
+        const update = {
+          achievements: {
+            ...state.achievements,
+            [achievementId]: { ...entry, claimed: true },
+          },
+        };
+        if (def.reward?.gems)  update.gems  = state.gems  + def.reward.gems;
+        if (def.reward?.gold)  update.gold  = state.gold  + def.reward.gold;
+        set(update);
+        triggerSync();
+        return true;
+      },
+
+      clearAchievementUnlocks: () => set({ pendingAchievementUnlocks: [] }),
+
+      // ── Event pity ──────────────────────────────────────────────────────────
+
+      setEventPity: (eventId, n) =>
+        set(state => ({ eventPity: { ...state.eventPity, [eventId]: n } })),
+
+      setEventGuarantee: (eventId, guaranteed) =>
+        set(state => ({ eventGuarantee: { ...state.eventGuarantee, [eventId]: guaranteed } })),
 
       // Exchange hero copies for gold (100 gold per copy).
       convertExcessCopies: (heroId, count) => {

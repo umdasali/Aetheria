@@ -43,7 +43,7 @@ const STEPS = [
 ];
 
 export default function OnboardingScreen({ navigation }) {
-  const { completeOnboarding } = useGameStore();
+  const completeOnboarding = useGameStore(s => s.completeOnboarding);
   const [step, setStep] = useState(0);
 
   const slideAnim = useRef(new Animated.Value(0)).current;

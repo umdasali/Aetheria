@@ -20,7 +20,10 @@ const CARD_W   = Math.floor((RIGHT_W - GRID_PAD * 2 - GRID_GAP * (COLS - 1)) / C
 const CARD_H   = Math.floor(CARD_W * 320 / 220);
 
 export default function EditProfileScreen({ navigation }) {
-  const { playerProfile, ownedHeroes, heroCollection, updateProfile } = useGameStore();
+  const playerProfile  = useGameStore(s => s.playerProfile);
+  const ownedHeroes    = useGameStore(s => s.ownedHeroes);
+  const heroCollection = useGameStore(s => s.heroCollection);
+  const updateProfile  = useGameStore(s => s.updateProfile);
 
   const [editName,      setEditName]      = useState(playerProfile.name            || '');
   const [editSig,       setEditSig]       = useState(playerProfile.signature       || '');

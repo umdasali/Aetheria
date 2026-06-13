@@ -1,4 +1,4 @@
-export const CURRENT_VERSION = 2;
+export const CURRENT_VERSION = 3;
 
 export function migrate(persistedState, fromVersion) {
   let state = { ...persistedState };
@@ -25,6 +25,19 @@ export function migrate(persistedState, fromVersion) {
           { ...data, ascension: data.ascension ?? 0 },
         ])
       ),
+    };
+  }
+
+  // v2 → v3: add pullHistory, achievements, eventPity, eventGuarantee
+  if (fromVersion < 3) {
+    state = {
+      ...state,
+      schemaVersion:              3,
+      pullHistory:                state.pullHistory ?? [],
+      achievements:               state.achievements ?? {},
+      pendingAchievementUnlocks:  state.pendingAchievementUnlocks ?? [],
+      eventPity:                  state.eventPity ?? {},
+      eventGuarantee:             state.eventGuarantee ?? {},
     };
   }
 

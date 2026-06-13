@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  View, Text, StyleSheet, TouchableOpacity, PanResponder, Animated, Dimensions, Alert, ActivityIndicator,
+  View, Text, StyleSheet, TouchableOpacity, PanResponder, Animated, Dimensions, Alert, ActivityIndicator, ScrollView, Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
 import { C } from '../theme/colors';
-import { onAuthChanged, getUser, signOut } from '../cloud/auth';
+import { onAuthChanged, getUser, signOut, deleteAccount } from '../cloud/auth';
 import { syncNow, getLastSyncTime } from '../cloud/syncQueue';
 import { APP_INFO } from '../constants/appInfo';
 
@@ -143,7 +143,9 @@ const TABS = [
 // ── Main Screen ───────────────────────────────────────────────────────────────
 
 export default function SettingsScreen({ navigation }) {
-  const { settings, updateSettings, cloudAccountEmail } = useGameStore();
+  const settings          = useGameStore(s => s.settings);
+  const updateSettings    = useGameStore(s => s.updateSettings);
+  const cloudAccountEmail = useGameStore(s => s.cloudAccountEmail);
 
   const [activeTab,  setActiveTab]  = useState('audio');
   const [musicVol,   setMusicVol]   = useState(settings.musicVolume ?? 0.65);
@@ -155,6 +157,7 @@ export default function SettingsScreen({ navigation }) {
   const [lastSync,  setLastSync]  = useState(null);
   const [syncing,   setSyncing]   = useState(false);
   const [signingOut, setSignOut]  = useState(false);
+  const [deleting,   setDeleting] = useState(false);
 
   // Keep auth state in sync; re-read on focus so returning from CloudAuth is instant
   useEffect(() => onAuthChanged(setAuthUser), []);
@@ -197,6 +200,51 @@ export default function SettingsScreen({ navigation }) {
       ]
     );
   }, []);
+
+  const handleDeleteAccount = useCallback(() => {
+    Alert.alert(
+      'Delete Account',
+      'This permanently deletes your account and cloud save, and erases your progress on this device. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Are you absolutely sure?',
+              'Your account, cloud save, and local progress will be gone forever.',
+              [
+                { text: 'Keep My Account', style: 'cancel' },
+                {
+                  text: 'Delete Forever',
+                  style: 'destructive',
+                  onPress: async () => {
+                    setDeleting(true);
+                    try {
+                      await deleteAccount();
+                      await useGameStore.getState().resetStore();
+                      useGameStore.setState({ cloudAccountEmail: null, localUserId: null });
+                      setDeleting(false);
+                      Alert.alert('Account Deleted', 'Your account and data have been removed.', [
+                        { text: 'OK', onPress: () => navigation.navigate('Home') },
+                      ]);
+                    } catch (e) {
+                      setDeleting(false);
+                      Alert.alert(
+                        'Deletion Failed',
+                        e?.message || 'Could not delete your account. Please check your connection and try again.'
+                      );
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  }, [navigation]);
 
   // Apply persisted volumes + mute state to AudioManager on mount
   useEffect(() => {
@@ -387,31 +435,61 @@ export default function SettingsScreen({ navigation }) {
               </View>
             </View>
 
-            {/* Sync now — only when signed in */}
+            {/* Sync now + account deletion — only when signed in */}
             {authUser ? (
-              <View style={styles.cloudCard}>
-                <LinearGradient colors={[C.GLASS_1, C.GLASS_2]} style={StyleSheet.absoluteFill} />
-                <View style={[styles.rowBorder, { borderColor: C.BORDER }]} />
-                <View style={styles.cloudRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowTitle}>Last Synced</Text>
-                    <Text style={[styles.rowHint, { color: C.TEXT_MUTED }]}>
-                      {lastSync ? new Date(lastSync).toLocaleString() : 'Not synced this session'}
-                    </Text>
+              <>
+                <View style={styles.cloudCard}>
+                  <LinearGradient colors={[C.GLASS_1, C.GLASS_2]} style={StyleSheet.absoluteFill} />
+                  <View style={[styles.rowBorder, { borderColor: C.BORDER }]} />
+                  <View style={styles.cloudRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowTitle}>Last Synced</Text>
+                      <Text style={[styles.rowHint, { color: C.TEXT_MUTED }]}>
+                        {lastSync ? new Date(lastSync).toLocaleString() : 'Not synced this session'}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.cloudBtn, { borderColor: C.CYAN + '60' }]}
+                      onPress={handleSyncNow}
+                      activeOpacity={0.75}
+                      disabled={syncing}
+                    >
+                      {syncing
+                        ? <ActivityIndicator size="small" color={C.CYAN} />
+                        : <Text style={[styles.cloudBtnText, { color: C.CYAN }]}>SYNC NOW</Text>
+                      }
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={[styles.cloudBtn, { borderColor: C.CYAN + '60' }]}
-                    onPress={handleSyncNow}
-                    activeOpacity={0.75}
-                    disabled={syncing}
-                  >
-                    {syncing
-                      ? <ActivityIndicator size="small" color={C.CYAN} />
-                      : <Text style={[styles.cloudBtnText, { color: C.CYAN }]}>SYNC NOW</Text>
-                    }
-                  </TouchableOpacity>
                 </View>
-              </View>
+
+                {/* Danger zone — account deletion (App Store / Play requirement) */}
+                <View style={styles.cloudCard}>
+                  <LinearGradient colors={[C.GLASS_1, C.GLASS_2]} style={StyleSheet.absoluteFill} />
+                  <View style={[styles.rowBorder, { borderColor: C.DANGER + '40' }]} />
+                  <View style={styles.cloudRow}>
+                    <View style={[styles.rowIcon, { backgroundColor: C.DANGER + '1A', borderColor: C.DANGER + '40' }]}>
+                      <Ionicons name="trash-outline" size={18} color={C.DANGER} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowTitle}>Delete Account</Text>
+                      <Text style={[styles.rowHint, { color: C.TEXT_MUTED }]} numberOfLines={2}>
+                        Permanently removes your account, cloud save and local progress.
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.cloudBtn, { borderColor: C.DANGER + '60' }]}
+                      onPress={handleDeleteAccount}
+                      activeOpacity={0.75}
+                      disabled={deleting}
+                    >
+                      {deleting
+                        ? <ActivityIndicator size="small" color={C.DANGER} />
+                        : <Text style={[styles.cloudBtnText, { color: C.DANGER }]}>DELETE</Text>
+                      }
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </>
             ) : null}
           </View>
 
@@ -421,38 +499,49 @@ export default function SettingsScreen({ navigation }) {
             <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']} style={StyleSheet.absoluteFill} />
             <View style={[styles.rowBorder, { borderColor: C.BORDER }]} />
 
-            <View style={styles.gameTitleBlock}>
-              <Text style={styles.gameTitle}>AETHERIA</Text>
-              <Text style={styles.gameSubtitle}>Legends Unbound</Text>
-              <Text style={styles.gameDesc}>
-                {APP_INFO.factionCount} factions. {APP_INFO.heroCount} legends. One war to decide the fate of Aetheria.
-                Collect powerful heroes, forge unstoppable squads, and unleash devastating
-                Trump Cards across {APP_INFO.stageCount} story-driven battles. As darkness tears open the
-                dimensional veil, only you can unite the forces of Emberveil, Glaciara,
-                Sunspire, Verdania, and Voidmark against the void that consumes all.
-              </Text>
-            </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.infoScroll}>
+              <View style={styles.gameTitleBlock}>
+                <Text style={styles.gameTitle}>AETHERIA</Text>
+                <Text style={styles.gameSubtitle}>Legends Unbound</Text>
+                <Text style={styles.gameDesc}>
+                  {APP_INFO.factionCount} factions. {APP_INFO.heroCount} legends. One war to decide the fate of Aetheria.
+                  Collect powerful heroes, forge unstoppable squads, and unleash devastating
+                  Trump Cards across {APP_INFO.stageCount} story-driven battles. As darkness tears open the
+                  dimensional veil, only you can unite the forces of Emberveil, Glaciara,
+                  Sunspire, Verdania, and Voidmark against the void that consumes all.
+                </Text>
+              </View>
 
-            <View style={styles.infoDivider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Studio</Text>
-              <Text style={styles.infoVal}>{APP_INFO.studio}</Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Website</Text>
-              <Text style={styles.infoVal}>{APP_INFO.website}</Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Version</Text>
-              <Text style={styles.infoVal}>{APP_INFO.version}</Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Build</Text>
-              <Text style={styles.infoVal}>Expo 56 · React Native 0.85</Text>
-            </View>
+              <View style={styles.infoDivider} />
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Studio</Text>
+                <Text style={styles.infoVal}>{APP_INFO.studio}</Text>
+              </View>
+              <View style={styles.infoDivider} />
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Website</Text>
+                <Text style={styles.infoVal}>{APP_INFO.website}</Text>
+              </View>
+              <View style={styles.infoDivider} />
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Version</Text>
+                <Text style={styles.infoVal}>{APP_INFO.version}</Text>
+              </View>
+              <View style={styles.infoDivider} />
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Build</Text>
+                <Text style={styles.infoVal}>Expo 56 · React Native 0.85</Text>
+              </View>
+              <View style={styles.infoDivider} />
+              <TouchableOpacity
+                style={styles.infoRow}
+                onPress={() => { AudioManager.playButtonSFX(); Linking.openURL(APP_INFO.privacyUrl).catch(() => {}); }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.infoLabel}>Privacy Policy</Text>
+                <Ionicons name="open-outline" size={15} color={C.PRIMARY_LIGHT} />
+              </TouchableOpacity>
+            </ScrollView>
           </View>
 
         )}
@@ -584,12 +673,19 @@ const styles = StyleSheet.create({
 
   // Info card
   infoCard: {
-    borderRadius: 12, overflow: 'hidden',
-    paddingHorizontal: 14, paddingVertical: 4,
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
     position: 'relative',
   },
+  infoScroll: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    paddingBottom: 16,
+  },
   gameTitleBlock: {
-    paddingVertical: 14, gap: 4,
+    paddingVertical: 16,
+    gap: 6,
   },
   gameTitle: {
     fontSize: 18, fontWeight: '900', color: C.GOLD,
@@ -597,15 +693,15 @@ const styles = StyleSheet.create({
   },
   gameSubtitle: {
     fontSize: 11, fontWeight: '700', color: C.TEXT_MUTED,
-    letterSpacing: 1.5, marginBottom: 8,
+    letterSpacing: 1.5, marginBottom: 6,
   },
   gameDesc: {
-    fontSize: 11, color: C.TEXT_SOFT, lineHeight: 17,
+    fontSize: 11, color: C.TEXT_SOFT, lineHeight: 18,
     fontWeight: '500',
   },
   infoRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 11,
+    paddingVertical: 12,
   },
   infoDivider: { height: 1, backgroundColor: C.BORDER_SUBTLE },
   infoLabel: { fontSize: 12, fontWeight: '700', color: C.TEXT_SOFT },

@@ -29,6 +29,15 @@ export const FACTIONS = {
     accentColor: '#D7BDE2',
     image: require('../../assets/faction/VOIDMARK.png'),
   },
+  // Sand-and-moon dynasty realm — Egyptian-inspired desert kingdom of dunes,
+  // moonlit nights, and the honored dead. (NOT sun-aligned — sand & moon.)
+  // NOTE: KHEMARA.png is a placeholder copy — swap in the real faction emblem.
+  KHEMARA: {
+    name: 'KHEMARA',
+    color: '#E0912E',
+    accentColor: '#F5C16B',
+    image: require('../../assets/faction/KHEMARA.png'),
+  },
 };
 
 
@@ -481,29 +490,29 @@ export const HEROES = [
   },
   
 
-  // ── hero_018 · SUNSPIRE · A · Female · Attacker ────────────────────────────
+  // ── hero_018 · KHEMARA · A · Female · Attacker ─────────────────────────────
   // Uncomment when assets/heroes/hero_018.webp is ready
   
   {
     id: 'hero_018',
-    name: 'Lyse Dawn',
-    frame: 'SOLARFANG',
-    faction: 'SUNSPIRE',
+    name: 'Neith Sahra',
+    frame: 'MOONFANG',
+    faction: 'KHEMARA',
     rank: 'A',
-    element: 'Holy',
+    element: 'Moon',
     effect: 'SMITE',
     class: 'Attacker',
-    cardId: 'SUN-04-LYSE',
+    cardId: 'KHE-01-NEITH',
     image: require('../../assets/heroes/hero_018.webp'),
-    about: 'A divine huntress of SUNSPIRE who pursues corrupted entities with holy blades charged by direct sunlight. Lyse strikes with blinding speed and vanishes before her targets can register the attack.',
+    about: 'A moonlit huntress of KHEMARA who stalks the dunes after dark, running down corrupted things with twin blades that drink the night sky. Neith strikes with blinding speed and is gone before her quarry can register the attack — only a settling of cold sand where she stood remains.',
     hp: 3500, atk: 530, def: 200, crit: 480,
     skills: [
-      { name: 'Solar Fang',     cost: 1, description: 'A swift holy-charged strike that burns on impact.', damage: 1.5 },
-      { name: 'Radiant Lunge',  cost: 3, description: 'Charges through all enemies in a single solar burst.', damage: 2.4 },
+      { name: 'Moon Fang',      cost: 1, description: 'A swift moon-edged strike that bites deeper than the dark it came from.', damage: 1.5 },
+      { name: 'Crescent Lunge', cost: 3, description: 'Carves a crescent of silver light through all enemies in a single charge.', damage: 2.4 },
     ],
     trumpCard: {
-      name: 'Holy Execution',
-      description: 'Channels divine judgment into a single annihilating strike that heals allies.',
+      name: 'Lunar Execution',
+      description: 'Channels the full weight of the desert moon into one annihilating strike that mends her allies.',
       damage: 4.8,
       effect: 'Heals all allies 25% HP; stuns all enemies 1 turn',
     },
@@ -1450,6 +1459,192 @@ export const HEROES = [
       description: 'Calls upon every bird companion at once — a dark tempest of nature-infused wings and thorns descends on all enemies from every direction.',
       damage: 4.6,
       effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_054 · KHEMARA · S · Female · Mage · SOVEREIGN · SHOP-EXCLUSIVE ─────
+  // Marquee shop-only Sovereign — the moon-queen who rules the new sand-and-moon
+  // realm of KHEMARA. shopExclusive:true keeps her out of every gacha pool (see
+  // SummonScreen). Ascends with Aetheria's Core (sovereign routing).
+  // NOTE: hero_054.webp is currently a placeholder copy — swap in the real art.
+  {
+    id: 'hero_054',
+    name: 'Nefara Khonsu',
+    frame: 'MOONTHRONE',
+    faction: 'KHEMARA',
+    rank: 'S',
+    element: 'Moon',
+    effect: 'MOONLIGHT',
+    class: 'Mage',
+    cardId: 'KHE-EX-NEFARA',
+    image: require('../../assets/heroes/hero_054.webp'),
+    about: 'The living moon-queen of KHEMARA — a sand dominion of obelisks, shifting dunes, and silver nights that bows to no other sovereign. Crowned not by daylight but by the full desert moon, Nefara rules as goddess and pharaoh in one, her word law from the cooling sands to the deepest dunes. She cannot be summoned or won in battle; she descends only for those who seek her court directly, trailing a veil of moonlit dust that turns the night air to silver. To stand before her is to be weighed in the dark.',
+    hp: 4300, atk: 800, def: 240, crit: 740, sovereign: true, shopExclusive: true,
+    skills: [
+      { name: 'Lunar Verdict', cost: 2, description: 'Brands a single enemy under the cold light of the moon — silver judgment that pierces every resistance.', damage: 2.7 },
+      { name: 'Duneshroud',    cost: 3, description: 'Raises a blinding veil of moonlit sand that scours all enemies at once.', damage: 2.2 },
+    ],
+    trumpCard: {
+      name: 'Dominion of the Moon',
+      description: 'Nefara draws the full desert moon down over the battlefield — a tide of silver light and singing sand that buries every enemy while its glow mends her court.',
+      damage: 6.3,
+      effect: 'Stuns all enemies 2 turns; heals all allies 30% HP',
+    },
+  },
+
+  // ── hero_055 · KHEMARA · C · Male · Mage ───────────────────────────────────
+  {
+    id: 'hero_055',
+    name: 'Khaemun Set',
+    frame: 'DUNECONJURER',
+    faction: 'KHEMARA',
+    rank: 'C',
+    element: 'Sand',
+    effect: 'SANDFLAY',
+    class: 'Mage',
+    cardId: 'KHE-02-KHAEMUN',
+    image: require('../../assets/heroes/hero_055.webp'),
+    about: 'A street-born sand conjurer who taught himself the old desert magic from half-buried scrolls salvaged out of collapsed tombs. Raw, untrained, and reckless — but the dunes answer him all the same, and KHEMARA has learned not to mock the boy who can turn an entire street into a swallowing pit of sand.',
+    hp: 2850, atk: 500, def: 150, crit: 470,
+    skills: [
+      { name: 'Grit Scrawl',     cost: 1, description: 'Hurls a hastily-drawn glyph that flays a single enemy with razor-edged sand.', damage: 1.4 },
+      { name: 'Sandscour Burst', cost: 3, description: 'Whips up a sweeping wall of abrasive sand that scours all enemies at once.', damage: 2.0 },
+    ],
+    trumpCard: {
+      name: 'Tomb of Dunes',
+      description: 'Collapses the battlefield into a churning grave of sand, dragging every enemy under.',
+      damage: 4.2,
+      effect: 'Stuns all enemies 1 turn',
+    },
+  },
+
+  // ── hero_056 · KHEMARA · A · Female · Mage · Richest woman of Khemara ───────
+  {
+    id: 'hero_056',
+    name: 'Meresankh Aurelia',
+    frame: 'GILDEDMATRON',
+    faction: 'KHEMARA',
+    rank: 'A',
+    element: 'Moon',
+    effect: 'LIFEDRAIN',
+    class: 'Mage',
+    cardId: 'KHE-03-MERESANKH',
+    image: require('../../assets/heroes/hero_056.webp'),
+    about: 'The richest woman in KHEMARA — her vaults outshine the royal treasury and her gilded sigils turn an enemy\'s own vitality into tribute. Wealth, to Meresankh, is simply life that has not yet been collected. She funds the throne, owns half the delta, and has never once been told no.',
+    hp: 3050, atk: 600, def: 165, crit: 560,
+    skills: [
+      { name: 'Gilded Siphon', cost: 2, description: 'Brands a target with a gold sigil that bleeds its life away to the caster.', damage: 1.9 },
+      { name: 'Tribute Due',   cost: 3, description: 'Calls in every debt at once, draining all enemies in cold, reclaiming moonlight.', damage: 2.2 },
+    ],
+    trumpCard: {
+      name: 'Midas Reckoning',
+      description: 'Encases every enemy in molten gold and reclaims their vitality as tribute to the throne.',
+      damage: 4.8,
+      effect: 'Heals all allies 25% HP',
+    },
+  },
+
+  // ── hero_057 · KHEMARA · B · Female · Mage · Profound dancer ───────────────
+  {
+    id: 'hero_057',
+    name: 'Anuket Sahel',
+    frame: 'MIRAGEDANCER',
+    faction: 'KHEMARA',
+    rank: 'B',
+    element: 'Sand',
+    effect: 'PARALYSIS',
+    class: 'Mage',
+    cardId: 'KHE-04-ANUKET',
+    image: require('../../assets/heroes/hero_057.webp'),
+    about: 'A temple dancer whose movements are a language older than KHEMARA itself. Those who watch her dance too long forget how to move at all — and by then the sand has already coiled around their ankles. The court calls her art devotion. Her enemies call it the last thing they saw.',
+    hp: 2950, atk: 545, def: 158, crit: 510,
+    skills: [
+      { name: 'Veil Step',    cost: 2, description: 'A hypnotic spin that mesmerizes a single enemy as sand coils tight around it.', damage: 1.7 },
+      { name: 'Mirage Waltz', cost: 3, description: 'Whirls into a storm of sand and silk that disorients all enemies at once.', damage: 2.0 },
+    ],
+    trumpCard: {
+      name: 'Dance of the Forgotten',
+      description: 'Performs the final movement no enemy can look away from — a desert trance that roots them where they stand.',
+      damage: 4.4,
+      effect: 'Stuns all enemies 1 turn',
+    },
+  },
+
+  // ── hero_058 · KHEMARA · A · Male · Defender · Sovereign advisor ───────────
+  {
+    id: 'hero_058',
+    name: 'Imhotep Sekara',
+    frame: 'THRONEWARDEN',
+    faction: 'KHEMARA',
+    rank: 'A',
+    element: 'Sand',
+    effect: 'SOVEREIGNTY',
+    class: 'Defender',
+    cardId: 'KHE-05-IMHOTEP',
+    image: require('../../assets/heroes/hero_058.webp'),
+    about: 'First advisor and living shield of the moon-throne. Imhotep has counseled three regents and outlived two, and he places himself between KHEMARA\'s ruler and all harm as a matter of plain arithmetic: the realm needs her, and she needs time. He has never raised his voice. He has never had to.',
+    hp: 7000, atk: 320, def: 575, crit: 180,
+    skills: [
+      { name: 'Aegis Decree', cost: 1, description: 'Raises a hardened sandstone ward that absorbs the next blow aimed at the line.', damage: 0.4 },
+      { name: 'Throneguard',  cost: 2, description: 'Slams a ceremonial staff to the earth, repelling all enemies with a wall of warding force.', damage: 1.3 },
+    ],
+    trumpCard: {
+      name: 'Unbroken Counsel',
+      description: 'Raises the full weight of the sovereign\'s aegis — shielding the court and burying those who dare approach the throne beneath the sand.',
+      damage: 3.8,
+      effect: 'Shields the team against the next hit; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_059 · KHEMARA · A · Female · Attacker · Assassin ──────────────────
+  {
+    id: 'hero_059',
+    name: 'Serqet Khopesh',
+    frame: 'DUNESHADE',
+    faction: 'KHEMARA',
+    rank: 'A',
+    element: 'Moon',
+    effect: 'PHANTOMSTRIKE',
+    class: 'Attacker',
+    cardId: 'KHE-06-SERQET',
+    image: require('../../assets/heroes/hero_059.webp'),
+    about: 'KHEMARA\'s quietest law — the blade the throne never admits to owning. Named for the scorpion goddess, Serqet moves through the dunes like a rumor and leaves only a settling of sand where a target used to breathe. The court does not speak of her. That is precisely how she prefers it.',
+    hp: 3400, atk: 560, def: 195, crit: 600,
+    skills: [
+      { name: 'Scorpion\'s Kiss',  cost: 1, description: 'A lightning-fast khopesh slash that lands before it can be seen.', damage: 1.6 },
+      { name: 'Duneshade Ambush',  cost: 3, description: 'Vanishes into the moonless dark and reappears mid-strike for a devastating blow.', damage: 2.6 },
+    ],
+    trumpCard: {
+      name: 'Verdict of the Sands',
+      description: 'Delivers the throne\'s unspoken sentence — a flurry of unseen strikes that buries the battlefield in settling sand.',
+      damage: 4.9,
+      effect: 'Stuns all enemies 1 turn',
+    },
+  },
+
+  // ── hero_060 · KHEMARA · B · Male · Mage · Lawmaker ────────────────────────
+  {
+    id: 'hero_060',
+    name: 'Thothmes Maat',
+    frame: 'EDICTBEARER',
+    faction: 'KHEMARA',
+    rank: 'B',
+    element: 'Moon',
+    effect: 'SHATTER',
+    class: 'Mage',
+    cardId: 'KHE-07-THOTHMES',
+    image: require('../../assets/heroes/hero_060.webp'),
+    about: 'KHEMARA\'s lawgiver — keeper of the great scales and the edicts carved into obelisk-stone, sworn to the moon under which all verdicts are weighed. When Thothmes reads a judgment aloud, the guilty feel their defenses crack like moon-bleached clay long before the sentence ever lands. The law, he insists, is not cruelty. It is simply weight, applied evenly.',
+    hp: 3000, atk: 555, def: 162, crit: 515,
+    skills: [
+      { name: 'Edict of Ruin',      cost: 2, description: 'Pronounces a verdict that fractures a single enemy\'s defenses with a sentence of cold moonlight.', damage: 1.8 },
+      { name: 'Scales of Judgment', cost: 3, description: 'Weighs all enemies and finds them wanting — answering with a cascade of silver moonfire.', damage: 2.1 },
+    ],
+    trumpCard: {
+      name: 'Final Decree',
+      description: 'Carves the last law into the night sky; a storm of silver judgment-light shatters and consumes every enemy at once.',
+      damage: 4.6,
+      effect: 'Stuns all enemies 1 turn',
     },
   },
 ];

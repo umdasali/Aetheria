@@ -20,7 +20,7 @@ export const ASCENSION_ITEMS = [
     rankLabel: 'S RANK',
     forRanks:  ['S'],
     price:     500,
-    image:     require('../../assets/Character-Ascension/feather-of-hope.png'),
+    image:     require('../../assets/Character-Ascension/feather-of-hope.webp'),
     lore:      'Plucked from wings that refused to break. Each feather holds the last breath of a champion who chose to fall standing rather than kneel.',
   },
   {
