@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  Image, Animated, Dimensions, Modal, Alert,
+  Image, Animated, Dimensions, Modal,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AudioManager from '../utils/AudioManager';
@@ -27,7 +27,6 @@ const { width: W, height: H } = Dimensions.get('window');
 const SIDEBAR_W  = 164;
 const PANEL_PAD  = 12;
 
-const ENEMY_THUMB  = require('../../assets/enemy/boss_001.webp');
 const SUMMON_THUMB = require('../../assets/heroes/hero_002.webp');
 
 
@@ -152,23 +151,6 @@ export default function HomeScreen({ navigation }) {
       onPress: () => { AudioManager.playButtonSFX(); navigation.navigate('Story'); },
     },
     {
-      key: 'Battle',
-      tag: 'BATTLE',
-      accent: C.DANGER,
-      title: 'Quick Battle',
-      sub: 'Practice Mode',
-      thumb: ENEMY_THUMB,
-      accessibilityLabel: 'Go to Quick Battle',
-      onPress: () => {
-        AudioManager.playButtonSFX();
-        if (!team.length) {
-          Alert.alert('No Team Selected', 'Add at least one hero to your team before battling.', [{ text: 'OK' }]);
-          return;
-        }
-        navigation.navigate('Battle', { practiceMode: true });
-      },
-    },
-    {
       key: 'Summon',
       tag: 'SUMMON',
       accent: C.CYAN,
@@ -188,6 +170,16 @@ export default function HomeScreen({ navigation }) {
       thumb: require('../../assets/enemy/boss_010.webp'),
       accessibilityLabel: 'Go to Tower',
       onPress: () => { AudioManager.playButtonSFX(); navigation.navigate('Tower'); },
+    },
+    {
+      key: 'Dungeons',
+      tag: 'DUNGEON',
+      accent: C.SUCCESS,
+      title: 'Resource Dungeons',
+      sub: 'Daily gold & materials',
+      thumb: require('../../assets/currency/chest.png'),
+      accessibilityLabel: 'Go to Resource Dungeons',
+      onPress: () => { AudioManager.playButtonSFX(); navigation.navigate('Dungeons'); },
     },
   ], [currentChapter, chapterTitle, storyProgress, displayHero, gems, towerCurrentFloor, towerHighestFloor, navigation, team]);
 
@@ -351,10 +343,10 @@ export default function HomeScreen({ navigation }) {
               </View>
             </View>
 
-            {/* center spacer — background shows through */}
+            {/* small spacer between sidebar and the tile grid */}
             <View style={styles.centerGap} />
 
-            {/* ── Right action panels ── */}
+            {/* ── Right action panels — 2-column tile grid (no scroll) ── */}
             <View style={styles.rightPanels}>
               {panelData.map(({ key: k, ...p }) => (
                 <ActionPanel key={k} {...p} />
@@ -864,11 +856,13 @@ const styles = StyleSheet.create({
     borderColor: C.BG_SCREEN,
   },
 
-  // Center spacer
   centerGap: { flex: 1 },
 
-  // Right panels
-  rightPanels: { width: 272, paddingVertical: 8, paddingRight: 8, gap: 7 },
+  rightPanels: {
+    width: (W - SIDEBAR_W - 16) / 2,
+    paddingVertical: 8, paddingRight: 8,
+    flexDirection: 'column', gap: 8,
+  },
 
   panel: {
     flex: 1, borderRadius: 10, overflow: 'hidden',
@@ -885,7 +879,7 @@ const styles = StyleSheet.create({
   panelThumbWrap: { width: 86, position: 'relative', overflow: 'hidden' },
   panelThumb: { width: '100%', height: '100%', },
 
-  panelContent: { flex: 1, paddingVertical: 9, paddingLeft: 8, paddingRight: 6 },
+  panelContent: { flex: 1, paddingVertical: 6, paddingLeft: 8, paddingRight: 6 },
   panelTagRow:  { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
   panelTag:     { borderRadius: 3, paddingHorizontal: 6, paddingVertical: 2 },
   panelTagText: { fontSize: 10, color: '#fff', fontWeight: '900', letterSpacing: 1.5 },

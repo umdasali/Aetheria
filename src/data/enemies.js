@@ -104,7 +104,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_102_1', name: 'Fire Specter',   tier: 'mob',       imageKey: 'mob_002',       hp: 1200, maxHp: 1200, atk: 140, def: 90,  skills: [{ name: 'Ember Strike',    damage: 1.3 }, { name: 'Blaze Slash',  damage: 1.7 }] },
       { id: 'e_102_2', name: 'Shadow Hound',    tier: 'mob',       imageKey: 'mob_003',       hp: 1400, maxHp: 1400, atk: 155, def: 100, skills: [{ name: 'Shadow Fang',        damage: 1.3 }, { name: 'Dark Pounce',  damage: 1.8 }] },
-      { id: 'e_102_3', name: 'Frost Commander', tier: 'mini-boss', imageKey: 'mini-boss_001', hp: 2800, maxHp: 2800, atk: 240, def: 160, skills: [{ name: 'Frost Strike',   damage: 2.0 }, { name: 'Blizzard Surge',      damage: 2.8 }] },
+      { id: 'e_102_3', name: 'Frost Commander', tier: 'mini-boss', imageKey: 'mini-boss_001', hp: 2800, maxHp: 2800, atk: 240, def: 160, effect: 'CHILL', skills: [{ name: 'Frost Strike',   damage: 2.0 }, { name: 'Blizzard Surge',      damage: 2.8 }] },
     ],
   },
   {
@@ -113,8 +113,8 @@ export const ENEMY_GROUPS = [
     description: 'The Glacial Empress Lysha emerges from the frozen void to claim the realm in eternal ice.',
     enemies: [
       { id: 'e_103_1', name: 'Shadow Hound',              tier: 'mob',       imageKey: 'mob_003',       hp: 1600, maxHp: 1600, atk: 165, def: 105, skills: [{ name: 'Shadow Fang',        damage: 1.4 }, { name: 'Dark Pounce',       damage: 1.9 }] },
-      { id: 'e_103_2', name: 'Frost Commander',            tier: 'mini-boss', imageKey: 'mini-boss_001', hp: 3000, maxHp: 3000, atk: 255, def: 170, skills: [{ name: 'Frost Strike',   damage: 2.1 }, { name: 'Blizzard Surge',           damage: 3.0 }] },
-      { id: 'e_103_3', name: 'Lysha the Glacial Empress', tier: 'boss',      imageKey: 'boss_001',      hp: 6000, maxHp: 6000, atk: 320, def: 200, skills: [{ name: 'Glacial Prison',   damage: 3.2 }, { name: 'Absolute Zero',        damage: 4.5 }] },
+      { id: 'e_103_2', name: 'Frost Commander',            tier: 'mini-boss', imageKey: 'mini-boss_001', hp: 3000, maxHp: 3000, atk: 255, def: 170, effect: 'CHILL', skills: [{ name: 'Frost Strike',   damage: 2.1 }, { name: 'Blizzard Surge',           damage: 3.0 }] },
+      { id: 'e_103_3', name: 'Lysha the Glacial Empress', tier: 'boss',      imageKey: 'boss_001',      hp: 6000, maxHp: 6000, atk: 320, def: 200, effect: 'CHILL', skills: [{ name: 'Glacial Prison',   damage: 3.2 }, { name: 'Absolute Zero',        damage: 4.5 }] },
     ],
   },
 
@@ -136,7 +136,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_202_1', name: 'Shadow Wraith',    tier: 'mob',       imageKey: 'mob_004',       hp: 1500, maxHp: 1500, atk: 165, def: 108, skills: [{ name: 'Shadow Touch',   damage: 1.3 }, { name: 'Dark Wave',        damage: 1.8 }] },
       { id: 'e_202_2', name: 'Emberhorn Brute', tier: 'mob',       imageKey: 'mob_008',       hp: 1700, maxHp: 1700, atk: 180, def: 118, skills: [{ name: 'Horn Charge',   damage: 1.4 }, { name: 'Inferno Gore',    damage: 2.0 }] },
-      { id: 'e_202_3', name: 'Inferno Warden',  tier: 'mini-boss', imageKey: 'mini-boss_002', hp: 3600, maxHp: 3600, atk: 280, def: 190, skills: [{ name: 'Inferno Wall',  damage: 2.0 }, { name: 'Blaze Prison',    damage: 2.8 }] },
+      { id: 'e_202_3', name: 'Inferno Warden',  tier: 'mini-boss', imageKey: 'mini-boss_002', hp: 3600, maxHp: 3600, atk: 280, def: 190, effect: 'BURN', skills: [{ name: 'Inferno Wall',  damage: 2.0 }, { name: 'Blaze Prison',    damage: 2.8 }] },
     ],
   },
   {
@@ -145,8 +145,8 @@ export const ENEMY_GROUPS = [
     description: 'Pyrevex the Ashen Drake rises from the magma caldera breathing world-consuming dragonfire.',
     enemies: [
       { id: 'e_203_1', name: 'Emberhorn Brute',       tier: 'mob',       imageKey: 'mob_008',       hp: 1900, maxHp: 1900, atk: 190, def: 125, skills: [{ name: 'Horn Charge',    damage: 1.5 }, { name: 'Inferno Gore',   damage: 2.0 }] },
-      { id: 'e_203_2', name: 'Inferno Warden',        tier: 'mini-boss', imageKey: 'mini-boss_002', hp: 3900, maxHp: 3900, atk: 295, def: 200, skills: [{ name: 'Inferno Wall',   damage: 2.1 }, { name: 'Blaze Prison',   damage: 3.0 }] },
-      { id: 'e_203_3', name: 'Pyrevex the Ashen Drake', tier: 'boss',   imageKey: 'boss_002',      hp: 7500, maxHp: 7500, atk: 370, def: 230, skills: [{ name: 'Ashfire Breath', damage: 3.4 }, { name: 'Drake Inferno',  damage: 4.8 }] },
+      { id: 'e_203_2', name: 'Inferno Warden',        tier: 'mini-boss', imageKey: 'mini-boss_002', hp: 3900, maxHp: 3900, atk: 295, def: 200, effect: 'BURN', skills: [{ name: 'Inferno Wall',   damage: 2.1 }, { name: 'Blaze Prison',   damage: 3.0 }] },
+      { id: 'e_203_3', name: 'Pyrevex the Ashen Drake', tier: 'boss',   imageKey: 'boss_002',      hp: 7500, maxHp: 7500, atk: 370, def: 230, effect: 'BURN', skills: [{ name: 'Ashfire Breath', damage: 3.4 }, { name: 'Drake Inferno',  damage: 4.8 }] },
     ],
   },
 
@@ -168,7 +168,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_302_1', name: 'Forest Warden',     tier: 'mob',       imageKey: 'mob_005',       hp: 1900, maxHp: 1900, atk: 195, def: 128, skills: [{ name: 'Vine Strike',     damage: 1.4 }, { name: 'Forest Smite',  damage: 1.9 }] },
       { id: 'e_302_2', name: 'Light Golem',      tier: 'mob',       imageKey: 'mob_006',       hp: 2300, maxHp: 2300, atk: 220, def: 145, skills: [{ name: 'Radiant Slam',     damage: 1.4 }, { name: 'Light Crush',  damage: 1.9 }] },
-      { id: 'e_302_3', name: 'Forest Knight', tier: 'mini-boss', imageKey: 'mini-boss_003', hp: 4400, maxHp: 4400, atk: 320, def: 220, skills: [{ name: 'Forest Judgment',   damage: 2.0 }, { name: 'Nature Wrath',  damage: 2.8 }] },
+      { id: 'e_302_3', name: 'Forest Knight', tier: 'mini-boss', imageKey: 'mini-boss_003', hp: 4400, maxHp: 4400, atk: 320, def: 220, effect: 'TOXIN', skills: [{ name: 'Forest Judgment',   damage: 2.0 }, { name: 'Nature Wrath',  damage: 2.8 }] },
     ],
   },
   {
@@ -177,8 +177,8 @@ export const ENEMY_GROUPS = [
     description: 'Aurariel the Light Maiden descends from the corrupted heavens to judge all of creation.',
     enemies: [
       { id: 'e_303_1', name: 'Light Golem',               tier: 'mob',       imageKey: 'mob_006',       hp: 2500, maxHp: 2500, atk: 230, def: 150, skills: [{ name: 'Radiant Slam',       damage: 1.5 }, { name: 'Light Crush',       damage: 2.0 }] },
-      { id: 'e_303_2', name: 'Forest Knight',          tier: 'mini-boss', imageKey: 'mini-boss_003', hp: 4700, maxHp: 4700, atk: 335, def: 232, skills: [{ name: 'Forest Judgment',     damage: 2.1 }, { name: 'Nature Wrath',       damage: 3.0 }] },
-      { id: 'e_303_3', name: 'Aurariel the Light Maiden', tier: 'boss',      imageKey: 'boss_003',      hp: 9000, maxHp: 9000, atk: 420, def: 270, skills: [{ name: 'Radiant Judgement', damage: 3.5 }, { name: 'Sacred Annihilation', damage: 4.8 }] },
+      { id: 'e_303_2', name: 'Forest Knight',          tier: 'mini-boss', imageKey: 'mini-boss_003', hp: 4700, maxHp: 4700, atk: 335, def: 232, effect: 'TOXIN', skills: [{ name: 'Forest Judgment',     damage: 2.1 }, { name: 'Nature Wrath',       damage: 3.0 }] },
+      { id: 'e_303_3', name: 'Aurariel the Light Maiden', tier: 'boss',      imageKey: 'boss_003',      hp: 9000, maxHp: 9000, atk: 420, def: 270, effect: 'PARALYSIS', skills: [{ name: 'Radiant Judgement', damage: 3.5 }, { name: 'Sacred Annihilation', damage: 4.8 }] },
     ],
   },
 
@@ -200,7 +200,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_402_1', name: 'Abyss Fang Ravager', tier: 'mob',       imageKey: 'mob_007',       hp: 2400, maxHp: 2400, atk: 235, def: 152, skills: [{ name: 'Fang Strike',  damage: 1.4 }, { name: 'Abyss Rend',   damage: 2.0 }] },
       { id: 'e_402_2', name: 'Light Golem',         tier: 'mob',       imageKey: 'mob_006',       hp: 2700, maxHp: 2700, atk: 250, def: 162, skills: [{ name: 'Radiant Slam',  damage: 1.4 }, { name: 'Light Crush', damage: 2.0 }] },
-      { id: 'e_402_3', name: 'Crimson Widow Queen', tier: 'mini-boss', imageKey: 'mini-boss_009', hp: 5200, maxHp: 5200, atk: 360, def: 250, skills: [{ name: 'Web of Blood', damage: 2.3 }, { name: 'Crimson Bite', damage: 3.0 }] },
+      { id: 'e_402_3', name: 'Crimson Widow Queen', tier: 'mini-boss', imageKey: 'mini-boss_009', hp: 5200, maxHp: 5200, atk: 360, def: 250, effect: 'TOXIN', skills: [{ name: 'Web of Blood', damage: 2.3 }, { name: 'Crimson Bite', damage: 3.0 }] },
     ],
   },
   {
@@ -209,8 +209,8 @@ export const ENEMY_GROUPS = [
     description: 'Thornqueen Sylva rises from the corrupted World Tree, commanding nature as a weapon of war.',
     enemies: [
       { id: 'e_403_1', name: 'Abyss Fang Ravager', tier: 'mob',       imageKey: 'mob_007',       hp: 2700, maxHp: 2700, atk: 252, def: 165, skills: [{ name: 'Fang Strike',      damage: 1.5 }, { name: 'Abyss Rend',      damage: 2.1 }] },
-      { id: 'e_403_2', name: 'Crimson Widow Queen', tier: 'mini-boss', imageKey: 'mini-boss_009', hp: 5600, maxHp: 5600, atk: 378, def: 262, skills: [{ name: 'Web of Blood',     damage: 2.4 }, { name: 'Crimson Bite',    damage: 3.2 }] },
-      { id: 'e_403_3', name: 'Thornqueen Sylva',    tier: 'boss',      imageKey: 'boss_004',      hp: 10500, maxHp: 10500, atk: 470, def: 310, skills: [{ name: 'Thorned Dominion', damage: 3.6 }, { name: "Nature's Wrath",  damage: 4.9 }] },
+      { id: 'e_403_2', name: 'Crimson Widow Queen', tier: 'mini-boss', imageKey: 'mini-boss_009', hp: 5600, maxHp: 5600, atk: 378, def: 262, effect: 'TOXIN', skills: [{ name: 'Web of Blood',     damage: 2.4 }, { name: 'Crimson Bite',    damage: 3.2 }] },
+      { id: 'e_403_3', name: 'Thornqueen Sylva',    tier: 'boss',      imageKey: 'boss_004',      hp: 10500, maxHp: 10500, atk: 470, def: 310, effect: 'TOXIN', skills: [{ name: 'Thorned Dominion', damage: 3.6 }, { name: "Nature's Wrath",  damage: 4.9 }] },
     ],
   },
 
@@ -232,7 +232,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_502_1', name: 'Water Guardian', tier: 'mob',       imageKey: 'mob_014',       hp: 2800, maxHp: 2800, atk: 262, def: 170, skills: [{ name: 'Water Surge',    damage: 1.5 }, { name: 'Tidal Strike',  damage: 2.0 }] },
       { id: 'e_502_2', name: 'Abyss Fang Ravager',       tier: 'mob',       imageKey: 'mob_007',       hp: 2900, maxHp: 2900, atk: 272, def: 178, skills: [{ name: 'Fang Strike',    damage: 1.5 }, { name: 'Abyss Rend',    damage: 2.1 }] },
-      { id: 'e_502_3', name: 'Frostveil Sorceress',       tier: 'mini-boss', imageKey: 'mini-boss_010', hp: 6000, maxHp: 6000, atk: 400, def: 280, skills: [{ name: 'Frost Nova',     damage: 2.4 }, { name: 'Blizzard Veil', damage: 3.3 }] },
+      { id: 'e_502_3', name: 'Frostveil Sorceress',       tier: 'mini-boss', imageKey: 'mini-boss_010', hp: 6000, maxHp: 6000, atk: 400, def: 280, effect: 'CHILL', skills: [{ name: 'Frost Nova',     damage: 2.4 }, { name: 'Blizzard Veil', damage: 3.3 }] },
     ],
   },
   {
@@ -241,8 +241,8 @@ export const ENEMY_GROUPS = [
     description: 'Verdara the Bloom Devourer unfurls from the dying forest core, consuming all life in her path.',
     enemies: [
       { id: 'e_503_1', name: 'Abyss Fang Ravager',        tier: 'mob',       imageKey: 'mob_007',       hp: 3100, maxHp: 3100, atk: 282, def: 184, skills: [{ name: 'Fang Strike',    damage: 1.6 }, { name: 'Abyss Rend',       damage: 2.2 }] },
-      { id: 'e_503_2', name: 'Frostveil Sorceress',        tier: 'mini-boss', imageKey: 'mini-boss_010', hp: 6400, maxHp: 6400, atk: 418, def: 292, skills: [{ name: 'Frost Nova',     damage: 2.5 }, { name: 'Blizzard Veil',    damage: 3.4 }] },
-      { id: 'e_503_3', name: 'Verdara the Bloom Devourer', tier: 'boss',      imageKey: 'boss_005',      hp: 12000, maxHp: 12000, atk: 520, def: 350, skills: [{ name: 'Bloom Devour',   damage: 3.8 }, { name: 'Corrupted Garden', damage: 5.0 }] },
+      { id: 'e_503_2', name: 'Frostveil Sorceress',        tier: 'mini-boss', imageKey: 'mini-boss_010', hp: 6400, maxHp: 6400, atk: 418, def: 292, effect: 'CHILL', skills: [{ name: 'Frost Nova',     damage: 2.5 }, { name: 'Blizzard Veil',    damage: 3.4 }] },
+      { id: 'e_503_3', name: 'Verdara the Bloom Devourer', tier: 'boss',      imageKey: 'boss_005',      hp: 12000, maxHp: 12000, atk: 520, def: 350, effect: 'TOXIN', skills: [{ name: 'Bloom Devour',   damage: 3.8 }, { name: 'Corrupted Garden', damage: 5.0 }] },
     ],
   },
 
@@ -264,7 +264,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_602_1', name: 'Frostveil Siren',          tier: 'mob',       imageKey: 'mob_009',       hp: 3300, maxHp: 3300, atk: 308, def: 200, skills: [{ name: 'Frost Song',         damage: 1.5 }, { name: 'Blizzard Aria',    damage: 2.1 }] },
       { id: 'e_602_2', name: 'Rotclaw Ghoul',            tier: 'mob',       imageKey: 'mob_010',       hp: 3400, maxHp: 3400, atk: 315, def: 205, skills: [{ name: 'Decay Strike',        damage: 1.5 }, { name: 'Rotting Claw',     damage: 2.1 }] },
-      { id: 'e_602_3', name: 'Celestial Fallen Valkyrie', tier: 'mini-boss', imageKey: 'mini-boss_011', hp: 7000, maxHp: 7000, atk: 450, def: 315, skills: [{ name: 'Fallen Judgement',   damage: 2.4 }, { name: 'Corruption Spear', damage: 3.3 }] },
+      { id: 'e_602_3', name: 'Celestial Fallen Valkyrie', tier: 'mini-boss', imageKey: 'mini-boss_011', hp: 7000, maxHp: 7000, atk: 450, def: 315, effect: 'VOID_CURSE', skills: [{ name: 'Fallen Judgement',   damage: 2.4 }, { name: 'Corruption Spear', damage: 3.3 }] },
     ],
   },
   {
@@ -273,8 +273,8 @@ export const ENEMY_GROUPS = [
     description: "Nyx Shadowbloom emerges from the corrupted World Tree's heart — darkness wearing nature's crown.",
     enemies: [
       { id: 'e_603_1', name: 'Rotclaw Ghoul',            tier: 'mob',       imageKey: 'mob_010',       hp: 3700, maxHp: 3700, atk: 328, def: 212, skills: [{ name: 'Decay Strike',      damage: 1.6 }, { name: 'Rotting Claw',    damage: 2.2 }] },
-      { id: 'e_603_2', name: 'Celestial Fallen Valkyrie', tier: 'mini-boss', imageKey: 'mini-boss_011', hp: 7500, maxHp: 7500, atk: 470, def: 328, skills: [{ name: 'Fallen Judgement',  damage: 2.5 }, { name: 'Corruption Spear', damage: 3.5 }] },
-      { id: 'e_603_3', name: 'Nyx Shadowbloom',           tier: 'boss',      imageKey: 'boss_006',      hp: 13500, maxHp: 13500, atk: 575, def: 390, skills: [{ name: 'Shadow Bloom',     damage: 3.8 }, { name: 'Dark Genesis',    damage: 5.0 }] },
+      { id: 'e_603_2', name: 'Celestial Fallen Valkyrie', tier: 'mini-boss', imageKey: 'mini-boss_011', hp: 7500, maxHp: 7500, atk: 470, def: 328, effect: 'VOID_CURSE', skills: [{ name: 'Fallen Judgement',  damage: 2.5 }, { name: 'Corruption Spear', damage: 3.5 }] },
+      { id: 'e_603_3', name: 'Nyx Shadowbloom',           tier: 'boss',      imageKey: 'boss_006',      hp: 13500, maxHp: 13500, atk: 575, def: 390, effect: 'VOID_CURSE', skills: [{ name: 'Shadow Bloom',     damage: 3.8 }, { name: 'Dark Genesis',    damage: 5.0 }] },
     ],
   },
 
@@ -296,7 +296,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_702_1', name: 'Rotclaw Ghoul',      tier: 'mob',       imageKey: 'mob_010',       hp: 4000, maxHp: 4000, atk: 348, def: 226, skills: [{ name: 'Decay Strike',  damage: 1.6 }, { name: 'Rotting Claw',  damage: 2.2 }] },
       { id: 'e_702_2', name: 'Stormbreaker Titan', tier: 'mob',       imageKey: 'mob_011',       hp: 4300, maxHp: 4300, atk: 362, def: 235, skills: [{ name: 'Storm Crush',   damage: 1.6 }, { name: 'Thunder Slam',  damage: 2.2 }] },
-      { id: 'e_702_3', name: 'Abyss Prophet',      tier: 'mini-boss', imageKey: 'mini-boss_007', hp: 8200, maxHp: 8200, atk: 500, def: 350, skills: [{ name: 'Dark Prophecy', damage: 2.3 }, { name: 'Abyss Command', damage: 3.1 }] },
+      { id: 'e_702_3', name: 'Abyss Prophet',      tier: 'mini-boss', imageKey: 'mini-boss_007', hp: 8200, maxHp: 8200, atk: 500, def: 350, effect: 'VOID_CURSE', skills: [{ name: 'Dark Prophecy', damage: 2.3 }, { name: 'Abyss Command', damage: 3.1 }] },
     ],
   },
   {
@@ -305,8 +305,8 @@ export const ENEMY_GROUPS = [
     description: 'The ancient Abyss Sovereign descends from his obsidian throne, reality bending at his command.',
     enemies: [
       { id: 'e_703_1', name: 'Stormbreaker Titan',  tier: 'mob',       imageKey: 'mob_011',       hp: 4600, maxHp: 4600, atk: 375, def: 242, skills: [{ name: 'Storm Crush',     damage: 1.7 }, { name: 'Thunder Slam',    damage: 2.3 }] },
-      { id: 'e_703_2', name: 'Abyss Prophet',       tier: 'mini-boss', imageKey: 'mini-boss_007', hp: 8800, maxHp: 8800, atk: 522, def: 365, skills: [{ name: 'Dark Prophecy',   damage: 2.4 }, { name: 'Abyss Command',   damage: 3.3 }] },
-      { id: 'e_703_3', name: 'The Abyss Sovereign', tier: 'boss',      imageKey: 'boss_007',      hp: 15500, maxHp: 15500, atk: 640, def: 430, skills: [{ name: 'Abyss Command',  damage: 3.9 }, { name: 'Sovereign Curse', damage: 5.2 }] },
+      { id: 'e_703_2', name: 'Abyss Prophet',       tier: 'mini-boss', imageKey: 'mini-boss_007', hp: 8800, maxHp: 8800, atk: 522, def: 365, effect: 'VOID_CURSE', skills: [{ name: 'Dark Prophecy',   damage: 2.4 }, { name: 'Abyss Command',   damage: 3.3 }] },
+      { id: 'e_703_3', name: 'The Abyss Sovereign', tier: 'boss',      imageKey: 'boss_007',      hp: 15500, maxHp: 15500, atk: 640, def: 430, effect: 'VOID_CURSE', skills: [{ name: 'Abyss Command',  damage: 3.9 }, { name: 'Sovereign Curse', damage: 5.2 }] },
     ],
   },
 
@@ -328,7 +328,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_802_1', name: 'Dark Huntress',       tier: 'mob',       imageKey: 'mob_012',       hp: 4600, maxHp: 4600, atk: 388, def: 255, skills: [{ name: 'Dark Sting',  damage: 1.7 }, { name: 'Shadow Lash',       damage: 2.3 }] },
       { id: 'e_802_2', name: 'Forest Marionette', tier: 'mob',       imageKey: 'mob_013',       hp: 4900, maxHp: 4900, atk: 402, def: 265, skills: [{ name: 'Vine Slash', damage: 1.7 }, { name: 'Root Bind', damage: 2.3 }] },
-      { id: 'e_802_3', name: 'Void Samurai Warlord',     tier: 'mini-boss', imageKey: 'mini-boss_004', hp: 9400, maxHp: 9400, atk: 560, def: 390, skills: [{ name: 'Katana Rain',  damage: 2.5 }, { name: 'Soul Cut',        damage: 3.4 }] },
+      { id: 'e_802_3', name: 'Void Samurai Warlord',     tier: 'mini-boss', imageKey: 'mini-boss_004', hp: 9400, maxHp: 9400, atk: 560, def: 390, effect: 'VOID_CURSE', skills: [{ name: 'Katana Rain',  damage: 2.5 }, { name: 'Soul Cut',        damage: 3.4 }] },
     ],
   },
   {
@@ -337,8 +337,8 @@ export const ENEMY_GROUPS = [
     description: 'The Radiant Dragon Emperor descends from the heavens, unleashing divine radiance that burns through every shadow.',
     enemies: [
       { id: 'e_803_1', name: 'Forest Marionette', tier: 'mob',       imageKey: 'mob_013',       hp: 5200, maxHp: 5200, atk: 415, def: 272, skills: [{ name: 'Vine Slash',    damage: 1.8 }, { name: 'Root Bind',  damage: 2.4 }] },
-      { id: 'e_803_2', name: 'Void Samurai Warlord',     tier: 'mini-boss', imageKey: 'mini-boss_004', hp: 10000, maxHp: 10000, atk: 580, def: 406, skills: [{ name: 'Katana Rain',    damage: 2.6 }, { name: 'Soul Cut',         damage: 3.6 }] },
-      { id: 'e_803_3', name: 'Radiant Dragon Emperor',   tier: 'boss',      imageKey: 'boss_008',      hp: 17500, maxHp: 17500, atk: 700, def: 480, skills: [{ name: 'Radiant Breath',  damage: 4.0 }, { name: 'Dragon Radiance',   damage: 5.3 }] },
+      { id: 'e_803_2', name: 'Void Samurai Warlord',     tier: 'mini-boss', imageKey: 'mini-boss_004', hp: 10000, maxHp: 10000, atk: 580, def: 406, effect: 'VOID_CURSE', skills: [{ name: 'Katana Rain',    damage: 2.6 }, { name: 'Soul Cut',         damage: 3.6 }] },
+      { id: 'e_803_3', name: 'Radiant Dragon Emperor',   tier: 'boss',      imageKey: 'boss_008',      hp: 17500, maxHp: 17500, atk: 700, def: 480, effect: 'PARALYSIS', skills: [{ name: 'Radiant Breath',  damage: 4.0 }, { name: 'Dragon Radiance',   damage: 5.3 }] },
     ],
   },
 
@@ -360,7 +360,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_902_1', name: 'Forest Marionette', tier: 'mob',       imageKey: 'mob_013',       hp: 5300, maxHp: 5300, atk: 430, def: 286, skills: [{ name: 'Vine Slash',      damage: 1.8 }, { name: 'Root Bind',   damage: 2.4 }] },
       { id: 'e_902_2', name: 'Water Guardian', tier: 'mob',       imageKey: 'mob_014',       hp: 5600, maxHp: 5600, atk: 442, def: 295, skills: [{ name: 'Water Surge',         damage: 1.7 }, { name: 'Tidal Strike',      damage: 2.4 }] },
-      { id: 'e_902_3', name: 'Clockwork Commander',       tier: 'mini-boss', imageKey: 'mini-boss_008', hp: 10800, maxHp: 10800, atk: 620, def: 435, skills: [{ name: 'Gear Blitz',        damage: 2.4 }, { name: 'Overdrive Protocol', damage: 3.2 }] },
+      { id: 'e_902_3', name: 'Clockwork Commander',       tier: 'mini-boss', imageKey: 'mini-boss_008', hp: 10800, maxHp: 10800, atk: 620, def: 435, effect: 'PARALYSIS', skills: [{ name: 'Gear Blitz',        damage: 2.4 }, { name: 'Overdrive Protocol', damage: 3.2 }] },
     ],
   },
   {
@@ -369,8 +369,8 @@ export const ENEMY_GROUPS = [
     description: 'Celestial Valkor descends as the fusion of light and darkness, rewriting the laws of existence itself.',
     enemies: [
       { id: 'e_903_1', name: 'Water Guardian', tier: 'mob',       imageKey: 'mob_014',       hp: 6000, maxHp: 6000, atk: 455, def: 305, skills: [{ name: 'Water Surge',          damage: 1.8 }, { name: 'Tidal Strike',       damage: 2.5 }] },
-      { id: 'e_903_2', name: 'Clockwork Commander',       tier: 'mini-boss', imageKey: 'mini-boss_008', hp: 11500, maxHp: 11500, atk: 642, def: 452, skills: [{ name: 'Gear Blitz',          damage: 2.5 }, { name: 'Overdrive Protocol', damage: 3.4 }] },
-      { id: 'e_903_3', name: 'Celestial Valkor',           tier: 'boss',      imageKey: 'boss_009',      hp: 19500, maxHp: 19500, atk: 770, def: 530, skills: [{ name: 'Celestial Fracture', damage: 4.0 }, { name: "Valkor's Judgement", damage: 5.3 }] },
+      { id: 'e_903_2', name: 'Clockwork Commander',       tier: 'mini-boss', imageKey: 'mini-boss_008', hp: 11500, maxHp: 11500, atk: 642, def: 452, effect: 'PARALYSIS', skills: [{ name: 'Gear Blitz',          damage: 2.5 }, { name: 'Overdrive Protocol', damage: 3.4 }] },
+      { id: 'e_903_3', name: 'Celestial Valkor',           tier: 'boss',      imageKey: 'boss_009',      hp: 19500, maxHp: 19500, atk: 770, def: 530, effect: 'PARALYSIS', skills: [{ name: 'Celestial Fracture', damage: 4.0 }, { name: "Valkor's Judgement", damage: 5.3 }] },
     ],
   },
 
@@ -392,7 +392,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_1002_1', name: 'Dark Huntress',        tier: 'mob',       imageKey: 'mob_012',       hp: 5900, maxHp: 5900, atk: 468, def: 316, skills: [{ name: 'Dark Sting',  damage: 1.8 }, { name: 'Shadow Lash',    damage: 2.4 }] },
       { id: 'e_1002_2', name: 'Forest Marionette',  tier: 'mob',       imageKey: 'mob_013',       hp: 6200, maxHp: 6200, atk: 482, def: 326, skills: [{ name: 'Vine Slash', damage: 1.8 }, { name: 'Root Bind', damage: 2.4 }] },
-      { id: 'e_1002_3', name: 'Nature Assassin',      tier: 'mini-boss', imageKey: 'mini-boss_012', hp: 12000, maxHp: 12000, atk: 680, def: 475, skills: [{ name: 'Nature Lash',  damage: 2.4 }, { name: 'Forest Bloom', damage: 3.2 }] },
+      { id: 'e_1002_3', name: 'Nature Assassin',      tier: 'mini-boss', imageKey: 'mini-boss_012', hp: 12000, maxHp: 12000, atk: 680, def: 475, effect: 'TOXIN', skills: [{ name: 'Nature Lash',  damage: 2.4 }, { name: 'Forest Bloom', damage: 3.2 }] },
     ],
   },
   {
@@ -401,8 +401,8 @@ export const ENEMY_GROUPS = [
     description: "Queen Nythera rises from her stolen celestial throne, the void energy of a thousand worlds at her command.",
     enemies: [
       { id: 'e_1003_1', name: 'Forest Marionette', tier: 'mob',       imageKey: 'mob_013',       hp: 6500, maxHp: 6500, atk: 495, def: 335, skills: [{ name: 'Vine Slash',    damage: 1.9 }, { name: 'Root Bind',    damage: 2.5 }] },
-      { id: 'e_1003_2', name: 'Nature Assassin',     tier: 'mini-boss', imageKey: 'mini-boss_012', hp: 12800, maxHp: 12800, atk: 705, def: 492, skills: [{ name: 'Nature Lash',      damage: 2.5 }, { name: 'Forest Bloom',       damage: 3.4 }] },
-      { id: 'e_1003_3', name: 'Queen Nythera',             tier: 'boss',      imageKey: 'boss_010',      hp: 21000, maxHp: 21000, atk: 830, def: 575, skills: [{ name: 'Void Reign',      damage: 4.0 }, { name: "Queen's Corruption", damage: 5.3 }] },
+      { id: 'e_1003_2', name: 'Nature Assassin',     tier: 'mini-boss', imageKey: 'mini-boss_012', hp: 12800, maxHp: 12800, atk: 705, def: 492, effect: 'TOXIN', skills: [{ name: 'Nature Lash',      damage: 2.5 }, { name: 'Forest Bloom',       damage: 3.4 }] },
+      { id: 'e_1003_3', name: 'Queen Nythera',             tier: 'boss',      imageKey: 'boss_010',      hp: 21000, maxHp: 21000, atk: 830, def: 575, effect: 'VOID_CURSE', skills: [{ name: 'Void Reign',      damage: 4.0 }, { name: "Queen's Corruption", damage: 5.3 }] },
     ],
   },
 
@@ -424,7 +424,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_1102_1', name: 'Stormbreaker Titan',       tier: 'mob',       imageKey: 'mob_011',       hp: 6600, maxHp: 6600, atk: 508, def: 346, skills: [{ name: 'Storm Crush',      damage: 1.8 }, { name: 'Thunder Slam',  damage: 2.5 }] },
       { id: 'e_1102_2', name: 'Forest Marionette', tier: 'mob',       imageKey: 'mob_013',       hp: 7000, maxHp: 7000, atk: 522, def: 356, skills: [{ name: 'Vine Slash',      damage: 1.8 }, { name: 'Root Bind', damage: 2.5 }] },
-      { id: 'e_1102_3', name: 'Infernal Berserker King',  tier: 'mini-boss', imageKey: 'mini-boss_005', hp: 13500, maxHp: 13500, atk: 740, def: 515, skills: [{ name: 'Berserker Rage',   damage: 2.5 }, { name: 'Titan Fury',    damage: 3.4 }] },
+      { id: 'e_1102_3', name: 'Infernal Berserker King',  tier: 'mini-boss', imageKey: 'mini-boss_005', hp: 13500, maxHp: 13500, atk: 740, def: 515, effect: 'SHATTER', skills: [{ name: 'Berserker Rage',   damage: 2.5 }, { name: 'Titan Fury',    damage: 3.4 }] },
     ],
   },
   {
@@ -433,8 +433,8 @@ export const ENEMY_GROUPS = [
     description: 'The Infernal Titan King stomps the burning ruins flat, his power threatening to unmake all celestial order.',
     enemies: [
       { id: 'e_1103_1', name: 'Forest Marionette', tier: 'mob',       imageKey: 'mob_013',       hp: 7300, maxHp: 7300, atk: 535, def: 365, skills: [{ name: 'Vine Slash',       damage: 1.9 }, { name: 'Root Bind',    damage: 2.6 }] },
-      { id: 'e_1103_2', name: 'Infernal Berserker King',  tier: 'mini-boss', imageKey: 'mini-boss_005', hp: 14200, maxHp: 14200, atk: 765, def: 535, skills: [{ name: 'Berserker Rage',    damage: 2.6 }, { name: 'Titan Fury',         damage: 3.6 }] },
-      { id: 'e_1103_3', name: 'The Infernal Titan King',  tier: 'boss',      imageKey: 'boss_011',      hp: 23000, maxHp: 23000, atk: 890, def: 620, skills: [{ name: 'Titan Devastation', damage: 4.0 }, { name: 'Infernal Apocalypse', damage: 5.4 }] },
+      { id: 'e_1103_2', name: 'Infernal Berserker King',  tier: 'mini-boss', imageKey: 'mini-boss_005', hp: 14200, maxHp: 14200, atk: 765, def: 535, effect: 'SHATTER', skills: [{ name: 'Berserker Rage',    damage: 2.6 }, { name: 'Titan Fury',         damage: 3.6 }] },
+      { id: 'e_1103_3', name: 'The Infernal Titan King',  tier: 'boss',      imageKey: 'boss_011',      hp: 23000, maxHp: 23000, atk: 890, def: 620, effect: 'SHATTER', skills: [{ name: 'Titan Devastation', damage: 4.0 }, { name: 'Infernal Apocalypse', damage: 5.4 }] },
     ],
   },
 
@@ -456,7 +456,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_1202_1', name: 'Forest Marionette', tier: 'mob',       imageKey: 'mob_013',       hp: 7100, maxHp: 7100, atk: 538, def: 368, skills: [{ name: 'Vine Slash',     damage: 1.9 }, { name: 'Root Bind', damage: 2.5 }] },
       { id: 'e_1202_2', name: 'Water Guardian', tier: 'mob',       imageKey: 'mob_014',       hp: 7400, maxHp: 7400, atk: 552, def: 378, skills: [{ name: 'Water Surge',        damage: 1.9 }, { name: 'Tidal Strike',    damage: 2.5 }] },
-      { id: 'e_1202_3', name: 'Frost Revenant Knight',    tier: 'mini-boss', imageKey: 'mini-boss_006', hp: 15000, maxHp: 15000, atk: 800, def: 555, skills: [{ name: 'Revenant Frost',   damage: 2.4 }, { name: 'Soul Freeze',     damage: 3.2 }] },
+      { id: 'e_1202_3', name: 'Frost Revenant Knight',    tier: 'mini-boss', imageKey: 'mini-boss_006', hp: 15000, maxHp: 15000, atk: 800, def: 555, effect: 'CHILL', skills: [{ name: 'Revenant Frost',   damage: 2.4 }, { name: 'Soul Freeze',     damage: 3.2 }] },
     ],
   },
   {
@@ -465,8 +465,8 @@ export const ENEMY_GROUPS = [
     description: 'Chronos the God of Time steps from the collapsing timeline to unmake all of history.',
     enemies: [
       { id: 'e_1203_1', name: 'Water Guardian', tier: 'mob',       imageKey: 'mob_014',       hp: 7700, maxHp: 7700, atk: 562, def: 386, skills: [{ name: 'Water Surge',       damage: 1.9 }, { name: 'Tidal Strike',      damage: 2.6 }] },
-      { id: 'e_1203_2', name: 'Frost Revenant Knight',    tier: 'mini-boss', imageKey: 'mini-boss_006', hp: 15800, maxHp: 15800, atk: 825, def: 572, skills: [{ name: 'Revenant Frost',   damage: 2.5 }, { name: 'Soul Freeze',       damage: 3.4 }] },
-      { id: 'e_1203_3', name: 'Chronos',                   tier: 'boss',      imageKey: 'boss_012',      hp: 24500, maxHp: 24500, atk: 940, def: 650, skills: [{ name: 'Time Stop',       damage: 4.0 }, { name: 'Temporal Collapse', damage: 5.4 }] },
+      { id: 'e_1203_2', name: 'Frost Revenant Knight',    tier: 'mini-boss', imageKey: 'mini-boss_006', hp: 15800, maxHp: 15800, atk: 825, def: 572, effect: 'CHILL', skills: [{ name: 'Revenant Frost',   damage: 2.5 }, { name: 'Soul Freeze',       damage: 3.4 }] },
+      { id: 'e_1203_3', name: 'Chronos',                   tier: 'boss',      imageKey: 'boss_012',      hp: 24500, maxHp: 24500, atk: 940, def: 650, effect: 'PARALYSIS', skills: [{ name: 'Time Stop',       damage: 4.0 }, { name: 'Temporal Collapse', damage: 5.4 }] },
     ],
   },
 
@@ -488,7 +488,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_1302_1', name: 'Frostveil Siren',      tier: 'mob',       imageKey: 'mob_009',       hp: 8100, maxHp: 8100, atk: 588, def: 405, skills: [{ name: 'Frost Song',      damage: 1.9 }, { name: 'Blizzard Aria',  damage: 2.5 }] },
       { id: 'e_1302_2', name: 'Stormbreaker Titan',   tier: 'mob',       imageKey: 'mob_011',       hp: 8500, maxHp: 8500, atk: 602, def: 416, skills: [{ name: 'Storm Crush',     damage: 1.9 }, { name: 'Thunder Slam',   damage: 2.6 }] },
-      { id: 'e_1302_3', name: 'Storm Siren Empress',  tier: 'mini-boss', imageKey: 'mini-boss_013', hp: 16500, maxHp: 16500, atk: 860, def: 590, skills: [{ name: 'Tempest Song',   damage: 2.5 }, { name: 'Lightning Aria', damage: 3.4 }] },
+      { id: 'e_1302_3', name: 'Storm Siren Empress',  tier: 'mini-boss', imageKey: 'mini-boss_013', hp: 16500, maxHp: 16500, atk: 860, def: 590, effect: 'PARALYSIS', skills: [{ name: 'Tempest Song',   damage: 2.5 }, { name: 'Lightning Aria', damage: 3.4 }] },
     ],
   },
   {
@@ -497,8 +497,8 @@ export const ENEMY_GROUPS = [
     description: 'The Frostbound Monarch descends from his frozen throne, his very gaze turning heroes to solid ice.',
     enemies: [
       { id: 'e_1303_1', name: 'Stormbreaker Titan',     tier: 'mob',       imageKey: 'mob_011',       hp: 8800, maxHp: 8800, atk: 615, def: 425, skills: [{ name: 'Storm Crush',       damage: 2.0 }, { name: 'Thunder Slam',     damage: 2.7 }] },
-      { id: 'e_1303_2', name: 'Storm Siren Empress',    tier: 'mini-boss', imageKey: 'mini-boss_013', hp: 17200, maxHp: 17200, atk: 882, def: 608, skills: [{ name: 'Tempest Song',      damage: 2.6 }, { name: 'Lightning Aria',    damage: 3.6 }] },
-      { id: 'e_1303_3', name: 'The Frostbound Monarch', tier: 'boss',      imageKey: 'boss_013',      hp: 25500, maxHp: 25500, atk: 980, def: 670, skills: [{ name: 'Frozen Kingdom',   damage: 4.0 }, { name: 'Eternal Blizzard',  damage: 5.4 }] },
+      { id: 'e_1303_2', name: 'Storm Siren Empress',    tier: 'mini-boss', imageKey: 'mini-boss_013', hp: 17200, maxHp: 17200, atk: 882, def: 608, effect: 'PARALYSIS', skills: [{ name: 'Tempest Song',      damage: 2.6 }, { name: 'Lightning Aria',    damage: 3.6 }] },
+      { id: 'e_1303_3', name: 'The Frostbound Monarch', tier: 'boss',      imageKey: 'boss_013',      hp: 25500, maxHp: 25500, atk: 980, def: 670, effect: 'CHILL', skills: [{ name: 'Frozen Kingdom',   damage: 4.0 }, { name: 'Eternal Blizzard',  damage: 5.4 }] },
     ],
   },
 
@@ -520,7 +520,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_1402_1', name: 'Forest Marionette', tier: 'mob',       imageKey: 'mob_013',       hp: 8800, maxHp: 8800, atk: 628, def: 438, skills: [{ name: 'Vine Slash',  damage: 2.0 }, { name: 'Root Bind', damage: 2.6 }] },
       { id: 'e_1402_2', name: 'Water Guardian', tier: 'mob',       imageKey: 'mob_014',       hp: 9200, maxHp: 9200, atk: 642, def: 448, skills: [{ name: 'Water Surge',    damage: 2.0 }, { name: 'Tidal Strike',    damage: 2.7 }] },
-      { id: 'e_1402_3', name: 'Crimson Widow Queen',       tier: 'mini-boss', imageKey: 'mini-boss_009', hp: 18000, maxHp: 18000, atk: 920, def: 620, skills: [{ name: 'Web of Blood',  damage: 2.3 }, { name: 'Crimson Bite',    damage: 3.0 }] },
+      { id: 'e_1402_3', name: 'Crimson Widow Queen',       tier: 'mini-boss', imageKey: 'mini-boss_009', hp: 18000, maxHp: 18000, atk: 920, def: 620, effect: 'TOXIN', skills: [{ name: 'Web of Blood',  damage: 2.3 }, { name: 'Crimson Bite',    damage: 3.0 }] },
     ],
   },
   {
@@ -529,8 +529,8 @@ export const ENEMY_GROUPS = [
     description: 'Seraphine the Crimson Empress absorbs the power of every battle fought, now at the peak of her terrible glory.',
     enemies: [
       { id: 'e_1403_1', name: 'Water Guardian',     tier: 'mob',       imageKey: 'mob_014',       hp: 9500, maxHp: 9500, atk: 655, def: 458, skills: [{ name: 'Water Surge',         damage: 2.0 }, { name: 'Tidal Strike',     damage: 2.7 }] },
-      { id: 'e_1403_2', name: 'Crimson Widow Queen',           tier: 'mini-boss', imageKey: 'mini-boss_009', hp: 18800, maxHp: 18800, atk: 948, def: 640, skills: [{ name: 'Web of Blood',       damage: 2.4 }, { name: 'Crimson Bite',     damage: 3.2 }] },
-      { id: 'e_1403_3', name: 'Seraphine the Crimson Empress', tier: 'boss',      imageKey: 'boss_014',      hp: 27000, maxHp: 27000, atk: 1040, def: 700, skills: [{ name: 'Crimson Judgement', damage: 4.2 }, { name: "Empress's Wrath",  damage: 5.5 }] },
+      { id: 'e_1403_2', name: 'Crimson Widow Queen',           tier: 'mini-boss', imageKey: 'mini-boss_009', hp: 18800, maxHp: 18800, atk: 948, def: 640, effect: 'TOXIN', skills: [{ name: 'Web of Blood',       damage: 2.4 }, { name: 'Crimson Bite',     damage: 3.2 }] },
+      { id: 'e_1403_3', name: 'Seraphine the Crimson Empress', tier: 'boss',      imageKey: 'boss_014',      hp: 27000, maxHp: 27000, atk: 1040, def: 700, effect: 'VOID_CURSE', skills: [{ name: 'Crimson Judgement', damage: 4.2 }, { name: "Empress's Wrath",  damage: 5.5 }] },
     ],
   },
 
@@ -552,7 +552,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_1502_1', name: 'Forest Marionette', tier: 'mob',       imageKey: 'mob_013',       hp: 9500, maxHp: 9500, atk: 668, def: 468, skills: [{ name: 'Vine Slash', damage: 2.0 }, { name: 'Root Bind', damage: 2.8 }] },
       { id: 'e_1502_2', name: 'Water Guardian', tier: 'mob',       imageKey: 'mob_014',       hp: 9900, maxHp: 9900, atk: 682, def: 478, skills: [{ name: 'Water Surge',   damage: 2.0 }, { name: 'Tidal Strike',    damage: 2.8 }] },
-      { id: 'e_1502_3', name: 'Void Samurai Warlord',     tier: 'mini-boss', imageKey: 'mini-boss_004', hp: 20000, maxHp: 20000, atk: 1000, def: 660, skills: [{ name: 'Katana Rain', damage: 3.5 }, { name: 'Soul Cut',         damage: 4.6 }] },
+      { id: 'e_1502_3', name: 'Void Samurai Warlord',     tier: 'mini-boss', imageKey: 'mini-boss_004', hp: 20000, maxHp: 20000, atk: 1000, def: 660, effect: 'VOID_CURSE', skills: [{ name: 'Katana Rain', damage: 3.5 }, { name: 'Soul Cut',         damage: 4.6 }] },
     ],
   },
   {
@@ -561,8 +561,8 @@ export const ENEMY_GROUPS = [
     description: 'The World Eater Leviathan surfaces from the cosmic abyss to consume the last remnants of reality.',
     enemies: [
       { id: 'e_1503_1', name: 'Water Guardian',  tier: 'mob',       imageKey: 'mob_014',       hp: 10200, maxHp: 10200, atk: 695, def: 488, skills: [{ name: 'Water Surge',         damage: 2.1 }, { name: 'Tidal Strike',      damage: 2.9 }] },
-      { id: 'e_1503_2', name: 'Void Samurai Warlord',       tier: 'mini-boss', imageKey: 'mini-boss_004', hp: 21000, maxHp: 21000, atk: 1025, def: 680, skills: [{ name: 'Katana Rain',        damage: 3.6 }, { name: 'Soul Cut',          damage: 4.8 }] },
-      { id: 'e_1503_3', name: 'The World Eater Leviathan',  tier: 'boss',      imageKey: 'boss_015',      hp: 28000, maxHp: 28000, atk: 1100, def: 720, skills: [{ name: 'World Devour',       damage: 4.2 }, { name: 'Cosmic Extinction', damage: 5.5 }] },
+      { id: 'e_1503_2', name: 'Void Samurai Warlord',       tier: 'mini-boss', imageKey: 'mini-boss_004', hp: 21000, maxHp: 21000, atk: 1025, def: 680, effect: 'VOID_CURSE', skills: [{ name: 'Katana Rain',        damage: 3.6 }, { name: 'Soul Cut',          damage: 4.8 }] },
+      { id: 'e_1503_3', name: 'The World Eater Leviathan',  tier: 'boss',      imageKey: 'boss_015',      hp: 28000, maxHp: 28000, atk: 1100, def: 720, effect: 'VOID_CURSE', skills: [{ name: 'World Devour',       damage: 4.2 }, { name: 'Cosmic Extinction', damage: 5.5 }] },
     ],
   },
 
@@ -584,7 +584,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_1602_1', name: 'Forest Revenant',         tier: 'mob',       imageKey: 'mob_016',       hp: 11300, maxHp: 11300, atk: 732, def: 516, skills: [{ name: 'Forest Strike',     damage: 2.1 }, { name: 'Nature Drain',    damage: 2.8 }] },
       { id: 'e_1602_2', name: 'Earth Sentinel', tier: 'mob',       imageKey: 'mob_017',       hp: 11600, maxHp: 11600, atk: 745, def: 526, skills: [{ name: 'Earth Smash',      damage: 2.1 }, { name: 'Stone Guard',   damage: 2.8 }] },
-      { id: 'e_1602_3', name: 'Stone Keeper',        tier: 'mini-boss', imageKey: 'mini-boss_014', hp: 22000, maxHp: 22000, atk: 1055, def: 700, skills: [{ name: 'Stone Toll',   damage: 2.6 }, { name: 'Earth Shockwave', damage: 3.5 }] },
+      { id: 'e_1602_3', name: 'Stone Keeper',        tier: 'mini-boss', imageKey: 'mini-boss_014', hp: 22000, maxHp: 22000, atk: 1055, def: 700, effect: 'SHATTER', skills: [{ name: 'Stone Toll',   damage: 2.6 }, { name: 'Earth Shockwave', damage: 3.5 }] },
     ],
   },
   {
@@ -593,8 +593,8 @@ export const ENEMY_GROUPS = [
     description: 'The true architect of the Crimson Empire emerges — a demon-vampire hybrid who engineered every war from the shadows.',
     enemies: [
       { id: 'e_1603_1', name: 'Earth Sentinel', tier: 'mob',       imageKey: 'mob_017',       hp: 11800, maxHp: 11800, atk: 752, def: 532, skills: [{ name: 'Earth Smash',       damage: 2.1 }, { name: 'Stone Guard',   damage: 2.9 }] },
-      { id: 'e_1603_2', name: 'Stone Keeper',        tier: 'mini-boss', imageKey: 'mini-boss_014', hp: 23000, maxHp: 23000, atk: 1075, def: 715, skills: [{ name: 'Stone Toll',   damage: 2.7 }, { name: 'Earth Shockwave', damage: 3.7 }] },
-      { id: 'e_1603_3', name: 'Visalia the Crimson',    tier: 'boss',      imageKey: 'boss_016',      hp: 29500, maxHp: 29500, atk: 1140, def: 742, skills: [{ name: 'Blood Dominion',   damage: 4.2 }, { name: "Demon's Eclipse", damage: 5.6 }] },
+      { id: 'e_1603_2', name: 'Stone Keeper',        tier: 'mini-boss', imageKey: 'mini-boss_014', hp: 23000, maxHp: 23000, atk: 1075, def: 715, effect: 'SHATTER', skills: [{ name: 'Stone Toll',   damage: 2.7 }, { name: 'Earth Shockwave', damage: 3.7 }] },
+      { id: 'e_1603_3', name: 'Visalia the Crimson',    tier: 'boss',      imageKey: 'boss_016',      hp: 29500, maxHp: 29500, atk: 1140, def: 742, effect: 'VOID_CURSE', skills: [{ name: 'Blood Dominion',   damage: 4.2 }, { name: "Demon's Eclipse", damage: 5.6 }] },
     ],
   },
 
@@ -616,7 +616,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_1702_1', name: 'Void Wraith Archer', tier: 'mob',       imageKey: 'mob_019',       hp: 12100, maxHp: 12100, atk: 770, def: 544, skills: [{ name: 'Wraith Arrow',    damage: 2.2 }, { name: 'Void Volley',     damage: 2.9 }] },
       { id: 'e_1702_2', name: 'Tomb Specter',       tier: 'mob',       imageKey: 'mob_020',       hp: 12400, maxHp: 12400, atk: 785, def: 554, skills: [{ name: 'Specter Claw',    damage: 2.2 }, { name: 'Haunting Wail',   damage: 2.9 }] },
-      { id: 'e_1702_3', name: 'Lady Silkgrave',     tier: 'mini-boss', imageKey: 'mini-boss_015', hp: 23000, maxHp: 23000, atk: 1085, def: 720, skills: [{ name: 'Funeral Silk',    damage: 2.6 }, { name: 'Crystal Fang',    damage: 3.5 }] },
+      { id: 'e_1702_3', name: 'Lady Silkgrave',     tier: 'mini-boss', imageKey: 'mini-boss_015', hp: 23000, maxHp: 23000, atk: 1085, def: 720, effect: 'TOXIN', skills: [{ name: 'Funeral Silk',    damage: 2.6 }, { name: 'Crystal Fang',    damage: 3.5 }] },
     ],
   },
   {
@@ -625,8 +625,8 @@ export const ENEMY_GROUPS = [
     description: 'An ancient ruler whose kingdom was erased from all history commands darkness from a shattered floating throne.',
     enemies: [
       { id: 'e_1703_1', name: 'Tomb Specter',       tier: 'mob',       imageKey: 'mob_020',       hp: 12600, maxHp: 12600, atk: 792, def: 560, skills: [{ name: 'Specter Claw',    damage: 2.2 }, { name: 'Haunting Wail',    damage: 3.0 }] },
-      { id: 'e_1703_2', name: 'Lady Silkgrave',     tier: 'mini-boss', imageKey: 'mini-boss_015', hp: 24000, maxHp: 24000, atk: 1105, def: 735, skills: [{ name: 'Funeral Silk',    damage: 2.7 }, { name: 'Crystal Fang',     damage: 3.7 }] },
-      { id: 'e_1703_3', name: 'The Crownless King', tier: 'boss',      imageKey: 'boss_017',      hp: 31000, maxHp: 31000, atk: 1180, def: 765, skills: [{ name: 'Nameless Decree', damage: 4.2 }, { name: 'Void Coronation', damage: 5.6 }] },
+      { id: 'e_1703_2', name: 'Lady Silkgrave',     tier: 'mini-boss', imageKey: 'mini-boss_015', hp: 24000, maxHp: 24000, atk: 1105, def: 735, effect: 'TOXIN', skills: [{ name: 'Funeral Silk',    damage: 2.7 }, { name: 'Crystal Fang',     damage: 3.7 }] },
+      { id: 'e_1703_3', name: 'The Crownless King', tier: 'boss',      imageKey: 'boss_017',      hp: 31000, maxHp: 31000, atk: 1180, def: 765, effect: 'VOID_CURSE', skills: [{ name: 'Nameless Decree', damage: 4.2 }, { name: 'Void Coronation', damage: 5.6 }] },
     ],
   },
 
@@ -648,7 +648,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_1802_1', name: 'Dark Golem', tier: 'mob',       imageKey: 'mob_021',       hp: 12900, maxHp: 12900, atk: 812, def: 574, skills: [{ name: 'Void Strike',   damage: 2.2 }, { name: 'Shadow Slam',       damage: 3.0 }] },
       { id: 'e_1802_2', name: 'Obsidian Sentinel',  tier: 'mob',       imageKey: 'mob_022',       hp: 13200, maxHp: 13200, atk: 828, def: 584, skills: [{ name: 'Obsidian Guard', damage: 2.3 }, { name: 'Volcanic Crush',    damage: 3.0 }] },
-      { id: 'e_1802_3', name: 'The Furnace Saint',  tier: 'mini-boss', imageKey: 'mini-boss_016', hp: 24000, maxHp: 24000, atk: 1115, def: 740, skills: [{ name: 'Cursed Hammer',  damage: 2.7 }, { name: 'Forge Consecration', damage: 3.6 }] },
+      { id: 'e_1802_3', name: 'The Furnace Saint',  tier: 'mini-boss', imageKey: 'mini-boss_016', hp: 24000, maxHp: 24000, atk: 1115, def: 740, effect: 'BURN', skills: [{ name: 'Cursed Hammer',  damage: 2.7 }, { name: 'Forge Consecration', damage: 3.6 }] },
     ],
   },
   {
@@ -657,8 +657,8 @@ export const ENEMY_GROUPS = [
     description: 'A cosmic goddess of two merged souls — one of divine light, one of consuming darkness — awakens in terrible balance.',
     enemies: [
       { id: 'e_1803_1', name: 'Obsidian Sentinel', tier: 'mob',       imageKey: 'mob_022',       hp: 13400, maxHp: 13400, atk: 835, def: 590, skills: [{ name: 'Obsidian Guard',  damage: 2.3 }, { name: 'Volcanic Crush',    damage: 3.1 }] },
-      { id: 'e_1803_2', name: 'The Furnace Saint', tier: 'mini-boss', imageKey: 'mini-boss_016', hp: 25000, maxHp: 25000, atk: 1135, def: 755, skills: [{ name: 'Cursed Hammer',   damage: 2.8 }, { name: 'Forge Consecration', damage: 3.8 }] },
-      { id: 'e_1803_3', name: 'Mother Eclipse',    tier: 'boss',      imageKey: 'boss_018',      hp: 32500, maxHp: 32500, atk: 1220, def: 790, skills: [{ name: 'Eclipse Divide',  damage: 4.3 }, { name: 'Dual Genesis',      damage: 5.7 }] },
+      { id: 'e_1803_2', name: 'The Furnace Saint', tier: 'mini-boss', imageKey: 'mini-boss_016', hp: 25000, maxHp: 25000, atk: 1135, def: 755, effect: 'BURN', skills: [{ name: 'Cursed Hammer',   damage: 2.8 }, { name: 'Forge Consecration', damage: 3.8 }] },
+      { id: 'e_1803_3', name: 'Mother Eclipse',    tier: 'boss',      imageKey: 'boss_018',      hp: 32500, maxHp: 32500, atk: 1220, def: 790, effect: 'BURN', skills: [{ name: 'Eclipse Divide',  damage: 4.3 }, { name: 'Dual Genesis',      damage: 5.7 }] },
     ],
   },
 
@@ -680,7 +680,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_1902_1', name: 'Star Map Wanderer',        tier: 'mob',       imageKey: 'mob_023',       hp: 13400, maxHp: 13400, atk: 832, def: 586, skills: [{ name: 'Stellar Strike',    damage: 2.2 }, { name: 'Cosmic Chart',       damage: 3.0 }] },
       { id: 'e_1902_2', name: 'Dimensional Rift Stalker', tier: 'mob',       imageKey: 'mob_024',       hp: 13800, maxHp: 13800, atk: 850, def: 598, skills: [{ name: 'Rift Slash',         damage: 2.3 }, { name: 'Reality Rend',       damage: 3.0 }] },
-      { id: 'e_1902_3', name: 'Void-Touched Navigator',   tier: 'mini-boss', imageKey: 'mini-boss_017', hp: 25000, maxHp: 25000, atk: 1148, def: 762, skills: [{ name: 'Dimensional Chart', damage: 2.7 }, { name: 'Rift Compass',       damage: 3.6 }] },
+      { id: 'e_1902_3', name: 'Void-Touched Navigator',   tier: 'mini-boss', imageKey: 'mini-boss_017', hp: 25000, maxHp: 25000, atk: 1148, def: 762, effect: 'VOID_CURSE', skills: [{ name: 'Dimensional Chart', damage: 2.7 }, { name: 'Rift Compass',       damage: 3.6 }] },
     ],
   },
   {
@@ -689,8 +689,8 @@ export const ENEMY_GROUPS = [
     description: 'A massive dragon-like entity composed of living books, scrolls, and ancient knowledge opens its eyes of magical text.',
     enemies: [
       { id: 'e_1903_1', name: 'Dimensional Rift Stalker', tier: 'mob',       imageKey: 'mob_024',       hp: 14000, maxHp: 14000, atk: 858, def: 605, skills: [{ name: 'Rift Slash',         damage: 2.3 }, { name: 'Reality Rend',        damage: 3.1 }] },
-      { id: 'e_1903_2', name: 'Void-Touched Navigator',   tier: 'mini-boss', imageKey: 'mini-boss_017', hp: 26000, maxHp: 26000, atk: 1168, def: 778, skills: [{ name: 'Dimensional Chart', damage: 2.8 }, { name: 'Rift Compass',        damage: 3.8 }] },
-      { id: 'e_1903_3', name: 'The Archive Devourer',     tier: 'boss',      imageKey: 'boss_019',      hp: 34000, maxHp: 34000, atk: 1262, def: 818, skills: [{ name: 'Text Obliteration', damage: 4.3 }, { name: "Knowledge's Hunger", damage: 5.7 }] },
+      { id: 'e_1903_2', name: 'Void-Touched Navigator',   tier: 'mini-boss', imageKey: 'mini-boss_017', hp: 26000, maxHp: 26000, atk: 1168, def: 778, effect: 'VOID_CURSE', skills: [{ name: 'Dimensional Chart', damage: 2.8 }, { name: 'Rift Compass',        damage: 3.8 }] },
+      { id: 'e_1903_3', name: 'The Archive Devourer',     tier: 'boss',      imageKey: 'boss_019',      hp: 34000, maxHp: 34000, atk: 1262, def: 818, effect: 'VOID_CURSE', skills: [{ name: 'Text Obliteration', damage: 4.3 }, { name: "Knowledge's Hunger", damage: 5.7 }] },
     ],
   },
 
@@ -712,7 +712,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_2002_1', name: 'Porcelain Guard',         tier: 'mob',       imageKey: 'mob_025',       hp: 14700, maxHp: 14700, atk: 888, def: 628, skills: [{ name: 'Porcelain Strike',  damage: 2.4 }, { name: 'Marionette Smash',   damage: 3.2 }] },
       { id: 'e_2002_2', name: 'Celestial String Dancer', tier: 'mob',       imageKey: 'mob_026',       hp: 15100, maxHp: 15100, atk: 905, def: 642, skills: [{ name: 'String Slash',      damage: 2.4 }, { name: 'Celestial Waltz',    damage: 3.2 }] },
-      { id: 'e_2002_3', name: 'The Last Marionette',     tier: 'mini-boss', imageKey: 'mini-boss_018', hp: 26500, maxHp: 26500, atk: 1180, def: 785, skills: [{ name: 'Puppet Crescendo', damage: 2.8 }, { name: 'Final Curtain',      damage: 3.8 }] },
+      { id: 'e_2002_3', name: 'The Last Marionette',     tier: 'mini-boss', imageKey: 'mini-boss_018', hp: 26500, maxHp: 26500, atk: 1180, def: 785, effect: 'VOID_CURSE', skills: [{ name: 'Puppet Crescendo', damage: 2.8 }, { name: 'Final Curtain',      damage: 3.8 }] },
     ],
   },
   {
@@ -721,8 +721,8 @@ export const ENEMY_GROUPS = [
     description: 'The ancient entity sleeping beneath reality opens its eyes — a being of stars, memories, and shattered worlds that dreamed existence into being.',
     enemies: [
       { id: 'e_2003_1', name: 'Celestial String Dancer', tier: 'mob',       imageKey: 'mob_026',       hp: 15300, maxHp: 15300, atk: 912, def: 648, skills: [{ name: 'String Slash',       damage: 2.4 }, { name: 'Celestial Waltz',    damage: 3.3 }] },
-      { id: 'e_2003_2', name: 'The Last Marionette',     tier: 'mini-boss', imageKey: 'mini-boss_018', hp: 27500, maxHp: 27500, atk: 1200, def: 800, skills: [{ name: 'Puppet Crescendo',  damage: 2.9 }, { name: 'Final Curtain',      damage: 4.0 }] },
-      { id: 'e_2003_3', name: 'The First Dream',         tier: 'boss',      imageKey: 'boss_020',      hp: 36000, maxHp: 36000, atk: 1320, def: 860, skills: [{ name: 'Dream Collapse',    damage: 4.5 }, { name: 'Origin Unraveling', damage: 6.0 }] },
+      { id: 'e_2003_2', name: 'The Last Marionette',     tier: 'mini-boss', imageKey: 'mini-boss_018', hp: 27500, maxHp: 27500, atk: 1200, def: 800, effect: 'VOID_CURSE', skills: [{ name: 'Puppet Crescendo',  damage: 2.9 }, { name: 'Final Curtain',      damage: 4.0 }] },
+      { id: 'e_2003_3', name: 'The First Dream',         tier: 'boss',      imageKey: 'boss_020',      hp: 36000, maxHp: 36000, atk: 1320, def: 860, effect: 'PARALYSIS', skills: [{ name: 'Dream Collapse',    damage: 4.5 }, { name: 'Origin Unraveling', damage: 6.0 }] },
     ],
   },
 
@@ -744,7 +744,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_2102_1', name: 'Void Viper',      tier: 'mob',       imageKey: 'mob_028',       hp: 16400, maxHp: 16400, atk: 965,  def: 688, skills: [{ name: 'Venom Lunge',  damage: 2.4 }, { name: 'Void Fang',       damage: 3.2 }] },
       { id: 'e_2102_2', name: 'Dark Crowmancer', tier: 'mob',       imageKey: 'mob_032',       hp: 17000, maxHp: 17000, atk: 980,  def: 700, skills: [{ name: 'Dark Feather', damage: 2.5 }, { name: 'Crow Curse',      damage: 3.3 }] },
-      { id: 'e_2102_3', name: 'Kitsune Specter', tier: 'mini-boss', imageKey: 'mini-boss_019', hp: 29500, maxHp: 29500, atk: 1245, def: 832, skills: [{ name: 'Fox Fire',      damage: 2.8 }, { name: 'Nine Tail Surge', damage: 3.8 }] },
+      { id: 'e_2102_3', name: 'Kitsune Specter', tier: 'mini-boss', imageKey: 'mini-boss_019', hp: 29500, maxHp: 29500, atk: 1245, def: 832, effect: 'BURN', skills: [{ name: 'Fox Fire',      damage: 2.8 }, { name: 'Nine Tail Surge', damage: 3.8 }] },
     ],
   },
   {
@@ -753,8 +753,8 @@ export const ENEMY_GROUPS = [
     description: 'The Shadow Sovereign herself rises — a dark-power ruler who has consolidated shadow energy since before time had a name.',
     enemies: [
       { id: 'e_2103_1', name: 'Dark Crowmancer',     tier: 'mob',       imageKey: 'mob_032',       hp: 17200, maxHp: 17200, atk: 988,  def: 708, skills: [{ name: 'Dark Feather',    damage: 2.5 }, { name: 'Crow Curse',     damage: 3.3 }] },
-      { id: 'e_2103_2', name: 'Kitsune Specter',     tier: 'mini-boss', imageKey: 'mini-boss_019', hp: 30500, maxHp: 30500, atk: 1265, def: 848, skills: [{ name: 'Fox Fire',         damage: 2.9 }, { name: 'Nine Tail Surge', damage: 3.9 }] },
-      { id: 'e_2103_3', name: 'The Shadow Sovereign',tier: 'boss',      imageKey: 'boss_021',      hp: 38500, maxHp: 38500, atk: 1385, def: 905, skills: [{ name: 'Dark Dominion',   damage: 4.5 }, { name: 'Shadow Surge',   damage: 5.8 }] },
+      { id: 'e_2103_2', name: 'Kitsune Specter',     tier: 'mini-boss', imageKey: 'mini-boss_019', hp: 30500, maxHp: 30500, atk: 1265, def: 848, effect: 'BURN', skills: [{ name: 'Fox Fire',         damage: 2.9 }, { name: 'Nine Tail Surge', damage: 3.9 }] },
+      { id: 'e_2103_3', name: 'The Shadow Sovereign',tier: 'boss',      imageKey: 'boss_021',      hp: 38500, maxHp: 38500, atk: 1385, def: 905, effect: 'VOID_CURSE', skills: [{ name: 'Dark Dominion',   damage: 4.5 }, { name: 'Shadow Surge',   damage: 5.8 }] },
     ],
   },
 
@@ -776,7 +776,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_2202_1', name: 'Crystal Drake',    tier: 'mob',       imageKey: 'mob_030',       hp: 17800, maxHp: 17800, atk: 1010, def: 725, skills: [{ name: 'Crystal Bite',   damage: 2.5 }, { name: 'Gem Shard Blast',  damage: 3.4 }] },
       { id: 'e_2202_2', name: 'Abyss Spider',     tier: 'mob',       imageKey: 'mob_031',       hp: 18200, maxHp: 18200, atk: 1022, def: 738, skills: [{ name: 'Web Ensnare',    damage: 2.5 }, { name: 'Venom Bite',       damage: 3.4 }] },
-      { id: 'e_2202_3', name: 'Obsidian Scholar', tier: 'mini-boss', imageKey: 'mini-boss_020', hp: 31000, maxHp: 31000, atk: 1290, def: 862, skills: [{ name: 'Dark Lecture',   damage: 2.8 }, { name: 'Void Formula',     damage: 3.9 }] },
+      { id: 'e_2202_3', name: 'Obsidian Scholar', tier: 'mini-boss', imageKey: 'mini-boss_020', hp: 31000, maxHp: 31000, atk: 1290, def: 862, effect: 'VOID_CURSE', skills: [{ name: 'Dark Lecture',   damage: 2.8 }, { name: 'Void Formula',     damage: 3.9 }] },
     ],
   },
   {
@@ -785,8 +785,8 @@ export const ENEMY_GROUPS = [
     description: 'Caelestra awakens from within a collapsing star — a mage who absorbed the dying memories of entire worlds and rewove them into herself.',
     enemies: [
       { id: 'e_2203_1', name: 'Abyss Spider',             tier: 'mob',       imageKey: 'mob_031',       hp: 18500, maxHp: 18500, atk: 1030, def: 748, skills: [{ name: 'Web Ensnare',    damage: 2.6 }, { name: 'Venom Bite',      damage: 3.5 }] },
-      { id: 'e_2203_2', name: 'Obsidian Scholar',          tier: 'mini-boss', imageKey: 'mini-boss_020', hp: 32000, maxHp: 32000, atk: 1310, def: 878, skills: [{ name: 'Dark Lecture',   damage: 2.9 }, { name: 'Void Formula',    damage: 4.0 }] },
-      { id: 'e_2203_3', name: 'Caelestra the Cosmic Weaver', tier: 'boss',   imageKey: 'boss_022',      hp: 41500, maxHp: 41500, atk: 1448, def: 945, skills: [{ name: 'Star Collapse',  damage: 4.5 }, { name: 'Cosmic Weave',    damage: 5.9 }] },
+      { id: 'e_2203_2', name: 'Obsidian Scholar',          tier: 'mini-boss', imageKey: 'mini-boss_020', hp: 32000, maxHp: 32000, atk: 1310, def: 878, effect: 'VOID_CURSE', skills: [{ name: 'Dark Lecture',   damage: 2.9 }, { name: 'Void Formula',    damage: 4.0 }] },
+      { id: 'e_2203_3', name: 'Caelestra the Cosmic Weaver', tier: 'boss',   imageKey: 'boss_022',      hp: 41500, maxHp: 41500, atk: 1448, def: 945, effect: 'VOID_CURSE', skills: [{ name: 'Star Collapse',  damage: 4.5 }, { name: 'Cosmic Weave',    damage: 5.9 }] },
     ],
   },
 
@@ -808,7 +808,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_2302_1', name: 'Crystal Drake',      tier: 'mob',       imageKey: 'mob_030',       hp: 19000, maxHp: 19000, atk: 1038, def: 752, skills: [{ name: 'Crystal Bite',   damage: 2.6 }, { name: 'Gem Shard Blast', damage: 3.5 }] },
       { id: 'e_2302_2', name: 'Abyss Spider',       tier: 'mob',       imageKey: 'mob_031',       hp: 19500, maxHp: 19500, atk: 1052, def: 765, skills: [{ name: 'Web Ensnare',    damage: 2.6 }, { name: 'Venom Bite',      damage: 3.5 }] },
-      { id: 'e_2302_3', name: 'Lysse the Youngest', tier: 'mini-boss', imageKey: 'mini-boss_021', hp: 32500, maxHp: 32500, atk: 1330, def: 890, skills: [{ name: 'Blood Lash',     damage: 2.8 }, { name: 'Crimson Fang',    damage: 3.9 }] },
+      { id: 'e_2302_3', name: 'Lysse the Youngest', tier: 'mini-boss', imageKey: 'mini-boss_021', hp: 32500, maxHp: 32500, atk: 1330, def: 890, effect: 'VOID_CURSE', skills: [{ name: 'Blood Lash',     damage: 2.8 }, { name: 'Crimson Fang',    damage: 3.9 }] },
     ],
   },
   {
@@ -817,8 +817,8 @@ export const ENEMY_GROUPS = [
     description: 'Glacidra emerges from beneath the sealed ice — an ice demon mage whose frost is not natural cold but a demonic absolute that corrodes dimensional matter.',
     enemies: [
       { id: 'e_2303_1', name: 'Abyss Spider',          tier: 'mob',       imageKey: 'mob_031',       hp: 19800, maxHp: 19800, atk: 1060, def: 775, skills: [{ name: 'Web Ensnare',   damage: 2.6 }, { name: 'Venom Bite',      damage: 3.6 }] },
-      { id: 'e_2303_2', name: 'Lysse the Youngest',    tier: 'mini-boss', imageKey: 'mini-boss_021', hp: 33500, maxHp: 33500, atk: 1352, def: 906, skills: [{ name: 'Blood Lash',    damage: 2.9 }, { name: 'Crimson Fang',    damage: 4.0 }] },
-      { id: 'e_2303_3', name: 'Glacidra the Frost Demon', tier: 'boss',   imageKey: 'boss_023',      hp: 44000, maxHp: 44000, atk: 1512, def: 985, skills: [{ name: 'Demon Frost',   damage: 4.6 }, { name: 'Frozen Hellfire', damage: 6.0 }] },
+      { id: 'e_2303_2', name: 'Lysse the Youngest',    tier: 'mini-boss', imageKey: 'mini-boss_021', hp: 33500, maxHp: 33500, atk: 1352, def: 906, effect: 'VOID_CURSE', skills: [{ name: 'Blood Lash',    damage: 2.9 }, { name: 'Crimson Fang',    damage: 4.0 }] },
+      { id: 'e_2303_3', name: 'Glacidra the Frost Demon', tier: 'boss',   imageKey: 'boss_023',      hp: 44000, maxHp: 44000, atk: 1512, def: 985, effect: 'CHILL', skills: [{ name: 'Demon Frost',   damage: 4.6 }, { name: 'Frozen Hellfire', damage: 6.0 }] },
     ],
   },
 
@@ -840,7 +840,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_2402_1', name: 'Abyss Spider',     tier: 'mob',       imageKey: 'mob_031',       hp: 20200, maxHp: 20200, atk: 1078, def: 784, skills: [{ name: 'Web Ensnare',  damage: 2.7 }, { name: 'Venom Bite',    damage: 3.6 }] },
       { id: 'e_2402_2', name: 'Dark Crowmancer',  tier: 'mob',       imageKey: 'mob_032',       hp: 20800, maxHp: 20800, atk: 1095, def: 798, skills: [{ name: 'Dark Feather', damage: 2.7 }, { name: 'Crow Curse',    damage: 3.6 }] },
-      { id: 'e_2402_3', name: 'Fae Enchantress',  tier: 'mini-boss', imageKey: 'mini-boss_022', hp: 34000, maxHp: 34000, atk: 1375, def: 918, skills: [{ name: 'Fae Hex',       damage: 2.9 }, { name: 'Pixie Storm',   damage: 4.0 }] },
+      { id: 'e_2402_3', name: 'Fae Enchantress',  tier: 'mini-boss', imageKey: 'mini-boss_022', hp: 34000, maxHp: 34000, atk: 1375, def: 918, effect: 'TOXIN', skills: [{ name: 'Fae Hex',       damage: 2.9 }, { name: 'Pixie Storm',   damage: 4.0 }] },
     ],
   },
   {
@@ -849,8 +849,8 @@ export const ENEMY_GROUPS = [
     description: 'The eldest of the Crimson bloodline surfaces — more ancient than Visalia, patient beyond measure, bearing both elven grace and the full weight of an undying crimson heritage.',
     enemies: [
       { id: 'e_2403_1', name: 'Dark Crowmancer',            tier: 'mob',       imageKey: 'mob_032',       hp: 21000, maxHp: 21000, atk: 1102, def: 808, skills: [{ name: 'Dark Feather',    damage: 2.8 }, { name: 'Crow Curse',        damage: 3.7 }] },
-      { id: 'e_2403_2', name: 'Fae Enchantress',            tier: 'mini-boss', imageKey: 'mini-boss_022', hp: 35000, maxHp: 35000, atk: 1398, def: 934, skills: [{ name: 'Fae Hex',          damage: 3.0 }, { name: 'Pixie Storm',       damage: 4.1 }] },
-      { id: 'e_2403_3', name: 'Lady Lyssiel the Elder Crimson', tier: 'boss', imageKey: 'boss_024',      hp: 46500, maxHp: 46500, atk: 1578, def: 1025, skills: [{ name: 'Blood Elegy',     damage: 4.6 }, { name: 'Elven Crimson',     damage: 6.1 }] },
+      { id: 'e_2403_2', name: 'Fae Enchantress',            tier: 'mini-boss', imageKey: 'mini-boss_022', hp: 35000, maxHp: 35000, atk: 1398, def: 934, effect: 'TOXIN', skills: [{ name: 'Fae Hex',          damage: 3.0 }, { name: 'Pixie Storm',       damage: 4.1 }] },
+      { id: 'e_2403_3', name: 'Lady Lyssiel the Elder Crimson', tier: 'boss', imageKey: 'boss_024',      hp: 46500, maxHp: 46500, atk: 1578, def: 1025, effect: 'VOID_CURSE', skills: [{ name: 'Blood Elegy',     damage: 4.6 }, { name: 'Elven Crimson',     damage: 6.1 }] },
     ],
   },
 
@@ -872,7 +872,7 @@ export const ENEMY_GROUPS = [
     enemies: [
       { id: 'e_2502_1', name: 'Bone Harpy',      tier: 'mob',       imageKey: 'mob_029',       hp: 21200, maxHp: 21200, atk: 1115, def: 808, skills: [{ name: 'Bone Dive',     damage: 2.7 }, { name: 'Death Shriek',   damage: 3.7 }] },
       { id: 'e_2502_2', name: 'Dark Crowmancer',  tier: 'mob',       imageKey: 'mob_032',       hp: 21800, maxHp: 21800, atk: 1132, def: 825, skills: [{ name: 'Dark Feather',  damage: 2.8 }, { name: 'Crow Curse',     damage: 3.7 }] },
-      { id: 'e_2502_3', name: 'Briar the Elder',  tier: 'mini-boss', imageKey: 'mini-boss_023', hp: 35500, maxHp: 35500, atk: 1420, def: 950, skills: [{ name: 'Nature Ambush', damage: 3.0 }, { name: 'Elder Poison',   damage: 4.2 }] },
+      { id: 'e_2502_3', name: 'Briar the Elder',  tier: 'mini-boss', imageKey: 'mini-boss_023', hp: 35500, maxHp: 35500, atk: 1420, def: 950, effect: 'TOXIN', skills: [{ name: 'Nature Ambush', damage: 3.0 }, { name: 'Elder Poison',   damage: 4.2 }] },
     ],
   },
   {
@@ -881,8 +881,8 @@ export const ENEMY_GROUPS = [
     description: 'The First Entity awakens — the oldest being in Aetheria\'s universe, whose existence predates the gods, the void, and the concept of darkness itself. It does not attack from malice. It simply is, and its mere presence unmakes all things.',
     enemies: [
       { id: 'e_2503_1', name: 'Dark Crowmancer', tier: 'mob',       imageKey: 'mob_032',       hp: 22000, maxHp: 22000, atk: 1145, def: 835, skills: [{ name: 'Dark Feather',      damage: 2.8 }, { name: 'Crow Curse',         damage: 3.8 }] },
-      { id: 'e_2503_2', name: 'Briar the Elder', tier: 'mini-boss', imageKey: 'mini-boss_023', hp: 36500, maxHp: 36500, atk: 1445, def: 968, skills: [{ name: 'Nature Ambush',    damage: 3.1 }, { name: 'Elder Poison',       damage: 4.3 }] },
-      { id: 'e_2503_3', name: 'The Origin',      tier: 'boss',      imageKey: 'boss_025',      hp: 50000, maxHp: 50000, atk: 1655, def: 1075, skills: [{ name: 'Primordial Crush', damage: 4.8 }, { name: 'First Darkness',     damage: 6.4 }] },
+      { id: 'e_2503_2', name: 'Briar the Elder', tier: 'mini-boss', imageKey: 'mini-boss_023', hp: 36500, maxHp: 36500, atk: 1445, def: 968, effect: 'TOXIN', skills: [{ name: 'Nature Ambush',    damage: 3.1 }, { name: 'Elder Poison',       damage: 4.3 }] },
+      { id: 'e_2503_3', name: 'The Origin',      tier: 'boss',      imageKey: 'boss_025',      hp: 50000, maxHp: 50000, atk: 1655, def: 1075, effect: 'VOID_CURSE', skills: [{ name: 'Primordial Crush', damage: 4.8 }, { name: 'First Darkness',     damage: 6.4 }] },
     ],
   },
 ];

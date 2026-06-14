@@ -16,7 +16,7 @@ const STEPS = [
     icon:    'flash',
     color:   C.GOLD,
     title:   'Welcome to Aetheria',
-    body:    'A tactical RPG where five factions clash for the fate of a world torn apart by dimensional war. Summon legendary heroes, forge your squad, and defeat powerful enemies across 45 story battles.',
+    body:    'A tactical RPG where five factions clash for the fate of a world torn apart by dimensional war. Summon legendary heroes, forge your squad, and defeat powerful enemies across 75 story battles.',
     accent:  C.GRAD_GOLD,
   },
   {
@@ -37,7 +37,7 @@ const STEPS = [
     icon:    'thunderstorm',
     color:   C.SECONDARY,
     title:   'Battle & Trump Cards',
-    body:    'Each turn, attack or use skills to build Energy. At 100⚡ your hero unleashes their Trump Card — a devastating ultimate ability. Target enemies by tapping their card.',
+    body:    'Each turn, attack or use skills to build Energy. At 100⚡ your hero unleashes their Trump Card — a devastating ultimate ability. Ready? Tap below to try your first battle with your starter team.',
     accent:  C.GRAD_PINK,
   },
 ];
@@ -61,8 +61,10 @@ export default function OnboardingScreen({ navigation }) {
 
   const handleNext = () => {
     if (isLast) {
+      // Finish onboarding with a hands-on practice battle (the old Home "Quick
+      // Battle" card now lives here). Starter team is seeded, so it's playable.
       completeOnboarding();
-      navigation.replace('Home');
+      navigation.replace('Battle', { practiceMode: true });
     } else {
       animateToStep(step + 1);
     }
@@ -125,8 +127,8 @@ export default function OnboardingScreen({ navigation }) {
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={styles.nextBtnInner}
               >
-                <Text style={styles.nextText}>{isLast ? 'START PLAYING' : 'NEXT'}</Text>
-                <Ionicons name={isLast ? 'play' : 'chevron-forward'} size={14} color="#fff" />
+                <Text style={styles.nextText}>{isLast ? 'TRY A BATTLE' : 'NEXT'}</Text>
+                <Ionicons name={isLast ? 'flash' : 'chevron-forward'} size={14} color="#fff" />
               </LinearGradient>
             </TouchableOpacity>
           </View>

@@ -109,7 +109,14 @@
       "Bash(grep -oE \"^ \\\\{$\" src/data/enemies.js)",
       "Bash(grep -rnE \"require\\\\\\(\\\\s*[\\\\`'\\\\\"][^\\)]*\\\\$\\\\{|require\\\\\\([^'\\\\\"\\\\`\\)][^\\)]*[+]\" src/ App.js index.js)",
       "Bash(/usr/bin/python3 -)",
-      "Bash(node -e \"const {ENEMY_GROUPS}=require\\('./src/data/enemies.js'\\); const b=ENEMY_GROUPS.filter\\(g=>g.enemies.some\\(e=>e.tier==='boss'\\)\\).length; const r=ENEMY_GROUPS.length-b; console.log\\('boss groups:',b,' regular groups:',r,' total:',ENEMY_GROUPS.length\\);\")"
+      "Bash(node -e \"const {ENEMY_GROUPS}=require\\('./src/data/enemies.js'\\); const b=ENEMY_GROUPS.filter\\(g=>g.enemies.some\\(e=>e.tier==='boss'\\)\\).length; const r=ENEMY_GROUPS.length-b; console.log\\('boss groups:',b,' regular groups:',r,' total:',ENEMY_GROUPS.length\\);\")",
+      "Bash(node -e 'require\\(\"@babel/core\"\\).transformFileSync\\(\"src/screens/HomeScreen.js\",{presets:[\"babel-preset-expo\"],babelrc:false,configFile:false}\\); console.log\\(\"HomeScreen.js OK ✅\"\\)')",
+      "Bash(npx babel *)",
+      "Bash(cat babel.config.js)",
+      "Bash(cat babel.config.json)",
+      "Bash(node -e \"const b = require\\('@babel/core'\\); console.log\\(b.version\\);\")",
+      "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('src/screens/BattleScreen.js', { presets: ['babel-preset-expo'], filename: 'src/screens/BattleScreen.js' }\\); console.log\\('OK'\\)\")",
+      "Bash(grep -n \"triggerHit\\(playerAnims\\\\|reflected\\\\|lastDmg = damage\\\\|msg = \\\\`\\\\${actor.name} attacks\" /Users/codeclouds-mdalisherali/Trump-Card-game/src/screens/BattleScreen.js)"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

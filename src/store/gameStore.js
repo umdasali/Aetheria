@@ -11,6 +11,7 @@ import {
   ASCENSION_ITEMS, ASCENSION_MAX, RANK_TO_ASCENSION_ITEM_ID,
 } from '../data/ascensionItems';
 import { getShopPackById } from '../data/shopPacks';
+import { DAILY_DUNGEON_ATTEMPTS, DUNGEON_REFILL_COST, DUNGEON_REFILL_AMOUNT } from '../data/resourceDungeons';
 import { CURRENT_VERSION, migrate } from './migrations';
 import { ACHIEVEMENT_DEFS } from '../data/achievements';
 import { sanitizeState } from './sanitizeState';
@@ -77,6 +78,8 @@ const INITIAL_STATE = {
   towerCurrentFloor:     1,
   towerWeekResetDate:    '',
   towerCoins:            0,
+  dungeonAttemptsUsed:   0,    // resource-dungeon runs used today
+  dungeonResetDate:      '',   // local date the attempt count belongs to
   ascensionInventory: {
     aetheria_core:   0,
     feather_of_hope: 0,
@@ -456,6 +459,58 @@ const useGameStore = create(
           // Genuine new-week transition — reset current floor, keep highest-floor record
           return { towerCurrentFloor: 1, towerWeekResetDate: weekKey };
         });
+      },
+
+      // ── Resource Dungeon actions ────────────────────────────────────────────
+
+      // Roll the daily attempt pool over at local midnight.
+      checkDungeonReset: () => {
+        const today = localDateStr();
+        set(state => (state.dungeonResetDate === today
+          ? {}
+          : { dungeonResetDate: today, dungeonAttemptsUsed: 0 }));
+      },
+
+      // Consume one attempt when entering a dungeon. Returns false if none left.
+      useDungeonAttempt: () => {
+        const today = localDateStr();
+        const state = get();
+        const used  = state.dungeonResetDate === today ? state.dungeonAttemptsUsed : 0;
+        if (used >= DAILY_DUNGEON_ATTEMPTS) return false;
+        set({ dungeonResetDate: today, dungeonAttemptsUsed: used + 1 });
+        return true;
+      },
+
+      // Spend gems to refund attempts (caps at 0 used = full bar).
+      refillDungeonAttempts: () => {
+        const today = localDateStr();
+        const state = get();
+        if (state.gems < DUNGEON_REFILL_COST) return false;
+        const used = state.dungeonResetDate === today ? state.dungeonAttemptsUsed : 0;
+        set({
+          gems:                state.gems - DUNGEON_REFILL_COST,
+          dungeonResetDate:    today,
+          dungeonAttemptsUsed: Math.max(0, used - DUNGEON_REFILL_AMOUNT),
+        });
+        triggerSync();
+        return true;
+      },
+
+      // Grant a dungeon's rewards on win (gold + optional gems + ascension material).
+      completeDungeon: (rewards) => {
+        set(state => {
+          const inv = { ...state.ascensionInventory };
+          const mat = rewards?.material;
+          if (mat?.itemId && mat.qty > 0) {
+            inv[mat.itemId] = (inv[mat.itemId] || 0) + mat.qty;
+          }
+          return {
+            gold:               state.gold + (rewards?.gold || 0),
+            gems:               state.gems + (rewards?.gems || 0),
+            ascensionInventory: inv,
+          };
+        });
+        triggerSync();
       },
 
       // ── Fusion & Transcendence actions ──────────────────────────────────────

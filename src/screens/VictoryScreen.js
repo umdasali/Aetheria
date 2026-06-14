@@ -54,6 +54,7 @@ export default function VictoryScreen({ navigation, route }) {
     battleResult, stageId, rewards, enemyGroup, fromStory,
     practiceMode, wasReplay, practiceGotBonus, xpGained = 0,
     towerMode = false, towerFloor = 0, towerRewards = null, towerAscensionDrop = null,
+    dungeonMode = false, dungeonRewards = null,
   } = route.params || {};
   const completedChapters = useGameStore(s => s.completedChapters);
   const ownedHeroes       = useGameStore(s => s.ownedHeroes);
@@ -67,12 +68,18 @@ export default function VictoryScreen({ navigation, route }) {
   const part       = stageId ? stageId % 10 : 0;
   const goldReward = towerMode
     ? (towerRewards?.gold ?? 0)
+    : dungeonMode
+    ? (dungeonRewards?.gold ?? 0)
     : (isWin && stageId ? stageGoldReward(part) : 0);
   const actualGems = towerMode
     ? (towerRewards?.gems ?? 0)
+    : dungeonMode
+    ? (dungeonRewards?.gems ?? 0)
     : (isWin && !wasReplay ? (rewards?.gems ?? 0) : 0);
   const heroObj    = (!wasReplay && rewards?.heroId) ? getHeroById(rewards.heroId) : null;
   const hero       = heroObj?.rank !== 'S' ? heroObj : null;
+  // Ascension material to show: tower boss drop, or a dungeon's fixed material reward.
+  const materialDrop = towerAscensionDrop || (dungeonMode ? (dungeonRewards?.material ?? null) : null);
 
   // XP — compute both before and after states precisely
   const afterState  = calcPlayerLevel({ completedChapters, ownedHeroes, heroCollection, dailyStreak });
@@ -251,6 +258,7 @@ export default function VictoryScreen({ navigation, route }) {
   const handleHome       = () => navigation.navigate('Home');
   const handleNextFloor  = () => navigation.navigate('Tower');
   const handleBackTower  = () => navigation.navigate('Tower');
+  const handleBackDungeon = () => navigation.navigate('Dungeons');
 
   const PARTS = Array.from({ length: 18 }, (_, i) => ({
     delay:    i * 240,
@@ -361,8 +369,8 @@ export default function VictoryScreen({ navigation, route }) {
                   )}
 
                   {/* Ascension material drop — boss floors only */}
-                  {towerAscensionDrop && (() => {
-                    const item = ASCENSION_ITEMS.find(i => i.id === towerAscensionDrop.itemId);
+                  {materialDrop && (() => {
+                    const item = ASCENSION_ITEMS.find(i => i.id === materialDrop.itemId);
                     if (!item) return null;
                     return (
                       <View style={[S.ascDropRow, { borderColor: C.GOLD + '40', backgroundColor: C.GOLD + '0C' }]}>
@@ -372,7 +380,7 @@ export default function VictoryScreen({ navigation, route }) {
                           <Text style={S.ascDropSub}>{item.rankLabel} · Ascension Material</Text>
                         </View>
                         <View style={[S.ascDropQtyBadge, { backgroundColor: C.GOLD + '22', borderColor: C.GOLD + '55' }]}>
-                          <Text style={[S.ascDropQty, { color: C.GOLD }]}>×{towerAscensionDrop.qty}</Text>
+                          <Text style={[S.ascDropQty, { color: C.GOLD }]}>×{materialDrop.qty}</Text>
                         </View>
                       </View>
                     );
@@ -485,7 +493,37 @@ export default function VictoryScreen({ navigation, route }) {
           {/* Action buttons */}
           <Animated.View style={[S.btnRow, { opacity: btnFade }]}>
 
-            {towerMode ? (
+            {dungeonMode ? (
+              /* ── Resource Dungeon win / lose ───────────────────────────────── */
+              isWin ? (
+                <>
+                  <TouchableOpacity style={S.primaryBtn} onPress={handleBackDungeon} activeOpacity={0.85}>
+                    <LinearGradient colors={[C.PRIMARY_DARK, C.PRIMARY]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
+                      <Ionicons name="flash" size={14} color="#fff" />
+                      <Text style={S.primaryBtnTxt}>Keep Farming</Text>
+                      <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.8)" />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={S.secondaryBtn} onPress={handleHome} activeOpacity={0.85}>
+                    <Ionicons name="home-outline" size={14} color="rgba(255,255,255,0.65)" />
+                    <Text style={S.secondaryBtnTxt}>Home</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <TouchableOpacity style={S.retryBtn} onPress={handleBackDungeon} activeOpacity={0.85}>
+                    <LinearGradient colors={[C.DANGER, C.DANGER_DARK]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
+                      <Ionicons name="refresh" size={14} color="#fff" />
+                      <Text style={S.primaryBtnTxt}>Try Again</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={S.secondaryBtn} onPress={handleHome} activeOpacity={0.85}>
+                    <Ionicons name="home-outline" size={14} color="rgba(255,255,255,0.65)" />
+                    <Text style={S.secondaryBtnTxt}>Home</Text>
+                  </TouchableOpacity>
+                </>
+              )
+            ) : towerMode ? (
               /* ── Tower win / lose ──────────────────────────────────────────── */
               isWin ? (
                 <>

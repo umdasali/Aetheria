@@ -33,6 +33,7 @@ import WorldMapScreen    from './src/screens/WorldMapScreen';
 import DailyQuestScreen  from './src/screens/DailyQuestScreen';
 import TowerScreen       from './src/screens/TowerScreen';
 import TowerShopScreen   from './src/screens/TowerShopScreen';
+import ResourceDungeonScreen from './src/screens/ResourceDungeonScreen';
 import ShopScreen        from './src/screens/ShopScreen';
 import CloudAuthScreen   from './src/screens/CloudAuthScreen';
 import PullHistoryScreen  from './src/screens/PullHistoryScreen';
@@ -55,9 +56,17 @@ export default function App() {
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (!navRef.current || navRef.current.canGoBack()) return false;
-      setQuitVisible(true);
-      return true;
+      if (!navRef.current) return false;
+      const routeName = navRef.current.getCurrentRoute?.()?.name;
+      // On the main menu (Home) — or anywhere there's nothing left to go back
+      // to — the device back button confirms exit instead of navigating away.
+      // Every other screen keeps normal back navigation. (BattleScreen registers
+      // its own handler that runs first and shows its "Quit Battle?" prompt.)
+      if (routeName === 'Home' || !navRef.current.canGoBack()) {
+        setQuitVisible(true);
+        return true;
+      }
+      return false;
     });
     return () => sub.remove();
   }, []);
@@ -99,6 +108,7 @@ export default function App() {
             <Stack.Screen name="DailyQuests" component={DailyQuestScreen} options={{ animation: 'fade' }} />
             <Stack.Screen name="Tower"       component={TowerScreen}      options={{ animation: 'fade' }} />
             <Stack.Screen name="TowerShop"   component={TowerShopScreen}  options={{ animation: 'fade' }} />
+            <Stack.Screen name="Dungeons"    component={ResourceDungeonScreen} options={{ animation: 'fade' }} />
             <Stack.Screen name="Shop"        component={ShopScreen}       options={{ animation: 'fade' }} />
             <Stack.Screen name="CloudAuth"   component={CloudAuthScreen}  options={{ animation: 'slide_from_bottom' }} />
             <Stack.Screen name="PullHistory"  component={PullHistoryScreen}  options={{ animation: 'fade' }} />

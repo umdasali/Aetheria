@@ -53,11 +53,6 @@ export const EFFECT_MECHANICS = {
   DIVINE_SHIELD:   'fortify',
   SOVEREIGNTY:     'fortify',
   SMITE:           'smite',
-  // ── Khemara — sand & moon flavor aliases ──────────────────────────────────
-  MOONLIGHT:       'regen',
-  LUNAR_GRACE:     'regen',
-  SANDFLAY:        'shatter',
-  DUSTSHROUD:      'evasion',
 };
 
 const DEBUFF_SET = new Set(['stun', 'burn', 'poison', 'chill', 'shatter', 'weaken']);
@@ -68,13 +63,7 @@ const addOrRefreshEffect = (unit, effect) => {
   const effects = [...(unit.statusEffects || [])];
   const idx = effects.findIndex((fx) => fx.type === effect.type);
   if (idx >= 0) {
-    // Refresh keeps the stronger of both: a weak hero's reapplication must not
-    // overwrite a strong burn's tick value (and vice versa for duration).
-    effects[idx] = {
-      ...effects[idx],
-      duration: Math.max(effects[idx].duration, effect.duration),
-      value:    Math.max(effects[idx].value ?? 0, effect.value ?? 0),
-    };
+    effects[idx] = { ...effects[idx], duration: Math.max(effects[idx].duration, effect.duration) };
   } else {
     effects.push(effect);
   }
@@ -114,9 +103,7 @@ export const calculateDamage = (attacker, defender, multiplier) => {
   const defEff     = effectiveUnit(defender);
   const base       = eff.atk * multiplier;
   const defFactor  = 1 + (defEff.def / (defEff.def + 500)) * 1.5;
-  // Cap at 60%: the crit stat is multiplied by level/rank/ascension in
-  // buildPlayers, so an uncapped crit/1000 hits 100% by mid-game.
-  const critChance = Math.min(0.6, (eff.crit || 0) / 1000);
+  const critChance = (eff.crit || 0) / 1000;
   const isCrit     = Math.random() < critChance;
 
   // Smite passive: 2.0× crit multiplier instead of 1.75×
@@ -143,29 +130,19 @@ export const applyTrumpCard = (hero, allies, enemies) => {
     updatedEnemies = enemies.map((e) => {
       if (e.currentHp <= 0) return e;
       const { damage, isCrit } = calculateDamage(hero, e, tc.damage);
-      let updated = {
+      return {
         ...e,
         currentHp:  Math.max(0, e.currentHp - damage),
         lastDamage: damage,
         lastCrit:   isCrit,
         damageKey:  (e.damageKey || 0) + 1,
       };
-      // Trump Cards are skills — proc hero's on-hit debuff (50% chance) on each enemy hit
-      if (damage > 0) updated = applyOnHitDebuff(hero, updated, true);
-      return updated;
     });
   }
 
-  // Prefix-anchored keyword match: `\bheal` matches "heal", "heals", "healing".
-  // A full-word `\bheal\b` regex silently missed the plural verb forms every
-  // trump effect string actually uses ("heals all allies 25% HP", "stuns all
-  // enemies"), disabling the secondary effect of nearly every Trump Card
-  // (verified: 0/53 trumps healed under \bheal\b vs 47/53 with prefix match).
   const eff = (tc.effect || '').toLowerCase();
-  const hasKeyword = (word) => new RegExp(`\\b${word}`).test(eff);
-
-  if (hasKeyword('heal') || hasKeyword('restore') || hasKeyword('recover')) {
-    const m   = eff.match(/(\d+)\s*%/);
+  if (eff.includes('heal')) {
+    const m   = eff.match(/(\d+)%/);
     const pct = m ? parseInt(m[1], 10) / 100 : 0.2;
     updatedAllies = updatedAllies.map((a) => {
       if (a.currentHp <= 0) return a;
@@ -173,7 +150,7 @@ export const applyTrumpCard = (hero, allies, enemies) => {
     });
   }
 
-  if (hasKeyword('shield') || hasKeyword('barrier')) {
+  if (eff.includes('shield')) {
     const m       = eff.match(/(\d+)\s*(?:hits?)/);
     const shields = m ? parseInt(m[1], 10) : 1;
     updatedAllies = updatedAllies.map((a) => {
@@ -182,14 +159,12 @@ export const applyTrumpCard = (hero, allies, enemies) => {
     });
   }
 
-  if (hasKeyword('stun') || hasKeyword('paralyze') || hasKeyword('paralyz')) {
+  if (eff.includes('stun')) {
     const m     = eff.match(/(\d+)\s*turn/);
     const turns = m ? parseInt(m[1], 10) : 1;
     updatedEnemies = updatedEnemies.map((e) => {
       if (e.currentHp <= 0) return e;
-      // Non-stacking: refresh to the trump's turn count (1–2), don't add onto an
-      // existing stun — additive stacking made stun-locks last far too long.
-      return { ...e, stunned: Math.max(e.stunned || 0, turns) };
+      return { ...e, stunned: (e.stunned || 0) + turns };
     });
   }
 
@@ -235,13 +210,10 @@ export const applyOnHitDebuff = (hero, target, isSkill) => {
 
   switch (mechanic) {
     case 'stun':
-      // Non-stacking: a proc guarantees the target skips its next turn, but never
-      // accumulates. Procs used to add +1 each (50% per skill hit), which chain-locked
-      // enemies for several turns — the "stun feels longer" problem.
-      return { ...target, stunned: Math.max(target.stunned || 0, 1) };
+      return { ...target, stunned: (target.stunned || 0) + 1 };
     case 'burn':
       return addOrRefreshEffect(target, {
-        type: 'burn', duration: 2,
+        type: 'burn', duration: 3,
         value: Math.floor((hero.atk || 0) * 0.08),
       });
     case 'poison':
@@ -305,26 +277,46 @@ export const processStatusEffects = (unit) => {
  * getSmartAIAction
  * Priority order:
  *  1. One-shot the lowest-HP player with skill[1] if affordable and lethal
- *  2. 60 % chance to use a skill — only from the set the enemy can actually afford
- *     (skill[1] preferred at 45 % when both are affordable)
- *  3. Basic attack
- * Always targets the player with the lowest HP ratio.
+ *  2. Skill use chance varies by tier (mob 60%, mini-boss 70%, boss 80%)
+ *     — skill[1] preference also scales with tier
+ *  3. Boss burst-save: if boss cannot yet afford skill[1] but has enough energy
+ *     for skill[0] cost × 1.5, skip skill and do a basic attack to save energy
+ *  4. Basic attack
+ * Target selection: mob always targets lowest HP ratio; mini-boss/boss may
+ * occasionally target the highest-ATK player instead.
  * actorEnergy and skillCosts are passed in so the function never proposes an
  * action the caller would have to silently downgrade.
  */
-export const getSmartAIAction = (enemy, playerTeam, actorEnergy = 0, skillCosts = [30, 50]) => {
-  const living = playerTeam
+export const getSmartAIAction = (enemy, playerTeam, actorEnergy = 0, skillCosts = [30, 50], tier = 'mob') => {
+  const livingAll = playerTeam
     .map((p, i) => ({ ...p, _i: i }))
-    .filter((p) => p.currentHp > 0)
-    .sort((a, b) => (a.currentHp / a.maxHp) - (b.currentHp / b.maxHp));
+    .filter((p) => p.currentHp > 0);
 
-  if (!living.length) return null;
+  if (!livingAll.length) return null;
 
-  // 20% chance to pick a random living hero instead of always targeting the weakest,
-  // preventing degenerate strategies where one low-HP hero permanently absorbs all aggro.
-  const primary = living.length > 1 && Math.random() < 0.20
-    ? living[Math.floor(Math.random() * living.length)]
-    : living[0];
+  // Sort by HP ratio ascending (lowest first) — used for both target selection and one-shot check
+  const byHpRatio = [...livingAll].sort((a, b) => (a.currentHp / a.maxHp) - (b.currentHp / b.maxHp));
+
+  // Tier-based target selection
+  let primary;
+  if (tier === 'boss') {
+    // 40% chance to target highest-ATK player (most dangerous), otherwise lowest HP ratio
+    if (livingAll.length > 1 && Math.random() < 0.40) {
+      primary = livingAll.reduce((best, p) => ((p.atk || 0) > (best.atk || 0) ? p : best), livingAll[0]);
+    } else {
+      primary = byHpRatio[0];
+    }
+  } else if (tier === 'mini-boss') {
+    // 30% chance to target highest-ATK player, otherwise lowest HP ratio
+    if (livingAll.length > 1 && Math.random() < 0.30) {
+      primary = livingAll.reduce((best, p) => ((p.atk || 0) > (best.atk || 0) ? p : best), livingAll[0]);
+    } else {
+      primary = byHpRatio[0];
+    }
+  } else {
+    // mob: always target lowest HP ratio
+    primary = byHpRatio[0];
+  }
 
   const canAfford = (idx) => actorEnergy >= (skillCosts[idx] ?? skillCosts[0]);
 
@@ -338,16 +330,27 @@ export const getSmartAIAction = (enemy, playerTeam, actorEnergy = 0, skillCosts 
     }
   }
 
-  // 60 % chance to use a skill — restricted to what the enemy can afford
-  if (Math.random() < 0.6) {
+  // Boss burst-save: if boss can't yet afford skill[1] but has energy >= skill[0] cost × 1.5,
+  // skip skill and do a basic attack to save energy for the bigger hit next turn.
+  if (tier === 'boss' && enemy.skills.length > 1 && !canAfford(1) && canAfford(0)) {
+    if (actorEnergy >= (skillCosts[0] ?? 30) * 1.5) {
+      return { action: 'attack', skillIdx: -1, targetIdx: primary._i };
+    }
+  }
+
+  // Tier-based skill use chance
+  const skillChance = tier === 'boss' ? 0.80 : tier === 'mini-boss' ? 0.70 : 0.60;
+  // Tier-based skill[1] preference when both are affordable
+  const skill1Pref  = tier === 'boss' ? 0.65 : tier === 'mini-boss' ? 0.55 : 0.45;
+
+  if (Math.random() < skillChance) {
     const affordable = enemy.skills
       .map((_, idx) => idx)
       .filter(canAfford);
 
     if (affordable.length > 0) {
-      // Prefer skill[1] at 45 % when both are available
       const skillIdx =
-        affordable.length > 1 && Math.random() < 0.45 ? 1 : affordable[0];
+        affordable.length > 1 && Math.random() < skill1Pref ? 1 : affordable[0];
       return { action: 'skill', skillIdx, targetIdx: primary._i };
     }
   }

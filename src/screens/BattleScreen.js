@@ -111,6 +111,7 @@ export default function BattleScreen({ navigation, route }) {
   const addGold                   = useGameStore(s => s.addGold);
   const trackQuestProgress        = useGameStore(s => s.trackQuestProgress);
   const completeTowerFloor        = useGameStore(s => s.completeTowerFloor);
+  const completeDungeon           = useGameStore(s => s.completeDungeon);
   const trackAchievementProgress  = useGameStore(s => s.trackAchievementProgress);
   const setMaxAchievementProgress = useGameStore(s => s.setMaxAchievementProgress);
   const [showTutorial, setShowTutorial] = useState(!hasSeenBattleTutorial);
@@ -129,6 +130,8 @@ export default function BattleScreen({ navigation, route }) {
   const towerMode      = route?.params?.towerMode      || false;
   const towerFloor     = route?.params?.towerFloor     || 1;
   const towerRewards   = route?.params?.towerRewards   || { gold: 0, gems: 0, coins: 0 };
+  const dungeonMode    = route?.params?.dungeonMode    || false;
+  const dungeonRewards = route?.params?.dungeonRewards || null;
 
   const buildPlayers = useCallback(() =>
     team.map((id) => {
@@ -311,6 +314,15 @@ export default function BattleScreen({ navigation, route }) {
         return true;
       }
 
+      // ── Resource Dungeon win ─────────────────────────────────────────────────
+      if (dungeonMode) {
+        completeDungeon(dungeonRewards);
+        trackQuestProgress('win_battles');
+        trackAchievementProgress('battlesWon', 1);
+        showResult('win', { wasReplay: false, xpGained: 0, dungeonMode: true, dungeonRewards });
+        return true;
+      }
+
       // Practice mode one-time bonus
       let practiceGotBonus = false;
       if (practiceMode && !practiceBonusClaimed) {
@@ -347,14 +359,15 @@ export default function BattleScreen({ navigation, route }) {
     }
     if (allDefeated(players)) {
       // Pass mode flags so VictoryScreen routes Retry / Back correctly
-      // (a tower defeat must not dump the player into Story Mode).
-      showResult('lose', { wasReplay: false, xpGained: 0, towerMode, towerFloor, towerRewards });
+      // (a tower/dungeon defeat must not dump the player into Story Mode).
+      showResult('lose', { wasReplay: false, xpGained: 0, towerMode, towerFloor, towerRewards, dungeonMode, dungeonRewards });
       return true;
     }
     return false;
   }, [showResult, chapterId, chapterRewards, completeChapter, completedChapters,
       practiceMode, practiceBonusClaimed, claimPracticeBonus, addGems, addGold,
       towerMode, towerFloor, towerRewards, completeTowerFloor, trackQuestProgress,
+      dungeonMode, dungeonRewards, completeDungeon,
       trackAchievementProgress, setMaxAchievementProgress, fromStory]);
 
   const firstLiving = (arr) => {
@@ -754,7 +767,7 @@ export default function BattleScreen({ navigation, route }) {
       if (!checkEnd(np, ne)) {
         if (newTurnCount >= TURN_LIMIT) {
           setStatusMsg('⏰ Turn limit reached — enemies endure...');
-          showResult('lose', { wasReplay: false, xpGained: 0, towerMode, towerFloor, towerRewards });
+          showResult('lose', { wasReplay: false, xpGained: 0, towerMode, towerFloor, towerRewards, dungeonMode, dungeonRewards });
         } else {
           setIsEnemyTurn(true);
         }
@@ -764,7 +777,7 @@ export default function BattleScreen({ navigation, route }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnemyTurn, isAnimating, battleResult, enemyCutIn, playerTeam, enemyTeam,
       energy, currentTurnIdx, selectedEnemy, turnCount,
-      towerMode, towerFloor, towerRewards,
+      towerMode, towerFloor, towerRewards, dungeonMode, dungeonRewards,
       checkEnd, triggerHit, triggerAttack, triggerShake, triggerScreenFlash,
       trackQuestProgress, trackAchievementProgress, showResult]);
 
