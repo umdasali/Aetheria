@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Animated, Image, Modal, Alert, Dimensions, BackHandler,
@@ -24,6 +24,33 @@ import {
 } from '../utils/battleEngine';
 
 const { width: W, height: SH } = Dimensions.get('window');
+
+// ── Battlefield backgrounds ───────────────────────────────────────────────────
+const BATTLE_BG = {
+  emberveil: require('../../assets/battlefield-bg/Emberveil-Volcanic-Battlefield.webp'),
+  glaciara:  require('../../assets/battlefield-bg/Glaciara-Frozen-Battlefield.webp'),
+  khemara:   require('../../assets/battlefield-bg/Khemara-Desert-Battlefield.webp'),
+  sunspire:  require('../../assets/battlefield-bg/Sunspire-Holy-Sanctuary.webp'),
+  verdania:  require('../../assets/battlefield-bg/Verdania-Ancient-Forest-Battlefield.webp'),
+  voidmark:  require('../../assets/battlefield-bg/Voidmark-Corrupted-Void-Battlefield.webp'),
+};
+
+const DUNGEON_BG_KEY = {
+  gilded_vault:     'khemara',
+  ascendant_grotto: 'verdania',
+  void_sanctum:     'voidmark',
+};
+
+// Cycles story chapters 1-25 through the 6 backgrounds
+const BG_CYCLE = ['emberveil', 'glaciara', 'sunspire', 'verdania', 'voidmark', 'khemara'];
+
+function getBattleBg(dungeonMode, dungeonId, towerMode, towerFloor, chapterId) {
+  if (dungeonMode && dungeonId) return BATTLE_BG[DUNGEON_BG_KEY[dungeonId] || 'voidmark'];
+  if (towerMode)   return BATTLE_BG[BG_CYCLE[(towerFloor - 1) % 6]];
+  if (chapterId)   return BATTLE_BG[BG_CYCLE[(Math.floor(chapterId / 100) - 1) % 6]];
+  return BATTLE_BG.emberveil;
+}
+
 const MAX_ENERGY          = 100;
 const ENERGY_PER_TURN     = 20;
 const ENEMY_ENERGY_TURN   = 25;
@@ -131,7 +158,13 @@ export default function BattleScreen({ navigation, route }) {
   const towerFloor     = route?.params?.towerFloor     || 1;
   const towerRewards   = route?.params?.towerRewards   || { gold: 0, gems: 0, coins: 0 };
   const dungeonMode    = route?.params?.dungeonMode    || false;
+  const dungeonId      = route?.params?.dungeonId      || null;
   const dungeonRewards = route?.params?.dungeonRewards || null;
+
+  const battleBg = useMemo(
+    () => getBattleBg(dungeonMode, dungeonId, towerMode, towerFloor, chapterId),
+    [dungeonMode, dungeonId, towerMode, towerFloor, chapterId],
+  );
 
   const buildPlayers = useCallback(() =>
     team.map((id) => {
@@ -477,7 +510,8 @@ export default function BattleScreen({ navigation, route }) {
         return;
       }
 
-      const aiAction = getSmartAIAction(actor, playerTeam, actorEnergy, ENEMY_SKILL_COSTS);
+      const actorHpRatio = actor.maxHp > 0 ? actor.currentHp / actor.maxHp : 1.0;
+      const aiAction = getSmartAIAction(actor, playerTeam, actorEnergy, ENEMY_SKILL_COSTS, actor.tier || 'mob', actorHpRatio);
       if (!aiAction) {
         aiRunning.current = false;
         setIsAnimating(false);
@@ -819,7 +853,8 @@ export default function BattleScreen({ navigation, route }) {
 
   return (
     <View style={S.root}>
-      <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
+      <Image source={battleBg} style={S.bgImage} resizeMode="cover" />
+      <LinearGradient colors={C.GRAD_BATTLE} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={S.safe} edges={['top', 'bottom', 'left', 'right']}>
 
@@ -1571,6 +1606,7 @@ const PillBtn = React.memo(function PillBtn({ label, sub, colors, onPress, disab
 
 const S = StyleSheet.create({
   root:   { flex: 1, backgroundColor: C.BG_DEEP },
+  bgImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.55 },
   safe:   { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
 

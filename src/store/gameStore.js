@@ -811,21 +811,39 @@ const useGameStore = create(
       setEventGuarantee: (eventId, guaranteed) =>
         set(state => ({ eventGuarantee: { ...state.eventGuarantee, [eventId]: guaranteed } })),
 
-      // Exchange hero copies for gold (100 gold per copy).
+      // Exchange hero copies for tower coins (rank-tiered rates).
+      // C/B copies → modest coins for common progression material.
+      // A/S/SOVEREIGN copies → significant coins usable in the Tower Shop.
       convertExcessCopies: (heroId, count) => {
-        const GOLD_PER_COPY = 100;
+        const COINS_PER_COPY = { SOVEREIGN: 200, S: 80, A: 35, B: 15, C: 8 };
         set(state => {
           const current = state.heroCollection[heroId];
+          const hero    = HEROES.find(h => h.id === heroId);
           if (!current || current.copies < count || count <= 0) return state;
+          const rank    = current.effectiveRank || hero?.rank || 'C';
+          const rate    = COINS_PER_COPY[rank] ?? COINS_PER_COPY.C;
           return {
             ...state,
             heroCollection: {
               ...state.heroCollection,
               [heroId]: { ...current, copies: current.copies - count },
             },
-            gold: state.gold + count * GOLD_PER_COPY,
+            towerCoins: state.towerCoins + count * rate,
           };
         });
+      },
+
+      // Exchange lower-tier ascension materials for higher-tier ones.
+      // Validates the recipe server-side — callers must not trust UI counts alone.
+      exchangeAscensionItems: (fromItemId, fromQty, toItemId, toQty) => {
+        const state = get();
+        const inv   = { ...state.ascensionInventory };
+        if ((inv[fromItemId] || 0) < fromQty) return false;
+        inv[fromItemId] = inv[fromItemId] - fromQty;
+        inv[toItemId]   = (inv[toItemId] || 0) + toQty;
+        set({ ascensionInventory: inv });
+        triggerSync();
+        return true;
       },
     }),
     {

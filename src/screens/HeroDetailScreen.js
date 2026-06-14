@@ -23,6 +23,149 @@ import { C, RANK, RANK_COLORS } from '../theme/colors';
 const { width: W, height: H } = Dimensions.get('window');
 const BODY_PAD = 14;
 
+// Coins earned per copy by rank
+const COINS_PER_COPY = { SOVEREIGN: 200, S: 80, A: 35, B: 15, C: 8 };
+
+// ── Convert Copies stepper widget ────────────────────────────────────────────
+function ConvertCopiesWidget({ hero, heroData, onConvert }) {
+  const copies = heroData?.copies ?? 0;
+  const rank   = heroData?.effectiveRank || hero?.rank || 'C';
+  const rate   = COINS_PER_COPY[rank] ?? COINS_PER_COPY.C;
+
+  const [count, setCount] = useState(1);
+
+  // Cap count whenever copies changes (e.g. after a conversion)
+  useEffect(() => {
+    if (count > copies) setCount(Math.max(1, copies));
+  }, [copies]);
+
+  if (copies === 0) return null;
+
+  const safeCount  = Math.min(count, copies);
+  const totalCoins = safeCount * rate;
+
+  const doConvert = (qty) => {
+    Alert.alert(
+      'Convert Copies',
+      `Convert ${qty} ${hero.name} ${qty === 1 ? 'copy' : 'copies'} into ${qty * rate} Tower Coins?\n\n${rate} coins per copy · ${rank} rank.\n\nThis cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: `Convert  (+${qty * rate} Coins)`,
+          onPress: () => { onConvert(hero.id, qty); setCount(1); },
+        },
+      ],
+    );
+  };
+
+  return (
+    <View style={cv.wrap}>
+      {/* Header */}
+      <View style={cv.header}>
+        <Text style={cv.label}>♻  CONVERT COPIES</Text>
+        <View style={cv.ratePill}>
+          <Text style={cv.rateText}>{rate} coins / copy · {rank}</Text>
+        </View>
+      </View>
+
+      {/* Stepper row */}
+      <View style={cv.stepRow}>
+        <TouchableOpacity
+          style={[cv.stepBtn, safeCount <= 1 && cv.stepBtnDisabled]}
+          onPress={() => setCount(c => Math.max(1, c - 1))}
+          disabled={safeCount <= 1}
+          activeOpacity={0.7}
+        >
+          <Text style={cv.stepGlyph}>−</Text>
+        </TouchableOpacity>
+
+        <View style={cv.countBox}>
+          <Text style={cv.countNum}>{safeCount}</Text>
+          <Text style={cv.countSub}>of {copies} {copies === 1 ? 'copy' : 'copies'}</Text>
+        </View>
+
+        <TouchableOpacity
+          style={[cv.stepBtn, safeCount >= copies && cv.stepBtnDisabled]}
+          onPress={() => setCount(c => Math.min(copies, c + 1))}
+          disabled={safeCount >= copies}
+          activeOpacity={0.7}
+        >
+          <Text style={cv.stepGlyph}>+</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Preview */}
+      <Text style={cv.preview}>→ {totalCoins} Tower Coins</Text>
+
+      {/* Action buttons */}
+      <View style={cv.btnRow}>
+        <TouchableOpacity style={cv.btnSelected} onPress={() => doConvert(safeCount)} activeOpacity={0.8}>
+          <LinearGradient
+            colors={C.GRAD_PINK}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={cv.btnInner}
+          >
+            <Text style={cv.btnTxt}>CONVERT {safeCount}</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {copies > 1 && (
+          <TouchableOpacity style={cv.btnAll} onPress={() => doConvert(copies)} activeOpacity={0.8}>
+            <LinearGradient
+              colors={C.GRAD_GOLD}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              style={cv.btnInner}
+            >
+              <Text style={cv.btnTxt}>ALL  (+{copies * rate})</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+}
+
+const cv = StyleSheet.create({
+  wrap: {
+    marginTop: 6,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: C.GOLD + '55',
+    backgroundColor: C.BG_STATS,
+    padding: 12,
+    gap: 10,
+  },
+  header:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  label:   { fontSize: 11, fontWeight: '900', color: C.GOLD, letterSpacing: 1.5 },
+  ratePill: {
+    borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2,
+    backgroundColor: C.GOLD + '18', borderWidth: 1, borderColor: C.GOLD + '44',
+  },
+  rateText: { fontSize: 8, fontWeight: '700', color: C.GOLD },
+
+  stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  stepBtn: {
+    width: 36, height: 36, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: C.GLASS_4, borderWidth: 1, borderColor: C.BORDER,
+  },
+  stepBtnDisabled: { opacity: 0.35 },
+  stepGlyph: { fontSize: 20, fontWeight: '700', color: C.TEXT, lineHeight: 24 },
+
+  countBox:  { alignItems: 'center', minWidth: 60 },
+  countNum:  { fontSize: 26, fontWeight: '900', color: C.TEXT },
+  countSub:  { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '600', marginTop: -2 },
+
+  preview: { fontSize: 11, fontWeight: '800', color: C.TEXT_SOFT, textAlign: 'center' },
+
+  btnRow:     { flexDirection: 'row', gap: 8 },
+  btnSelected: { flex: 1, borderRadius: 8, overflow: 'hidden' },
+  btnAll:      { flex: 1, borderRadius: 8, overflow: 'hidden' },
+  btnInner:    { paddingVertical: 10, alignItems: 'center', justifyContent: 'center' },
+  btnTxt:      { fontSize: 11, fontWeight: '900', color: '#fff', letterSpacing: 1 },
+});
+
 export default function HeroDetailScreen({ route, navigation }) {
   const { heroId } = route.params || {};
   const ownedHeroes         = useGameStore(s => s.ownedHeroes);
@@ -629,37 +772,13 @@ export default function HeroDetailScreen({ route, navigation }) {
               </View>
             )}
 
-            {/* Convert Excess Copies */}
-            {owned && heroData.copies > 0 && (
-              <TouchableOpacity
-                style={styles.convertBtn}
-                accessibilityLabel={`Convert ${heroData.copies} copies to ${heroData.copies * 100} gold`}
-                accessibilityRole="button"
-                onPress={() => {
-                  Alert.alert(
-                    'Convert Copies',
-                    `Convert all ${heroData.copies} ${hero.name} ${heroData.copies === 1 ? 'copy' : 'copies'} into ${heroData.copies * 100} gold?\n\nThis cannot be undone.`,
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: `Convert (+${heroData.copies * 100}G)`,
-                        onPress: () => convertExcessCopies(hero.id, heroData.copies),
-                      },
-                    ]
-                  );
-                }}
-              >
-                <LinearGradient
-                  colors={C.GRAD_GOLD}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.convertBtnInner}
-                >
-                  <Text style={styles.convertBtnText}>
-                    ♻ Convert {heroData.copies} {heroData.copies === 1 ? 'Copy' : 'Copies'} → {heroData.copies * 100}G
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
+            {/* Convert Excess Copies → Tower Coins */}
+            {owned && (
+              <ConvertCopiesWidget
+                hero={hero}
+                heroData={heroData}
+                onConvert={convertExcessCopies}
+              />
             )}
 
             {/* Skills */}
@@ -1077,10 +1196,6 @@ const styles = StyleSheet.create({
   },
   shareBtnText: { fontSize: 11, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1 },
 
-  // ── Convert copies ───────────────────────────────────────────────────────────
-  convertBtn:      { borderRadius: 8, overflow: 'hidden', marginTop: 6 },
-  convertBtnInner: { paddingVertical: 9, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
-  convertBtnText:  { color: C.TEXT, fontWeight: '800', fontSize: 12, letterSpacing: 0.5 },
 
   // ── Fusion animation ─────────────────────────────────────────────────────────
   fuseBurst: {

@@ -86,6 +86,7 @@ const effectiveUnit = (unit) => {
  * Returns { damage, isCrit, blocked, dodged }.
  * Accounts for evasion (dodge), fortify (damage reduction), smite (enhanced crits),
  * shatter (DEF down on defender), and weaken (ATK down on attacker).
+ * Enemies without a crit stat receive a 5% base crit chance (crit || 50).
  */
 export const calculateDamage = (attacker, defender, multiplier) => {
   const defMechanic = EFFECT_MECHANICS[defender.effect];
@@ -103,7 +104,8 @@ export const calculateDamage = (attacker, defender, multiplier) => {
   const defEff     = effectiveUnit(defender);
   const base       = eff.atk * multiplier;
   const defFactor  = 1 + (defEff.def / (defEff.def + 500)) * 1.5;
-  const critChance = (eff.crit || 0) / 1000;
+  // Heroes have explicit crit (170-700). Enemies lack the stat → give them a 5% base crit.
+  const critChance = (eff.crit || 50) / 1000;
   const isCrit     = Math.random() < critChance;
 
   // Smite passive: 2.0× crit multiplier instead of 1.75×
@@ -276,51 +278,85 @@ export const processStatusEffects = (unit) => {
 /**
  * getSmartAIAction
  * Priority order:
- *  1. One-shot the lowest-HP player with skill[1] if affordable and lethal
- *  2. Skill use chance varies by tier (mob 60%, mini-boss 70%, boss 80%)
- *     — skill[1] preference also scales with tier
- *  3. Boss burst-save: if boss cannot yet afford skill[1] but has enough energy
- *     for skill[0] cost × 1.5, skip skill and do a basic attack to save energy
- *  4. Basic attack
- * Target selection: mob always targets lowest HP ratio; mini-boss/boss may
- * occasionally target the highest-ATK player instead.
- * actorEnergy and skillCosts are passed in so the function never proposes an
- * action the caller would have to silently downgrade.
+ *  1. Kill focus — if any player is at ≤25% HP, overwhelm them with best skill (85-95% chance)
+ *  2. One-shot check — use skill[1] if its low-end estimate kills the primary target
+ *  3. Energy urgency — at ≥80 energy always spend a skill (never waste a full bar)
+ *  4. Boss burst-save — hoard energy toward skill[1] if still building up
+ *  5. Tier-based skill chance (mob 60% → mini-boss 72% → boss 82%; rage: 92%)
+ *  6. Basic attack
+ *
+ * Rage phase: boss at ≤45% HP or already enraged enters rage mode — skill chance
+ * jumps to 92%, heavy-skill preference to 80%, and it always targets unshielded heroes.
+ *
+ * Target selection: mob → lowest HP ratio; mini-boss → 30% highest ATK; boss → 40%
+ * highest ATK. Both elites prefer unshielded targets over shielded ones.
+ *
+ * actorEnergy and skillCosts are passed in so the function never silently downgrades.
+ * enemyHpRatio is the actor's own current HP / maxHP for phase-shift logic.
  */
-export const getSmartAIAction = (enemy, playerTeam, actorEnergy = 0, skillCosts = [30, 50], tier = 'mob') => {
+export const getSmartAIAction = (enemy, playerTeam, actorEnergy = 0, skillCosts = [30, 50], tier = 'mob', enemyHpRatio = 1.0) => {
   const livingAll = playerTeam
     .map((p, i) => ({ ...p, _i: i }))
     .filter((p) => p.currentHp > 0);
 
   if (!livingAll.length) return null;
 
-  // Sort by HP ratio ascending (lowest first) — used for both target selection and one-shot check
-  const byHpRatio = [...livingAll].sort((a, b) => (a.currentHp / a.maxHp) - (b.currentHp / b.maxHp));
-
-  // Tier-based target selection
-  let primary;
-  if (tier === 'boss') {
-    // 40% chance to target highest-ATK player (most dangerous), otherwise lowest HP ratio
-    if (livingAll.length > 1 && Math.random() < 0.40) {
-      primary = livingAll.reduce((best, p) => ((p.atk || 0) > (best.atk || 0) ? p : best), livingAll[0]);
-    } else {
-      primary = byHpRatio[0];
-    }
-  } else if (tier === 'mini-boss') {
-    // 30% chance to target highest-ATK player, otherwise lowest HP ratio
-    if (livingAll.length > 1 && Math.random() < 0.30) {
-      primary = livingAll.reduce((best, p) => ((p.atk || 0) > (best.atk || 0) ? p : best), livingAll[0]);
-    } else {
-      primary = byHpRatio[0];
-    }
-  } else {
-    // mob: always target lowest HP ratio
-    primary = byHpRatio[0];
-  }
-
   const canAfford = (idx) => actorEnergy >= (skillCosts[idx] ?? skillCosts[0]);
 
-  // One-shot check — only if skill[1] is affordable and low-end estimate (−15% variance) still kills
+  // Sort by HP ratio ascending (lowest first)
+  const byHpRatio = [...livingAll].sort((a, b) => (a.currentHp / a.maxHp) - (b.currentHp / b.maxHp));
+
+  // Boss rage: activated at ≤45% own HP or if already enraged flag is set
+  const isRaging = tier === 'boss' && (enemy.enraged || enemyHpRatio <= 0.45);
+  // Mini-boss second phase: ≤50% own HP
+  const minibossPhase2 = tier === 'mini-boss' && enemyHpRatio <= 0.50;
+
+  // ── 1. Kill focus ────────────────────────────────────────────────────────────
+  // Any player at or below 25% HP is a "finish them" target — elite units strongly prioritise.
+  const dyingPlayers = byHpRatio.filter(p => (p.currentHp / p.maxHp) <= 0.25);
+  if (dyingPlayers.length > 0 && (tier === 'boss' || tier === 'mini-boss')) {
+    const killTarget = dyingPlayers[0];
+    const killChance = isRaging ? 0.95 : tier === 'boss' ? 0.88 : 0.78;
+    if (Math.random() < killChance) {
+      const affordable = enemy.skills.map((_, i) => i).filter(canAfford);
+      if (affordable.length > 0) {
+        const best = affordable.length > 1 ? 1 : affordable[0];
+        return { action: 'skill', skillIdx: best, targetIdx: killTarget._i };
+      }
+    }
+  }
+
+  // ── Target selection ─────────────────────────────────────────────────────────
+  // Prefer unshielded heroes over shielded ones when choosing primary target
+  const unshielded = livingAll.filter(p => !(p.shield > 0));
+  const candidatePool = unshielded.length > 0 ? unshielded : livingAll;
+  const byHpRatioCandidates = [...candidatePool].sort((a, b) => (a.currentHp / a.maxHp) - (b.currentHp / b.maxHp));
+
+  let primary;
+  if (tier === 'boss') {
+    // Rage mode: always target the highest-ATK player (eliminate the biggest threat)
+    if (isRaging && livingAll.length > 1) {
+      primary = candidatePool.reduce((best, p) => ((p.atk || 0) > (best.atk || 0) ? p : best), candidatePool[0]);
+    } else if (livingAll.length > 1 && Math.random() < 0.40) {
+      // 40% chance to focus highest-ATK player
+      primary = candidatePool.reduce((best, p) => ((p.atk || 0) > (best.atk || 0) ? p : best), candidatePool[0]);
+    } else {
+      primary = byHpRatioCandidates[0];
+    }
+  } else if (tier === 'mini-boss') {
+    // Phase 2: target highest-ATK 50% of the time
+    const atkChance = minibossPhase2 ? 0.50 : 0.30;
+    if (livingAll.length > 1 && Math.random() < atkChance) {
+      primary = candidatePool.reduce((best, p) => ((p.atk || 0) > (best.atk || 0) ? p : best), candidatePool[0]);
+    } else {
+      primary = byHpRatioCandidates[0];
+    }
+  } else {
+    // Mob: always lowest HP ratio
+    primary = byHpRatioCandidates[0];
+  }
+
+  // ── 2. One-shot check ────────────────────────────────────────────────────────
   if (enemy.skills.length > 1 && canAfford(1)) {
     const est = Math.floor(
       enemy.atk * enemy.skills[1].damage / (1 + ((primary.def || 0) / ((primary.def || 0) + 500)) * 1.5)
@@ -330,27 +366,42 @@ export const getSmartAIAction = (enemy, playerTeam, actorEnergy = 0, skillCosts 
     }
   }
 
-  // Boss burst-save: if boss can't yet afford skill[1] but has energy >= skill[0] cost × 1.5,
-  // skip skill and do a basic attack to save energy for the bigger hit next turn.
-  if (tier === 'boss' && enemy.skills.length > 1 && !canAfford(1) && canAfford(0)) {
+  // ── 3. Energy urgency — full bar, always spend ───────────────────────────────
+  if (actorEnergy >= 80) {
+    const affordable = enemy.skills.map((_, i) => i).filter(canAfford);
+    if (affordable.length > 0) {
+      const urgentPref = isRaging ? 0.85 : tier === 'boss' ? 0.70 : 0.60;
+      const skillIdx = affordable.length > 1 && Math.random() < urgentPref ? 1 : affordable[0];
+      return { action: 'skill', skillIdx, targetIdx: primary._i };
+    }
+  }
+
+  // ── 4. Boss burst-save ───────────────────────────────────────────────────────
+  // Skip skill and basic-attack to hoard energy toward skill[1] — but not while raging.
+  if (!isRaging && tier === 'boss' && enemy.skills.length > 1 && !canAfford(1) && canAfford(0)) {
     if (actorEnergy >= (skillCosts[0] ?? 30) * 1.5) {
       return { action: 'attack', skillIdx: -1, targetIdx: primary._i };
     }
   }
 
-  // Tier-based skill use chance
-  const skillChance = tier === 'boss' ? 0.80 : tier === 'mini-boss' ? 0.70 : 0.60;
-  // Tier-based skill[1] preference when both are affordable
-  const skill1Pref  = tier === 'boss' ? 0.65 : tier === 'mini-boss' ? 0.55 : 0.45;
+  // ── 5. Tier-based skill use ──────────────────────────────────────────────────
+  let skillChance, skill1Pref;
+  if (isRaging) {
+    skillChance = 0.92; skill1Pref = 0.80;
+  } else if (tier === 'boss') {
+    skillChance = 0.82; skill1Pref = 0.65;
+  } else if (minibossPhase2) {
+    skillChance = 0.78; skill1Pref = 0.62;
+  } else if (tier === 'mini-boss') {
+    skillChance = 0.72; skill1Pref = 0.55;
+  } else {
+    skillChance = 0.60; skill1Pref = 0.45;
+  }
 
   if (Math.random() < skillChance) {
-    const affordable = enemy.skills
-      .map((_, idx) => idx)
-      .filter(canAfford);
-
+    const affordable = enemy.skills.map((_, idx) => idx).filter(canAfford);
     if (affordable.length > 0) {
-      const skillIdx =
-        affordable.length > 1 && Math.random() < skill1Pref ? 1 : affordable[0];
+      const skillIdx = affordable.length > 1 && Math.random() < skill1Pref ? 1 : affordable[0];
       return { action: 'skill', skillIdx, targetIdx: primary._i };
     }
   }

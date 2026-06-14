@@ -72,7 +72,11 @@ export function getTowerFloorReward(floor) {
   return {
     gold:  200  + floor * 80,
     gems:  isBossFloor(floor) ? 30 + Math.floor(floor / 10) * 5 : 0,
-    coins: 2    + Math.floor(floor / 4),
+    // Non-boss: 3 base + 1 per 3 floors. Boss: extra +5 per milestone.
+    // Floor 1 → 3 coins | Floor 30 → 13 coins | Floor 100 → 36 coins
+    coins: isBossFloor(floor)
+      ? Math.floor(floor / 3) + 5
+      : 3 + Math.floor(floor / 3),
   };
 }
 

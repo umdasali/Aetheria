@@ -132,7 +132,7 @@ export const C = {
   GRAD_HEADER:           ['#5B21B6', '#7C3AED'],            // Dark purple — always use light text on top
   GRAD_PINK:             ['#7C3AED', '#DB2777'],
   GRAD_GOLD:             ['#92400E', '#D97706'],
-  GRAD_BATTLE:           ['#06030E', '#0E0720', '#06030E'],
+  GRAD_BATTLE:           ['rgba(6,3,14,0.78)', 'rgba(14,7,32,0.55)', 'rgba(6,3,14,0.78)'],
   GRAD_WIN:              ['#021A0D', '#042B14'],
   GRAD_LOSE:             ['#1A0202', '#2B0404'],
   GRAD_SUMMON:           ['#5B21B6', '#7C3AED', '#1E40AF'],
