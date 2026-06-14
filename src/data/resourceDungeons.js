@@ -26,7 +26,7 @@ export const DUNGEON_DEFS = [
     accent:     C.GOLD,
     icon:       'cash-outline',
     image:      require('../../assets/dungeons/gilded_vault.webp'),
-    gradientColors: ['#7A4500', '#3A1A00'],
+    gradientColors: ['#7A4500', '#a54e06a6'],
     baseGroupIndex: 8,
     tiers: [
       { tier: 1, label: 'I',   mult: 2.0, diff: 'EASY',   reward: { gold: 7000  } },
@@ -64,8 +64,8 @@ export const DUNGEON_DEFS = [
     baseGroupIndex: 15,
     tiers: [
       { tier: 1, label: 'I',   mult: 3.0, diff: 'NORMAL', reward: { gold: 1500, material: { itemId: 'broken_wing',    qty: 2 } } },
-      { tier: 2, label: 'II',  mult: 4.5, diff: 'HARD',   reward: { gold: 3000, material: { itemId: 'lost_butterfly',  qty: 1 } } },
-      { tier: 3, label: 'III', mult: 6.5, diff: 'MYTHIC', reward: { gold: 5000, material: { itemId: 'feather_of_hope', qty: 1 } } },
+      { tier: 2, label: 'II',  mult: 5.0, diff: 'HARD',   reward: { gold: 3000, material: { itemId: 'lost_butterfly',  qty: 1 } } },
+      { tier: 3, label: 'III', mult: 7.5, diff: 'MYTHIC', reward: { gold: 5000, material: { itemId: 'feather_of_hope', qty: 1 } } },
     ],
   },
 ];

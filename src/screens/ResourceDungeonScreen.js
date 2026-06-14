@@ -309,7 +309,7 @@ function DungeonDetail({ dungeon, onEnter }) {
     <View style={det.wrap}>
       {/* Dungeon background image */}
       {dungeon.image && (
-        <Image source={dungeon.image} style={det.bgImage} resizeMode="cover" />
+        <Image source={dungeon.image} style={[StyleSheet.absoluteFill, { width: '100%', height: H }]} resizeMode="cover" />
       )}
       {/* Dark gradient overlay — keeps text readable over any image */}
       <LinearGradient

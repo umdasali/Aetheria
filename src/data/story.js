@@ -49,11 +49,11 @@ export const CHAPTER_DEFS = [
   { id: 18, title: 'Divided Heaven',      subtitle: 'A goddess of two merged souls tears reality apart as divine light and consuming darkness wage war', color: '#C8A800', accent: '#C084FC' },
   { id: 19, title: 'The Living Archive',  subtitle: 'An infinite library of all knowledge becomes a devouring labyrinth of living ink and ancient hunger',color: '#92640A', accent: '#E8D5A3' },
   { id: 20, title: 'Before the First Breath', subtitle: 'The dreaming entity beneath all reality opens its eyes — existence holds its breath',          color: '#6D28D9', accent: '#C4B5FD' },
-  { id: 21, title: 'Shadow Sovereign',        subtitle: 'A dark-power ruler claims dominion over the shadow realm as night falls on all existence',      color: '#1E1040', accent: '#A78BFA' },
-  { id: 22, title: 'The Cosmic Weave',        subtitle: 'A mage who has absorbed the dying memories of worlds rewrites reality from within a star',      color: '#0F2350', accent: '#7EC8E3' },
-  { id: 23, title: 'Demon Glacier',           subtitle: 'An ice demon breaks free from the frozen underworld — her frost corrodes dimensional matter',    color: '#0A1F3C', accent: '#72C4E8' },
-  { id: 24, title: 'The Elder Crimson',       subtitle: 'The eldest of the crimson bloodline surfaces — more ancient and patient than any before her',   color: '#4A0010', accent: '#FF8C8C' },
-  { id: 25, title: 'The First Entity',        subtitle: 'The oldest being in Aetheria\'s universe stirs — it predates the gods, the void, and darkness', color: '#050510', accent: '#C4B5FD' },
+  { id: 21, title: 'Shadow Sovereign',        subtitle: 'A dark-power ruler claims dominion over the shadow realm as night falls on all existence',      color: '#6429ec', accent: '#A78BFA' },
+  { id: 22, title: 'The Cosmic Weave',        subtitle: 'A mage who has absorbed the dying memories of worlds rewrites reality from within a star',      color: '#3a67d0', accent: '#7EC8E3' },
+  { id: 23, title: 'Demon Glacier',           subtitle: 'An ice demon breaks free from the frozen underworld — her frost corrodes dimensional matter',    color: '#486da1', accent: '#72C4E8' },
+  { id: 24, title: 'The Elder Crimson',       subtitle: 'The eldest of the crimson bloodline surfaces — more ancient and patient than any before her',   color: '#c53655', accent: '#FF8C8C' },
+  { id: 25, title: 'The First Entity',        subtitle: 'The oldest being in Aetheria\'s universe stirs — it predates the gods, the void, and darkness', color: '#8a8a8a', accent: '#C4B5FD' },
 ];
 
 export const STORY_STAGES = [

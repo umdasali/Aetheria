@@ -853,7 +853,7 @@ export default function BattleScreen({ navigation, route }) {
 
   return (
     <View style={S.root}>
-      <Image source={battleBg} style={S.bgImage} resizeMode="cover" />
+      <Image source={battleBg} style={[StyleSheet.absoluteFill, { width: '100%', height: SH }]} resizeMode="cover" />
       <LinearGradient colors={C.GRAD_BATTLE} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={S.safe} edges={['top', 'bottom', 'left', 'right']}>

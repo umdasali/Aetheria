@@ -10,5 +10,5 @@ export const APP_INFO = {
   year:         '2025',
   heroCount:    HEROES.length,       // auto-updates as heroes.js grows
   stageCount:   STAGE_ORDER.length,  // auto-updates as story.js grows
-  factionCount: 5,
+  factionCount: 6,
 };
