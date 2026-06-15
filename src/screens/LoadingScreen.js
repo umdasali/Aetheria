@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', gap: 6,
   },
   titleMain: {
-    fontSize: 42, fontWeight: '900', color: '#fff', letterSpacing: 12,
+    fontSize: 42, fontWeight: '900', color: C.TEXT, letterSpacing: 12,
     textShadowColor: 'rgba(124,58,237,0.9)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 24,
   },
   titleSub:    { fontSize: 13, fontWeight: '700', color: 'rgba(167,139,250,0.85)', letterSpacing: 7 },

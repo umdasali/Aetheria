@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   topLeft: { flex: 1 },
   heroName: {
     fontWeight: '900',
-    color: '#fff',
+    color: C.TEXT,
     letterSpacing: 1.5,
     textShadowColor: 'rgba(0,0,0,0.9)',
     textShadowOffset: { width: 0, height: 1 },
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   },
   tagIcon:  {},
   tagLabel: { color: C.TEXT_MUTED, letterSpacing: 0.5 },
-  tagValue: { color: '#fff', fontWeight: '700', letterSpacing: 0.5 },
+  tagValue: { color: C.TEXT, fontWeight: '700', letterSpacing: 0.5 },
 
   // ── Faction icon ─────────────────────────────────────────────────────────────
   factionBadge: {

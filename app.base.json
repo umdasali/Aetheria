@@ -10,7 +10,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.trumpcard.game",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "CADisableMinimumFrameDurationOnPhone": true
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -37,7 +40,11 @@
       [
         "expo-build-properties",
         {
+          "ios": {
+            "newArchEnabled": true
+          },
           "android": {
+            "newArchEnabled": true,
             "enableMinifyInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true
           }

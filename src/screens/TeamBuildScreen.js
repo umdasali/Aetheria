@@ -151,7 +151,7 @@ export default function TeamBuildScreen({ navigation }) {
             onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }}
             style={s.backBtn}
           >
-            <Ionicons name="chevron-back" size={19} color="#fff" />
+            <Ionicons name="chevron-back" size={19} color={C.TEXT} />
             <Text style={s.backTxt}>BACK</Text>
           </TouchableOpacity>
 
@@ -381,8 +381,8 @@ export default function TeamBuildScreen({ navigation }) {
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                       style={s.deployInner}
                     >
-                      <Ionicons name="flash" size={13} color={filledCount ? '#fff' : C.TEXT_DISABLED} />
-                      <Text style={[s.deployTxt, { color: filledCount ? '#fff' : C.TEXT_DISABLED }]}>
+                      <Ionicons name="flash" size={13} color={filledCount ? C.TEXT : C.TEXT_DISABLED} />
+                      <Text style={[s.deployTxt, { color: filledCount ? C.TEXT : C.TEXT_DISABLED }]}>
                         DEPLOY {PRESET_LABELS[tab]}
                       </Text>
                     </LinearGradient>
@@ -445,9 +445,9 @@ const s = StyleSheet.create({
     paddingHorizontal: 12, gap: 10,
   },
   backBtn:      { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  backTxt:      { fontSize: 12, fontWeight: '700', color: '#fff', letterSpacing: 0.5 },
+  backTxt:      { fontSize: 12, fontWeight: '700', color: C.TEXT, letterSpacing: 0.5 },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle:  { fontSize: 14, fontWeight: '900', color: '#fff', letterSpacing: 3 },
+  headerTitle:  { fontSize: 14, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
   headerSub:    { fontSize: 9, color: C.TEXT_ON_DARK_MUTED, marginTop: 1 },
   countChip:    { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, borderWidth: 1 },
   countTxt:     { fontSize: 13, fontWeight: '900' },
@@ -509,7 +509,7 @@ const s = StyleSheet.create({
   cardRankTxt: { fontSize: 8, fontWeight: '900' },
   cardName: {
     position: 'absolute', bottom: 5, left: 5, right: 5,
-    fontSize: 9, color: '#fff', fontWeight: '700', letterSpacing: 0.3,
+    fontSize: 9, color: C.TEXT, fontWeight: '700', letterSpacing: 0.3,
     textShadowColor: C.OVERLAY_4,
     textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
@@ -572,7 +572,7 @@ const s = StyleSheet.create({
   slotFactionLabel: { fontSize: 7, fontWeight: '800', letterSpacing: 1, opacity: 0.85 },
   slotSlotNum:      { marginLeft: 'auto', fontSize: 9, color: C.TEXT_ON_DARK_DIM, fontWeight: '800' },
   slotName: {
-    fontSize: 12, fontWeight: '800', color: '#fff', letterSpacing: 0.2,
+    fontSize: 12, fontWeight: '800', color: C.TEXT, letterSpacing: 0.2,
     textShadowColor: C.OVERLAY_4,
     textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },

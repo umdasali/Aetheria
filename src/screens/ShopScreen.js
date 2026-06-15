@@ -88,7 +88,7 @@ const pc = StyleSheet.create({
     backgroundColor: C.BG_CARD, alignItems: 'center',
     paddingVertical: 12, paddingHorizontal: 8, gap: 7, position: 'relative',
     height: '100%',
-    shadowColor: '#000', shadowRadius: 10, shadowOpacity: 0.45,
+    shadowColor: C.SHADOW, shadowRadius: 10, shadowOpacity: 0.45,
     shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   tag: {
@@ -103,7 +103,7 @@ const pc = StyleSheet.create({
   divider:  { width: '80%', height: 1, borderRadius: 1 },
   buyBtn:   { borderRadius: 8, overflow: 'hidden', width: '90%', marginTop: 'auto' },
   buyInner: { paddingVertical: 9, alignItems: 'center' },
-  buyTxt:   { fontSize: 13, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
+  buyTxt:   { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 0.5 },
 });
 
 // ─── Exclusive hero pack (featured, gem-priced) ────────────────────────────────
@@ -219,8 +219,8 @@ const hp = StyleSheet.create({
   buyBtn:   { borderRadius: 10, overflow: 'hidden', alignSelf: 'flex-start', marginTop: 2 },
   buyInner: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 11, paddingHorizontal: 22 },
   buyGem:   { width: 16, height: 16 },
-  buyTxt:   { fontSize: 16, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
-  buyTxtSub:{ fontSize: 9, fontWeight: '900', color: '#fff', letterSpacing: 1, marginLeft: 4 },
+  buyTxt:   { fontSize: 16, fontWeight: '900', color: C.TEXT, letterSpacing: 0.5 },
+  buyTxtSub:{ fontSize: 9, fontWeight: '900', color: C.TEXT, letterSpacing: 1, marginLeft: 4 },
 });
 
 // ─── Main screen ───────────────────────────────────────────────────────────────
@@ -489,7 +489,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 7,
     backgroundColor: C.BG_RAISED, borderWidth: 1, borderRadius: 20,
     paddingHorizontal: 16, paddingVertical: 8,
-    shadowColor: '#000', shadowRadius: 6, shadowOpacity: 0.35,
+    shadowColor: C.SHADOW, shadowRadius: 6, shadowOpacity: 0.35,
     shadowOffset: { width: 0, height: 2 }, elevation: 5,
   },
   toastTxt: { fontSize: 11, fontWeight: '800', color: C.TEXT },

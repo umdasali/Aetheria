@@ -151,7 +151,7 @@ function EventCard({ event, onEnter, isGuaranteed }) {
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={s.enterBtnGrad}
             >
-              <Ionicons name="sparkles-outline" size={16} color="#fff" />
+              <Ionicons name="sparkles-outline" size={16} color={C.TEXT} />
               <Text style={s.enterBtnTxt}>ENTER BANNER</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -189,7 +189,7 @@ export default function EventScreen({ navigation }) {
       {/* Header */}
       <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.75}>
-          <Ionicons name="chevron-back" size={22} color="#fff" />
+          <Ionicons name="chevron-back" size={22} color={C.TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>EVENTS</Text>
@@ -252,7 +252,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: C.GLASS_7,
   },
   backBtn:     { padding: 4, marginRight: 6 },
-  headerTitle: { fontSize: 16, fontWeight: '900', color: '#fff', letterSpacing: 3 },
+  headerTitle: { fontSize: 16, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
   headerSub:   { fontSize: 10, color: C.TEXT_ON_DARK_SOFT, marginTop: 1 },
   liveChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -336,7 +336,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, paddingVertical: 12,
   },
-  enterBtnTxt: { fontSize: 13, fontWeight: '900', color: '#fff', letterSpacing: 2 },
+  enterBtnTxt: { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 2 },
 
   emptyWrap: {
     flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingTop: 80,

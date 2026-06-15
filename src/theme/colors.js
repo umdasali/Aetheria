@@ -74,6 +74,7 @@ export const C = {
   // ── Status ────────────────────────────────────────────────────────────────
   SUCCESS:     '#059669',
   DANGER:      '#DC2626',
+  DANGER_MID:  '#991B1B',   // Mid-dark red — gradient stop between DANGER and DANGER_DARK
   DANGER_DARK: '#7F1D1D',
   WARNING:     '#D97706',
 
@@ -142,6 +143,10 @@ export const C = {
   GRAD_TOWER:            ['#03001A', '#09032C', '#03001A'],   // Tower normal floor bg
   GRAD_TOWER_BOSS:       ['#140005', '#1C000A', '#140005'],   // Tower boss floor bg
   GRAD_TOWER_MILESTONE:  ['#140A00', '#1E1200', '#140A00'],   // Tower milestone floor bg
+  GRAD_PANEL:            ['#0E0525', '#1A0840'],              // Dark modal/card panel gradient
+
+  // ── Shadow base ────────────────────────────────────────────────────────────
+  SHADOW: '#000000',   // shadowColor base — opacity controlled by shadowOpacity
 };
 
 // ── Rank badge colors — hierarchy: SOVEREIGN > S > A > B > C ─────────────────
@@ -155,3 +160,22 @@ export const RANK = {
 
 // Alias — import from here, not from data/heroes.js
 export const RANK_COLORS = RANK;
+
+// ── Faction particle palettes ─────────────────────────────────────────────────
+// Used by FactionParticles.js — faction-specific ambient color arrays.
+export const FACTION_PARTICLES = {
+  palettes: {
+    fire:    ['#FF4500', '#FF6B35', '#FF8C00', '#FFA500', '#FFD700'],
+    snow:    ['#FFFFFF', '#E0F7FF', '#B3E5FC', '#81D4FA', '#90E0EF'],
+    sparkle: ['#FFD700', '#FFF9C4', '#FFEE58', '#FFC107', '#FFFFFF'],
+    leaf:    ['#2ECC71', '#27AE60', '#A8E6CF', '#52BE80', '#1ABC9C'],
+    void:    ['#9B59B6', '#8E44AD', '#D7BDE2', '#BB8FCE', '#C39BD3'],
+  },
+  glows: {
+    fire:    '#FF4500',
+    snow:    '#90E0EF',
+    sparkle: '#FFD700',
+    leaf:    '#2ECC71',
+    void:    '#9B59B6',
+  },
+};

@@ -163,7 +163,7 @@ const cv = StyleSheet.create({
   btnSelected: { flex: 1, borderRadius: 8, overflow: 'hidden' },
   btnAll:      { flex: 1, borderRadius: 8, overflow: 'hidden' },
   btnInner:    { paddingVertical: 10, alignItems: 'center', justifyContent: 'center' },
-  btnTxt:      { fontSize: 11, fontWeight: '900', color: '#fff', letterSpacing: 1 },
+  btnTxt:      { fontSize: 11, fontWeight: '900', color: C.TEXT, letterSpacing: 1 },
 });
 
 export default function HeroDetailScreen({ route, navigation }) {
@@ -999,7 +999,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: C.BORDER,
     zIndex: 20,
-    shadowColor: '#000',
+    shadowColor: C.SHADOW,
     shadowOpacity: 0.12,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: C.BORDER,
     zIndex: 20,
-    shadowColor: '#000',
+    shadowColor: C.SHADOW,
     shadowOpacity: 0.12,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,

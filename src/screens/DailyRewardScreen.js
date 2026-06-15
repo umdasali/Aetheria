@@ -73,7 +73,7 @@ function DayCard({ reward, state, scale }) {
         {
           borderColor, borderWidth,
           transform: [{ scale }],
-          shadowColor:   isToday ? accentCol : '#000',
+          shadowColor:   isToday ? accentCol : C.SHADOW,
           shadowOpacity: isToday ? 0.60 : 0.18,
           shadowOffset:  { width: 0, height: isToday ? 5 : 2 },
           shadowRadius:  isToday ? 12 : 4,
@@ -236,7 +236,7 @@ export default function DailyRewardScreen({ navigation }) {
         {/* ══ HEADER ══ */}
         <LinearGradient colors={C.GRAD_HEADER} style={[S.header, { paddingTop: topInset + 8 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={S.backBtn} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={22} color="#fff" />
+            <Ionicons name="chevron-back" size={22} color={C.TEXT} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={S.hdrTitle}>DAILY LOGIN REWARD</Text>
@@ -306,7 +306,7 @@ export default function DailyRewardScreen({ navigation }) {
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={S.claimBtnInner}
                   >
-                    <Ionicons name="gift" size={17} color="#fff" />
+                    <Ionicons name="gift" size={17} color={C.TEXT} />
                     <Text style={S.claimBtnTxt}>{isBonus ? 'CLAIM BONUS!' : 'CLAIM REWARD'}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -446,7 +446,7 @@ const S = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, paddingVertical: 13,
   },
-  claimBtnTxt: { fontSize: 13, fontWeight: '900', color: '#fff', letterSpacing: 1 },
+  claimBtnTxt: { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 1 },
 
   // Claimed state
   claimedBox: {
@@ -512,5 +512,5 @@ const S = StyleSheet.create({
   // ⑤ State chip
   dayStateRow: { height: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   todayChip:   { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
-  todayChipTxt:{ fontSize: 7, fontWeight: '900', color: '#fff', letterSpacing: 0.8 },
+  todayChipTxt:{ fontSize: 7, fontWeight: '900', color: C.TEXT, letterSpacing: 0.8 },
 });

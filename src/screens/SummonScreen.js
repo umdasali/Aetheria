@@ -1127,7 +1127,7 @@ export default function SummonScreen({ navigation, route }) {
           <View style={s.revealBar}>
             {allRevealed ? (
               <TouchableOpacity onPress={closeToBanner} activeOpacity={0.85} style={s.closeBtn}>
-                <Ionicons name="close" size={26} color="#fff" />
+                <Ionicons name="close" size={26} color={C.TEXT} />
               </TouchableOpacity>
             ) : (
               !isSingle && (
@@ -1164,7 +1164,7 @@ export default function SummonScreen({ navigation, route }) {
             return (
               <View key="FEAT" style={[s.sumChip, { borderColor: C.GOLD }]}>
                 <View style={[s.sumDot, { backgroundColor: C.GOLD }]}>
-                  <Text style={[s.sumDotTxt, { color: '#1A0A00', fontSize: 8 }]}>★</Text>
+                  <Text style={[s.sumDotTxt, { color: RANK.SOVEREIGN.text, fontSize: 8 }]}>★</Text>
                 </View>
                 <Text style={[s.sumCount, { color: C.GOLD }]}>×{count}</Text>
               </View>
@@ -1200,7 +1200,7 @@ export default function SummonScreen({ navigation, route }) {
         </View>
 
         <TouchableOpacity onPress={closeToBanner} activeOpacity={0.85} style={s.closeBtn}>
-          <Ionicons name="close" size={26} color="#fff" />
+          <Ionicons name="close" size={26} color={C.TEXT} />
         </TouchableOpacity>
       </View>
     );
@@ -1215,7 +1215,7 @@ export default function SummonScreen({ navigation, route }) {
           onPress={pullPhase === 'banner' ? () => navigation.goBack() : closeToBanner}
           style={s.headerBack}
         >
-          <Ionicons name={pullPhase === 'banner' ? 'chevron-back' : 'close'} size={22} color="#fff" />
+          <Ionicons name={pullPhase === 'banner' ? 'chevron-back' : 'close'} size={22} color={C.TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>SUMMON</Text>
@@ -1289,7 +1289,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: C.GLASS_7,
   },
   headerBack:  { padding: 4, marginRight: 6 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#fff', letterSpacing: 4 },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
   headerSub:   { fontSize: 10, color: 'rgba(255,255,255,0.65)', marginTop: 1 },
   gemsChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -1363,7 +1363,7 @@ const s = StyleSheet.create({
   ornateRail:    { position: 'absolute', left: 14, right: 14, height: 1 },
   ornateContent: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 12 },
   ornateLabel: {
-    fontSize: 14, fontWeight: '900', color: '#fff', letterSpacing: 2,
+    fontSize: 14, fontWeight: '900', color: C.TEXT, letterSpacing: 2,
     textShadowColor: 'rgba(0,0,0,0.7)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
   ornateSub:     { fontSize: 7, color: C.SUCCESS, fontWeight: '800', letterSpacing: 1, marginTop: 2 },
@@ -1440,7 +1440,7 @@ const s = StyleSheet.create({
   scRankTxt: { fontSize: 9, fontWeight: '900' },
   scName: {
     position: 'absolute', bottom: 16, left: 4, right: 4,
-    fontSize: 8, color: '#fff', fontWeight: '700', textAlign: 'center',
+    fontSize: 8, color: C.TEXT, fontWeight: '700', textAlign: 'center',
     textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
   scNew:    { position: 'absolute', bottom: 4, left: 4, right: 4, alignItems: 'center' },
@@ -1453,7 +1453,7 @@ const s = StyleSheet.create({
     backgroundColor: C.GOLD + 'CC', borderRadius: 3,
     paddingHorizontal: 3, paddingVertical: 1,
   },
-  scFeaturedTxt: { fontSize: 8, color: '#1A0A00', fontWeight: '900' },
+  scFeaturedTxt: { fontSize: 8, color: RANK.SOVEREIGN.text, fontWeight: '900' },
 
   // ── Single card badges ─────────────────────────────────────────────────────
   singleFeatured: {

@@ -144,7 +144,7 @@ const ac = StyleSheet.create({
   card: {
     borderRadius: 12, overflow: 'hidden', borderWidth: 1.5,
     backgroundColor: C.BG_CARD,
-    shadowColor: '#000', shadowRadius: 10, shadowOpacity: 0.45,
+    shadowColor: C.SHADOW, shadowRadius: 10, shadowOpacity: 0.45,
     shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   imgWrap: {
@@ -156,7 +156,7 @@ const ac = StyleSheet.create({
   rankBadge: {
     position: 'absolute', top: 5, right: 5,
     borderRadius: 5, paddingHorizontal: 5, paddingVertical: 2.5, borderWidth: 1,
-    shadowColor: '#000', shadowRadius: 3, shadowOpacity: 0.5,
+    shadowColor: C.SHADOW, shadowRadius: 3, shadowOpacity: 0.5,
     shadowOffset: { width: 0, height: 1 }, elevation: 2,
   },
   rankTxt: { fontSize: 7, fontWeight: '900', letterSpacing: 0.5 },
@@ -194,7 +194,7 @@ const ac = StyleSheet.create({
   buyBtn:     { borderRadius: 7, overflow: 'hidden' },
   buyInner:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, gap: 5 },
   buyCoinIcon:{ width: 10, height: 10 },
-  buyTxt:     { fontSize: 10, fontWeight: '900', color: '#fff', letterSpacing: 0.3 },
+  buyTxt:     { fontSize: 10, fontWeight: '900', color: C.TEXT, letterSpacing: 0.3 },
 });
 
 // ─── Bundle Card ──────────────────────────────────────────────────────────────
@@ -270,7 +270,7 @@ const bc = StyleSheet.create({
     backgroundColor: C.BG_CARD,
     alignItems: 'center', paddingVertical: 12, paddingHorizontal: 8,
     gap: 8, position: 'relative',
-    shadowColor: '#000', shadowRadius: 10, shadowOpacity: 0.45,
+    shadowColor: C.SHADOW, shadowRadius: 10, shadowOpacity: 0.45,
     shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   tag: {
@@ -288,7 +288,7 @@ const bc = StyleSheet.create({
   divider:  { width: '80%', height: 1, borderRadius: 1 },
   buyBtn:   { borderRadius: 8, overflow: 'hidden', width: '88%' },
   buyInner: { paddingVertical: 8, alignItems: 'center' },
-  buyTxt:   { fontSize: 11, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
+  buyTxt:   { fontSize: 11, fontWeight: '900', color: C.TEXT, letterSpacing: 0.5 },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
@@ -578,7 +578,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 7,
     backgroundColor: C.BG_RAISED, borderWidth: 1, borderRadius: 20,
     paddingHorizontal: 16, paddingVertical: 8,
-    shadowColor: '#000', shadowRadius: 6, shadowOpacity: 0.35,
+    shadowColor: C.SHADOW, shadowRadius: 6, shadowOpacity: 0.35,
     shadowOffset: { width: 0, height: 2 }, elevation: 5,
   },
   toastTxt: { fontSize: 11, fontWeight: '800', color: C.TEXT },

@@ -53,7 +53,7 @@ export default function EditProfileScreen({ navigation }) {
           accessibilityLabel="Back"
           accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={20} color="#fff" />
+          <Ionicons name="arrow-back" size={20} color={C.TEXT} />
         </TouchableOpacity>
         <Text style={s.title}>EDIT PROFILE</Text>
         <View style={{ flex: 1 }} />
@@ -63,7 +63,7 @@ export default function EditProfileScreen({ navigation }) {
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={s.saveInner}
           >
-            <Ionicons name="checkmark" size={14} color="#fff" />
+            <Ionicons name="checkmark" size={14} color={C.TEXT} />
             <Text style={s.saveTxt}>SAVE</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -204,13 +204,13 @@ const s = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: C.BORDER,
   },
   backBtn:   { padding: 4 },
-  title:     { fontSize: 13, fontWeight: '900', color: '#fff', letterSpacing: 2.5 },
+  title:     { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 2.5 },
   saveBtn:   { borderRadius: 8, overflow: 'hidden' },
   saveInner: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 16, paddingVertical: 8,
   },
-  saveTxt:   { fontSize: 11, fontWeight: '800', color: '#fff', letterSpacing: 1 },
+  saveTxt:   { fontSize: 11, fontWeight: '800', color: C.TEXT, letterSpacing: 1 },
 
   body:       { flex: 1, flexDirection: 'row' },
 
@@ -274,7 +274,7 @@ const s = StyleSheet.create({
   rankTxt:  { fontSize: 9, fontWeight: '900' },
   heroName: {
     position: 'absolute', bottom: 4, left: 4, right: 4,
-    fontSize: 9, fontWeight: '700', color: '#fff',
+    fontSize: 9, fontWeight: '700', color: C.TEXT,
     textShadowColor: 'rgba(0,0,0,0.9)',
     textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },

@@ -84,7 +84,7 @@ export default function PullHistoryScreen({ navigation }) {
       {/* Header */}
       <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.75}>
-          <Ionicons name="chevron-back" size={22} color="#fff" />
+          <Ionicons name="chevron-back" size={22} color={C.TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>PULL HISTORY</Text>
@@ -167,7 +167,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: C.GLASS_7,
   },
   backBtn:      { padding: 4, marginRight: 6 },
-  headerTitle:  { fontSize: 16, fontWeight: '900', color: '#fff', letterSpacing: 3 },
+  headerTitle:  { fontSize: 16, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
   headerSub:    { fontSize: 10, color: C.TEXT_ON_DARK_SOFT, marginTop: 1 },
   pityChip: {
     flexDirection: 'row', alignItems: 'center', gap: 3,

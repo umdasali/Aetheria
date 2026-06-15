@@ -66,7 +66,7 @@ export default function DailyQuestScreen({ navigation }) {
         {/* ── Header ── */}
         <LinearGradient colors={C.GRAD_HEADER} style={s.header}>
           <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} style={s.backBtn}>
-            <Ionicons name="chevron-back" size={22} color="#fff" />
+            <Ionicons name="chevron-back" size={22} color={C.TEXT} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={s.headerTitle}>DAILY QUESTS</Text>
@@ -223,7 +223,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: C.BORDER,
   },
   backBtn:     { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#fff', letterSpacing: 3 },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
   headerSub:   { fontSize: 10, color: 'rgba(255,255,255,0.6)', marginTop: 1 },
   allDoneBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
@@ -284,7 +284,7 @@ const s = StyleSheet.create({
 
   claimBtn:      { borderRadius: 8, overflow: 'hidden' },
   claimBtnInner: { paddingHorizontal: 14, paddingVertical: 7, alignItems: 'center' },
-  claimBtnText:  { fontSize: 11, fontWeight: '900', color: '#fff', letterSpacing: 1 },
+  claimBtnText:  { fontSize: 11, fontWeight: '900', color: C.TEXT, letterSpacing: 1 },
 
   claimedBadge: {
     backgroundColor: C.SUCCESS + '18', borderRadius: 6,

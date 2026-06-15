@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { View, Animated, StyleSheet, Dimensions } from 'react-native';
+import { FACTION_PARTICLES } from '../theme/colors';
 
 const { width: W, height: H } = Dimensions.get('window');
 const rnd  = (mn, mx) => mn + Math.random() * (mx - mn);
@@ -15,23 +16,9 @@ const EFFECT = {
   KHEMARA:   'sparkle',   // sand & moon — pale dust motes glinting in moonlight
 };
 
-// ─── Color palettes ───────────────────────────────────────────────────────────
-const PAL = {
-  fire:    ['#FF4500', '#FF6B35', '#FF8C00', '#FFA500', '#FFD700'],
-  snow:    ['#FFFFFF', '#E0F7FF', '#B3E5FC', '#81D4FA', '#90E0EF'],
-  sparkle: ['#FFD700', '#FFF9C4', '#FFEE58', '#FFC107', '#FFFFFF'],
-  leaf:    ['#2ECC71', '#27AE60', '#A8E6CF', '#52BE80', '#1ABC9C'],
-  void:    ['#9B59B6', '#8E44AD', '#D7BDE2', '#BB8FCE', '#C39BD3'],
-};
-
-// ─── Glow (shadow) colors per effect ─────────────────────────────────────────
-const GLOW = {
-  fire:    '#FF4500',
-  snow:    '#90E0EF',
-  sparkle: '#FFD700',
-  leaf:    '#2ECC71',
-  void:    '#9B59B6',
-};
+// ─── Color palettes & glows (defined in theme/colors.js) ─────────────────────
+const PAL  = FACTION_PARTICLES.palettes;
+const GLOW = FACTION_PARTICLES.glows;
 
 // ─── Particle generators ──────────────────────────────────────────────────────
 // Counts kept lean: fire 10 / snow 12 / sparkle 9 / leaf 8 / void 10

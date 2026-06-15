@@ -141,7 +141,7 @@ export default function AchievementScreen({ navigation }) {
       {/* Header */}
       <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.75}>
-          <Ionicons name="chevron-back" size={22} color="#fff" />
+          <Ionicons name="chevron-back" size={22} color={C.TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>ACHIEVEMENTS</Text>
@@ -213,7 +213,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: C.GLASS_7,
   },
   backBtn:      { padding: 4, marginRight: 6 },
-  headerTitle:  { fontSize: 16, fontWeight: '900', color: '#fff', letterSpacing: 3 },
+  headerTitle:  { fontSize: 16, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
   headerSub:    { fontSize: 10, color: C.TEXT_ON_DARK_SOFT, marginTop: 1 },
   pendingChip: {
     backgroundColor: C.SECONDARY + '22', borderRadius: 10,
@@ -300,5 +300,5 @@ const s = StyleSheet.create({
 
   claimBtn:     { borderRadius: 6, overflow: 'hidden', marginTop: 2 },
   claimBtnGrad: { paddingHorizontal: 12, paddingVertical: 6 },
-  claimBtnTxt:  { fontSize: 10, fontWeight: '900', color: '#fff', letterSpacing: 1 },
+  claimBtnTxt:  { fontSize: 10, fontWeight: '900', color: C.TEXT, letterSpacing: 1 },
 });

@@ -166,7 +166,8 @@ export const applyTrumpCard = (hero, allies, enemies) => {
     const turns = m ? parseInt(m[1], 10) : 1;
     updatedEnemies = updatedEnemies.map((e) => {
       if (e.currentHp <= 0) return e;
-      return { ...e, stunned: (e.stunned || 0) + turns };
+      // Cap stun at 2 turns (matches applyOnHitDebuff).
+      return { ...e, stunned: Math.min(2, (e.stunned || 0) + turns) };
     });
   }
 
@@ -212,7 +213,8 @@ export const applyOnHitDebuff = (hero, target, isSkill) => {
 
   switch (mechanic) {
     case 'stun':
-      return { ...target, stunned: (target.stunned || 0) + 1 };
+      // Cap stun at 2 turns so repeated procs can't lock an enemy indefinitely.
+      return { ...target, stunned: Math.min(2, (target.stunned || 0) + 1) };
     case 'burn':
       return addOrRefreshEffect(target, {
         type: 'burn', duration: 3,

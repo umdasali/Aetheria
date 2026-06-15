@@ -42,7 +42,7 @@ const ChapterTab = memo(function ChapterTab({ ch, accessible, done, active, onSe
             <Ionicons name="lock-closed" size={13} color={C.TEXT_DISABLED} />
           ) : null}
         </View>
-        <Text style={[styles.chTabTitle, active && { color: '#fff' }]} numberOfLines={1}>
+        <Text style={[styles.chTabTitle, active && { color: C.TEXT }]} numberOfLines={1}>
           {ch.title}
         </Text>
         <Text style={[styles.chTabSub, active && { color: 'rgba(255,255,255,0.65)' }]} numberOfLines={2}>
@@ -198,11 +198,11 @@ export default function StoryScreen({ navigation }) {
           {unlocked && (
             <TouchableOpacity style={styles.enterBtn} onPress={() => handleStagePress(stage)}>
               <LinearGradient
-                colors={isBoss ? [C.DANGER, '#991B1B'] : [chColor, chColor + 'CC']}
+                colors={isBoss ? [C.DANGER, C.DANGER_MID] : [chColor, chColor + 'CC']}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={styles.enterBtnInner}
               >
-                <Ionicons name={completed ? 'refresh' : 'play'} size={12} color="#fff" />
+                <Ionicons name={completed ? 'refresh' : 'play'} size={12} color={C.TEXT} />
                 <Text style={styles.enterBtnTxt}>{completed ? 'Replay' : 'Enter'}</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -220,7 +220,7 @@ export default function StoryScreen({ navigation }) {
         {/* Header */}
         <LinearGradient colors={C.GRAD_HEADER} style={styles.header}>
           <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Home'); }} style={styles.hdrBack}>
-            <Ionicons name="chevron-back" size={22} color="#fff" />
+            <Ionicons name="chevron-back" size={22} color={C.TEXT} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={styles.hdrTitle}>STORY MODE</Text>
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
 
   header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingTop: 8, paddingBottom: 10, gap: 10, borderBottomWidth: 1, borderBottomColor: C.BORDER },
   hdrBack:      { padding: 4 },
-  hdrTitle:     { fontSize: 18, fontWeight: '900', color: '#fff', letterSpacing: 3 },
+  hdrTitle:     { fontSize: 18, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
   hdrSub:       { fontSize: 10, color: 'rgba(255,255,255,0.65)', marginTop: 1 },
   progressPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(217,119,6,0.15)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: C.GOLD },
   progressTxt:  { fontSize: 11, color: C.GOLD, fontWeight: '800' },
@@ -328,5 +328,5 @@ const styles = StyleSheet.create({
 
   enterBtn:      { borderRadius: 8, overflow: 'hidden' },
   enterBtnInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, gap: 5 },
-  enterBtnTxt:   { fontSize: 12, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
+  enterBtnTxt:   { fontSize: 12, fontWeight: '800', color: C.TEXT, letterSpacing: 0.5 },
 });

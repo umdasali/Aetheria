@@ -41,13 +41,46 @@ const DUNGEON_BG_KEY = {
   void_sanctum:     'voidmark',
 };
 
-// Cycles story chapters 1-25 through the 6 backgrounds
+// Cycle used only for the Tower (no per-floor theme to honour)
 const BG_CYCLE = ['emberveil', 'glaciara', 'sunspire', 'verdania', 'voidmark', 'khemara'];
+
+// Per-chapter battlefield theme (chapter number 1-25 → background key).
+// Matches each chapter's actual story theme rather than an arbitrary cycle.
+const CHAPTER_BG = {
+  1:  'glaciara',  // Shattered Veil — ice scouts invade
+  2:  'emberveil', // Ashen Inferno — fire drakes
+  3:  'sunspire',  // Dawn of Radiance — sacred light shrines
+  4:  'verdania',  // Thornwall — twisted ancient forest
+  5:  'verdania',  // Verdant Ruin — bloom corruption of nature
+  6:  'voidmark',  // Shadowbloom — darkness claims nature's crown
+  7:  'voidmark',  // Abyssal Gate — the abyss tears reality open
+  8:  'sunspire',  // Eclipse Rising — radiant light dragon
+  9:  'sunspire',  // Celestial Fracture — the celestial realm
+  10: 'voidmark',  // Void Queen's Reign — corrupted queen
+  11: 'emberveil', // Titan's March — titan army burns everything
+  12: 'voidmark',  // Time's End — the god of time unmakes the timeline
+  13: 'glaciara',  // Eternal Winter — permanent ice
+  14: 'emberveil', // Crimson Empire — blood empress
+  15: 'voidmark',  // World's Last Hour — the World Eater
+  16: 'voidmark',  // Cathedral of Chains — blood and shadow
+  17: 'khemara',   // The Hollow Crown — erased king's domain
+  18: 'sunspire',  // Divided Heaven — divine light and darkness
+  19: 'khemara',   // The Living Archive — ancient library labyrinth
+  20: 'voidmark',  // Before the First Breath — the dreaming entity
+  21: 'voidmark',  // Shadow Sovereign — the shadow realm
+  22: 'voidmark',  // The Cosmic Weave — rewriting reality from a star
+  23: 'glaciara',  // Demon Glacier — ice demon's frost
+  24: 'emberveil', // The Elder Crimson — the crimson bloodline
+  25: 'voidmark',  // The First Entity — predates the gods and the void
+};
 
 function getBattleBg(dungeonMode, dungeonId, towerMode, towerFloor, chapterId) {
   if (dungeonMode && dungeonId) return BATTLE_BG[DUNGEON_BG_KEY[dungeonId] || 'voidmark'];
   if (towerMode)   return BATTLE_BG[BG_CYCLE[(towerFloor - 1) % 6]];
-  if (chapterId)   return BATTLE_BG[BG_CYCLE[(Math.floor(chapterId / 100) - 1) % 6]];
+  if (chapterId) {
+    const chapterNum = Math.floor(chapterId / 100);
+    return BATTLE_BG[CHAPTER_BG[chapterNum] || 'emberveil'];
+  }
   return BATTLE_BG.emberveil;
 }
 
@@ -60,7 +93,14 @@ const TURN_LIMIT          = 50;
 
 // XP awarded per stage part on first clear (part = stageId % 10)
 const STAGE_XP = { 1: 200, 2: 350, 3: 600 };
-const AI_DELAY_MS = 750;
+
+// ── Pacing (all divided by the active battle speed: 1× / 2× / 3×) ─────────────
+const AI_DELAY_MS     = 350;  // "thinking" beat before the enemy acts
+const POST_ACTION_MS  = 250;  // beat after the player's action before the enemy turn
+const RESULT_DELAY_MS = 700;  // pause before navigating to Victory/defeat
+
+// Battle speed persists across battles within a session (not across app restarts).
+let _lastSpeed = 1;
 
 // ── Landscape layout ──────────────────────────────────────────────────────────
 const SIDE_PAD = 8;
@@ -195,6 +235,9 @@ export default function BattleScreen({ navigation, route }) {
   const [playerTeam,     setPlayerTeam]     = useState(buildPlayers);
   const [enemyTeam,      setEnemyTeam]      = useState(buildEnemies);
   const [energy,         setEnergy]         = useState(0);
+  // Shared enemy energy pool — mirrors the player's single energy bar (whichever
+  // enemy acts this turn draws from / feeds this one pool).
+  const [enemyEnergy,    setEnemyEnergy]    = useState(0);
   const [turnNumber,     setTurnNumber]     = useState(1);
   const [turnCount,      setTurnCount]      = useState(0);
   const [currentTurnIdx, setCurrentTurnIdx] = useState(0);
@@ -207,11 +250,20 @@ export default function BattleScreen({ navigation, route }) {
   const [trumpCutIn,     setTrumpCutIn]     = useState(null);
   // Enemy skill cut-in — bosses/mini-bosses get a menacing slam when they unleash a skill
   const [enemyCutIn,     setEnemyCutIn]     = useState(null);
+  // Battle speed: 1 | 2 | 3. Mirrored into a ref so async timers read the latest.
+  const [speed,          setSpeed]          = useState(_lastSpeed);
 
   const aiRunning       = useRef(false);
   const resultTimerRef  = useRef(null);
-  // Round-robin pointer so every living enemy gets turns (boss included)
+  const phaseTimerRef   = useRef(null);
+  // Round-robin pointer so each enemy phase a different living enemy acts.
   const enemyActorRef   = useRef(-1);
+  const speedRef        = useRef(speed);
+  speedRef.current = speed;  // keep enemy-phase / result timers reading the live speed
+
+  const cycleSpeed = useCallback(() => {
+    setSpeed((s) => { const n = s >= 3 ? 1 : s + 1; _lastSpeed = n; return n; });
+  }, []);
   const playerAnims = useRef(mkAnims()).current;
   const enemyAnims  = useRef(mkAnims()).current;
   // Whole-arena impact shake + full-screen flash (cosmetic overlays only —
@@ -237,7 +289,7 @@ export default function BattleScreen({ navigation, route }) {
   }, []));
 
   // Cancel pending victory navigation if the screen unmounts (e.g. quit during the 750ms delay)
-  useEffect(() => () => { clearTimeout(resultTimerRef.current); }, []);
+  useEffect(() => () => { clearTimeout(resultTimerRef.current); clearTimeout(phaseTimerRef.current); }, []);
 
   // Shared quit confirmation — used by both the Quit button and hardware back.
   const confirmQuit = useCallback(() => {
@@ -267,15 +319,23 @@ export default function BattleScreen({ navigation, route }) {
     const a = anims[Math.min(idx, 2)];
     if (!a) return;
     Animated.parallel([
+      // 5-stage decreasing shake — physical impact decay
       Animated.sequence([
-        Animated.timing(a.shake, { toValue: 9,  duration: 50, useNativeDriver: true }),
-        Animated.timing(a.shake, { toValue: -9, duration: 50, useNativeDriver: true }),
-        Animated.timing(a.shake, { toValue: 4,  duration: 50, useNativeDriver: true }),
-        Animated.timing(a.shake, { toValue: 0,  duration: 50, useNativeDriver: true }),
+        Animated.timing(a.shake, { toValue:  12, duration: 36, useNativeDriver: true }),
+        Animated.timing(a.shake, { toValue: -10, duration: 36, useNativeDriver: true }),
+        Animated.timing(a.shake, { toValue:   7, duration: 32, useNativeDriver: true }),
+        Animated.timing(a.shake, { toValue:  -4, duration: 32, useNativeDriver: true }),
+        Animated.timing(a.shake, { toValue:   0, duration: 32, useNativeDriver: true }),
       ]),
+      // Hard flash onset, slow fade
       Animated.sequence([
-        Animated.timing(a.flash, { toValue: 0.85, duration: 70,  useNativeDriver: true }),
-        Animated.timing(a.flash, { toValue: 0,    duration: 280, useNativeDriver: true }),
+        Animated.timing(a.flash, { toValue: 0.95, duration: 48,  useNativeDriver: true }),
+        Animated.timing(a.flash, { toValue: 0,    duration: 340, useNativeDriver: true }),
+      ]),
+      // Scale punch: compress → spring back — feels like absorbing the blow
+      Animated.sequence([
+        Animated.timing(a.scale, { toValue: 0.86, duration: 52, useNativeDriver: true }),
+        Animated.spring(a.scale, { toValue: 1.0, friction: 4, tension: 220, useNativeDriver: true }),
       ]),
     ]).start();
   }, []);
@@ -284,15 +344,17 @@ export default function BattleScreen({ navigation, route }) {
     const a = anims[Math.min(idx, 2)];
     if (!a) return;
     const animations = [
+      // Bigger pop: 1.15 surge with a quick snap back
       Animated.sequence([
-        Animated.timing(a.scale, { toValue: 1.09, duration: 100, useNativeDriver: true }),
-        Animated.timing(a.scale, { toValue: 1.0,  duration: 150, useNativeDriver: true }),
+        Animated.timing(a.scale, { toValue: 1.15, duration: 75,  useNativeDriver: true }),
+        Animated.timing(a.scale, { toValue: 1.0,  duration: 140, useNativeDriver: true }),
       ]),
     ];
     if (direction !== 0 && a.lungeX) {
+      // Faster lunge out, decisive snap back
       animations.push(Animated.sequence([
-        Animated.timing(a.lungeX, { toValue: direction * 14, duration: 90,  useNativeDriver: true }),
-        Animated.timing(a.lungeX, { toValue: 0,              duration: 140, useNativeDriver: true }),
+        Animated.timing(a.lungeX, { toValue: direction * 24, duration: 65,  useNativeDriver: true }),
+        Animated.timing(a.lungeX, { toValue: 0,              duration: 120, useNativeDriver: true }),
       ]));
     }
     Animated.parallel(animations).start();
@@ -329,7 +391,7 @@ export default function BattleScreen({ navigation, route }) {
         practiceMode,
         ...meta,
       });
-    }, 750);
+    }, Math.round(RESULT_DELAY_MS / (speedRef.current || 1)));
   }, [navigation, chapterId, chapterRewards, chapterEnemies, fromStory, practiceMode]);
 
   const checkEnd = useCallback((players, enemies) => {
@@ -421,131 +483,116 @@ export default function BattleScreen({ navigation, route }) {
     aiRunning.current = true;
     setIsAnimating(true);
 
+    const spd     = Math.max(1, speedRef.current || 1);
+    const aiDelay = Math.round(AI_DELAY_MS / spd);
+
     const timer = setTimeout(() => {
-      // ── Tick enemy status effects (burn/poison DOTs, buff expiry) ──────────
+      // Mutable working copies for this phase (state is async; carry our own).
+      let curEnemies = enemyTeam.map((e) => ({ ...e }));
+      let curPlayers = playerTeam.map((p) => ({ ...p, lastDamage: 0 }));
+
+      // ── Phase start: enemy DOTs/expiry, enrage, player regen (once) ─────────
       const dotMsgs = [];
-      let effectsProcessed = false;
-      let curEnemyTeam = enemyTeam.map((e, i) => {
+      curEnemies = curEnemies.map((e, i) => {
         if (e.currentHp <= 0 || !(e.statusEffects || []).length) return e;
-        effectsProcessed = true;
         const { unit, dotDamage, messages } = processStatusEffects(e);
         dotMsgs.push(...messages);
-        // DOT damage gets the same hit feedback as an attack: floating
-        // damage number (via damageKey) + hit flash — it used to be silent.
         if (dotDamage > 0) {
           setTimeout(() => triggerHit(enemyAnims, i), 60);
           return { ...unit, lastDamage: dotDamage, lastCrit: false, damageKey: (e.damageKey || 0) + 1 };
         }
         return unit;
       });
-      if (effectsProcessed) {
-        // A DOT tick can push a boss below 50% — enrage must trigger here too,
-        // not only on player actions.
-        const enr = applyEnrage(curEnemyTeam);
-        curEnemyTeam = enr.team;
-        if (enr.msg) dotMsgs.unshift(enr.msg);
-        setEnemyTeam(curEnemyTeam);
-        if (dotMsgs.length > 0) setStatusMsg(dotMsgs[0]);
-        // Apply player regen so checkEnd sees the post-regen state (DOT could finish
-        // an already-weakened enemy, regen could keep a player alive at the same tick).
-        const regenPlayers = playerTeam.map((p) => {
-          if (p.currentHp <= 0) return p;
-          return processStatusEffects(p).unit;
-        });
-        if (checkEnd(regenPlayers, curEnemyTeam)) {
-          // Game over from DOT — commit regen state and exit
-          setPlayerTeam(regenPlayers);
-          aiRunning.current = false;
-          setIsAnimating(false);
-          return;
+      const enr = applyEnrage(curEnemies);
+      curEnemies = enr.team;
+      if (enr.msg) dotMsgs.unshift(enr.msg);
+      curPlayers = curPlayers.map((p) => (p.currentHp <= 0 ? p : processStatusEffects(p).unit));
+
+      // Helper: end the phase (commit a state, hand control back to the player).
+      // stunDecrement runs once per ROUND for every stunned enemy, so a 2-stack
+      // always clears in exactly two rounds — the count visibly ticks down.
+      const finishPhase = (enemies, players, message) => {
+        const ticked = enemies.map((e) =>
+          (e.stunned || 0) > 0 ? { ...e, stunned: e.stunned - 1 } : e
+        );
+        setEnemyTeam(ticked);
+        setPlayerTeam(players);
+        if (message) setStatusMsg(message);
+        if (!checkEnd(players, ticked)) {
+          setCurrentTurnIdx(nextPlayerIdx(players, currentTurnIdx));
+          setEnergy((p) => Math.min(MAX_ENERGY, p + ENERGY_PER_TURN));
+          setTurnNumber((t) => t + 1);
+          setIsEnemyTurn(false);
         }
-        setCurrentTurnIdx(nextPlayerIdx(regenPlayers, currentTurnIdx));
-        // Game continues: don't setPlayerTeam here — the AI action block below
-        // rebuilds np from playerTeam and applies regen itself before setting state.
+        aiRunning.current = false;
+        setIsAnimating(false);
+      };
+
+      // A DOT tick may have ended the battle before any enemy acts.
+      if (checkEnd(curPlayers, curEnemies)) {
+        setEnemyTeam(curEnemies);
+        setPlayerTeam(curPlayers);
+        if (dotMsgs.length > 0) setStatusMsg(dotMsgs[0]);
+        aiRunning.current = false;
+        setIsAnimating(false);
+        return;
       }
 
-      // ── Round-robin actor selection ──────────────────────────────────────
-      // Rotate through living enemies so every enemy gets turns. Previously
-      // only the FIRST living enemy ever acted, which meant a boss listed
-      // last never attacked until its mobs were dead — and stun counters on
-      // non-acting enemies froze forever.
-      const len = curEnemyTeam.length;
+      // ── Pick ONE actor (round-robin), skipping stunned enemies so the team
+      //    still acts while a stunned enemy waits out its turns. ──────────────
+      const len = curEnemies.length;
       let actorIdx = -1;
       for (let k = 1; k <= len; k++) {
         const idx = (enemyActorRef.current + k) % len;
-        if (curEnemyTeam[idx]?.currentHp > 0) { actorIdx = idx; break; }
+        const e = curEnemies[idx];
+        if (e?.currentHp > 0 && (e.stunned || 0) <= 0) { actorIdx = idx; break; }
       }
-      const actor = actorIdx >= 0 ? curEnemyTeam[actorIdx] : null;
-      if (actorIdx >= 0) enemyActorRef.current = actorIdx;
 
-      if (!actor) {
-        aiRunning.current = false;
-        setIsAnimating(false);
-        setIsEnemyTurn(false);
+      // Every living enemy is stunned (or none left) → enemy team forfeits the
+      // round, but stuns still tick down so the lock can't last forever.
+      if (actorIdx < 0) {
+        const stunnedName = curEnemies.find((e) => e.currentHp > 0 && (e.stunned || 0) > 0)?.name;
+        finishPhase(curEnemies, curPlayers, stunnedName ? `${stunnedName} is stunned!` : (dotMsgs[0] || ''));
         return;
       }
+      enemyActorRef.current = actorIdx;
+      const actor = curEnemies[actorIdx];
 
-      // Chill debuff halves passive energy gain
-      const chilled = (actor.statusEffects || []).some((fx) => fx.type === 'chill');
+      // Shared enemy energy pool: this turn's actor draws from / feeds it.
+      // Chill on the acting enemy halves the round's energy gain.
+      const chilled     = (actor.statusEffects || []).some((fx) => fx.type === 'chill');
       const energyGain  = chilled ? Math.floor(ENEMY_ENERGY_TURN * 0.5) : ENEMY_ENERGY_TURN;
-      const actorEnergy = Math.min(MAX_ENERGY, (actor.energy || 0) + energyGain);
-
-      if ((actor.stunned || 0) > 0) {
-        setEnemyTeam(curEnemyTeam.map((e, i) =>
-          i === actorIdx ? { ...e, stunned: e.stunned - 1, energy: actorEnergy } : e
-        ));
-        // Apply player regen passives on stun-skip
-        const npRegen = playerTeam.map((p) => {
-          if (p.currentHp <= 0) return p;
-          return processStatusEffects(p).unit;
-        });
-        setStatusMsg(`${actor.name} is stunned!`);
-        setPlayerTeam(npRegen);
-        setCurrentTurnIdx(nextPlayerIdx(npRegen, currentTurnIdx));
-        setEnergy((p) => Math.min(MAX_ENERGY, p + ENERGY_PER_TURN));
-        setTurnNumber((t) => t + 1);
-        setIsEnemyTurn(false);
-        aiRunning.current = false;
-        setIsAnimating(false);
-        return;
-      }
+      const actorEnergy = Math.min(MAX_ENERGY, enemyEnergy + energyGain);
 
       const actorHpRatio = actor.maxHp > 0 ? actor.currentHp / actor.maxHp : 1.0;
-      const aiAction = getSmartAIAction(actor, playerTeam, actorEnergy, ENEMY_SKILL_COSTS, actor.tier || 'mob', actorHpRatio);
-      if (!aiAction) {
-        aiRunning.current = false;
-        setIsAnimating(false);
-        setIsEnemyTurn(false);
+      const aiAction = getSmartAIAction(actor, curPlayers, actorEnergy, ENEMY_SKILL_COSTS, actor.tier || 'mob', actorHpRatio);
+
+      // No action / chosen target already gone → bank energy and end the round.
+      const target = aiAction ? curPlayers[aiAction.targetIdx] : null;
+      if (!aiAction || !target || target.currentHp <= 0) {
+        setEnemyEnergy(actorEnergy);
+        finishPhase(curEnemies, curPlayers, dotMsgs[0] || '');
         return;
       }
 
-      const { targetIdx } = aiAction;
-      const target = playerTeam[targetIdx];
-      if (!target) {
-        aiRunning.current = false;
-        setIsAnimating(false);
-        setIsEnemyTurn(false);
-        return;
-      }
-
-      let np  = playerTeam.map((p) => ({ ...p, lastDamage: 0 }));
-      let msg = '';
+      const targetIdx = aiAction.targetIdx;
+      let msg = dotMsgs[0] || '';
       let energyAfter = actorEnergy;
       let lastDmg = 0;
 
       if (aiAction.action === 'attack') {
         const { damage, isCrit, blocked, dodged } = calculateDamage(actor, target, 1.0);
         if (blocked) {
-          np[targetIdx] = { ...np[targetIdx], shield: Math.max(0, np[targetIdx].shield - 1) };
+          curPlayers[targetIdx] = { ...curPlayers[targetIdx], shield: Math.max(0, curPlayers[targetIdx].shield - 1) };
           msg = `${target.name}'s shield blocked!`;
         } else if (dodged) {
           msg = `${target.name} dodged ${actor.name}'s attack!`;
         } else {
-          np[targetIdx] = {
-            ...np[targetIdx],
-            currentHp:  Math.max(0, np[targetIdx].currentHp - damage),
+          curPlayers[targetIdx] = {
+            ...curPlayers[targetIdx],
+            currentHp:  Math.max(0, curPlayers[targetIdx].currentHp - damage),
             lastDamage: damage, lastCrit: isCrit,
-            damageKey:  (np[targetIdx].damageKey || 0) + 1,
+            damageKey:  (curPlayers[targetIdx].damageKey || 0) + 1,
           };
           lastDmg = damage;
           msg = `${actor.name} attacks${isCrit ? ' — CRITICAL!' : ''}`;
@@ -558,25 +605,22 @@ export default function BattleScreen({ navigation, route }) {
         const skill     = actor.skills[aiAction.skillIdx];
         const skillCost = ENEMY_SKILL_COSTS[aiAction.skillIdx] ?? ENEMY_SKILL_COSTS[0];
         if (skill) {
-          // Signature moment for elites: a boss/mini-boss unleashing a skill gets a
-          // menacing full-screen cut-in + impact shake. Regular mobs stay quick so the
-          // pace doesn't drown in cinematics.
           if (actor.tier === 'boss' || actor.tier === 'mini-boss') {
             setEnemyCutIn({ ...actor, _skillName: skill.name });
             triggerShake(10);
           }
           const { damage, isCrit, blocked, dodged } = calculateDamage(actor, target, skill.damage);
           if (blocked) {
-            np[targetIdx] = { ...np[targetIdx], shield: Math.max(0, np[targetIdx].shield - 1) };
+            curPlayers[targetIdx] = { ...curPlayers[targetIdx], shield: Math.max(0, curPlayers[targetIdx].shield - 1) };
             msg = `${target.name}'s shield blocked ${skill.name}!`;
           } else if (dodged) {
             msg = `${target.name} dodged ${skill.name}!`;
           } else {
-            np[targetIdx] = {
-              ...np[targetIdx],
-              currentHp:  Math.max(0, np[targetIdx].currentHp - damage),
+            curPlayers[targetIdx] = {
+              ...curPlayers[targetIdx],
+              currentHp:  Math.max(0, curPlayers[targetIdx].currentHp - damage),
               lastDamage: damage, lastCrit: isCrit,
-              damageKey:  (np[targetIdx].damageKey || 0) + 1,
+              damageKey:  (curPlayers[targetIdx].damageKey || 0) + 1,
             };
             lastDmg = damage;
             msg = `${actor.name}: ${skill.name}${isCrit ? ' — CRIT!' : ''}`;
@@ -588,42 +632,24 @@ export default function BattleScreen({ navigation, route }) {
         }
       }
 
-      // Thornstrike reflect: if hit player has thornstrike passive, reflect 15% to attacker
-      let updatedEnemyTeam = curEnemyTeam.map((e, i) =>
-        i === actorIdx ? { ...e, energy: energyAfter } : e
-      );
+      // Commit the shared pool.
+      setEnemyEnergy(energyAfter);
+
+      // Thornstrike reflect: hit player with thornstrike reflects 15% back.
       if (lastDmg > 0 && EFFECT_MECHANICS[target.effect] === 'thornstrike') {
         const reflect = Math.floor(lastDmg * 0.15);
-        updatedEnemyTeam = updatedEnemyTeam.map((e, i) =>
+        curEnemies = curEnemies.map((e, i) =>
           i === actorIdx ? { ...e, currentHp: Math.max(0, e.currentHp - reflect) } : e
         );
         msg += ` (reflected ${reflect})`;
       }
 
-      // Apply player regen passives at end of enemy turn
-      np = np.map((p) => {
-        if (p.currentHp <= 0) return p;
-        return processStatusEffects(p).unit;
-      });
-
-      setStatusMsg(msg);
-      setPlayerTeam(np);
-      setEnemyTeam(updatedEnemyTeam);
-
-      if (!checkEnd(np, updatedEnemyTeam)) {
-        setCurrentTurnIdx(nextPlayerIdx(np, currentTurnIdx));
-        setEnergy((p) => Math.min(MAX_ENERGY, p + ENERGY_PER_TURN));
-        setTurnNumber((t) => t + 1);
-        setIsEnemyTurn(false);
-      }
-
-      aiRunning.current = false;
-      setIsAnimating(false);
-    }, AI_DELAY_MS);
+      finishPhase(curEnemies, curPlayers, msg);
+    }, aiDelay);
 
     return () => clearTimeout(timer);
   // Intentional stale closure: only re-trigger when the turn flips or the battle ends.
-  // Including playerTeam/enemyTeam would re-fire mid-turn as those are mutated inside this effect.
+  // Including playerTeam/enemyTeam would re-fire mid-turn as those are mutated here.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnemyTurn, battleResult]);
 
@@ -770,13 +796,13 @@ export default function BattleScreen({ navigation, route }) {
       ne.forEach((e, i) => { if ((e.lastDamage || 0) > 0) triggerHit(enemyAnims, i); });
       msg = `${hero.name}: ${hero.trumpCard.name}!`;
       newEnergy = 0;
-      // Signature moment: full-screen cinematic cut-in + heavy impact feedback.
-      // Capture the post-fusion rank so the card shows its true rarity, not base.
+      // Signature moment: shake + blinding flash FIRST, then cut-in slides in
+      // through the fading brightness — identical to the summon reveal design.
       const hd = getHeroData(hero.id);
       const cutInRank = hero.sovereign ? 'SOVEREIGN' : (hd?.effectiveRank || hero.rank);
-      setTrumpCutIn({ ...hero, _effRank: cutInRank });
-      triggerScreenFlash(0.55);
-      triggerShake(14);
+      triggerShake(18);
+      triggerScreenFlash(0.82);
+      setTimeout(() => setTrumpCutIn({ ...hero, _effRank: cutInRank }), 160);
       trackQuestProgress('use_trump');
       trackAchievementProgress('trumpCardsUsed', 1);
     }
@@ -807,7 +833,7 @@ export default function BattleScreen({ navigation, route }) {
         }
       }
       setIsAnimating(false);
-    }, 500);
+    }, Math.round(POST_ACTION_MS / (speedRef.current || 1)));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnemyTurn, isAnimating, battleResult, enemyCutIn, playerTeam, enemyTeam,
       energy, currentTurnIdx, selectedEnemy, turnCount,
@@ -880,6 +906,18 @@ export default function BattleScreen({ navigation, route }) {
             </Text>
           </View>
 
+          {/* Battle-speed toggle: cycles 1× → 2× → 3× */}
+          <TouchableOpacity
+            style={[S.speedBtn, speed > 1 && S.speedBtnActive]}
+            onPress={cycleSpeed}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel={`Battle speed ${speed} times, tap to change`}
+          >
+            <Ionicons name="play-forward" size={11} color={speed > 1 ? C.GOLD : C.TEXT_MUTED} />
+            <Text style={[S.speedBtnTxt, speed > 1 && { color: C.GOLD }]}>{speed}×</Text>
+          </TouchableOpacity>
+
           <Text style={S.turnLabel}>Round {turnNumber}  ·  <Text style={S.turnCountLabel}>Act {turnCount}/{TURN_LIMIT}</Text></Text>
 
           <View style={S.energyWrap}>
@@ -910,6 +948,25 @@ export default function BattleScreen({ navigation, route }) {
           {/* — Enemy side — */}
           <View style={S.teamSide}>
             <Text style={[S.teamLabel, { color: C.SECONDARY }]}>ENEMY TEAM</Text>
+
+            {/* Shared enemy energy + skill-intent telegraph (mirrors player's bar) */}
+            <View style={S.enTeamEnergyRow}>
+              <Text style={S.enTeamEnergyLbl}>⚡ {enemyEnergy}</Text>
+              <View style={S.enTeamEnergyBg}>
+                <LinearGradient
+                  colors={enemyEnergy >= ENEMY_SKILL_COSTS[0] ? C.GRAD_GOLD : [C.SECONDARY_DARK, C.SECONDARY]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={[S.enTeamEnergyFill, { width: `${Math.min(100, enemyEnergy)}%` }]}
+                />
+              </View>
+              {enemyEnergy >= ENEMY_SKILL_COSTS[0] && (
+                <View style={S.enTeamIntent}>
+                  <Ionicons name="flash" size={9} color={C.GOLD} />
+                  <Text style={S.enTeamIntentTxt}>SKILL</Text>
+                </View>
+              )}
+            </View>
+
             <View style={S.cardRow}>
               {enemyTeam.map((e, i) => (
                 <BattleCard
@@ -1153,6 +1210,36 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
   const hpRatio  = unit.maxHp > 0 ? Math.max(0, unit.currentHp / unit.maxHp) : 0;
   const defeated = unit.currentHp <= 0;
 
+  // Gentle vertical float on the active hero — signals whose turn it is
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!isActive || defeated) { floatAnim.setValue(0); return; }
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(floatAnim, { toValue: -5, duration: 850, useNativeDriver: true }),
+      Animated.timing(floatAnim, { toValue:  0, duration: 850, useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, [isActive, defeated, floatAnim]);
+
+  // Death animation — scale down + fade when HP hits 0 (plays once per defeat)
+  const deathAlpha = useRef(new Animated.Value(1)).current;
+  const deathScale = useRef(new Animated.Value(1)).current;
+  const wasDefeated = useRef(false);
+  useEffect(() => {
+    if (defeated && !wasDefeated.current) {
+      wasDefeated.current = true;
+      Animated.parallel([
+        Animated.timing(deathAlpha, { toValue: 0.32, duration: 480, useNativeDriver: true }),
+        Animated.timing(deathScale, { toValue: 0.84, duration: 380, useNativeDriver: true }),
+      ]).start();
+    } else if (!defeated) {
+      wasDefeated.current = false;
+      deathAlpha.setValue(1);
+      deathScale.setValue(1);
+    }
+  }, [defeated, deathAlpha, deathScale]);
+
   // Ghost HP trail — amber bar that lingers at the old HP level, then catches up
   const prevHpRatioRef = useRef(hpRatio);
   const [ghostRatio, setGhostRatio] = useState(hpRatio);
@@ -1252,11 +1339,13 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
         {
           borderColor: cardBorderColor,
           borderWidth: isSelected || isActive ? 2.5 : 1,
-          opacity: defeated ? 0.4 : 1,
+          opacity: deathAlpha,
           transform: [
             { translateX: shakeAnim ?? _shake },
             { translateX: lungeAnim ?? _lungeX },
+            { translateY: floatAnim },
             { scale:      scaleAnim ?? _scale },
+            { scale:      deathScale },
           ],
         },
       ]}>
@@ -1335,7 +1424,9 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
               const d = STATUS_DISPLAY.stun;
               return (
                 <View style={[S.statusEffectBadge, { backgroundColor: d.color + '33', borderColor: d.color }]}>
-                  <Text style={[S.statusEffectText, { color: d.color }]}>{d.label}</Text>
+                  <Text style={[S.statusEffectText, { color: d.color }]}>
+                    {unit.stunned > 1 ? `${d.label}·${unit.stunned}` : d.label}
+                  </Text>
                 </View>
               );
             })()}
@@ -1400,7 +1491,7 @@ const FloatingDamage = React.memo(function FloatingDamage({ value, isCrit, trigg
       S.floatDmg,
       {
         fontSize:  isCrit ? 18 : 13,
-        color:     isCrit ? C.GOLD : '#fff',
+        color:     isCrit ? C.GOLD : C.TEXT,
         transform: [{ translateY: yAnim }, { scale: scAnim }],
         opacity:   opAnim,
       },
@@ -1631,6 +1722,15 @@ const S = StyleSheet.create({
   energyBg:   { height: 5, backgroundColor: C.BG_MID, borderRadius: 3, overflow: 'hidden' },
   energyFill: { height: 5, borderRadius: 3 },
 
+  speedBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingHorizontal: 8, paddingVertical: 5,
+    borderRadius: 8, borderWidth: 1,
+    borderColor: C.BORDER, backgroundColor: C.GLASS_3,
+  },
+  speedBtnActive: { borderColor: C.GOLD, backgroundColor: C.GOLD_GLOW },
+  speedBtnTxt:    { fontSize: 11, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 0.3 },
+
   turnPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     borderRadius: 8, borderWidth: 1,
@@ -1680,6 +1780,15 @@ const S = StyleSheet.create({
   hpBarBg:     { flex: 1, height: 5, backgroundColor: C.BG_BOTTOM, borderRadius: 3, overflow: 'hidden' },
   hpBarFill:   { height: 5, borderRadius: 3 },
   hpGhostFill: { position: 'absolute', top: 0, left: 0, height: 5, backgroundColor: C.WARNING, borderRadius: 3, opacity: 0.45 },
+
+  // Shared enemy-team energy bar (under the ENEMY TEAM label; mirrors the
+  // player's single energy bar in the header).
+  enTeamEnergyRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6, paddingHorizontal: 6 },
+  enTeamEnergyLbl: { fontSize: 8, fontWeight: '800', color: C.GOLD, letterSpacing: 0.5 },
+  enTeamEnergyBg:  { flex: 1, height: 5, backgroundColor: C.BG_MID, borderRadius: 3, overflow: 'hidden' },
+  enTeamEnergyFill:{ height: 5, borderRadius: 3 },
+  enTeamIntent:    { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  enTeamIntentTxt: { fontSize: 7, fontWeight: '900', color: C.GOLD, letterSpacing: 0.3 },
 
   card: {
     width: CARD_W,

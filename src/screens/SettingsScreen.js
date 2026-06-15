@@ -307,7 +307,7 @@ export default function SettingsScreen({ navigation }) {
       <SafeAreaView edges={['top', 'left', 'right']}>
         <LinearGradient colors={C.GRAD_HEADER} style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={22} color="#fff" />
+            <Ionicons name="chevron-back" size={22} color={C.TEXT} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>SETTINGS</Text>
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)',
   },
   backBtn:     { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#fff', letterSpacing: 4 },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
   headerSub:   { fontSize: 10, color: 'rgba(255,255,255,0.55)', marginTop: 1 },
   headerIcon:  { padding: 6 },
 
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
     width: 16, height: 16, borderRadius: 8,
     backgroundColor: C.THUMB,
     borderWidth: 2,
-    shadowColor: '#000', shadowOpacity: 0.35,
+    shadowColor: C.SHADOW, shadowOpacity: 0.35,
     shadowOffset: { width: 0, height: 2 }, shadowRadius: 4,
     elevation: 4,
   },

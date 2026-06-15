@@ -93,7 +93,7 @@ function PrimaryBtn({ label, onPress, disabled, loading }) {
         style={s.btnGrad}
       >
         {loading
-          ? <ActivityIndicator size="small" color="#fff" />
+          ? <ActivityIndicator size="small" color={C.TEXT} />
           : <Text style={s.btnTxt}>{label}</Text>}
       </LinearGradient>
     </TouchableOpacity>
@@ -363,7 +363,7 @@ export default function CloudAuthScreen({ navigation }) {
       <>
         <View style={s.verifyIconRow}>
           <LinearGradient colors={[C.SUCCESS + 'CC', C.CYAN]} style={s.verifyIcon}>
-            <Ionicons name="mail-open-outline" size={22} color="#fff" />
+            <Ionicons name="mail-open-outline" size={22} color={C.TEXT} />
           </LinearGradient>
           <View style={{ flex: 1, marginLeft: 10 }}>
             <Text style={s.formTitle}>Verify Your Email</Text>
@@ -408,7 +408,7 @@ export default function CloudAuthScreen({ navigation }) {
         {/* Header */}
         <LinearGradient colors={C.GRAD_HEADER} style={s.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={22} color="#fff" />
+            <Ionicons name="chevron-back" size={22} color={C.TEXT} />
           </TouchableOpacity>
           <Text style={s.headerTitle}>CONNECT ACCOUNT</Text>
         </LinearGradient>
@@ -428,7 +428,7 @@ export default function CloudAuthScreen({ navigation }) {
               />
               <View style={s.brandIcon}>
                 <LinearGradient colors={[C.PRIMARY, C.SECONDARY]} style={s.brandIconGrad}>
-                  <Ionicons name="cloud-outline" size={24} color="#fff" />
+                  <Ionicons name="cloud-outline" size={24} color={C.TEXT} />
                 </LinearGradient>
               </View>
               <Text style={s.brandTitle}>Cloud Save</Text>
@@ -462,7 +462,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)',
   },
   backBtn:     { padding: 4 },
-  headerTitle: { fontSize: 15, fontWeight: '900', color: '#fff', letterSpacing: 3 },
+  headerTitle: { fontSize: 15, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
 
   body: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
 
@@ -526,7 +526,7 @@ const s = StyleSheet.create({
   btn:         { borderRadius: 8, overflow: 'hidden', marginBottom: 8 },
   btnDisabled: { opacity: 0.45 },
   btnGrad:     { paddingVertical: 10, alignItems: 'center' },
-  btnTxt:      { fontSize: 11, fontWeight: '900', color: '#fff', letterSpacing: 1.5 },
+  btnTxt:      { fontSize: 11, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
 
   linksRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   linkBtn:  { paddingVertical: 4 },

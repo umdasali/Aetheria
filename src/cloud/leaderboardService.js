@@ -78,12 +78,25 @@ export async function fetchTopN(category, limit = 50) {
 }
 
 /**
+ * The currently signed-in user's id, or null when signed out.
+ */
+export async function getCurrentUserId() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
+
+/**
  * Fetch the signed-in user's rank and score for a category.
- * Returns { rank, score, error }.
+ * Returns { rank, score, userId, error }.
+ *
+ * Rank uses DENSE ranking (tied scores share a rank) so it stays consistent with
+ * fetchTopN — e.g. scores [100,100,90] rank the 90 as #2, not #3. This is the
+ * fallback used only when the player is outside the fetched top-N window; inside
+ * it the screen derives the rank directly from the listed row.
  */
 export async function fetchOwnRank(category) {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { rank: null, score: null, error: 'not_signed_in' };
+  if (!user) return { rank: null, score: null, userId: null, error: 'not_signed_in' };
 
   // Get own score
   const { data: ownRow, error: ownErr } = await supabase
@@ -93,16 +106,17 @@ export async function fetchOwnRank(category) {
     .eq('category', category)
     .single();
 
-  if (ownErr || !ownRow) return { rank: null, score: null, error: ownErr };
+  if (ownErr || !ownRow) return { rank: null, score: null, userId: user.id, error: ownErr };
 
-  // Count how many scores are strictly higher
-  const { count, error: countErr } = await supabase
+  // Dense rank = 1 + number of DISTINCT scores strictly higher than ours.
+  const { data: higher, error: higherErr } = await supabase
     .from('leaderboards')
-    .select('*', { count: 'exact', head: true })
+    .select('score')
     .eq('category', category)
     .gt('score', ownRow.score);
 
-  if (countErr) return { rank: null, score: ownRow.score, error: countErr };
+  if (higherErr) return { rank: null, score: ownRow.score, userId: user.id, error: higherErr };
 
-  return { rank: (count ?? 0) + 1, score: ownRow.score, error: null };
+  const distinctHigher = new Set((higher ?? []).map(r => r.score)).size;
+  return { rank: distinctHigher + 1, score: ownRow.score, userId: user.id, error: null };
 }

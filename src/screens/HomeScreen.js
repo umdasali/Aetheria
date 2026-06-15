@@ -250,7 +250,7 @@ export default function HomeScreen({ navigation }) {
                 {avatarHero?.image ? (
                   <Image source={avatarHero.image} style={styles.avatarImg} />
                 ) : (
-                  <Ionicons name="person" size={18} color="#fff" />
+                  <Ionicons name="person" size={18} color={C.TEXT} />
                 )}
                 <LinearGradient
                   colors={['transparent', 'rgba(0,0,0,0.55)']}
@@ -454,7 +454,7 @@ export default function HomeScreen({ navigation }) {
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.achBtnViewInner}
                 >
-                  <Ionicons name="ribbon-outline" size={13} color="#fff" />
+                  <Ionicons name="ribbon-outline" size={13} color={C.TEXT} />
                   <Text style={styles.achBtnViewTxt}>VIEW ACHIEVEMENTS</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -473,7 +473,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.msOverlay}>
           <View style={styles.msCard}>
             <LinearGradient
-              colors={['#0E0525', '#1A0840']}
+              colors={C.GRAD_PANEL}
               style={StyleSheet.absoluteFill}
             />
             <View style={[styles.msAccent, { backgroundColor: C.GOLD }]} />
@@ -510,7 +510,7 @@ export default function HomeScreen({ navigation }) {
                   styles.msRankBadge,
                   { backgroundColor: RANK[milestoneHero.rank]?.bg ?? C.PRIMARY },
                 ]}>
-                  <Text style={[styles.msRankText, { color: RANK[milestoneHero.rank]?.text ?? '#fff' }]}>
+                  <Text style={[styles.msRankText, { color: RANK[milestoneHero.rank]?.text ?? C.TEXT }]}>
                     {milestoneHero.rank}
                   </Text>
                 </View>
@@ -716,9 +716,9 @@ const styles = StyleSheet.create({
   avatarOverlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
 
   nameRow:    { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 },
-  playerName: { fontSize: 11, fontWeight: '800', color: '#fff', letterSpacing: 0.8 },
+  playerName: { fontSize: 11, fontWeight: '800', color: C.TEXT, letterSpacing: 0.8 },
   lvBadge:    { borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 },
-  lvText:     { fontSize: 10, color: '#fff', fontWeight: '900', letterSpacing: 0.5 },
+  lvText:     { fontSize: 10, color: C.TEXT, fontWeight: '900', letterSpacing: 0.5 },
 
   xpOuter: {
     width: 88, height: 3,
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 6,
-    shadowColor: '#000',
+    shadowColor: C.SHADOW,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.40,
     shadowRadius: 4,
@@ -882,14 +882,14 @@ const styles = StyleSheet.create({
   panelContent: { flex: 1, paddingVertical: 6, paddingLeft: 8, paddingRight: 6 },
   panelTagRow:  { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
   panelTag:     { borderRadius: 3, paddingHorizontal: 6, paddingVertical: 2 },
-  panelTagText: { fontSize: 10, color: '#fff', fontWeight: '900', letterSpacing: 1.5 },
+  panelTagText: { fontSize: 10, color: C.TEXT, fontWeight: '900', letterSpacing: 1.5 },
   panelNewBadge: {
     backgroundColor: C.SECONDARY, borderRadius: 3,
     paddingHorizontal: 5, paddingVertical: 1,
   },
-  panelNewText:  { fontSize: 10, color: '#fff', fontWeight: '900', letterSpacing: 1 },
+  panelNewText:  { fontSize: 10, color: C.TEXT, fontWeight: '900', letterSpacing: 1 },
   panelTitle: {
-    fontSize: 12, color: '#fff', fontWeight: '800', letterSpacing: 0.3,
+    fontSize: 12, color: C.TEXT, fontWeight: '800', letterSpacing: 0.3,
     textShadowColor: 'rgba(0,0,0,0.7)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
   panelSub:    { fontSize: 9, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
@@ -912,7 +912,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.PRIMARY, borderRadius: 3,
     paddingHorizontal: 6, paddingVertical: 2,
   },
-  tickerTagText: { fontSize: 10, color: '#fff', fontWeight: '900', letterSpacing: 1.5 },
+  tickerTagText: { fontSize: 10, color: C.TEXT, fontWeight: '900', letterSpacing: 1.5 },
   tickerText:    { fontSize: 9, color: 'rgba(255,255,255,0.42)', flex: 1, letterSpacing: 0.3 },
 
   // ── Milestone modal ───────────────────────────────────────────────────────
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
     letterSpacing: 3, marginBottom: 4, marginTop: 4,
   },
   msChapters: {
-    fontSize: 18, fontWeight: '900', color: '#fff',
+    fontSize: 18, fontWeight: '900', color: C.TEXT,
     letterSpacing: 2, textAlign: 'center', marginBottom: 4,
   },
   msSub: {
@@ -959,7 +959,7 @@ const styles = StyleSheet.create({
   msRankBadge: {
     position: 'absolute', top: 6, right: -8,
     borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3,
-    shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 4, elevation: 6,
+    shadowColor: C.SHADOW, shadowOpacity: 0.5, shadowRadius: 4, elevation: 6,
   },
   msRankText: { fontSize: 12, fontWeight: '900' },
   msAscRow:      { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 8, borderWidth: 1, borderColor: C.GOLD + '40', backgroundColor: C.GOLD + '0C', paddingHorizontal: 10, paddingVertical: 8, width: '100%', marginBottom: 10 },
@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13, alignItems: 'center',
   },
   msBtnText: {
-    fontSize: 14, fontWeight: '900', color: '#fff', letterSpacing: 2,
+    fontSize: 14, fontWeight: '900', color: C.TEXT, letterSpacing: 2,
   },
 
   // ── Achievement unlock modal ──────────────────────────────────────────────
@@ -1053,6 +1053,6 @@ const styles = StyleSheet.create({
     gap: 7, paddingVertical: 12,
   },
   achBtnViewTxt: {
-    fontSize: 11, fontWeight: '900', color: '#fff', letterSpacing: 1.5,
+    fontSize: 11, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5,
   },
 });

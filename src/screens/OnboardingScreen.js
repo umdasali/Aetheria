@@ -96,7 +96,7 @@ export default function OnboardingScreen({ navigation }) {
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.iconGradient}
               >
-                <Ionicons name={current.icon} size={36} color="#fff" />
+                <Ionicons name={current.icon} size={36} color={C.TEXT} />
               </LinearGradient>
             </View>
           </View>
@@ -128,7 +128,7 @@ export default function OnboardingScreen({ navigation }) {
                 style={styles.nextBtnInner}
               >
                 <Text style={styles.nextText}>{isLast ? 'TRY A BATTLE' : 'NEXT'}</Text>
-                <Ionicons name={isLast ? 'flash' : 'chevron-forward'} size={14} color="#fff" />
+                <Ionicons name={isLast ? 'flash' : 'chevron-forward'} size={14} color={C.TEXT} />
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -207,5 +207,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingVertical: 11, paddingHorizontal: 28,
   },
-  nextText: { fontSize: 13, fontWeight: '900', color: '#fff', letterSpacing: 1.5 },
+  nextText: { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
 });

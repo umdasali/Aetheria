@@ -423,7 +423,7 @@ export default function VictoryScreen({ navigation, route }) {
                       {/* Flash overlay */}
                       <Animated.View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, { backgroundColor: '#fff', opacity: xpFlash, borderRadius: 10 }]}
+                        style={[StyleSheet.absoluteFill, { backgroundColor: C.FLASH_WHITE, opacity: xpFlash, borderRadius: 10 }]}
                       />
 
                       {/* Header row */}
@@ -499,7 +499,7 @@ export default function VictoryScreen({ navigation, route }) {
                 <>
                   <TouchableOpacity style={S.primaryBtn} onPress={handleBackDungeon} activeOpacity={0.85}>
                     <LinearGradient colors={[C.PRIMARY_DARK, C.PRIMARY]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
-                      <Ionicons name="flash" size={14} color="#fff" />
+                      <Ionicons name="flash" size={14} color={C.TEXT} />
                       <Text style={S.primaryBtnTxt}>Keep Farming</Text>
                       <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.8)" />
                     </LinearGradient>
@@ -513,7 +513,7 @@ export default function VictoryScreen({ navigation, route }) {
                 <>
                   <TouchableOpacity style={S.retryBtn} onPress={handleBackDungeon} activeOpacity={0.85}>
                     <LinearGradient colors={[C.DANGER, C.DANGER_DARK]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
-                      <Ionicons name="refresh" size={14} color="#fff" />
+                      <Ionicons name="refresh" size={14} color={C.TEXT} />
                       <Text style={S.primaryBtnTxt}>Try Again</Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -530,7 +530,7 @@ export default function VictoryScreen({ navigation, route }) {
                   {/* Primary: Next Floor */}
                   <TouchableOpacity style={S.primaryBtn} onPress={handleNextFloor} activeOpacity={0.85}>
                     <LinearGradient colors={[C.GOLD_DARK, C.GOLD]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
-                      <Ionicons name="layers" size={14} color="#fff" />
+                      <Ionicons name="layers" size={14} color={C.TEXT} />
                       <Text style={S.primaryBtnTxt}>{towerFloor >= TOWER_MAX_FLOOR ? 'Back to Tower' : 'Next Floor'}</Text>
                       <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.8)" />
                     </LinearGradient>
@@ -546,7 +546,7 @@ export default function VictoryScreen({ navigation, route }) {
                   {/* Primary: Back to Tower to retry same floor */}
                   <TouchableOpacity style={S.retryBtn} onPress={handleBackTower} activeOpacity={0.85}>
                     <LinearGradient colors={[C.PRIMARY_DARK, C.PRIMARY]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
-                      <Ionicons name="layers" size={14} color="#fff" />
+                      <Ionicons name="layers" size={14} color={C.TEXT} />
                       <Text style={S.primaryBtnTxt}>Back to Tower</Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -562,7 +562,7 @@ export default function VictoryScreen({ navigation, route }) {
                 {canGoNext && (
                   <TouchableOpacity style={S.primaryBtn} onPress={handleNextStage} activeOpacity={0.85}>
                     <LinearGradient colors={C.GRAD_PINK} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
-                      <Ionicons name="flash" size={14} color="#fff" />
+                      <Ionicons name="flash" size={14} color={C.TEXT} />
                       <Text style={S.primaryBtnTxt}>Next Stage</Text>
                       <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.8)" />
                     </LinearGradient>
@@ -577,8 +577,8 @@ export default function VictoryScreen({ navigation, route }) {
               /* ── Normal defeat ─────────────────────────────────────────────── */
               <>
                 <TouchableOpacity style={S.retryBtn} onPress={handleRetry} activeOpacity={0.85}>
-                  <LinearGradient colors={[C.DANGER, '#7F1D1D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
-                    <Ionicons name="refresh" size={14} color="#fff" />
+                  <LinearGradient colors={[C.DANGER, C.DANGER_DARK]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
+                    <Ionicons name="refresh" size={14} color={C.TEXT} />
                     <Text style={S.primaryBtnTxt}>Retry</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -649,7 +649,7 @@ const S = StyleSheet.create({
   heroNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   rankBadge: { borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 },
   rankTxt:   { fontSize: 9, fontWeight: '900' },
-  heroName:  { fontSize: 12, fontWeight: '800', color: '#fff', flex: 1 },
+  heroName:  { fontSize: 12, fontWeight: '800', color: C.TEXT, flex: 1 },
   heroFaction:{ fontSize: 9, fontWeight: '700', letterSpacing: 0.3 },
   heroClass:  { fontSize: 8, color: 'rgba(255,255,255,0.38)', fontWeight: '600' },
   unlockBadge: {
@@ -705,7 +705,7 @@ const S = StyleSheet.create({
     borderWidth: 1, borderColor: C.PRIMARY + '55',
   },
   lvLabel: { fontSize: 6, fontWeight: '700', color: 'rgba(255,255,255,0.40)', letterSpacing: 0.5 },
-  lvNum:   { fontSize: 12, fontWeight: '900', color: '#fff' },
+  lvNum:   { fontSize: 12, fontWeight: '900', color: C.TEXT },
   xpNums:  { fontSize: 9, color: 'rgba(255,255,255,0.35)', fontWeight: '600', letterSpacing: 0.3 },
 
   // Defeat
@@ -734,7 +734,7 @@ const S = StyleSheet.create({
   btnInner:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
   primaryBtn:   { flex: 1, borderRadius: 10, overflow: 'hidden' },
   retryBtn:     { flex: 1, borderRadius: 10, overflow: 'hidden' },
-  primaryBtnTxt:{ fontSize: 12, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
+  primaryBtnTxt:{ fontSize: 12, fontWeight: '900', color: C.TEXT, letterSpacing: 0.5 },
   secondaryBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10,

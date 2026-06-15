@@ -116,10 +116,65 @@
       "Bash(cat babel.config.json)",
       "Bash(node -e \"const b = require\\('@babel/core'\\); console.log\\(b.version\\);\")",
       "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('src/screens/BattleScreen.js', { presets: ['babel-preset-expo'], filename: 'src/screens/BattleScreen.js' }\\); console.log\\('OK'\\)\")",
-      "Bash(grep -n \"triggerHit\\(playerAnims\\\\|reflected\\\\|lastDmg = damage\\\\|msg = \\\\`\\\\${actor.name} attacks\" /Users/codeclouds-mdalisherali/Trump-Card-game/src/screens/BattleScreen.js)"
+      "Bash(grep -n \"triggerHit\\(playerAnims\\\\|reflected\\\\|lastDmg = damage\\\\|msg = \\\\`\\\\${actor.name} attacks\" /Users/codeclouds-mdalisherali/Trump-Card-game/src/screens/BattleScreen.js)",
+      "Bash(awk '/^const em = StyleSheet.create\\\\\\(/{f=1} f{print NR\": \"$0} f&&/^\\\\}\\\\\\);/{exit}' src/screens/ResourceDungeonScreen.js)"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('file_path',''))\" 2>/dev/null); if [[ \"$FILE\" == */src/screens/* ]] || [[ \"$FILE\" == */src/components/* ]]; then HITS=$(grep -nE \"'#[0-9A-Fa-f]{3,8}'|\\\"#[0-9A-Fa-f]{3,8}\\\"\" \"$FILE\" 2>/dev/null); if [ -n \"$HITS\" ]; then printf \"\\n\\033[33m⚠️  Bare hex in %s — replace with C.* tokens (src/theme/colors.js):\\033[0m\\n%s\\n\" \"$(basename $FILE)\" \"$HITS\"; fi; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('file_path',''))\" 2>/dev/null); [ -n \"$FILE\" ] && echo \"$(date '+%H:%M:%S') $CLAUDE_TOOL_NAME $(basename $FILE)\" >> /Users/codeclouds-mdalisherali/Trump-Card-game/.claude/tool-use.log"
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import json,sys; print(json.load(sys.stdin).get('file_path',''))\" 2>/dev/null); if [[ \"$FILE\" == *\"gameStore.js\"* ]]; then printf \"\\n\\033[36m📋 gameStore: use set(state=>…) inside updates that read state · call triggerSync() after gems/gold/hero changes · spendGems/spendGold return boolean — check it\\033[0m\\n\"; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import json,sys; print(json.load(sys.stdin).get('file_path',''))\" 2>/dev/null); if [[ \"$FILE\" == *\"heroes.js\"* ]] && [[ \"$FILE\" != *\"colors\"* ]]; then node -e \"try{const h=require('$FILE');const req=['id','name','hp','atk','def','crit','skills','trumpCard','faction','rank','element','effect'];const bad=h.HEROES.filter(x=>req.some(f=>!(f in x))).map(x=>x.id||'?');if(bad.length)console.log('\\033[31m⚠️  Heroes missing required fields: '+bad.join(', ')+'\\033[0m');}catch(e){}\" 2>/dev/null; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import json,sys; print(json.load(sys.stdin).get('file_path',''))\" 2>/dev/null); if [[ \"$FILE\" == *\"dailyQuests.js\"* ]]; then node -e \"try{const q=require('$FILE');const g=q.QUEST_DEFS.reduce((s,d)=>s+(d.reward?.gems||0),0);const go=q.QUEST_DEFS.reduce((s,d)=>s+(d.reward?.gold||0),0);console.log('\\033[36m💰 Daily quest totals now: '+g+' gems + '+go+' gold\\033[0m');}catch(e){}\" 2>/dev/null; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import json,sys; print(json.load(sys.stdin).get('file_path',''))\" 2>/dev/null); if [[ \"$FILE\" == *\"battleEngine.js\"* ]]; then python3 -c \"src=open('$FILE').read(); missing=[f for f in ['defFactor','isCrit','critMult','variance'] if f not in src]; missing and print('\\033[31m⚠️  battleEngine.js missing key formula var(s): '+', '.join(missing)+'\\033[0m')\" 2>/dev/null; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import json,sys; print(json.load(sys.stdin).get('command',''))\" 2>/dev/null); if echo \"$CMD\" | grep -qE 'git commit'; then STAGED=$(git -C /Users/codeclouds-mdalisherali/Trump-Card-game diff --cached --name-only 2>/dev/null | grep -E 'src/(screens|components)/'); if [ -n \"$STAGED\" ]; then HITS=$(echo \"$STAGED\" | while read f; do grep -ln \"#[0-9A-Fa-f]\\{6\\}\" \"/Users/codeclouds-mdalisherali/Trump-Card-game/$f\" 2>/dev/null; done); if [ -n \"$HITS\" ]; then printf \"\\033[31m\\n🚫 BLOCKED: Bare hex found in staged files — fix before committing:\\033[0m\\n%s\\n\" \"$HITS\"; exit 2; fi; fi; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf \"\\n\\033[90m── Aetheria rules: no bare hex (use C.*) · useNativeDriver:true · landscape-only (W>H) · pointerEvents:none on overlays ──\\033[0m\\n\""
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {

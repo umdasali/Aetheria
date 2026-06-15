@@ -84,37 +84,32 @@ export default function App() {
               contentStyle: { backgroundColor: C.BG_SCREEN },
             }}
           >
-            {/* Loading is always the entry point — replaces itself with Home when done */}
-            <Stack.Screen
-              name="Loading"
-              component={LoadingScreen}
-              options={{ animation: 'none' }}
-            />
-            <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ animation: 'fade' }} />
-            <Stack.Screen name="Home"       component={HomeScreen}       />
-            <Stack.Screen name="Story"      component={StoryScreen}      />
-            <Stack.Screen name="Narration"  component={NarrationScreen}  options={{ animation: 'fade' }} />
-            <Stack.Screen name="Battle"     component={BattleScreen}     />
-            <Stack.Screen name="Victory"     component={VictoryScreen}     options={{ animation: 'fade' }} />
-            <Stack.Screen name="DailyReward" component={DailyRewardScreen} options={{ animation: 'fade' }} />
-            <Stack.Screen name="Collection" component={CollectionScreen} />
-            <Stack.Screen name="TeamBuild"  component={TeamBuildScreen}  />
-            <Stack.Screen name="Summon"     component={SummonScreen}     />
-            <Stack.Screen name="HeroDetail" component={HeroDetailScreen} />
-            <Stack.Screen name="Profile"     component={ProfileScreen}    />
-            <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ animation: 'fade' }} />
-            <Stack.Screen name="Settings"    component={SettingsScreen}   options={{ animation: 'fade' }} />
-            <Stack.Screen name="WorldMap"    component={WorldMapScreen}   options={{ animation: 'fade' }} />
-            <Stack.Screen name="DailyQuests" component={DailyQuestScreen} options={{ animation: 'fade' }} />
-            <Stack.Screen name="Tower"       component={TowerScreen}      options={{ animation: 'fade' }} />
-            <Stack.Screen name="TowerShop"   component={TowerShopScreen}  options={{ animation: 'fade' }} />
-            <Stack.Screen name="Dungeons"    component={ResourceDungeonScreen} options={{ animation: 'fade' }} />
-            <Stack.Screen name="Shop"        component={ShopScreen}       options={{ animation: 'fade' }} />
-            <Stack.Screen name="CloudAuth"   component={CloudAuthScreen}  options={{ animation: 'slide_from_bottom' }} />
-            <Stack.Screen name="PullHistory"  component={PullHistoryScreen}  options={{ animation: 'fade' }} />
-            <Stack.Screen name="Achievements" component={AchievementScreen}  options={{ animation: 'fade' }} />
-            <Stack.Screen name="Leaderboard"  component={LeaderboardScreen}  options={{ animation: 'fade' }} />
-            <Stack.Screen name="Events"       component={EventScreen}        options={{ animation: 'fade' }} />
+            <Stack.Screen name="Loading"      component={LoadingScreen}         options={{ animation: 'none' }} />
+            <Stack.Screen name="Onboarding"   component={OnboardingScreen}      />
+            <Stack.Screen name="Home"         component={HomeScreen}            />
+            <Stack.Screen name="Story"        component={StoryScreen}           />
+            <Stack.Screen name="Narration"    component={NarrationScreen}       />
+            <Stack.Screen name="Battle"       component={BattleScreen}          />
+            <Stack.Screen name="Victory"      component={VictoryScreen}         />
+            <Stack.Screen name="DailyReward"  component={DailyRewardScreen}     />
+            <Stack.Screen name="Collection"   component={CollectionScreen}      />
+            <Stack.Screen name="TeamBuild"    component={TeamBuildScreen}       />
+            <Stack.Screen name="Summon"       component={SummonScreen}          />
+            <Stack.Screen name="HeroDetail"   component={HeroDetailScreen}      />
+            <Stack.Screen name="Profile"      component={ProfileScreen}         />
+            <Stack.Screen name="EditProfile"  component={EditProfileScreen}     />
+            <Stack.Screen name="Settings"     component={SettingsScreen}        />
+            <Stack.Screen name="WorldMap"     component={WorldMapScreen}        />
+            <Stack.Screen name="DailyQuests"  component={DailyQuestScreen}      />
+            <Stack.Screen name="Tower"        component={TowerScreen}           />
+            <Stack.Screen name="TowerShop"    component={TowerShopScreen}       />
+            <Stack.Screen name="Dungeons"     component={ResourceDungeonScreen} />
+            <Stack.Screen name="Shop"         component={ShopScreen}            />
+            <Stack.Screen name="CloudAuth"    component={CloudAuthScreen}       />
+            <Stack.Screen name="PullHistory"  component={PullHistoryScreen}     />
+            <Stack.Screen name="Achievements" component={AchievementScreen}     />
+            <Stack.Screen name="Leaderboard"  component={LeaderboardScreen}     />
+            <Stack.Screen name="Events"       component={EventScreen}           />
           </Stack.Navigator>
         </NavigationContainer>
 

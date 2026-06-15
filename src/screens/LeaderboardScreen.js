@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  Dimensions, Animated, Image,
+  Dimensions, Animated, Image, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
-import { fetchTopN, fetchOwnRank, submitScore, CATEGORIES } from '../cloud/leaderboardService';
+import { fetchTopN, fetchOwnRank, submitScore, getCurrentUserId, CATEGORIES } from '../cloud/leaderboardService';
 import { C } from '../theme/colors';
 
 const { width: W } = Dimensions.get('window');
@@ -26,6 +26,8 @@ const TIER   = [GOLD, SILVER, BRONZE];
 
 const LEFT_W = Math.round(W * 0.41);
 const PAD    = 10;
+// Fixed list-row height: paddingVertical 9·2 + avatar 26 + 1px bottom border.
+const ROW_H  = 45;
 
 // ── Medal images ──────────────────────────────────────────────────────────────
 const MEDAL_GOLD   = require('../../assets/home/gold-medal.png');
@@ -35,19 +37,24 @@ const MEDALS       = [null, MEDAL_GOLD, MEDAL_SILVER, MEDAL_BRONZE];
 
 // ── Per-tab response cache (prevents redundant fetches) ───────────────────────
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const _cache = new Map(); // key: category → { data, ownRank, ownScore, ts }
+const _cache = new Map(); // key: category → { data, ownRank, ownScore, ownUserId, ts }
+// The user the cache belongs to — when it changes (sign in/out/switch) the cache
+// is wiped so one account never shows another's rank.
+let _cacheUserId = null;
 
 // Avatar colors per first-char bucket
 const AV_PALETTE = [C.PRIMARY, C.SECONDARY, C.CYAN, C.GOLD, C.SUCCESS, C.DANGER];
 function avatarColor(name) {
-  return AV_PALETTE[(name?.charCodeAt(0) ?? 65) % AV_PALETTE.length];
+  const code = name && name.length ? name.charCodeAt(0) : 65;
+  return AV_PALETTE[code % AV_PALETTE.length];
 }
 function initials(name) {
   if (!name) return '?';
-  const parts = name.trim().split(' ');
-  return parts.length >= 2
-    ? (parts[0][0] + parts[1][0]).toUpperCase()
-    : name.slice(0, 2).toUpperCase();
+  // split on any whitespace run + drop empties so "Sir  Lancelot" → ["Sir","Lancelot"]
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return parts[0].slice(0, 2).toUpperCase();
 }
 
 // ── Skeleton shimmer ──────────────────────────────────────────────────────────
@@ -185,16 +192,18 @@ const av = StyleSheet.create({
 
 // ── Champion card (rank #1 — full width, gold, shimmer) ───────────────────────
 function ChampionCard({ player, unit }) {
+  const empty   = !player;
   const shimmer = useRef(new Animated.Value(-1)).current;
   useEffect(() => {
+    // Only animate when there's a champion — the sweep view isn't rendered when empty.
+    if (empty) return;
     const anim = Animated.loop(
       Animated.timing(shimmer, { toValue: 1, duration: 2200, useNativeDriver: true })
     );
     anim.start();
     return () => anim.stop();
-  }, []);
+  }, [empty, shimmer]);
   const shimX = shimmer.interpolate({ inputRange: [-1, 1], outputRange: [-W * 0.4, W * 0.4] });
-  const empty = !player;
 
   return (
     <View style={cc.card}>
@@ -436,10 +445,11 @@ const yr = StyleSheet.create({
 });
 
 // ── List row ──────────────────────────────────────────────────────────────────
-function RankRow({ item, ownRank }) {
+const RankRow = React.memo(function RankRow({ item, ownUserId }) {
   const isTop3 = item.rank <= 3;
   const tier   = isTop3 ? TIER[item.rank - 1] : null;
-  const isOwn  = ownRank !== null && item.rank === ownRank;
+  // Identity is matched by user id — never by rank (ties share a rank number).
+  const isOwn  = !!ownUserId && item.user_id === ownUserId;
   return (
     <View style={[rr.row, isOwn && rr.rowOwn, isTop3 && { backgroundColor: tier.bg }]}>
       {/* Left: rank */}
@@ -476,7 +486,13 @@ function RankRow({ item, ownRank }) {
       </Text>
     </View>
   );
-}
+}, (prev, next) =>
+  prev.ownUserId        === next.ownUserId        &&
+  prev.item.user_id     === next.item.user_id     &&
+  prev.item.rank        === next.item.rank        &&
+  prev.item.score       === next.item.score       &&
+  prev.item.player_name === next.item.player_name
+);
 
 const rr = StyleSheet.create({
   row: {
@@ -496,68 +512,114 @@ const rr = StyleSheet.create({
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function LeaderboardScreen({ navigation }) {
-  const insets            = useSafeAreaInsets();
-  const playerProfile     = useGameStore(s => s.playerProfile);
-  const towerHighestFloor = useGameStore(s => s.towerHighestFloor);
-  const ownedHeroes       = useGameStore(s => s.ownedHeroes);
+  const insets             = useSafeAreaInsets();
+  const playerProfile      = useGameStore(s => s.playerProfile);
+  const towerHighestFloor  = useGameStore(s => s.towerHighestFloor);
+  const towerWeeklyBest    = useGameStore(s => s.towerWeeklyBest);
+  const ownedHeroes        = useGameStore(s => s.ownedHeroes);
+  const checkTowerWeekReset = useGameStore(s => s.checkTowerWeekReset);
 
   const [activeTab, setActiveTab] = useState(CATEGORIES.TOWER_WEEKLY);
   const [rows,      setRows]      = useState([]);
   const [ownRank,   setOwnRank]   = useState(null);
   const [ownScore,  setOwnScore]  = useState(null);
+  const [ownUserId, setOwnUserId] = useState(null);
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState(null);
+
+  // Monotonic request id — only the most recent load is allowed to commit state,
+  // so a slow response for a tab the user already left can't overwrite the view.
+  const reqIdRef = useRef(0);
 
   const tabDef = TABS.find(t => t.key === activeTab);
   const unit   = tabDef?.unit ?? 'FLOOR';
 
-  const pushScore = useCallback(async () => {
-    const score = activeTab === CATEGORIES.COLLECTION ? ownedHeroes.length : towerHighestFloor;
-    await submitScore(activeTab, score, playerProfile?.name ?? 'Aetherian');
-  }, [activeTab, towerHighestFloor, ownedHeroes, playerProfile]);
+  // Single source of truth for "what score does this tab submit?"
+  const scoreForTab = useCallback((tab) => {
+    if (tab === CATEGORIES.COLLECTION)   return ownedHeroes.length;
+    if (tab === CATEGORIES.TOWER_WEEKLY) return towerWeeklyBest;
+    return towerHighestFloor;
+  }, [ownedHeroes, towerWeeklyBest, towerHighestFloor]);
 
   const loadLeaderboard = useCallback(async (forceRefresh = false) => {
+    const category = activeTab;
+    const myReq    = ++reqIdRef.current;
+    const isCurrent = () => myReq === reqIdRef.current;
+
+    // Keep towerWeeklyBest aligned with the current week before reading it.
+    checkTowerWeekReset();
+
+    // Drop the whole cache if the signed-in account changed.
+    const userId = await getCurrentUserId();
+    if (userId !== _cacheUserId) { _cache.clear(); _cacheUserId = userId; }
+    if (!isCurrent()) return;
+
     // Serve from cache if fresh and not a manual refresh
-    const cached = _cache.get(activeTab);
+    const cached = _cache.get(category);
     if (!forceRefresh && cached && (Date.now() - cached.ts < CACHE_TTL)) {
       setRows(cached.data);
       setOwnRank(cached.ownRank);
       setOwnScore(cached.ownScore);
+      setOwnUserId(cached.ownUserId);
+      setError(null);
       return;
     }
 
+    // Initial load shows the skeleton; a refresh-over-existing-data keeps content.
     setLoading(true);
     setError(null);
     try {
       // Only submit if the score has actually changed since the last cached upload.
-      const currentScore = activeTab === CATEGORIES.COLLECTION ? ownedHeroes.length : towerHighestFloor;
+      const currentScore = scoreForTab(category);
       if (forceRefresh || !cached || cached.ownScore !== currentScore) {
-        await pushScore();
+        await submitScore(category, currentScore, playerProfile?.name ?? 'Aetherian');
       }
       const [topResult, ownResult] = await Promise.all([
-        fetchTopN(activeTab, 100),
-        fetchOwnRank(activeTab),
+        fetchTopN(category, 100),
+        fetchOwnRank(category),
       ]);
       if (topResult.error) throw new Error(String(topResult.error));
-      _cache.set(activeTab, {
-        data: topResult.data, ownRank: ownResult.rank,
-        ownScore: ownResult.score, ts: Date.now(),
+      if (!isCurrent()) return; // a newer load superseded this one
+
+      // Prefer the rank from the player's own listed row (dense, consistent with
+      // the visible list); fall back to the queried rank when outside the top-N.
+      const myId   = userId ?? ownResult.userId ?? null;
+      const myRow  = myId ? topResult.data.find(r => r.user_id === myId) : null;
+      const rank   = myRow ? myRow.rank  : ownResult.rank;
+      const score  = myRow ? myRow.score : ownResult.score;
+
+      _cache.set(category, {
+        data: topResult.data, ownRank: rank, ownScore: score,
+        ownUserId: myId, ts: Date.now(),
       });
       setRows(topResult.data);
-      setOwnRank(ownResult.rank);
-      setOwnScore(ownResult.score);
+      setOwnRank(rank);
+      setOwnScore(score);
+      setOwnUserId(myId);
     } catch (e) {
-      setError(e.message ?? 'Failed to load');
+      if (isCurrent()) setError(e.message ?? 'Failed to load');
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
-  }, [activeTab, pushScore]);
+  }, [activeTab, scoreForTab, playerProfile, checkTowerWeekReset]);
 
+  // Reload whenever the tab changes. loadLeaderboard is intentionally omitted —
+  // it already closes over activeTab, and listing it would re-fire on unrelated
+  // store changes (score/profile) mid-view.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadLeaderboard(); }, [activeTab]);
 
-  const top1 = rows.find(r => r.rank === 1) ?? null;
-  const top2 = rows.find(r => r.rank === 2) ?? null;
-  const top3 = rows.find(r => r.rank === 3) ?? null;
+  // Resolve the podium in a single pass instead of three Array.find scans.
+  const { top1, top2, top3 } = useMemo(() => {
+    let a = null, b = null, c = null;
+    for (const r of rows) {
+      if      (r.rank === 1 && !a) a = r;
+      else if (r.rank === 2 && !b) b = r;
+      else if (r.rank === 3 && !c) c = r;
+      if (a && b && c) break;
+    }
+    return { top1: a, top2: b, top3: c };
+  }, [rows]);
 
   return (
     <View style={[s.root, { paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
@@ -565,8 +627,14 @@ export default function LeaderboardScreen({ navigation }) {
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 4 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.75}>
-          <Ionicons name="chevron-back" size={22} color="#fff" />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={s.backBtn}
+          activeOpacity={0.75}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="chevron-back" size={22} color={C.TEXT} />
         </TouchableOpacity>
 
         {/* Title */}
@@ -585,6 +653,9 @@ export default function LeaderboardScreen({ navigation }) {
                 style={[s.tabPill, active && s.tabPillActive]}
                 onPress={() => setActiveTab(tab.key)}
                 activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={`${tab.label} leaderboard`}
               >
                 <Ionicons name={active ? tab.icon : tab.icon + '-outline'} size={12} color={active ? C.PRIMARY_LIGHT : C.TEXT_MUTED} />
                 <Text style={[s.tabPillTxt, active && s.tabPillTxtActive]}>{tab.label}</Text>
@@ -593,14 +664,26 @@ export default function LeaderboardScreen({ navigation }) {
           })}
         </View>
 
-        <TouchableOpacity onPress={() => loadLeaderboard(true)} style={s.refreshBtn} activeOpacity={0.75}>
-          <Ionicons name="refresh-outline" size={18} color="rgba(255,255,255,0.7)" />
+        <TouchableOpacity
+          onPress={() => loadLeaderboard(true)}
+          style={s.refreshBtn}
+          activeOpacity={0.75}
+          disabled={loading}
+          accessibilityRole="button"
+          accessibilityLabel="Refresh leaderboard"
+        >
+          {loading
+            ? <ActivityIndicator size="small" color={C.TEXT_ON_DARK} />
+            : <Ionicons name="refresh-outline" size={18} color={C.TEXT_ON_DARK} />
+          }
         </TouchableOpacity>
       </LinearGradient>
 
       {/* ── Body ────────────────────────────────────────────────────────── */}
       <View style={s.body}>
-        {loading ? (
+        {loading && rows.length === 0 ? (
+          // Skeleton only on a cold load — a refresh over existing data keeps the
+          // content on screen (the header spinner signals the in-flight request).
           <>
             <LeftPanelSkeleton />
             <View style={s.separator} />
@@ -636,24 +719,36 @@ export default function LeaderboardScreen({ navigation }) {
                 <Text style={[s.colHdr, { width: 56, textAlign: 'right' }]}>{unit}</Text>
               </View>
 
+              {/* Non-blocking error banner — shown when a refresh failed but we
+                  still have data to display underneath. */}
+              {error && rows.length > 0 && (
+                <View style={s.errBanner}>
+                  <Ionicons name="cloud-offline-outline" size={12} color={C.DANGER} />
+                  <Text style={s.errBannerTxt} numberOfLines={1}>Couldn’t refresh — showing saved ranks</Text>
+                </View>
+              )}
+
               {rows.length === 0 ? (
                 <View style={s.emptyWrap}>
                   <Text style={s.emptyIcon}>🏆</Text>
                   <Text style={s.emptyTitle}>{error ? 'Could Not Load' : 'No Rankings Yet'}</Text>
                   <Text style={s.emptyBody}>
                     {error
-                      ? 'Sign in to Cloud Save to participate'
-                      : 'Complete Tower floors to join the leaderboard'}
+                      ? 'Could not reach the leaderboard. Check your connection or sign in to Cloud Save.'
+                      : activeTab === CATEGORIES.COLLECTION
+                        ? 'Summon heroes to climb the collection ranks'
+                        : 'Complete Tower floors to join the leaderboard'}
                   </Text>
                 </View>
               ) : (
                 <FlatList
                   data={rows}
-                  keyExtractor={item => `${item.user_id}-${item.rank}`}
-                  renderItem={({ item }) => <RankRow item={item} ownRank={ownRank} />}
+                  extraData={ownUserId}
+                  keyExtractor={item => item.user_id}
+                  renderItem={({ item }) => <RankRow item={item} ownUserId={ownUserId} />}
                   showsVerticalScrollIndicator={false}
                   initialNumToRender={20}
-                  getItemLayout={(_, index) => ({ length: 46, offset: 46 * index, index })}
+                  getItemLayout={(_, index) => ({ length: ROW_H, offset: ROW_H * index, index })}
                 />
               )}
             </View>
@@ -677,7 +772,7 @@ const s = StyleSheet.create({
   },
   backBtn:   { padding: 6 },
   titleBlock:{ flexDirection: 'row', alignItems: 'center', gap: 7 },
-  title:     { fontSize: 16, fontWeight: '900', color: '#fff', letterSpacing: 4 },
+  title:     { fontSize: 16, fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
   refreshBtn:{ padding: 8 },
 
   tabRow: { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: 6 },
@@ -724,6 +819,15 @@ const s = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: C.BORDER_SUBTLE,
   },
   colHdr: { fontSize: 8, fontWeight: '900', color: C.TEXT_DISABLED, letterSpacing: 1.5 },
+
+  // Error banner (refresh failed but data is still shown)
+  errBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 6,
+    backgroundColor: C.DANGER + '1A',
+    borderBottomWidth: 1, borderBottomColor: C.DANGER + '44',
+  },
+  errBannerTxt: { flex: 1, fontSize: 9, fontWeight: '700', color: C.DANGER, letterSpacing: 0.5 },
 
   // Empty state
   emptyWrap: {

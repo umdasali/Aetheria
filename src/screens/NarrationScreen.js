@@ -384,7 +384,7 @@ export default function NarrationScreen({ navigation, route }) {
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={S.battleBtn}
                   >
-                    <Ionicons name={isBoss ? 'skull' : 'flash'} size={17} color="#fff" />
+                    <Ionicons name={isBoss ? 'skull' : 'flash'} size={17} color={C.TEXT} />
                     <Text style={S.battleBtnTxt}>
                       {isBoss ? 'BOSS BATTLE' : 'BEGIN BATTLE'}
                     </Text>
@@ -425,7 +425,7 @@ const S = StyleSheet.create({
   chChip:      { borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3 },
   chChipTxt:   { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
 
-  stageTitle:  { fontSize: 15, fontWeight: '900', color: '#fff', letterSpacing: 3 },
+  stageTitle:  { fontSize: 15, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
   accentLine:  { height: 2, borderRadius: 1, width: '100%' },
 
   dlgBox:  { flex: 1, borderRadius: 10, padding: 12, overflow: 'hidden', borderWidth: 1, minHeight: 100 },
@@ -445,5 +445,5 @@ const S = StyleSheet.create({
   nextBtn:  { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 9 },
   nextTxt:  { fontSize: 13, fontWeight: '700' },
   battleBtn:   { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 10, paddingHorizontal: 22, paddingVertical: 12 },
-  battleBtnTxt:{ fontSize: 13, fontWeight: '900', color: '#fff', letterSpacing: 1 },
+  battleBtnTxt:{ fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 1 },
 });

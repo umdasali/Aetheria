@@ -605,5 +605,5 @@ const s = StyleSheet.create({
   enterBtn:   { borderRadius: 11, overflow: 'hidden', position: 'relative' },
   enterGlow:  { position: 'absolute', top: -8, left: -8, right: -8, bottom: -8, borderRadius: 18 },
   enterInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 11, gap: 8 },
-  enterTxt:   { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '900', color: '#fff', letterSpacing: 0.8 },
+  enterTxt:   { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '900', color: C.TEXT, letterSpacing: 0.8 },
 });

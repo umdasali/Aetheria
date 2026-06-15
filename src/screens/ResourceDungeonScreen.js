@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Image, Dimensions, Alert, Modal, ScrollView,
@@ -209,7 +209,7 @@ const C_W  = 2;
 const tc = StyleSheet.create({
   card: {
     flex: 1,
-    borderRadius: 14,
+    borderRadius: 4,
     overflow: 'hidden',
     borderWidth: 1,
     flexDirection: 'column',
@@ -398,7 +398,13 @@ function ExchangeModal({ visible, inventory, onExchange, onClose }) {
       onRequestClose={onClose}
     >
       <View style={em.backdrop}>
-        <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          activeOpacity={1}
+          accessibilityRole="button"
+          accessibilityLabel="Close exchange"
+        />
 
         <View style={em.panel}>
           <LinearGradient colors={[C.BG_MID, C.BG_DEEP]} style={StyleSheet.absoluteFill} />
@@ -411,7 +417,13 @@ function ExchangeModal({ visible, inventory, onExchange, onClose }) {
               <Text style={em.title}>MATERIAL EXCHANGE</Text>
               <Text style={em.subtitle}>Convert surplus reagents into higher-tier materials</Text>
             </View>
-            <TouchableOpacity style={em.closeBtn} onPress={onClose} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={em.closeBtn}
+              onPress={onClose}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+            >
               <Ionicons name="close" size={18} color={C.TEXT_MUTED} />
             </TouchableOpacity>
           </View>
@@ -420,13 +432,16 @@ function ExchangeModal({ visible, inventory, onExchange, onClose }) {
 
           {/* Recipe list — always visible; individual rows disable when qty insufficient */}
           <ScrollView
-            style={{ flex: 1 }}
+            style={em.recipeScroll}
             contentContainerStyle={em.recipeList}
             showsVerticalScrollIndicator={false}
           >
             {MATERIAL_EXCHANGE_RECIPES.map(recipe => {
               const fromItem = getAscensionItemById(recipe.from.itemId);
               const toItem   = getAscensionItemById(recipe.to.itemId);
+              // Skip a recipe whose items can't be resolved rather than rendering
+              // a broken row (blank name/image) with a live Convert button.
+              if (!fromItem || !toItem) return null;
               const have     = inv[recipe.from.itemId] || 0;
               const canDo    = have >= recipe.from.qty;
 
@@ -464,13 +479,16 @@ function ExchangeModal({ visible, inventory, onExchange, onClose }) {
                     disabled={!canDo}
                     onPress={() => onExchange(recipe)}
                     activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: !canDo }}
+                    accessibilityLabel={`Convert: ${recipe.label}`}
                   >
                     <LinearGradient
                       colors={[C.PRIMARY, C.PRIMARY_DARK]}
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                       style={em.convertInner}
                     >
-                      <Ionicons name="swap-horizontal" size={13} color="#fff" />
+                      <Ionicons name="swap-horizontal" size={13} color={C.TEXT} />
                       <Text style={em.convertTxt}>CONVERT</Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -518,6 +536,10 @@ const em = StyleSheet.create({
   },
   divider: { height: 1, backgroundColor: C.BORDER_SUBTLE, marginHorizontal: 18 },
 
+  // flexShrink (not flex:1): the panel is content-sized with only a maxHeight, so
+  // flex:1 would resolve flexBasis:0 and collapse the list to zero height. flexShrink
+  // keeps the content height yet still shrinks-and-scrolls when it exceeds maxHeight.
+  recipeScroll: { flexShrink: 1 },
   recipeList: { padding: 16, gap: 10 },
   recipe: {
     flexDirection: 'row',
@@ -545,7 +567,7 @@ const em = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 18, paddingVertical: 11,
   },
-  convertTxt: { fontSize: 10, fontWeight: '900', color: '#fff', letterSpacing: 1.5 },
+  convertTxt: { fontSize: 10, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
 
 });
 
@@ -662,6 +684,8 @@ export default function ResourceDungeonScreen({ navigation }) {
   const [selectedIdx, setSelectedIdx]       = useState(0);
   const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
   const [, tick] = useState(0);
+  // Debounce guard so a rapid double-tap can't convert twice in one burst.
+  const exchangingRef = useRef(false);
   useFocusEffect(useCallback(() => {
     checkDungeonReset();
     tick(n => n + 1);
@@ -708,16 +732,19 @@ export default function ResourceDungeonScreen({ navigation }) {
   };
 
   const handleExchange = (recipe) => {
-    // Execute directly — the Convert button is already disabled when canDo is false,
-    // and the store re-validates before mutating. No Alert needed inside a Modal.
+    // Debounce: a rapid double-tap must not silently convert twice (the top recipe
+    // burns 5 scarce Feathers per run). The ref flips synchronously so a second tap
+    // in the same burst is ignored; it clears after a short beat.
+    if (exchangingRef.current) return;
+    exchangingRef.current = true;
+    // The Convert button is disabled when unaffordable and the store re-validates
+    // before mutating; the ascensionInventory selector re-renders us on success.
     const ok = exchangeAscensionItems(
       recipe.from.itemId, recipe.from.qty,
       recipe.to.itemId,   recipe.to.qty,
     );
-    if (ok) {
-      AudioManager.playRewardClaimSFX();
-      tick(n => n + 1);
-    }
+    if (ok) AudioManager.playRewardClaimSFX();
+    setTimeout(() => { exchangingRef.current = false; }, 280);
   };
 
   return (

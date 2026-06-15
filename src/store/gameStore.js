@@ -75,6 +75,7 @@ const INITIAL_STATE = {
   activeTeamPreset:      -1,
   dailyQuests:           { date: '', progress: {}, claimed: {} },
   towerHighestFloor:     0,
+  towerWeeklyBest:       0,    // highest floor reached in the current week (resets weekly)
   towerCurrentFloor:     1,
   towerWeekResetDate:    '',
   towerCoins:            0,
@@ -429,6 +430,7 @@ const useGameStore = create(
             const inv = state.ascensionInventory || {};
             return {
               towerHighestFloor: Math.max(state.towerHighestFloor, floor),
+              towerWeeklyBest: Math.max(state.towerWeeklyBest, floor),
               towerCurrentFloor: floor + 1,
               towerCoins: state.towerCoins + (rewards.coins || 0),
               gems: state.gems + (rewards.gems || 0),
@@ -439,6 +441,7 @@ const useGameStore = create(
         } else {
           set(state => ({
             towerHighestFloor: Math.max(state.towerHighestFloor, floor),
+            towerWeeklyBest: Math.max(state.towerWeeklyBest, floor),
             towerCurrentFloor: floor + 1,
             towerCoins: state.towerCoins + (rewards.coins || 0),
             gems: state.gems + (rewards.gems || 0),
@@ -456,8 +459,8 @@ const useGameStore = create(
           if (state.towerWeekResetDate === weekKey) return {};
           // First-ever open (no stored key yet) — just stamp the week, don't wipe progress
           if (!state.towerWeekResetDate) return { towerWeekResetDate: weekKey };
-          // Genuine new-week transition — reset current floor, keep highest-floor record
-          return { towerCurrentFloor: 1, towerWeekResetDate: weekKey };
+          // Genuine new-week transition — reset current floor + weekly best, keep all-time record
+          return { towerCurrentFloor: 1, towerWeeklyBest: 0, towerWeekResetDate: weekKey };
         });
       },
 

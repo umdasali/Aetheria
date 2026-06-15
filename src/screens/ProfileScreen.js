@@ -182,7 +182,7 @@ export default function ProfileScreen({ navigation }) {
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={s.editGrad}
           >
-            <Ionicons name="create-outline" size={12} color="#fff" />
+            <Ionicons name="create-outline" size={12} color={C.TEXT} />
             <Text style={s.editTxt}>EDIT PROFILE</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -251,7 +251,7 @@ export default function ProfileScreen({ navigation }) {
         style={[s.header, { height: HEADER_H + topInset, paddingTop: topInset }]}
       >
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.8} accessibilityLabel="Go back" accessibilityRole="button">
-          <Ionicons name="chevron-back" size={22} color="#fff" />
+          <Ionicons name="chevron-back" size={22} color={C.TEXT} />
         </TouchableOpacity>
         <Text style={s.headerTitle}>COMMANDER PROFILE</Text>
         <View style={{ flex: 1 }} />
@@ -287,7 +287,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 14, gap: 10,
   },
   backBtn:     { padding: 4 },
-  headerTitle: { fontSize: 12, fontWeight: '900', color: '#fff', letterSpacing: 2.5 },
+  headerTitle: { fontSize: 12, fontWeight: '900', color: C.TEXT, letterSpacing: 2.5 },
   gemsChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: 'rgba(255,255,255,0.15)',
@@ -333,7 +333,7 @@ const s = StyleSheet.create({
     borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4,
   },
   lvlLabel: { color: 'rgba(255,255,255,0.48)', fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
-  lvlNum:   { color: '#fff', fontSize: 16, fontWeight: '900' },
+  lvlNum:   { color: C.TEXT, fontSize: 16, fontWeight: '900' },
 
   factionChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -347,7 +347,7 @@ const s = StyleSheet.create({
   miniGems: { color: C.GOLD, fontSize: 10, fontWeight: '700' },
 
   charName: {
-    fontSize: 20, fontWeight: '900', color: '#fff',
+    fontSize: 20, fontWeight: '900', color: C.TEXT,
     letterSpacing: 0.5, marginBottom: 3,
     textShadowColor: 'rgba(0,0,0,0.85)',
     textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6,
@@ -368,7 +368,7 @@ const s = StyleSheet.create({
   },
   statBlock: { flex: 1, paddingVertical: 6, alignItems: 'center' },
   statSep:   { width: 1, backgroundColor: 'rgba(255,255,255,0.10)', marginVertical: 6 },
-  statVal:   { color: '#fff', fontSize: 15, fontWeight: '900' },
+  statVal:   { color: C.TEXT, fontSize: 15, fontWeight: '900' },
   statLbl:   { color: 'rgba(255,255,255,0.42)', fontSize: 10, fontWeight: '700', letterSpacing: 0.8, marginTop: 2 },
 
   editBtn:  { borderRadius: 8, overflow: 'hidden' },
@@ -376,7 +376,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 9,
   },
-  editTxt: { color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  editTxt: { color: C.TEXT, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
 
   // ── Right panel ───────────────────────────────────────────────────────────────
   rightPanel: { flex: 1 },
@@ -412,7 +412,7 @@ const s = StyleSheet.create({
   heroRankTxt: { fontSize: 10, fontWeight: '900' },
   heroNameTxt: {
     position: 'absolute', bottom: 4, left: 4, right: 4,
-    fontSize: 10, fontWeight: '700', color: '#fff',
+    fontSize: 10, fontWeight: '700', color: C.TEXT,
     textShadowColor: 'rgba(0,0,0,0.9)',
     textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
