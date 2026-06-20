@@ -265,7 +265,7 @@ export const HEROES = [
     about: 'Iron bulwark of SUNSPIRE. Kane\'s sacred armor has never been breached in over 300 battles. He stands between his allies and annihilation without flinching.',
     hp: 8000, atk: 380, def: 620, crit: 220,
     skills: [
-      { name: 'Holy Guard', cost: 1, description: 'Raises sacred defense reducing incoming damage.', damage: 0.6 },
+      { name: 'Holy Guard', cost: 1, description: 'Raises sacred defense reducing incoming damage.', damage: 0 },
       { name: 'Light Slam', cost: 3, description: 'Slams the ground creating a holy shockwave.', damage: 1.6 },
     ],
     trumpCard: {
@@ -317,7 +317,7 @@ export const HEROES = [
     about: 'Ancient guardian of GLACIARA\'s frozen tundra. Vera\'s body has been tempered by centuries of blizzards, making her near-indestructible and capable of regenerating rapidly in freezing conditions.',
     hp: 7000, atk: 310, def: 570, crit: 170,
     skills: [
-      { name: 'Frost Wall',   cost: 1, description: 'Raises an ice wall to absorb enemy attacks.', damage: 0.5 },
+      { name: 'Frost Wall',   cost: 1, description: 'Raises an ice wall to absorb enemy attacks.', damage: 0 },
       { name: 'Glacial Slam', cost: 3, description: 'Slams the ground with glacial force hitting all enemies.', damage: 1.5 },
     ],
     trumpCard: {
@@ -421,7 +421,7 @@ export const HEROES = [
     about: 'A warrior tempered by GLACIARA\'s most brutal winters. Vex feels no cold and channels frozen energy through her body, converting incoming force into devastating ice-charged counterstrikes.',
     hp: 6600, atk: 380, def: 530, crit: 220,
     skills: [
-      { name: 'Frost Absorb', cost: 1, description: 'Absorbs incoming attack converting it to frozen energy.', damage: 0.5 },
+      { name: 'Frost Absorb', cost: 1, description: 'Absorbs incoming attack converting it to frozen energy.', damage: 0 },
       { name: 'Glacial Slam', cost: 3, description: 'Unleashes absorbed frost energy on all enemies.', damage: 1.9 },
     ],
     trumpCard: {
@@ -449,7 +449,7 @@ export const HEROES = [
     about: 'A battle-hardened shield-bearer of EMBERVEIL who uses his body as a living wall, absorbing volcanic strikes and redirecting that raw heat into explosive counterattacks. He has survived more than any other soldier in the faction.',
     hp: 7200, atk: 350, def: 580, crit: 200,
     skills: [
-      { name: 'Ember Block',    cost: 1, description: 'Raises a flaming barrier absorbing the next attack.', damage: 0.4 },
+      { name: 'Ember Block',    cost: 1, description: 'Raises a flaming barrier absorbing the next attack.', damage: 0 },
       { name: 'Heat Rebound',   cost: 2, description: 'Releases absorbed fire energy back at all enemies.', damage: 1.4 },
     ],
     trumpCard: {
@@ -623,7 +623,7 @@ export const HEROES = [
     about: 'Steel-willed guardian of EMBERVEIL\'s inner fortress. Rook\'s armour was forged in active volcanic vents and redirects incoming damage as superheated steam capable of blinding and burning attackers.',
     hp: 6800, atk: 370, def: 560, crit: 210,
     skills: [
-      { name: 'Cinder Guard',  cost: 1, description: 'Hardens volcanic armour, reducing the next hit taken.', damage: 0.5 },
+      { name: 'Cinder Guard',  cost: 1, description: 'Hardens volcanic armour, reducing the next hit taken.', damage: 0 },
       { name: 'Molten Rebound',cost: 2, description: 'Releases absorbed heat as a burst of scalding steam at all enemies.', damage: 1.4 },
     ],
     trumpCard: {
@@ -732,7 +732,7 @@ export const HEROES = [
     about: 'A colossus of GLACIARA who has spent decades hardening his body against arctic extremes. Roan\'s skin crystallises under sustained cold, forming natural ice-plate armour that grows denser with every hit he absorbs.',
     hp: 6900, atk: 345, def: 550, crit: 195,
     skills: [
-      { name: 'Ice Armour',    cost: 1, description: 'Crystallises the skin reducing incoming damage for 1 turn.', damage: 0.4 },
+      { name: 'Ice Armour',    cost: 1, description: 'Crystallises the skin reducing incoming damage for 1 turn.', damage: 0 },
       { name: 'Tundra Slam',   cost: 2, description: 'Drives a fist of glacial force into the ground stunning nearby enemies.', damage: 1.4 },
     ],
     trumpCard: {
@@ -901,7 +901,7 @@ export const HEROES = [
     about: 'A sentinel of VERDANIA who has merged her body with living bark and vine. Rae\'s skin is reinforced by constantly regenerating plant-matter — the longer a fight lasts, the harder she becomes to damage.',
     hp: 6500, atk: 330, def: 545, crit: 180,
     skills: [
-      { name: 'Bark Shield',  cost: 1, description: 'Hardens bark armour around self or an ally absorbing the next attack.', damage: 0.4 },
+      { name: 'Bark Shield',  cost: 1, description: 'Hardens bark armour around self or an ally absorbing the next attack.', damage: 0 },
       { name: 'Vine Bind',    cost: 2, description: 'Ensnares all enemies with animated vines slowing their attacks.', damage: 0.6 },
     ],
     trumpCard: {
@@ -929,7 +929,7 @@ export const HEROES = [
     about: 'The unopposed sovereign of VOIDMARK — a void-forged empress whose body has merged with the abyss itself and been reborn stronger. Nyx does not debate authority; in a realm where reality tears without warning, she is the only constant. Three challenger factions dissolved attempting to dethrone her. Their names are no longer spoken in VOIDMARK, which here is a fate more feared than death.',
     hp: 9500, atk: 500, def: 800, crit: 300, sovereign: true,
     skills: [
-      { name: 'Void Absorb',   cost: 1, description: 'Pulls an incoming attack into sovereign void space, nullifying damage and storing energy for a counter-burst.', damage: 0.8 },
+      { name: 'Void Absorb',   cost: 1, description: 'Pulls an incoming attack into sovereign void space, nullifying damage and storing energy for a counter-burst.', damage: 0 },
       { name: 'Abyss Release', cost: 3, description: 'Detonates all accumulated void energy in a sovereign-class area blast that ignores DEF.', damage: 2.6 },
     ],
     trumpCard: {
@@ -1087,7 +1087,7 @@ export const HEROES = [
     about: 'A veteran paladin of SUNSPIRE who has survived more campaigns than any other active knight on the line. Caelum fights from the front with practiced precision — his sacred shield has absorbed blows that would have ended entire battles, and he has never once lost a comrade under his watch.',
     hp: 6800, atk: 350, def: 580, crit: 220,
     skills: [
-      { name: 'Sacred Guard',   cost: 1, description: 'Raises a divine barrier blocking the next attack targeting any ally.', damage: 0.4 },
+      { name: 'Sacred Guard',   cost: 1, description: 'Raises a divine barrier blocking the next attack targeting any ally.', damage: 0 },
       { name: 'Holy Judgment',  cost: 2, description: 'Strikes with consecrated force, dealing damage and taunting the target for 1 turn.', damage: 1.5 },
     ],
     trumpCard: {
@@ -1585,7 +1585,7 @@ export const HEROES = [
     about: 'First advisor and living shield of the moon-throne. Imhotep has counseled three regents and outlived two, and he places himself between KHEMARA\'s ruler and all harm as a matter of plain arithmetic: the realm needs her, and she needs time. He has never raised his voice. He has never had to.',
     hp: 7000, atk: 320, def: 575, crit: 180,
     skills: [
-      { name: 'Aegis Decree', cost: 1, description: 'Raises a hardened sandstone ward that absorbs the next blow aimed at the line.', damage: 0.4 },
+      { name: 'Aegis Decree', cost: 1, description: 'Raises a hardened sandstone ward that absorbs the next blow aimed at the line.', damage: 0 },
       { name: 'Throneguard',  cost: 2, description: 'Slams a ceremonial staff to the earth, repelling all enemies with a wall of warding force.', damage: 1.3 },
     ],
     trumpCard: {

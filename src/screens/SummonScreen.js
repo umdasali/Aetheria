@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, Image, StyleSheet, TouchableOpacity, TouchableWithoutFeedback,
-  Animated, Dimensions, Easing,
+  Animated, Dimensions, Easing, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -400,6 +400,7 @@ export default function SummonScreen({ navigation, route }) {
     return 'standard';
   });
   const [featuredIdx,  setFeaturedIdx]  = useState(0);
+  const [showRates,    setShowRates]    = useState(false);
   const featFadeAnim = useRef(new Animated.Value(1)).current;
 
   const activeEvents    = getActiveEvents();
@@ -1233,6 +1234,17 @@ export default function SummonScreen({ navigation, route }) {
         </View>
         {pullPhase === 'banner' && (
           <TouchableOpacity
+            onPress={() => setShowRates(true)}
+            style={s.historyBtn}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel="View summon rates and odds"
+          >
+            <Ionicons name="information-circle-outline" size={22} color="rgba(255,255,255,0.85)" />
+          </TouchableOpacity>
+        )}
+        {pullPhase === 'banner' && (
+          <TouchableOpacity
             onPress={() => navigation.navigate('PullHistory')}
             style={s.historyBtn}
             activeOpacity={0.75}
@@ -1261,6 +1273,53 @@ export default function SummonScreen({ navigation, route }) {
       <Animated.View pointerEvents="none" style={[s.overlay, { backgroundColor: 'white',         opacity: flashWhite }]} />
       <Animated.View pointerEvents="none" style={[s.overlay, { backgroundColor: C.FLASH_GOLD,   opacity: flashGold  }]} />
       <Animated.View pointerEvents="none" style={[s.overlay, { backgroundColor: C.FLASH_PURPLE, opacity: flashPurp  }]} />
+
+      {/* Rates / odds disclosure — required for App Store (3.1.1) & Google Play */}
+      {showRates && (
+        <View style={[StyleSheet.absoluteFill, s.ratesOverlay]}>
+          <TouchableWithoutFeedback onPress={() => setShowRates(false)}>
+            <View style={StyleSheet.absoluteFill} />
+          </TouchableWithoutFeedback>
+          <View style={s.ratesCard}>
+            <View style={s.ratesHeaderRow}>
+              <Text style={s.ratesTitle}>SUMMON RATES</Text>
+              <TouchableOpacity onPress={() => setShowRates(false)} style={s.ratesClose} accessibilityLabel="Close rates">
+                <Ionicons name="close" size={22} color={C.TEXT} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ paddingBottom: 6 }}>
+              <Text style={s.ratesSection}>Base probability per summon</Text>
+              {[
+                { rank: 'S', pct: '4%',  note: 'incl. rate-up / Sovereign — see below' },
+                { rank: 'A', pct: '22%', note: '' },
+                { rank: 'B', pct: '30%', note: '' },
+                { rank: 'C', pct: '44%', note: '' },
+              ].map((r) => {
+                const rc = RANK[r.rank];
+                return (
+                  <View key={r.rank} style={s.rateRow}>
+                    <View style={[s.rateBadge, { backgroundColor: rc.bg }]}>
+                      <Text style={[s.rateBadgeTxt, { color: rc.text }]}>{r.rank}</Text>
+                    </View>
+                    <Text style={s.ratePct}>{r.pct}</Text>
+                    {!!r.note && <Text style={s.rateNote}>{r.note}</Text>}
+                  </View>
+                );
+              })}
+
+              <Text style={s.ratesSection}>Pity (guaranteed S-rank)</Text>
+              <Text style={s.ratesBody}>• The S-rank chance rises to <Text style={s.ratesEm}>8%</Text> from pull 50 and <Text style={s.ratesEm}>15%</Text> from pull 70 (“soft pity”).</Text>
+              <Text style={s.ratesBody}>• An S-rank is <Text style={s.ratesEm}>guaranteed by pull 90</Text> on the standard banner and <Text style={s.ratesEm}>pull 80</Text> on event banners (“hard pity”). The counter carries over between summons and resets when you obtain an S-rank.</Text>
+
+              <Text style={s.ratesSection}>Featured heroes</Text>
+              <Text style={s.ratesBody}>• <Text style={s.ratesEm}>Event banner:</Text> each S-rank has a 50% chance to be the featured hero. If it is not, your <Text style={s.ratesEm}>next</Text> S-rank is guaranteed to be the featured hero.</Text>
+              <Text style={s.ratesBody}>• <Text style={s.ratesEm}>Standard banner:</Text> 20% of S-rank summons are a Sovereign-tier hero (when one is still uncollected).</Text>
+
+              <Text style={s.ratesFoot}>Probabilities are independent per summon. ×10 summons draw 10 times at these same rates.</Text>
+            </ScrollView>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -1299,6 +1358,35 @@ const s = StyleSheet.create({
   },
   gemsTxt:      { color: C.GOLD, fontSize: 14, fontWeight: '700' },
   headerGemImg: { width: 16, height: 16, resizeMode: 'contain' },
+
+  // ── Rates / odds disclosure modal ───────────────────────────────────────────
+  ratesOverlay: {
+    backgroundColor: C.OVERLAY_4, alignItems: 'center', justifyContent: 'center',
+    zIndex: 120, paddingHorizontal: 16,
+  },
+  ratesCard: {
+    width: '100%', maxWidth: 520, maxHeight: '88%',
+    backgroundColor: C.BG_CARD, borderRadius: 16,
+    borderWidth: 1, borderColor: C.BORDER_STRONG,
+    paddingHorizontal: 18, paddingTop: 14, paddingBottom: 16,
+  },
+  ratesHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  ratesTitle: { flex: 1, color: C.TEXT, fontSize: 15, fontWeight: '900', letterSpacing: 2 },
+  ratesClose: { padding: 4 },
+  ratesSection: {
+    color: C.GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 1.5,
+    textTransform: 'uppercase', marginTop: 12, marginBottom: 6,
+  },
+  rateRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 3 },
+  rateBadge: {
+    width: 26, height: 22, borderRadius: 5, alignItems: 'center', justifyContent: 'center',
+  },
+  rateBadgeTxt: { fontSize: 12, fontWeight: '900' },
+  ratePct: { color: C.TEXT, fontSize: 14, fontWeight: '800', minWidth: 42 },
+  rateNote: { color: C.TEXT_MUTED, fontSize: 11, flex: 1 },
+  ratesBody: { color: C.TEXT_SOFT, fontSize: 12.5, lineHeight: 18, marginBottom: 5 },
+  ratesEm: { color: C.TEXT, fontWeight: '800' },
+  ratesFoot: { color: C.TEXT_MUTED, fontSize: 11, lineHeight: 16, marginTop: 12, fontStyle: 'italic' },
 
   // ── Banner layout ──────────────────────────────────────────────────────────
   bannerLayout: { flex: 1, flexDirection: 'row' },

@@ -1,20 +1,25 @@
 import { getUID } from './auth';
 import { supabase } from './supabaseConfig';
+import { CURRENT_VERSION } from '../store/migrations';
 
-const SCHEMA_VERSION = 1;
+// Keep cloud saves tagged with the SAME schema version the local migrations use, so the
+// restore path can migrate() an older cloud save up to the current shape correctly.
+const SCHEMA_VERSION = CURRENT_VERSION;
 
 const SAVE_FIELDS = [
   'schemaVersion', 'gems', 'gold', 'pity', 'playerUid',
   'ownedHeroes', 'heroCollection', 'team', 'savedTeams', 'activeTeamPreset',
   'completedChapters', 'milestonesClaimed',
   'lastClaimDate', 'dailyStreak', 'dailyQuests',
-  'towerHighestFloor', 'towerCurrentFloor', 'towerWeekResetDate', 'towerCoins',
+  'towerHighestFloor', 'towerWeeklyBest', 'towerCurrentFloor', 'towerWeekResetDate', 'towerCoins',
   'ascensionInventory',
   'pullHistory', 'achievements', 'pendingAchievementUnlocks',
   'eventPity', 'eventGuarantee',
   'playerProfile', 'settings',
   'hasSeenOnboarding', 'hasSeenBattleTutorial',
   'practiceBonusClaimed', 'pendingMilestoneReward',
+  // Synced so re-auth can't reset an IAP entitlement cap or refill daily dungeon attempts.
+  'shopPurchases', 'dungeonAttemptsUsed', 'dungeonResetDate',
 ];
 
 function pickSaveFields(state) {
@@ -127,6 +132,28 @@ function mergeEventGuarantee(local, cloud) {
   return merged;
 }
 
+// Per-pack purchase counts — max-merge so a sign-out/in cannot reset an IAP purchase cap.
+function mergeShopPurchases(local, cloud) {
+  const merged = { ...(cloud || {}) };
+  for (const [id, qty] of Object.entries(local || {})) {
+    merged[id] = Math.max(merged[id] || 0, qty || 0);
+  }
+  return merged;
+}
+
+// Daily dungeon-attempt counter: keep the most recent local date; on the same day keep
+// the higher used-count so re-authenticating can't hand the player a free attempt refill.
+function mergeDungeonAttempts(local, cloud) {
+  const lDate = local.dungeonResetDate || '';
+  const cDate = cloud.dungeonResetDate || '';
+  if (lDate === cDate) {
+    return { dungeonResetDate: lDate, dungeonAttemptsUsed: Math.max(local.dungeonAttemptsUsed || 0, cloud.dungeonAttemptsUsed || 0) };
+  }
+  return lDate > cDate
+    ? { dungeonResetDate: lDate, dungeonAttemptsUsed: local.dungeonAttemptsUsed || 0 }
+    : { dungeonResetDate: cDate, dungeonAttemptsUsed: cloud.dungeonAttemptsUsed || 0 };
+}
+
 function higherRank(a, b) {
   const ORDER = [null, 'C', 'B', 'A', 'S', 'SOVEREIGN'];
   return ORDER.indexOf(a) >= ORDER.indexOf(b) ? a : b;
@@ -154,14 +181,32 @@ export function resolveConflict(local, cloud) {
   const cloudTs = typeof cloud.updatedAt === 'number' ? cloud.updatedAt : 0;
   const localTs = typeof local.updatedAt === 'number' ? local.updatedAt : 0;
   const useLocal = localTs > cloudTs;
+  const pick = (key) => (useLocal ? local[key] : cloud[key]);
+  const dungeon = mergeDungeonAttempts(local, cloud);
 
   return {
     ...cloud,
-    gems:              Math.max(local.gems  || 0, cloud.gems  || 0),
-    gold:              Math.max(local.gold  || 0, cloud.gold  || 0),
-    towerHighestFloor: Math.max(local.towerHighestFloor || 0, cloud.towerHighestFloor || 0),
-    dailyStreak:       Math.max(local.dailyStreak || 0, cloud.dailyStreak || 0),
 
+    // Spendable balances use TRUE last-writer-wins (not Math.max). Max-merging let
+    // spent gems/gold reappear on the next multi-device sync — a duplication exploit.
+    // Trade-off without server authority: the older device's unsynced earnings are lost,
+    // which is correct LWW behaviour and far safer than resurrecting spent currency.
+    gems:       pick('gems') || 0,
+    gold:       pick('gold') || 0,
+    pity:       pick('pity') || 0,
+    towerCoins: pick('towerCoins') || 0,
+
+    // Monotonic high-water records — safe to max-merge.
+    towerHighestFloor: Math.max(local.towerHighestFloor || 0, cloud.towerHighestFloor || 0),
+    towerWeeklyBest:   Math.max(local.towerWeeklyBest || 0, cloud.towerWeeklyBest || 0),
+
+    // Point-in-time daily/progress state → newest writer wins.
+    dailyStreak:       pick('dailyStreak') || 0,
+    lastClaimDate:     pick('lastClaimDate'),
+    dailyQuests:       pick('dailyQuests'),
+    towerCurrentFloor: pick('towerCurrentFloor'),
+
+    // Additive collections — union/merge so owned progress is never lost.
     ownedHeroes:       [...new Set([...(local.ownedHeroes || []), ...(cloud.ownedHeroes || [])])],
     completedChapters: [...new Set([...(local.completedChapters || []), ...(cloud.completedChapters || [])])],
     milestonesClaimed: [...new Set([...(local.milestonesClaimed || []), ...(cloud.milestonesClaimed || [])])],
@@ -173,9 +218,18 @@ export function resolveConflict(local, cloud) {
     eventPity:          mergeEventPity(local.eventPity, cloud.eventPity),
     eventGuarantee:     mergeEventGuarantee(local.eventGuarantee, cloud.eventGuarantee),
 
-    team:          useLocal ? local.team          : cloud.team,
-    savedTeams:    useLocal ? local.savedTeams    : cloud.savedTeams,
-    playerProfile: useLocal ? local.playerProfile : cloud.playerProfile,
-    settings:      useLocal ? local.settings      : cloud.settings,
+    // IAP caps and daily dungeon attempts — merged so re-auth can't reset either.
+    shopPurchases:       mergeShopPurchases(local.shopPurchases, cloud.shopPurchases),
+    dungeonResetDate:    dungeon.dungeonResetDate,
+    dungeonAttemptsUsed: dungeon.dungeonAttemptsUsed,
+
+    team:             useLocal ? local.team             : cloud.team,
+    savedTeams:       useLocal ? local.savedTeams       : cloud.savedTeams,
+    activeTeamPreset: useLocal ? local.activeTeamPreset : cloud.activeTeamPreset,
+    playerProfile:    useLocal ? local.playerProfile    : cloud.playerProfile,
+    settings:         useLocal ? local.settings         : cloud.settings,
+
+    // Carry the winning timestamp forward so the merged result compares correctly next time.
+    updatedAt: Math.max(cloudTs, localTs),
   };
 }

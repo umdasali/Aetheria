@@ -1,33 +1,14 @@
 // ─── Leaderboard Service ──────────────────────────────────────────────────────
-// Supabase table schema (run once in your Supabase SQL editor):
+// Schema and policies live in supabase/migrations:
+//   0001_init.sql                              -> public.leaderboards table + public read
+//   0002_leaderboard_server_authoritative.sql  -> submit_score() RPC; client writes revoked
 //
-//   create table public.leaderboards (
-//     id          bigserial primary key,
-//     user_id     uuid not null,
-//     player_name text not null default 'Aetherian',
-//     category    text not null,          -- 'tower_weekly' | 'tower_alltime' | 'collection'
-//     score       int  not null default 0,
-//     updated_at  timestamptz not null default now()
-//   );
-//
-//   -- Unique per user + category (upsert key)
-//   create unique index leaderboards_user_category on public.leaderboards(user_id, category);
-//
-//   -- Enable Row Level Security
-//   alter table public.leaderboards enable row level security;
-//
-//   -- Allow authenticated users to upsert their own row
-//   create policy "users can upsert own scores"
-//     on public.leaderboards for all
-//     using  (auth.uid() = user_id)
-//     with check (auth.uid() = user_id);
-//
-//   -- Allow anyone to read (public leaderboard)
-//   create policy "anyone can read leaderboard"
-//     on public.leaderboards for select
-//     using (true);
+// Scores are server-authoritative: clients call the submit_score() RPC, which derives
+// the score from the caller's own game_saves row. Direct INSERT/UPDATE on the table is
+// revoked, so a client cannot spoof its rank. Reads remain public.
 
 import { supabase } from './supabaseConfig';
+import { syncNow } from './syncQueue';
 
 export const CATEGORIES = {
   TOWER_WEEKLY:   'tower_weekly',
@@ -36,21 +17,31 @@ export const CATEGORIES = {
 };
 
 /**
- * Upsert the caller's score for the given category.
- * No-ops gracefully when the user is not signed in.
+ * Submit the caller's score for a category.
+ *
+ * The score is NOT supplied by the client — it is derived SERVER-SIDE from the
+ * player's own game_saves row by the submit_score() SECURITY DEFINER RPC (see
+ * supabase/migrations/0002_leaderboard_server_authoritative.sql). Direct table
+ * writes are revoked, so a client can no longer spoof its rank. Make sure the
+ * latest save has been uploaded (cloudSave) before calling this.
+ *
+ * No-ops gracefully when the user is not signed in. Returns { score, error }.
  */
-export async function submitScore(category, score, playerName) {
+export async function submitScore(category, playerName) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'not_signed_in' };
 
-  const { error } = await supabase
-    .from('leaderboards')
-    .upsert(
-      { user_id: user.id, player_name: playerName ?? 'Aetherian', category, score, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,category' },
-    );
+  // Flush the latest local state to the cloud first, so the server derives the score
+  // from current data (otherwise a just-cleared floor wouldn't count until the next
+  // debounced sync). Best-effort — a failed flush just means a slightly stale score.
+  try { await syncNow(); } catch (_) {}
 
-  return { error };
+  const { data, error } = await supabase.rpc('submit_score', {
+    p_category: category,
+    p_player_name: playerName ?? 'Aetherian',
+  });
+
+  return { score: data ?? null, error };
 }
 
 /**

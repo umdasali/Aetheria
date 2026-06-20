@@ -191,9 +191,10 @@ export default function SettingsScreen({ navigation }) {
           onPress: async () => {
             setSignOut(true);
             await signOut();
-            // Mark local save as unclaimed — syncAndClose will detect a different
-            // user signing in later and wipe this data before loading their save.
-            useGameStore.setState({ cloudAccountEmail: null, localUserId: null });
+            // Keep localUserId (the previous owner's id) so that if a DIFFERENT account
+            // signs in later, syncAndClose detects the mismatch and wipes this account's
+            // leftover progress before loading theirs. Only clear the connected email.
+            useGameStore.setState({ cloudAccountEmail: null });
             setSignOut(false);
           },
         },

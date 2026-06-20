@@ -17,6 +17,12 @@ import { ACHIEVEMENT_DEFS } from '../data/achievements';
 import { sanitizeState } from './sanitizeState';
 import { initSyncQueue, triggerSync } from '../cloud/syncQueue';
 
+// Copies consumed per upgrade. Kept low so progression is reachable for F2P players via
+// recurring featured banners + pity, instead of requiring an unreachable pile of dupes of
+// one specific hero. Exported so the HeroDetail forge UI shows the same numbers.
+export const FUSION_COPIES    = 2;  // C→B→A→S rank-up
+export const TRANSCEND_COPIES = 3;  // +5 level cap per transcendence (×4 to reach L30)
+
 function localDateStr(date = new Date()) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -55,6 +61,7 @@ function pickAscensionDrop(maxQty) {
 // Canonical initial state — used both to seed the store and to reset it on account switch.
 const INITIAL_STATE = {
   schemaVersion:         CURRENT_VERSION,
+  updatedAt:             0,       // last local mutation time (ms) — drives cloud last-writer-wins
   cloudAccountEmail:     null,
   localUserId:           null,   // Supabase user id that owns this local save; null = unclaimed
   playerUid:             null,   // Persistent display UID shown on profile; generated once
@@ -124,7 +131,20 @@ const INITIAL_STATE = {
 
 const useGameStore = create(
   persist(
-    (set, get) => ({
+    (rawSet, get) => {
+      // Stamp updatedAt on every mutation so cloud-merge has a real last-writer-wins
+      // signal. Previously updatedAt was never set locally → it stayed 0 → cloud always
+      // won and local team/profile/settings/currency edits were silently lost on sync
+      // (see resolveConflict in cloudSave.js).
+      const set = (partial, replace) =>
+        rawSet(
+          typeof partial === 'function'
+            ? (s) => ({ ...partial(s), updatedAt: Date.now() })
+            : { ...partial, updatedAt: Date.now() },
+          replace,
+        );
+
+      return {
       ...INITIAL_STATE,
 
       // Wipes AsyncStorage and resets Zustand to defaults.
@@ -523,7 +543,9 @@ const useGameStore = create(
         const data       = state.heroCollection[heroId];
         const hero       = HEROES.find(h => h.id === heroId);
         if (!data || !hero) return { ok: false, reason: 'not_owned' };
-        if ((data.copies ?? 1) < 3) return { ok: false, reason: 'copies' };
+        // 2 copies (was 3): getting 3+ dupes of a specific hero from a 60-hero pool was
+        // effectively unreachable F2P; 2 is attainable via recurring featured banners + pity.
+        if ((data.copies ?? 1) < FUSION_COPIES) return { ok: false, reason: 'copies' };
 
         const RANK_ORDER = ['C', 'B', 'A', 'S'];
         const effectiveRank = data.effectiveRank || hero.rank;
@@ -541,7 +563,7 @@ const useGameStore = create(
             ...state.heroCollection,
             [heroId]: {
               ...data,
-              copies:       (data.copies ?? 1) - 3,
+              copies:       (data.copies ?? 1) - FUSION_COPIES,
               effectiveRank: newRank,
             },
           },
@@ -554,7 +576,9 @@ const useGameStore = create(
         const state = get();
         const data  = state.heroCollection[heroId];
         if (!data) return { ok: false, reason: 'not_owned' };
-        if ((data.copies ?? 1) < 5) return { ok: false, reason: 'copies' };
+        // 3 copies per transcendence (was 5) — see FUSION_COPIES note. 4 transcendences
+        // to reach L30 now costs 12 copies of one hero instead of an unreachable 20.
+        if ((data.copies ?? 1) < TRANSCEND_COPIES) return { ok: false, reason: 'copies' };
 
         const transcendence = data.transcendence || 0;
         if (transcendence >= 4) return { ok: false, reason: 'max' }; // hard cap L30
@@ -569,7 +593,7 @@ const useGameStore = create(
             ...state.heroCollection,
             [heroId]: {
               ...data,
-              copies:       (data.copies ?? 1) - 5,
+              copies:       (data.copies ?? 1) - TRANSCEND_COPIES,
               transcendence: transcendence + 1,
             },
           },
@@ -848,7 +872,8 @@ const useGameStore = create(
         triggerSync();
         return true;
       },
-    }),
+      };
+    },
     {
       name: 'trump-card-game-storage',
       storage: createJSONStorage(() => AsyncStorage),

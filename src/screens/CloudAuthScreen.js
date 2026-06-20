@@ -12,6 +12,8 @@ import {
   resendVerification,
 } from '../cloud/auth';
 import { downloadSave, uploadSave, resolveConflict } from '../cloud/cloudSave';
+import { migrate } from '../store/migrations';
+import { sanitizeState } from '../store/sanitizeState';
 import useGameStore from '../store/gameStore';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -150,8 +152,20 @@ export default function CloudAuthScreen({ navigation }) {
       const { data: cloudSave } = await withTimeout(downloadSave(), SYNC_TIMEOUT_MS);
 
       if (cloudSave) {
-        const local = useGameStore.getState();
-        const merged = resolveConflict(local, cloudSave);
+        // Protect the running app: migrate + sanitize the downloaded save before it
+        // touches the store, so an old-schema or tampered cloud save can't crash or
+        // corrupt state (mirrors the local AsyncStorage rehydrate guards).
+        const migratedCloud = migrate(cloudSave, cloudSave.schemaVersion ?? 0);
+        const cleanCloud = sanitizeState(migratedCloud) || migratedCloud;
+
+        let local = useGameStore.getState();
+        // If this device still holds a DIFFERENT user's progress, wipe it before merging
+        // so account A's leftover data can never bleed into account B's cloud save.
+        if (local.localUserId && local.localUserId !== currentUid) {
+          await useGameStore.getState().resetStore();
+          local = useGameStore.getState();
+        }
+        const merged = resolveConflict(local, cleanCloud);
         useGameStore.setState({ ...merged, cloudAccountEmail: user.email, localUserId: currentUid });
         await withTimeout(uploadSave({ ...merged, cloudAccountEmail: user.email }), SYNC_TIMEOUT_MS);
       } else {

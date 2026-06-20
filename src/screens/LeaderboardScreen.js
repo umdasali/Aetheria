@@ -569,10 +569,11 @@ export default function LeaderboardScreen({ navigation }) {
     setLoading(true);
     setError(null);
     try {
-      // Only submit if the score has actually changed since the last cached upload.
+      // currentScore is used only to decide WHEN to re-submit; the authoritative score
+      // is derived server-side by submit_score() from the uploaded save.
       const currentScore = scoreForTab(category);
       if (forceRefresh || !cached || cached.ownScore !== currentScore) {
-        await submitScore(category, currentScore, playerProfile?.name ?? 'Aetherian');
+        await submitScore(category, playerProfile?.name ?? 'Aetherian');
       }
       const [topResult, ownResult] = await Promise.all([
         fetchTopN(category, 100),

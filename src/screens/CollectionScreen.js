@@ -16,9 +16,9 @@ const { width: W } = Dimensions.get('window');
 
 const SIDEBAR_W = 148;
 const COLS      = 5;
-const GRID_PAD  = 10;
+const GRID_PAD  = 12;
 const GAP       = 7;
-const CARD_W    = Math.floor((W - SIDEBAR_W - GRID_PAD * 2 - GAP * (COLS - 1)) / COLS);
+const CARD_W    = Math.floor((W - SIDEBAR_W - GRID_PAD * 2 - GAP * (COLS - 7)) / COLS);
 const CARD_H    = Math.floor(CARD_W * 1.42);
 
 const FACTION_FILTERS = [
@@ -192,7 +192,7 @@ export default function CollectionScreen({ navigation }) {
             windowSize={5}
             removeClippedSubviews
             getItemLayout={(_data, index) => ({
-              length: CARD_H + GAP,
+              length: CARD_H,
               offset: Math.floor(index / COLS) * (CARD_H + GAP) + GRID_PAD,
               index,
             })}

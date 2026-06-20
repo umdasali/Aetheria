@@ -19,9 +19,9 @@ const HEADER_H   = 48;
 const LEFT_W     = Math.floor(W * 0.33);
 const RIGHT_W    = W - LEFT_W - 1;
 const HERO_COLS  = 5;
-const HERO_PAD   = 10;
-const HERO_GAP   = 6;
-const HERO_CARD_W = Math.floor((RIGHT_W - HERO_PAD * 2 - HERO_GAP * (HERO_COLS - 1)) / HERO_COLS);
+const HERO_PAD   = 12;
+const HERO_GAP   = 7;
+const HERO_CARD_W = Math.floor((RIGHT_W - HERO_PAD * 2 - HERO_GAP * (HERO_COLS - 12)) / HERO_COLS);
 const HERO_CARD_H = Math.floor(HERO_CARD_W * 320 / 220);
 
 const GEM_IMG = require('../../assets/currency/gem.png');

@@ -5,7 +5,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ALL_EVENTS, getActiveEvents, secondsUntilEnd } from '../data/events';
+import { getActiveEvents, getUpcomingEvents, getEndedEvents, secondsUntilEnd } from '../data/events';
 import { getHeroById } from '../data/heroes';
 import { C, RANK } from '../theme/colors';
 import HeroCard from '../components/HeroCard';
@@ -166,15 +166,10 @@ export default function EventScreen({ navigation }) {
   const eventGuarantee = useGameStore(s => s.eventGuarantee);
   const [tab, setTab]  = useState('active');
 
+  // Banners rotate on a fixed cadence, so these are always populated (no dead tabs).
   const activeEvents   = getActiveEvents();
-  const upcomingEvents = ALL_EVENTS.filter(e => {
-    const today = new Date().toISOString().slice(0, 10);
-    return new Date(e.startDate) > new Date(today);
-  });
-  const endedEvents    = ALL_EVENTS.filter(e => {
-    const today = new Date().toISOString().slice(0, 10);
-    return new Date(e.endDate) < new Date(today);
-  });
+  const upcomingEvents = getUpcomingEvents();
+  const endedEvents    = getEndedEvents();
 
   const displayList = tab === 'active'   ? activeEvents
     : tab === 'upcoming' ? upcomingEvents

@@ -105,7 +105,9 @@ export const calculateDamage = (attacker, defender, multiplier) => {
   const base       = eff.atk * multiplier;
   const defFactor  = 1 + (defEff.def / (defEff.def + 500)) * 1.5;
   // Heroes have explicit crit (170-700). Enemies lack the stat → give them a 5% base crit.
-  const critChance = (eff.crit || 50) / 1000;
+  // Cap at 85%: rank (SOVEREIGN 1.85×) + level scaling pushes crit past 1000 on leveled
+  // heroes, which without a cap means a guaranteed crit every hit and a meaningless stat.
+  const critChance = Math.min(0.85, (eff.crit || 50) / 1000);
   const isCrit     = Math.random() < critChance;
 
   // Smite passive: 2.0× crit multiplier instead of 1.75×

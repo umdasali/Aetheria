@@ -117,7 +117,13 @@
       "Bash(node -e \"const b = require\\('@babel/core'\\); console.log\\(b.version\\);\")",
       "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('src/screens/BattleScreen.js', { presets: ['babel-preset-expo'], filename: 'src/screens/BattleScreen.js' }\\); console.log\\('OK'\\)\")",
       "Bash(grep -n \"triggerHit\\(playerAnims\\\\|reflected\\\\|lastDmg = damage\\\\|msg = \\\\`\\\\${actor.name} attacks\" /Users/codeclouds-mdalisherali/Trump-Card-game/src/screens/BattleScreen.js)",
-      "Bash(awk '/^const em = StyleSheet.create\\\\\\(/{f=1} f{print NR\": \"$0} f&&/^\\\\}\\\\\\);/{exit}' src/screens/ResourceDungeonScreen.js)"
+      "Bash(awk '/^const em = StyleSheet.create\\\\\\(/{f=1} f{print NR\": \"$0} f&&/^\\\\}\\\\\\);/{exit}' src/screens/ResourceDungeonScreen.js)",
+      "Bash(grep -nB6 \"effect: 'MOONLIGHT'\\\\|effect: 'SANDFLAY'\" src/data/heroes.js)",
+      "Bash(bc)",
+      "Bash(md5 assets/heroes/hero_054.webp assets/heroes/hero_055.webp assets/heroes/hero_018.webp)",
+      "Bash(grep -E \"\\\\.env$\")",
+      "Bash(grep -rnE \"#[0-9a-fA-F]{3,8}\" src/screens src/components)",
+      "Bash(awk -F: '{print $1}')"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

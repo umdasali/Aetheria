@@ -351,9 +351,10 @@ export default function BattleScreen({ navigation, route }) {
       ]),
     ];
     if (direction !== 0 && a.lungeX) {
-      // Faster lunge out, decisive snap back
+      // Faster lunge out, decisive snap back. Kept modest (14px) so lunge + the 1.15×
+      // scale together still fit within the inter-card spacing and never overlap a neighbour.
       animations.push(Animated.sequence([
-        Animated.timing(a.lungeX, { toValue: direction * 24, duration: 65,  useNativeDriver: true }),
+        Animated.timing(a.lungeX, { toValue: direction * 14, duration: 65,  useNativeDriver: true }),
         Animated.timing(a.lungeX, { toValue: 0,              duration: 120, useNativeDriver: true }),
       ]));
     }
@@ -470,9 +471,20 @@ export default function BattleScreen({ navigation, route }) {
     return 0;
   };
 
-  // Prefer the player's currently-chosen hero if still alive; fall back to firstLiving.
-  const nextPlayerIdx = (arr, preferred) =>
-    preferred < arr.length && arr[preferred].currentHp > 0 ? preferred : firstLiving(arr);
+  // First living hero that is NOT stunned (can actually take an action this turn).
+  const firstActable = (arr) => {
+    for (let i = 0; i < arr.length; i++) if (arr[i].currentHp > 0 && (arr[i].stunned || 0) <= 0) return i;
+    return -1;
+  };
+
+  // Prefer the player's currently-chosen hero if still alive AND not stunned; otherwise
+  // hand control to the first actable hero, falling back to the first living hero so a
+  // fully-stunned team still resolves (the stun-skip effect then auto-passes the turn).
+  const nextPlayerIdx = (arr, preferred) => {
+    if (preferred < arr.length && arr[preferred].currentHp > 0 && (arr[preferred].stunned || 0) <= 0) return preferred;
+    const actable = firstActable(arr);
+    return actable >= 0 ? actable : firstLiving(arr);
+  };
 
   // ── Enemy AI ──────────────────────────────────────────────────────────────
 
@@ -594,6 +606,9 @@ export default function BattleScreen({ navigation, route }) {
             lastDamage: damage, lastCrit: isCrit,
             damageKey:  (curPlayers[targetIdx].damageKey || 0) + 1,
           };
+          // Enemy effects (burn/poison/chill/shatter/weaken/stun) now actually proc on
+          // the player — basic attack = 25% chance via applyOnHitDebuff.
+          curPlayers[targetIdx] = applyOnHitDebuff(actor, curPlayers[targetIdx], false);
           lastDmg = damage;
           msg = `${actor.name} attacks${isCrit ? ' — CRITICAL!' : ''}`;
           setTimeout(() => triggerHit(playerAnims, targetIdx), 80);
@@ -622,6 +637,8 @@ export default function BattleScreen({ navigation, route }) {
               lastDamage: damage, lastCrit: isCrit,
               damageKey:  (curPlayers[targetIdx].damageKey || 0) + 1,
             };
+            // Enemy skills proc their effect at 50% (matches the player skill rate).
+            curPlayers[targetIdx] = applyOnHitDebuff(actor, curPlayers[targetIdx], true);
             lastDmg = damage;
             msg = `${actor.name}: ${skill.name}${isCrit ? ' — CRIT!' : ''}`;
             setTimeout(() => triggerHit(playerAnims, targetIdx), 80);
@@ -659,6 +676,9 @@ export default function BattleScreen({ navigation, route }) {
     if (isEnemyTurn || isAnimating || battleResult || enemyCutIn) return;
     const hero = playerTeam[currentTurnIdx];
     if (!hero || hero.currentHp <= 0) return;
+    // A stunned hero can't act — the player must switch to an unstunned hero
+    // (or, if the whole team is stunned, the stun-skip effect auto-passes the turn).
+    if ((hero.stunned || 0) > 0) { setStatusMsg(`${hero.name} is stunned!`); return; }
 
     let tgtIdx = selectedEnemy;
     if (tgtIdx >= enemyTeam.length || enemyTeam[tgtIdx]?.currentHp <= 0)
@@ -757,7 +777,11 @@ export default function BattleScreen({ navigation, route }) {
         }
       } else {
         const desc = (skill.description || '').toLowerCase();
-        if (/shield|absorb|barrier|deflect/.test(desc)) {
+        // Defensive skills (guards/walls/armour/wards) grant the caster a shield charge.
+        // Broadened from the old shield|absorb|barrier|deflect set so the ~10 "guard/
+        // armour/reduce incoming damage" skills actually shield instead of falling through
+        // to a heal. Verified against every damage:0 skill: no heal/buff matches this set.
+        if (/shield|absorb|barrier|deflect|armou?r|\bward\b|nullif|reduc|defens|block/.test(desc)) {
           np = np.map((p, i) =>
             i === currentTurnIdx ? { ...p, shield: (p.shield || 0) + 1 } : p
           );
@@ -815,6 +839,10 @@ export default function BattleScreen({ navigation, route }) {
     // ── Turn limit ──────────────────────────────────────────────────────────────
     const newTurnCount = turnCount + 1;
 
+    // One round has passed — tick down any player stuns (symmetric with the
+    // per-round enemy stun decrement in finishPhase).
+    np = np.map((p) => ((p.stunned || 0) > 0 ? { ...p, stunned: p.stunned - 1 } : p));
+
     setStatusMsg(msg);
     setEnergy(newEnergy);
     setEnemyTeam(ne);
@@ -840,6 +868,39 @@ export default function BattleScreen({ navigation, route }) {
       towerMode, towerFloor, towerRewards, dungeonMode, dungeonRewards,
       checkEnd, triggerHit, triggerAttack, triggerShake, triggerScreenFlash,
       trackQuestProgress, trackAchievementProgress, showResult]);
+
+  // ── Player stun-skip ────────────────────────────────────────────────────
+  // If it's the player's turn and EVERY living hero is stunned, no action is
+  // possible — auto-pass the turn (ticking the stuns down) so a player-side stun
+  // can never soft-lock the battle. If only some heroes are stunned, steer
+  // control to one that can act.
+  useEffect(() => {
+    if (isEnemyTurn || battleResult || isAnimating || enemyCutIn) return;
+    if (!playerTeam.length) return;
+    const living = playerTeam.filter((p) => p.currentHp > 0);
+    if (!living.length) return;
+
+    if (living.some((p) => (p.stunned || 0) <= 0)) {
+      // At least one hero can act — make sure the active slot isn't stunned/dead.
+      const active = playerTeam[currentTurnIdx];
+      if (!active || active.currentHp <= 0 || (active.stunned || 0) > 0) {
+        const idx = playerTeam.findIndex((p) => p.currentHp > 0 && (p.stunned || 0) <= 0);
+        if (idx >= 0 && idx !== currentTurnIdx) setCurrentTurnIdx(idx);
+      }
+      return;
+    }
+
+    // Whole team stunned → skip the player's turn (and tick the stuns).
+    setStatusMsg('Your team is stunned!');
+    setPlayerTeam((prev) => prev.map((p) => ((p.stunned || 0) > 0 ? { ...p, stunned: p.stunned - 1 } : p)));
+    setIsAnimating(true);
+    const t = setTimeout(() => {
+      setIsAnimating(false);
+      setIsEnemyTurn(true);
+    }, Math.round(700 / (speedRef.current || 1)));
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEnemyTurn, battleResult, isAnimating, enemyCutIn, playerTeam, currentTurnIdx]);
 
   // ── Rehydration guard — brief spinner while AsyncStorage loads ───────────
 
@@ -1756,8 +1817,10 @@ const S = StyleSheet.create({
   },
   cardRow: {
     flexDirection: 'row',
-    gap: CARD_GAP,
-    justifyContent: 'center',
+    // space-evenly puts the CARD_W ×0.80 slack BETWEEN the cards (not just the outer
+    // edges, as justifyContent:'center' did), giving each card room for its 1.15×
+    // attack-scale + lunge so an animating card never visually overlaps its neighbours.
+    justifyContent: 'space-evenly',
   },
   divider: {
     width: 1,

@@ -1,17 +1,19 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Image, ScrollView, Dimensions, Animated, Alert,
+  Image, Dimensions, Animated, Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import HeroCard from '../components/HeroCard';
 import FactionParticles from '../components/FactionParticles';
+import ForgeViz from '../components/ui/ForgeViz';
 import { HEROES, FACTIONS } from '../data/heroes';
-import useGameStore from '../store/gameStore';
+import useGameStore, { FUSION_COPIES, TRANSCEND_COPIES } from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
 import {
   ASCENSION_STAT_MULT, ASCENSION_MAX,
@@ -21,153 +23,599 @@ import { RANK_STAT_MULT } from '../utils/battleEngine';
 import { C, RANK, RANK_COLORS } from '../theme/colors';
 
 const { width: W, height: H } = Dimensions.get('window');
-const BODY_PAD = 14;
+const BODY_PAD  = 12;
+const RANK_ORDER = ['C', 'B', 'A', 'S'];
 
-// Coins earned per copy by rank
+// Absolute stat ceilings across all heroes — bars differ per hero
+const STAT_ABS_MAX = { HP: 25000, ATK: 3000, DEF: 2500, CRIT: 2500 };
+
+// Tower coins earned per copy by rank
 const COINS_PER_COPY = { SOVEREIGN: 200, S: 80, A: 35, B: 15, C: 8 };
 
-// ── Convert Copies stepper widget ────────────────────────────────────────────
-function ConvertCopiesWidget({ hero, heroData, onConvert }) {
-  const copies = heroData?.copies ?? 0;
-  const rank   = heroData?.effectiveRank || hero?.rank || 'C';
-  const rate   = COINS_PER_COPY[rank] ?? COINS_PER_COPY.C;
+// ── Glass panel helper ────────────────────────────────────────────────────────
+function Glass({ style, children, borderColor }) {
+  return (
+    <View style={[glass.wrap, style, borderColor ? { borderColor } : null]}>
+      <BlurView intensity={55} tint="dark" style={StyleSheet.absoluteFill} />
+      {/* Dark backing (was a faint white tint) so card text stays legible over the
+          bright blurred hero portrait behind the body. */}
+      <LinearGradient colors={[C.OVERLAY_3, C.OVERLAY_4]} style={StyleSheet.absoluteFill} />
+      {children}
+    </View>
+  );
+}
+const glass = StyleSheet.create({
+  wrap: {
+    borderRadius: 10, overflow: 'hidden',
+    borderWidth: 1, borderColor: C.BORDER,
+    position: 'relative',
+  },
+});
 
-  const [count, setCount] = useState(1);
+// ── Chip button ───────────────────────────────────────────────────────────────
+function Chip({ icon, label, color, onPress, disabled }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={disabled ? 1 : 0.75}
+      style={[chip.wrap, { borderColor: color + '55', backgroundColor: color + '15', opacity: disabled ? 0.45 : 1 }]}
+    >
+      <Ionicons name={icon} size={11} color={color} />
+      <Text style={[chip.label, { color }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+const chip = StyleSheet.create({
+  wrap: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 6, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 5 },
+  label: { fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
+});
 
-  // Cap count whenever copies changes (e.g. after a conversion)
+// ── Pixel-accurate progress bar ───────────────────────────────────────────────
+// Uses onLayout → animates an Animated.Value to pixel width (not %).
+// This guarantees bars actually end at different positions.
+function StatBar({ value, max, color }) {
+  const [trackW, setTrackW] = useState(0);
+  const fillAnim = useRef(new Animated.Value(0)).current;
+
+  const onLayout = useCallback((e) => {
+    const w = e.nativeEvent.layout.width;
+    setTrackW(w);
+  }, []);
+
   useEffect(() => {
-    if (count > copies) setCount(Math.max(1, copies));
-  }, [copies]);
-
-  if (copies === 0) return null;
-
-  const safeCount  = Math.min(count, copies);
-  const totalCoins = safeCount * rate;
-
-  const doConvert = (qty) => {
-    Alert.alert(
-      'Convert Copies',
-      `Convert ${qty} ${hero.name} ${qty === 1 ? 'copy' : 'copies'} into ${qty * rate} Tower Coins?\n\n${rate} coins per copy · ${rank} rank.\n\nThis cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: `Convert  (+${qty * rate} Coins)`,
-          onPress: () => { onConvert(hero.id, qty); setCount(1); },
-        },
-      ],
-    );
-  };
+    if (trackW === 0) return;
+    const target = Math.round(Math.min(value / max, 1) * trackW);
+    Animated.timing(fillAnim, {
+      toValue: target,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }, [trackW, value, max]);
 
   return (
-    <View style={cv.wrap}>
-      {/* Header */}
-      <View style={cv.header}>
-        <Text style={cv.label}>♻  CONVERT COPIES</Text>
-        <View style={cv.ratePill}>
-          <Text style={cv.rateText}>{rate} coins / copy · {rank}</Text>
-        </View>
-      </View>
+    <View
+      onLayout={onLayout}
+      style={[sb.track, { backgroundColor: color + '18' }]}
+    >
+      <Animated.View
+        style={[sb.fill, { width: fillAnim, backgroundColor: color }]}
+      />
+      {/* Leading glow nub */}
+      {trackW > 0 && (
+        <Animated.View
+          style={[sb.nub, {
+            backgroundColor: color,
+            shadowColor: color,
+            left: Animated.subtract(fillAnim, 3),
+          }]}
+        />
+      )}
+    </View>
+  );
+}
+const sb = StyleSheet.create({
+  track: { height: 5, borderRadius: 3, overflow: 'visible', position: 'relative' },
+  fill:  { height: '100%', borderRadius: 3, position: 'absolute', left: 0, top: 0 },
+  nub:   {
+    position: 'absolute', top: -2, width: 6, height: 9, borderRadius: 3,
+    shadowOpacity: 1, shadowRadius: 4, shadowOffset: { width: 0, height: 0 }, elevation: 4,
+  },
+});
 
-      {/* Stepper row */}
-      <View style={cv.stepRow}>
-        <TouchableOpacity
-          style={[cv.stepBtn, safeCount <= 1 && cv.stepBtnDisabled]}
-          onPress={() => setCount(c => Math.max(1, c - 1))}
-          disabled={safeCount <= 1}
-          activeOpacity={0.7}
-        >
-          <Text style={cv.stepGlyph}>−</Text>
-        </TouchableOpacity>
+// ── Section heading ───────────────────────────────────────────────────────────
+function SHead({ label }) {
+  return <Text style={shared.sHead}>{label}</Text>;
+}
 
-        <View style={cv.countBox}>
-          <Text style={cv.countNum}>{safeCount}</Text>
-          <Text style={cv.countSub}>of {copies} {copies === 1 ? 'copy' : 'copies'}</Text>
-        </View>
+// ── Tab bar ───────────────────────────────────────────────────────────────────
+const TABS = [
+  { key: 'profile', label: 'PROFILE', icon: 'person-outline' },
+  { key: 'skills',  label: 'SKILLS',  icon: 'flash-outline' },
+  { key: 'level',   label: 'LEVEL',   icon: 'trending-up-outline' },
+  { key: 'forge',   label: 'FORGE',   icon: 'git-merge-outline' },
+];
 
-        <TouchableOpacity
-          style={[cv.stepBtn, safeCount >= copies && cv.stepBtnDisabled]}
-          onPress={() => setCount(c => Math.min(copies, c + 1))}
-          disabled={safeCount >= copies}
-          activeOpacity={0.7}
-        >
-          <Text style={cv.stepGlyph}>+</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Preview */}
-      <Text style={cv.preview}>→ {totalCoins} Tower Coins</Text>
-
-      {/* Action buttons */}
-      <View style={cv.btnRow}>
-        <TouchableOpacity style={cv.btnSelected} onPress={() => doConvert(safeCount)} activeOpacity={0.8}>
-          <LinearGradient
-            colors={C.GRAD_PINK}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-            style={cv.btnInner}
-          >
-            <Text style={cv.btnTxt}>CONVERT {safeCount}</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {copies > 1 && (
-          <TouchableOpacity style={cv.btnAll} onPress={() => doConvert(copies)} activeOpacity={0.8}>
-            <LinearGradient
-              colors={C.GRAD_GOLD}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={cv.btnInner}
-            >
-              <Text style={cv.btnTxt}>ALL  (+{copies * rate})</Text>
-            </LinearGradient>
+function TabBar({ active, onChange, accent }) {
+  return (
+    <View style={tb.row}>
+      {TABS.map(t => {
+        const on = active === t.key;
+        return (
+          <TouchableOpacity key={t.key} style={tb.tab} onPress={() => onChange(t.key)} activeOpacity={0.7}>
+            <Ionicons name={t.icon} size={12} color={on ? accent : C.TEXT_DISABLED} />
+            <Text style={[tb.label, { color: on ? accent : C.TEXT_DISABLED }]}>{t.label}</Text>
+            {on && <View style={[tb.bar, { backgroundColor: accent }]} />}
           </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+const tb = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    backgroundColor: C.BG_STATS,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: C.BORDER_SUBTLE,
+    marginBottom: 8,
+  },
+  tab:   { flex: 1, alignItems: 'center', paddingVertical: 6, gap: 2 },
+  label: { fontSize: 7, fontWeight: '900', letterSpacing: 1.2 },
+  bar:   { height: 2, width: '50%', borderRadius: 1, marginTop: 2 },
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB CONTENTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── 1. Profile ────────────────────────────────────────────────────────────────
+function ProfileTab({
+  hero, faction, owned, inTeam, teamFull, addToTeam,
+  level, maxLevel, transcendence, ascension, ascMult, ascItemColor,
+  effectiveHp, effectiveAtk, effectiveDef, effectiveCrit,
+  saving, saved, handleDownload,
+}) {
+  const accent = faction.color;
+
+  return (
+    <View style={styles.tabContent}>
+      {/* About glass card */}
+      <Glass style={styles.aboutCard}>
+        <Text style={styles.aboutTxt} numberOfLines={2}>{hero.about}</Text>
+      </Glass>
+
+      {/* 2×2 stat grid */}
+      <View style={styles.statGrid}>
+        {[
+          { key: 'HP',   val: effectiveHp,   color: accent },
+          { key: 'ATK',  val: effectiveAtk,  color: accent },
+          { key: 'DEF',  val: effectiveDef,  color: accent },
+          { key: 'CRIT', val: effectiveCrit, color: accent },
+        ].map(({ key, val, color }) => (
+          <Glass key={key} style={styles.statCell}>
+            <Text style={[styles.statVal, { color }]}>{val.toLocaleString()}</Text>
+            <Text style={styles.statKey}>{key}</Text>
+            <View style={styles.statBarWrap}>
+              <StatBar value={val} max={STAT_ABS_MAX[key]} color={color} />
+            </View>
+          </Glass>
+        ))}
+      </View>
+
+      {/* Level + ascension info row */}
+      <View style={styles.infoRow}>
+        <Glass style={styles.infoPill}>
+          <Text style={[styles.infoPillTxt, { color: accent }]}>Lv.{level}/{maxLevel}</Text>
+          {transcendence > 0 && <Text style={[styles.infoPillSub, { color: C.GOLD }]}>✦{transcendence}</Text>}
+        </Glass>
+        {ascension > 0 && (
+          <Glass style={styles.infoPill}>
+            <Text style={[styles.infoPillTxt, { color: ascItemColor }]}>
+              ★{ascension}  +{Math.round((ascMult - 1) * 100)}%
+            </Text>
+          </Glass>
+        )}
+        {hero.element && (
+          <Glass style={styles.infoPill}>
+            <Text style={[styles.infoPillTxt, { color: C.CYAN }]}>{hero.element}</Text>
+          </Glass>
+        )}
+      </View>
+
+      {/* Action chips */}
+      <View style={styles.chipRow}>
+        {owned ? (
+          <>
+            <Chip
+              icon={inTeam ? 'remove-circle-outline' : teamFull ? 'people-outline' : 'add-circle-outline'}
+              label={inTeam ? 'REMOVE' : teamFull ? 'TEAM FULL' : 'ADD TO TEAM'}
+              color={inTeam ? C.DANGER : teamFull ? C.TEXT_MUTED : accent}
+              onPress={teamFull ? undefined : () => addToTeam(hero.id)}
+              disabled={teamFull}
+            />
+            <Chip
+              icon={saved ? 'checkmark-done-outline' : saving ? 'hourglass-outline' : 'share-social-outline'}
+              label={saved ? 'SHARED!' : saving ? 'SHARING…' : 'SHARE'}
+              color={saved ? C.SUCCESS : C.TEXT_MUTED}
+              onPress={handleDownload}
+              disabled={saving}
+            />
+          </>
+        ) : (
+          <Chip icon="lock-closed-outline" label="UNLOCK VIA SUMMON" color={C.GOLD} disabled />
         )}
       </View>
     </View>
   );
 }
 
-const cv = StyleSheet.create({
-  wrap: {
-    marginTop: 6,
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: C.GOLD + '55',
-    backgroundColor: C.BG_STATS,
-    padding: 12,
-    gap: 10,
-  },
-  header:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  label:   { fontSize: 11, fontWeight: '900', color: C.GOLD, letterSpacing: 1.5 },
-  ratePill: {
-    borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2,
-    backgroundColor: C.GOLD + '18', borderWidth: 1, borderColor: C.GOLD + '44',
-  },
-  rateText: { fontSize: 8, fontWeight: '700', color: C.GOLD },
+// ── 2. Skills ─────────────────────────────────────────────────────────────────
+function SkillsTab({ hero, faction }) {
+  const accent = faction.color;
+  return (
+    <View style={styles.tabContent}>
+      {hero.skills.map((sk, i) => (
+        <Glass key={i} style={styles.skillCard} borderColor={accent + '30'}>
+          {/* Cost badge */}
+          <View style={[styles.skillCostBadge, { borderColor: accent + '70', backgroundColor: accent + '18' }]}>
+            <Text style={[styles.skillCostTxt, { color: accent }]}>{sk.cost}</Text>
+          </View>
+          {/* Body */}
+          <View style={styles.skillBody}>
+            <Text style={styles.skillName}>{sk.name}</Text>
+            <Text style={styles.skillDesc} numberOfLines={2}>{sk.description}</Text>
+          </View>
+          {/* Damage */}
+          {sk.damage > 0 && (
+            <View style={styles.skillDmg}>
+              <Text style={styles.skillDmgTxt}>{sk.damage}×</Text>
+            </View>
+          )}
+          {sk.damage === 0 && (
+            <View style={[styles.skillDmg, { backgroundColor: C.SUCCESS + '20' }]}>
+              <Text style={[styles.skillDmgTxt, { color: C.SUCCESS }]}>HEAL</Text>
+            </View>
+          )}
+        </Glass>
+      ))}
 
-  stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  stepBtn: {
-    width: 36, height: 36, borderRadius: 10,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: C.GLASS_4, borderWidth: 1, borderColor: C.BORDER,
-  },
-  stepBtnDisabled: { opacity: 0.35 },
-  stepGlyph: { fontSize: 20, fontWeight: '700', color: C.TEXT, lineHeight: 24 },
+      {/* Trump card */}
+      <Glass style={styles.trumpCard} borderColor={accent + '55'}>
+        <LinearGradient
+          colors={[accent + '25', 'transparent']}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        />
+        <View style={styles.trumpLeft}>
+          <Text style={styles.trumpLabel}>TRUMP CARD</Text>
+          <Text style={[styles.trumpName, { color: C.GOLD }]}>{hero.trumpCard.name.toUpperCase()}</Text>
+        </View>
+        <Text style={[styles.trumpEffect, { color: accent }]} numberOfLines={2}>
+          ✦ {hero.trumpCard.effect}
+        </Text>
+      </Glass>
+    </View>
+  );
+}
 
-  countBox:  { alignItems: 'center', minWidth: 60 },
-  countNum:  { fontSize: 26, fontWeight: '900', color: C.TEXT },
-  countSub:  { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '600', marginTop: -2 },
+// ── 3. Level ──────────────────────────────────────────────────────────────────
+function LevelTab({
+  hero, faction, owned, gold,
+  level, maxLevel, levelCost, canLevelUp, isMaxLevel, copies,
+  transcendence, canTranscend, canAffordTranscend, transcendCost,
+  ascension, canAscend, requiredItem, ownedItemCount, ascItemColor,
+  onLevelUp, onTranscend, onAscend,
+  fusionMsg, transcendMsg, ascendMsg,
+  statDiff,
+}) {
+  const accent = faction.color;
 
-  preview: { fontSize: 11, fontWeight: '800', color: C.TEXT_SOFT, textAlign: 'center' },
+  // Arc ring — drawn as a thin border-radius circle with a clip-path trick:
+  // We use two rotating half-covers to reveal a % of the ring.
+  const pct     = level / maxLevel;
+  const degrees = Math.round(pct * 360);
 
-  btnRow:     { flexDirection: 'row', gap: 8 },
-  btnSelected: { flex: 1, borderRadius: 8, overflow: 'hidden' },
-  btnAll:      { flex: 1, borderRadius: 8, overflow: 'hidden' },
-  btnInner:    { paddingVertical: 10, alignItems: 'center', justifyContent: 'center' },
-  btnTxt:      { fontSize: 11, fontWeight: '900', color: C.TEXT, letterSpacing: 1 },
-});
+  return (
+    <View style={styles.tabContent}>
+      <View style={styles.levelLayout}>
+
+        {/* LEFT — level ring */}
+        <View style={styles.levelLeft}>
+          <Glass style={styles.levelRingCard} borderColor={accent + '50'}>
+            {/* Outer glow ring background */}
+            <View style={[styles.ringOuter, { borderColor: accent + '25' }]}>
+              {/* Filled arc using a gradient overlay trick */}
+              <View style={[styles.ringFill, { borderColor: accent }]}>
+                {/* Mask the unfilled portion */}
+                <View
+                  style={[
+                    styles.ringMask,
+                    {
+                      backgroundColor: C.BG_STATS,
+                      transform: [{ rotate: `${degrees}deg` }],
+                    },
+                  ]}
+                />
+              </View>
+              {/* Center content */}
+              <View style={styles.ringCenter}>
+                <Text style={[styles.ringLevel, { color: accent }]}>{level}</Text>
+                <Text style={styles.ringMax}>/ {maxLevel}</Text>
+              </View>
+            </View>
+
+            {/* Level up button */}
+            {owned && (
+              <TouchableOpacity
+                style={[
+                  styles.lvUpBtn,
+                  {
+                    borderColor: isMaxLevel ? C.GOLD + '55' : canLevelUp ? accent + '80' : C.BORDER,
+                    backgroundColor: isMaxLevel ? C.GOLD + '10' : canLevelUp ? accent + '15' : 'transparent',
+                  },
+                ]}
+                onPress={canLevelUp ? onLevelUp : undefined}
+                disabled={!canLevelUp}
+                activeOpacity={0.75}
+              >
+                <Ionicons
+                  name={isMaxLevel ? 'trophy-outline' : 'arrow-up-outline'}
+                  size={11}
+                  color={isMaxLevel ? C.GOLD : canLevelUp ? accent : C.TEXT_DISABLED}
+                />
+                <Text style={[styles.lvUpTxt, { color: isMaxLevel ? C.GOLD : canLevelUp ? accent : C.TEXT_DISABLED }]}>
+                  {isMaxLevel ? 'MAX' : `${levelCost.toLocaleString()} G`}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {!owned && (
+              <Text style={styles.lockedHint}>UNLOCK TO LEVEL</Text>
+            )}
+          </Glass>
+        </View>
+
+        {/* RIGHT — transcend + ascend panels */}
+        <View style={styles.levelRight}>
+          {/* Transcendence */}
+          <Glass
+            style={[styles.upgradeCard, { opacity: !owned ? 0.4 : 1 }]}
+            borderColor={canAffordTranscend ? C.PRIMARY + '70' : C.BORDER_SUBTLE}
+          >
+            <LinearGradient
+              colors={canAffordTranscend ? [C.PRIMARY + '20', 'transparent'] : ['transparent', 'transparent']}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.upgradeTop}>
+              <Ionicons name="arrow-up-circle-outline" size={13} color={canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED} />
+              <Text style={[styles.upgradeName, { color: canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>TRANSCEND</Text>
+              <View style={[styles.upgradeBadge, { backgroundColor: copies >= TRANSCEND_COPIES ? C.PRIMARY + '25' : C.BG_STATS }]}>
+                <Text style={[styles.upgradeBadgeTxt, { color: copies >= TRANSCEND_COPIES ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>{copies}/{TRANSCEND_COPIES}</Text>
+              </View>
+            </View>
+            <Text style={styles.upgradeSub}>
+              Max Lv {maxLevel} → {maxLevel + 5}
+            </Text>
+            <Text style={[styles.upgradeCost, { color: canAffordTranscend ? C.GOLD : C.TEXT_DISABLED }]}>
+              {transcendCost.toLocaleString()} G
+            </Text>
+            {owned && canTranscend && (
+              <TouchableOpacity
+                style={[styles.upgradeBtn, {
+                  borderColor: canAffordTranscend ? C.PRIMARY : C.BORDER,
+                  backgroundColor: canAffordTranscend ? C.PRIMARY + '20' : 'transparent',
+                }]}
+                onPress={canAffordTranscend ? onTranscend : undefined}
+                disabled={!canAffordTranscend}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.upgradeBtnTxt, { color: canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>
+                  {canAffordTranscend ? 'TRANSCEND' : 'NEED GOLD'}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {(!owned || !canTranscend) && (
+              <Text style={styles.upgradeHint}>
+                {!owned ? 'Unlock first' : transcendence >= 4 ? 'MAX REACHED' : `${copies}/${TRANSCEND_COPIES} copies`}
+              </Text>
+            )}
+            {transcendMsg !== '' && <Text style={[styles.upgradeErr, { color: C.PRIMARY_LIGHT }]}>{transcendMsg}</Text>}
+          </Glass>
+
+          {/* Ascension */}
+          <Glass
+            style={[styles.upgradeCard, { opacity: !owned ? 0.4 : 1 }]}
+            borderColor={canAscend ? ascItemColor + '70' : C.BORDER_SUBTLE}
+          >
+            <LinearGradient
+              colors={canAscend ? [ascItemColor + '20', 'transparent'] : ['transparent', 'transparent']}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.upgradeTop}>
+              <Ionicons name="sparkles-outline" size={13} color={canAscend ? ascItemColor : C.TEXT_DISABLED} />
+              <Text style={[styles.upgradeName, { color: canAscend ? ascItemColor : C.TEXT_DISABLED }]}>ASCEND</Text>
+              <View style={styles.ascTierRow}>
+                {[1, 2, 3].map(t => (
+                  <Text key={t} style={[styles.ascStar, { color: t <= ascension ? ascItemColor : C.TEXT_DISABLED }]}>★</Text>
+                ))}
+              </View>
+            </View>
+            <Text style={styles.upgradeSub}>
+              {requiredItem ? requiredItem.name : 'Item required'}
+            </Text>
+            <Text style={[styles.upgradeCost, { color: ownedItemCount >= 1 ? ascItemColor : C.TEXT_DISABLED }]}>
+              {ownedItemCount} / 1 owned
+            </Text>
+            {owned && ascension < ASCENSION_MAX && requiredItem && (
+              <TouchableOpacity
+                style={[styles.upgradeBtn, {
+                  borderColor: canAscend ? ascItemColor : C.BORDER,
+                  backgroundColor: canAscend ? ascItemColor + '20' : 'transparent',
+                }]}
+                onPress={canAscend ? onAscend : undefined}
+                disabled={!canAscend}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.upgradeBtnTxt, { color: canAscend ? ascItemColor : C.TEXT_DISABLED }]}>
+                  {canAscend ? `ASCEND → TIER ${ascension + 1}` : 'NEED ITEM'}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {ascension >= ASCENSION_MAX && (
+              <Text style={[styles.upgradeHint, { color: C.GOLD }]}>MAX TIER</Text>
+            )}
+            {ascendMsg !== '' && <Text style={[styles.upgradeErr, { color: ascItemColor }]}>{ascendMsg}</Text>}
+          </Glass>
+        </View>
+      </View>
+
+      {/* Stat diff panel */}
+      {statDiff && (
+        <Glass style={[styles.diffPanel, { borderColor: statDiff.color + '55' }]}>
+          <LinearGradient colors={[statDiff.color + '12', 'transparent']} style={StyleSheet.absoluteFill} />
+          <View style={styles.diffHeader}>
+            <Ionicons name="trending-up" size={10} color={statDiff.color} />
+            <Text style={[styles.diffLabel, { color: statDiff.color }]}>{statDiff.label}</Text>
+          </View>
+          {statDiff.transcendOnly ? (
+            <Text style={styles.diffNote}>Level up to unlock extra potential</Text>
+          ) : (
+            <View style={styles.diffRow}>
+              {statDiff.gains.map(({ stat, before, after, color }) => (
+                <View key={stat} style={styles.diffCell}>
+                  <Text style={[styles.diffStat, { color }]}>{stat}</Text>
+                  <Text style={styles.diffBefore}>{before.toLocaleString()}</Text>
+                  <Text style={[styles.diffAfter, { color: C.SUCCESS }]}>+{(after - before).toLocaleString()}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </Glass>
+      )}
+    </View>
+  );
+}
+
+// ── 4. Forge ──────────────────────────────────────────────────────────────────
+function ForgeTab({
+  hero, faction, owned, gold, copies,
+  effectiveRankKey, rankIdx, canFuse, canAffordFuse, fusionCost, fusionRankNext,
+  forgeActive,
+  heroData,
+  onFuse, onConvert,
+  fusionMsg,
+}) {
+  const rank    = RANK_COLORS[effectiveRankKey] || RANK_COLORS[hero.rank];
+  const rate    = COINS_PER_COPY[effectiveRankKey] ?? COINS_PER_COPY.C;
+  const maxConv = heroData?.copies ?? 0;
+  const accent  = canFuse ? (RANK[fusionRankNext]?.bg ?? faction.color) : faction.color;
+
+  return (
+    // Video bleeds edge-to-edge — negative margin cancels tabArea's padding
+    <View style={[styles.tabContent, styles.forgeTabFill]}>
+      {/* Video — fills the entire tab */}
+      <View style={[StyleSheet.absoluteFill, { borderRadius: 12, overflow: 'hidden' }]}>
+        <ForgeViz rank={effectiveRankKey} />
+      </View>
+
+      {/* Top-right rank badge */}
+      <View style={styles.galaxyBadge} pointerEvents="none">
+        <View style={[styles.rankChip, { backgroundColor: rank.bg + 'CC', borderColor: rank.glow + '80' }]}>
+          <Text style={[styles.rankChipTxt, { color: rank.text }]}>{effectiveRankKey}</Text>
+        </View>
+        {canFuse && (
+          <Text style={[styles.fuseHint, { color: RANK[fusionRankNext]?.glow ?? C.GOLD }]}>
+            {effectiveRankKey} → {fusionRankNext}
+          </Text>
+        )}
+        {hero.sovereign && (
+          <Text style={[styles.fuseHint, { color: C.SOVEREIGN_GOLD }]}>✦ SOVEREIGN APEX</Text>
+        )}
+      </View>
+
+      {/* Bottom action overlay — buttons float on the video */}
+      <View style={styles.forgeOverlay} pointerEvents="box-none">
+        {/* Gradient veil so buttons stay readable */}
+        <LinearGradient
+          colors={['transparent', C.OVERLAY_DEEP]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        <View style={styles.forgeOverlayRow}>
+          {/* Fusion button */}
+          {owned && (
+            <TouchableOpacity
+              style={[
+                styles.forgeOverlayBtn,
+                {
+                  borderColor: canAffordFuse ? accent + 'AA' : C.GLASS_7,
+                  backgroundColor: canAffordFuse ? accent + '28' : C.OVERLAY_2,
+                  opacity: !canFuse ? 0.45 : 1,
+                },
+              ]}
+              onPress={canFuse && canAffordFuse ? onFuse : undefined}
+              disabled={!canFuse || !canAffordFuse}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="git-merge-outline" size={13} color={canAffordFuse ? accent : C.TEXT_ON_DARK_DIM} />
+              <View>
+                <Text style={[styles.forgeOverlayLabel, { color: canAffordFuse ? accent : C.TEXT_ON_DARK_DIM }]}>
+                  {canFuse ? 'FUSION' : hero.sovereign ? 'APEX LOCKED' : rankIdx >= 3 ? 'MAX RANK' : 'FUSION'}
+                </Text>
+                <Text style={styles.forgeOverlaySub}>
+                  {canFuse
+                    ? `${copies}/${FUSION_COPIES} copies · ${fusionCost.toLocaleString()} G`
+                    : `Requires ${FUSION_COPIES} copies`}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {/* Convert copies button */}
+          {owned && maxConv > 0 && (
+            <TouchableOpacity
+              style={[styles.forgeOverlayBtn, {
+                borderColor: C.GOLD + '88',
+                backgroundColor: C.OVERLAY_2,
+              }]}
+              onPress={() => {
+                Alert.alert(
+                  'Convert Copies',
+                  `Convert ${maxConv} ${hero.name} ${maxConv === 1 ? 'copy' : 'copies'} into ${maxConv * rate} Tower Coins?\n\n${rate} coins / copy · ${effectiveRankKey} rank.`,
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: `Convert (+${maxConv * rate})`, onPress: () => onConvert(hero.id, maxConv) },
+                  ],
+                );
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="refresh-outline" size={13} color={C.GOLD} />
+              <View>
+                <Text style={[styles.forgeOverlayLabel, { color: C.GOLD }]}>CONVERT</Text>
+                <Text style={styles.forgeOverlaySub}>×{maxConv} copies · {rate} coins each</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {fusionMsg !== '' && (
+          <Text style={styles.forgeOverlayErr}>{fusionMsg}</Text>
+        )}
+      </View>
+    </View>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export default function HeroDetailScreen({ route, navigation }) {
   const { heroId } = route.params || {};
+
   const ownedHeroes         = useGameStore(s => s.ownedHeroes);
   const team                = useGameStore(s => s.team);
   const addToTeam           = useGameStore(s => s.addToTeam);
@@ -181,19 +629,23 @@ export default function HeroDetailScreen({ route, navigation }) {
   const ascendHero          = useGameStore(s => s.ascendHero);
   const ascensionInventory  = useGameStore(s => s.ascensionInventory);
   const convertExcessCopies = useGameStore(s => s.convertExcessCopies);
+
+  const [activeTab,    setActiveTab]    = useState('profile');
   const [fusionMsg,    setFusionMsg]    = useState('');
   const [transcendMsg, setTranscendMsg] = useState('');
   const [ascendMsg,    setAscendMsg]    = useState('');
-  const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
-  const cardRef = useRef(null);
+  const [statDiff,     setStatDiff]     = useState(null);
+  const [forgeActive,  setForgeActive]  = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved,  setSaved]  = useState(false);
-  const [statDiff, setStatDiff] = useState(null);
-  const statDiffTimer = useRef(null);
 
-  useEffect(() => () => { if (statDiffTimer.current) clearTimeout(statDiffTimer.current); }, []);
+  const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
+  const cardRef       = useRef(null);
+  const diffTimerRef  = useRef(null);
 
-  // Fusion animation refs
+  useEffect(() => () => { if (diffTimerRef.current) clearTimeout(diffTimerRef.current); }, []);
+
+  // ── Forge overlay animation refs ──────────────────────────────────────────
   const fuseFlash = useRef(new Animated.Value(0)).current;
   const fuseScale = useRef(new Animated.Value(1)).current;
   const fuseRing1 = useRef(new Animated.Value(0)).current;
@@ -202,34 +654,27 @@ export default function HeroDetailScreen({ route, navigation }) {
   const fuseBadge = useRef(new Animated.Value(0)).current;
   const [forgeBadge, setForgeBadge] = useState({ topLabel: '', mainLabel: '', bg: C.GOLD, glow: C.GOLD, text: C.TEXT });
 
-  const triggerForgeAnimation = ({ topLabel, mainLabel, bg, glow, text }) => {
+  const triggerForgeAnimation = useCallback(({ topLabel, mainLabel, bg, glow, text }) => {
     setForgeBadge({ topLabel, mainLabel, bg, glow, text });
-    fuseFlash.setValue(0);
-    fuseScale.setValue(1);
-    fuseRing1.setValue(0);
-    fuseRing2.setValue(0);
-    fuseRing3.setValue(0);
+    fuseFlash.setValue(0); fuseScale.setValue(1);
+    fuseRing1.setValue(0); fuseRing2.setValue(0); fuseRing3.setValue(0);
     fuseBadge.setValue(0);
-
     AudioManager.playPowerForgeSFX();
 
     Animated.sequence([
-      Animated.timing(fuseFlash, { toValue: 0.72, duration: 140, useNativeDriver: true }),
-      Animated.timing(fuseFlash, { toValue: 0,    duration: 560, useNativeDriver: true }),
+      Animated.timing(fuseFlash, { toValue: 0.68, duration: 130, useNativeDriver: true }),
+      Animated.timing(fuseFlash, { toValue: 0,    duration: 520, useNativeDriver: true }),
     ]).start();
-
     Animated.sequence([
-      Animated.timing(fuseScale, { toValue: 1.08, duration: 210, useNativeDriver: true }),
-      Animated.spring(fuseScale,  { toValue: 1, friction: 4, tension: 100, useNativeDriver: true }),
+      Animated.timing(fuseScale, { toValue: 1.08, duration: 200, useNativeDriver: true }),
+      Animated.spring(fuseScale, { toValue: 1, friction: 4, tension: 100, useNativeDriver: true }),
     ]).start();
-
     [fuseRing1, fuseRing2, fuseRing3].forEach((ring, i) => {
       setTimeout(() => {
         ring.setValue(0);
         Animated.timing(ring, { toValue: 1, duration: 760, useNativeDriver: true }).start();
       }, i * 140);
     });
-
     setTimeout(() => {
       Animated.spring(fuseBadge, { toValue: 1, friction: 5, tension: 95, useNativeDriver: true }).start(() => {
         setTimeout(() => {
@@ -237,28 +682,32 @@ export default function HeroDetailScreen({ route, navigation }) {
         }, 980);
       });
     }, 190);
-  };
+  }, []);
+
+  const showStatDiff = useCallback((label, color, gains, transcendOnly = false) => {
+    clearTimeout(diffTimerRef.current);
+    setStatDiff({ label, color, gains, transcendOnly });
+    diffTimerRef.current = setTimeout(() => setStatDiff(null), 3500);
+  }, []);
 
   const handleDownload = async () => {
     if (saving) return;
     setSaving(true);
     try {
-      const tempUri = await captureRef(cardRef, { format: 'png', quality: 1 });
-      await Sharing.shareAsync(tempUri, { mimeType: 'image/png', dialogTitle: hero.name });
+      const uri = await captureRef(cardRef, { format: 'png', quality: 1 });
+      await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: hero.name });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (_) {}
     setSaving(false);
   };
 
-  // Derive card width from actual available height (accounting for safe area insets)
-  // so the card never overflows the column on notched devices.
+  // ── Derived hero data ─────────────────────────────────────────────────────
   const cardHAvail = H - topInset - bottomInset - BODY_PAD * 2;
   const CARD_W = Math.floor(cardHAvail * (220 / 320));
 
-  const hero    = HEROES.find((h) => h.id === heroId);
+  const hero    = HEROES.find(h => h.id === heroId);
   const faction = hero ? FACTIONS[hero.faction] : null;
-
   if (!hero || !faction) return null;
 
   const owned    = ownedHeroes.includes(hero.id);
@@ -266,115 +715,182 @@ export default function HeroDetailScreen({ route, navigation }) {
   const teamFull = !inTeam && team.length >= 3;
 
   const heroData      = owned ? getHeroData(hero.id) : { level: 1, copies: 1, effectiveRank: null, transcendence: 0, ascension: 0 };
-  const copies        = heroData.copies      ?? 1;
-  const level         = heroData.level       ?? 1;
+  const copies        = heroData.copies       ?? 1;
+  const level         = heroData.level        ?? 1;
   const transcendence = heroData.transcendence ?? 0;
-  const ascension     = heroData.ascension   ?? 0;
+  const ascension     = heroData.ascension    ?? 0;
   const maxLevel      = 10 + transcendence * 5;
-  const effectiveRankKey = owned ? getEffectiveRank(hero.id) : hero.rank;
-  const rank          = RANK_COLORS[effectiveRankKey] || RANK_COLORS[hero.rank];
 
-  const levelMult  = 1 + (level - 1) * 0.08;
-  const ascMult    = ASCENSION_STAT_MULT[ascension] ?? 1;
-  const rankKey    = hero.sovereign ? 'SOVEREIGN' : effectiveRankKey;
-  const rankMult   = RANK_STAT_MULT[rankKey] ?? 1.0;
-  const totalMult  = levelMult * rankMult * ascMult;
+  const effectiveRankKey = owned ? getEffectiveRank(hero.id) : hero.rank;
+  const rank             = RANK_COLORS[effectiveRankKey] || RANK_COLORS[hero.rank];
+
+  const levelMult = 1 + (level - 1) * 0.08;
+  const ascMult   = ASCENSION_STAT_MULT[ascension] ?? 1;
+  const rankKey   = hero.sovereign ? 'SOVEREIGN' : effectiveRankKey;
+  const rankMult  = RANK_STAT_MULT[rankKey] ?? 1.0;
+  const totalMult = levelMult * rankMult * ascMult;
 
   const levelCost  = level <= 10 ? 100 * level : 200 * (level - 10) + 1000;
   const isMaxLevel = level >= maxLevel;
   const canLevelUp = owned && !isMaxLevel && gold >= levelCost;
-
-  // ── Fusion ────────────────────────────────────────────────────────────────
-  const RANK_ORDER  = ['C', 'B', 'A', 'S'];
-  const rankIdx     = RANK_ORDER.indexOf(effectiveRankKey);
-  const canFuse     = owned && copies >= 3 && rankIdx >= 0 && rankIdx < 3;
-  const fusionCosts = [2000, 5000, 10000];
-  const fusionCost  = fusionCosts[rankIdx] ?? 0;
-  const fusionRankNext = canFuse ? RANK_ORDER[rankIdx + 1] : null;
-  const canAffordFuse  = canFuse && gold >= fusionCost;
-
-  // ── Transcendence ─────────────────────────────────────────────────────────
-  const canTranscend      = owned && copies >= 5 && transcendence < 4;
-  const transcendCosts    = [8000, 15000, 25000, 40000];
-  const transcendCost     = transcendCosts[transcendence] ?? 0;
-  const canAffordTranscend= canTranscend && gold >= transcendCost;
-
-  // ── Ascension ─────────────────────────────────────────────────────────────
-  // Use the sovereign-aware rankKey (L136) so Sovereigns require Aetheria's Core,
-  // not the S-rank Feather — matches the ascendHero routing in the store.
-  const ascItemId      = RANK_TO_ASCENSION_ITEM_ID[rankKey] ?? null;
-  const requiredItem   = ascItemId ? getAscensionItemById(ascItemId) : null;
-  const ownedItemCount = requiredItem ? ((ascensionInventory ?? {})[requiredItem.id] || 0) : 0;
-  const canAscend      = owned && ascension < ASCENSION_MAX && ownedItemCount >= 1;
-  const ascItemColor   = requiredItem ? (RANK[requiredItem.rankKey]?.bg ?? C.PRIMARY) : C.PRIMARY;
 
   const effectiveHp   = Math.round(hero.hp   * totalMult);
   const effectiveAtk  = Math.round(hero.atk  * totalMult);
   const effectiveDef  = Math.round(hero.def  * totalMult);
   const effectiveCrit = Math.round(hero.crit * totalMult);
 
+  // Fusion
+  const rankIdx        = RANK_ORDER.indexOf(effectiveRankKey);
+  const canFuse        = owned && copies >= FUSION_COPIES && rankIdx >= 0 && rankIdx < 3;
+  const fusionCosts    = [2000, 5000, 10000];
+  const fusionCost     = fusionCosts[rankIdx] ?? 0;
+  const fusionRankNext = canFuse ? RANK_ORDER[rankIdx + 1] : null;
+  const canAffordFuse  = canFuse && gold >= fusionCost;
+
+  // Transcendence
+  const canTranscend        = owned && copies >= TRANSCEND_COPIES && transcendence < 4;
+  const transcendCosts      = [8000, 15000, 25000, 40000];
+  const transcendCost       = transcendCosts[transcendence] ?? 0;
+  const canAffordTranscend  = canTranscend && gold >= transcendCost;
+
+  // Ascension
+  const ascItemId      = RANK_TO_ASCENSION_ITEM_ID[rankKey] ?? null;
+  const requiredItem   = ascItemId ? getAscensionItemById(ascItemId) : null;
+  const ownedItemCount = requiredItem ? ((ascensionInventory ?? {})[requiredItem.id] || 0) : 0;
+  const canAscend      = owned && ascension < ASCENSION_MAX && ownedItemCount >= 1;
+  const ascItemColor   = requiredItem ? (RANK[requiredItem.rankKey]?.bg ?? C.PRIMARY) : C.PRIMARY;
+
+  // ── Action handlers ───────────────────────────────────────────────────────
+  const handleLevelUp = useCallback(() => {
+    const before = { hp: effectiveHp, atk: effectiveAtk, def: effectiveDef, crit: effectiveCrit };
+    AudioManager.playLevelUpSFX();
+    if (levelUpHero(hero.id)) {
+      trackQuestProgress('hero_level');
+      const nm = 1 + level * 0.08;
+      const nt = nm * rankMult * ascMult;
+      showStatDiff(`LV ${level} → ${level + 1}`, faction.color, [
+        { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * nt), color: faction.color },
+        { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * nt), color: faction.color },
+        { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * nt), color: faction.color },
+        { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * nt), color: faction.color },
+      ]);
+    }
+  }, [effectiveHp, effectiveAtk, effectiveDef, effectiveCrit, level, rankMult, ascMult]);
+
+  const handleFuse = useCallback(() => {
+    const before = { hp: effectiveHp, atk: effectiveAtk, def: effectiveDef, crit: effectiveCrit };
+    const result = fuseHero(hero.id);
+    if (result.ok) {
+      const r = RANK[result.newRank];
+      triggerForgeAnimation({ topLabel: 'RANK UP', mainLabel: result.newRank, bg: r?.bg ?? C.GOLD, glow: r?.glow ?? C.GOLD, text: r?.text ?? C.TEXT });
+      setForgeActive(true);
+      setTimeout(() => setForgeActive(false), 2200);
+      const nm = RANK_STAT_MULT[result.newRank] ?? 1.0;
+      const nt = levelMult * nm * ascMult;
+      showStatDiff(`${effectiveRankKey} → ${result.newRank}  RANK UP`, r?.bg ?? C.GOLD, [
+        { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * nt), color: faction.color },
+        { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * nt), color: faction.color },
+        { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * nt), color: faction.color },
+        { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * nt), color: faction.color },
+      ]);
+    } else {
+      setFusionMsg(result.reason === 'gold' ? 'Not enough gold' : result.reason === 'copies' ? `Need ${FUSION_COPIES} copies` : 'Cannot fuse');
+      setTimeout(() => setFusionMsg(''), 2200);
+    }
+  }, [effectiveHp, effectiveAtk, effectiveDef, effectiveCrit, effectiveRankKey, levelMult, ascMult]);
+
+  const handleTranscend = useCallback(() => {
+    const result = transcendHero(hero.id);
+    if (result.ok) {
+      triggerForgeAnimation({ topLabel: 'TRANSCENDED', mainLabel: `LV ${result.newMaxLevel}`, bg: C.PRIMARY, glow: C.PRIMARY_LIGHT, text: C.TEXT });
+      showStatDiff(`MAX LV ${maxLevel} → ${maxLevel + 5}`, C.PRIMARY_LIGHT, [], true);
+    } else {
+      setTranscendMsg(result.reason === 'gold' ? 'Not enough gold' : result.reason === 'copies' ? `Need ${TRANSCEND_COPIES} copies` : 'Cannot transcend');
+      setTimeout(() => setTranscendMsg(''), 2200);
+    }
+  }, [maxLevel]);
+
+  const handleAscend = useCallback(() => {
+    const before = { hp: effectiveHp, atk: effectiveAtk, def: effectiveDef, crit: effectiveCrit };
+    const result = ascendHero(hero.id);
+    if (result.ok) {
+      triggerForgeAnimation({ topLabel: 'ASCENDED', mainLabel: `TIER ${result.newTier}`, bg: ascItemColor, glow: ascItemColor, text: C.TEXT });
+      const na = ASCENSION_STAT_MULT[ascension + 1] ?? 1;
+      const nt = levelMult * rankMult * na;
+      showStatDiff(`ASCENSION TIER ${ascension} → ${result.newTier}`, ascItemColor, [
+        { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * nt), color: faction.color },
+        { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * nt), color: faction.color },
+        { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * nt), color: faction.color },
+        { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * nt), color: faction.color },
+      ]);
+    } else {
+      setAscendMsg(result.reason === 'missing_item' ? `Need ${requiredItem?.name}` : 'Cannot ascend');
+      setTimeout(() => setAscendMsg(''), 2200);
+    }
+  }, [effectiveHp, effectiveAtk, effectiveDef, effectiveCrit, ascension, ascItemColor, levelMult, rankMult]);
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <View style={styles.root}>
-      <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
-
-      {/* Faction-specific ambient particles */}
+      {/* Hero image — native blur so colours bleed through */}
+      <Image
+        source={hero.image}
+        style={styles.bgImage}
+        resizeMode="cover"
+        blurRadius={22}
+      />
+      {/* BlurView adds frosted-glass finish on top */}
+      <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} />
+      {/* Gradient veil — darker on right (text area) to guarantee legibility on light hero images */}
+      <LinearGradient
+        colors={[C.BG_DEEP + 'A0', C.BG_BASE + 'C8', C.BG_DEEP + 'A0']}
+        start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={[C.OVERLAY_2, C.OVERLAY_3]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={StyleSheet.absoluteFill}
+      />
       <FactionParticles faction={hero.faction} />
 
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
         <View style={styles.body}>
 
-          {/* Left — Hero card with floating back + download buttons */}
+          {/* LEFT — hero card */}
           <View style={[styles.cardCol, { width: CARD_W }]}>
-            {/* Capture target — just the card, no overlaid buttons */}
-            <Animated.View
-              ref={cardRef}
-              collapsable={false}
-              style={{ transform: [{ scale: fuseScale }] }}
-            >
+            <Animated.View ref={cardRef} collapsable={false} style={{ transform: [{ scale: fuseScale }] }}>
               <HeroCard hero={hero} width={CARD_W} effectiveRank={effectiveRankKey} />
             </Animated.View>
-
-            {/* Floating back button */}
-            <TouchableOpacity
-              style={styles.backBtn}
-              onPress={() => navigation.goBack()}
-              activeOpacity={0.8}
-            >
+            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>
               <Ionicons name="chevron-back" size={18} color={C.TEXT} />
             </TouchableOpacity>
           </View>
 
-          {/* Right — Info */}
-          <ScrollView
-            style={styles.infoCol}
-            contentContainerStyle={styles.infoContent}
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-          >
-            {/* Name + rank */}
+          {/* RIGHT — tab panel */}
+          <View style={styles.infoCol}>
+            {/* Static header */}
             <View style={styles.nameRow}>
               <View style={[styles.factionDot, { backgroundColor: faction.color }]} />
               <Text style={[styles.heroName, { color: faction.color }]} numberOfLines={1}>
                 {hero.name.toUpperCase()}
               </Text>
               <View style={[styles.rankBadge, { backgroundColor: rank.bg }]}>
-                <Text style={[styles.rankText, { color: rank.text }]}>{effectiveRankKey}</Text>
+                <Text style={[styles.rankTxt, { color: rank.text }]}>{effectiveRankKey}</Text>
               </View>
               {copies > 1 && (
                 <View style={styles.copiesBadge}>
-                  <Text style={styles.copiesText}>×{copies}</Text>
+                  <Text style={styles.copiesTxt}>×{copies}</Text>
                 </View>
               )}
             </View>
 
-            {/* Faction accent strip */}
             <LinearGradient
               colors={[faction.color + '40', 'transparent']}
               style={styles.factionStrip}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             />
 
-            {/* Tags */}
             <View style={styles.tagRow}>
               <TagChip label={faction.label ?? hero.faction} color={faction.color} />
               <TagChip label={hero.class}   color={C.PRIMARY_LIGHT} />
@@ -382,867 +898,323 @@ export default function HeroDetailScreen({ route, navigation }) {
               <TagChip label={hero.effect}  color={C.SECONDARY}     />
             </View>
 
-            {/* About */}
-            <View style={styles.section}>
-              <SectionHead label="ABOUT" />
-              <Text style={styles.aboutText}>{hero.about}</Text>
-            </View>
+            {/* Tab bar */}
+            <TabBar active={activeTab} onChange={setActiveTab} accent={faction.color} />
 
-            {/* Stats */}
-            <View style={styles.section}>
-              <View style={styles.statsHead}>
-                <SectionHead label="STATS" />
-                {owned && (
-                  <View style={[styles.lvBadge, { backgroundColor: faction.color + '20', borderColor: faction.color + '55' }]}>
-                    <Text style={[styles.lvBadgeText, { color: faction.color }]}>Lv. {level} / {maxLevel}</Text>
-                    {transcendence > 0 && (
-                      <Text style={[styles.lvBadgeText, { color: C.GOLD, marginLeft: 4 }]}>✦{transcendence}</Text>
-                    )}
-                  </View>
-                )}
-              </View>
-              <View style={styles.statsRow}>
-                <StatBlock label="HP"   value={effectiveHp}   color={C.HP}   boosted={level > 1} />
-                <StatBlock label="ATK"  value={effectiveAtk}  color={C.ATK}  boosted={level > 1} />
-                <StatBlock label="DEF"  value={effectiveDef}  color={C.DEF}  boosted={level > 1} />
-                <StatBlock label="CRIT" value={effectiveCrit} color={C.CRIT} boosted={level > 1} />
-              </View>
-            </View>
-
-            {/* Stat diff panel — appears after any successful forge/level action */}
-            {statDiff && (
-              <View style={[styles.statDiffPanel, { borderColor: statDiff.color + '55', backgroundColor: statDiff.color + '0E' }]}>
-                <View style={styles.statDiffHeader}>
-                  <Ionicons name="trending-up" size={11} color={statDiff.color} />
-                  <Text style={[styles.statDiffLabel, { color: statDiff.color }]}>{statDiff.label}</Text>
-                </View>
-                {statDiff.transcendOnly ? (
-                  <Text style={styles.statDiffNote}>Level up further to unlock the additional potential</Text>
-                ) : (
-                  <View style={styles.statDiffGrid}>
-                    {statDiff.gains.map(({ stat, before, after, color }) => (
-                      <View key={stat} style={styles.statDiffRow}>
-                        <Text style={[styles.statDiffStat, { color }]}>{stat}</Text>
-                        <Text style={styles.statDiffBefore}>{before.toLocaleString()}</Text>
-                        <Ionicons name="arrow-forward" size={9} color={C.SUCCESS} />
-                        <Text style={[styles.statDiffAfter, { color: C.SUCCESS }]}>{after.toLocaleString()}</Text>
-                        <Text style={[styles.statDiffGain, { color: C.SUCCESS }]}>+{(after - before).toLocaleString()}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-            )}
-
-            {/* Level Up */}
-            {owned && (
-              <View style={styles.section}>
-                <TouchableOpacity
-                  style={[
-                    styles.levelUpBtn,
-                    isMaxLevel
-                      ? { borderColor: C.GOLD, backgroundColor: C.GOLD + '10' }
-                      : canLevelUp
-                      ? { borderColor: faction.color, backgroundColor: faction.color + '12' }
-                      : { borderColor: C.BORDER, backgroundColor: C.BG_BASE },
-                  ]}
-                  onPress={canLevelUp ? () => {
-                    const before = { hp: effectiveHp, atk: effectiveAtk, def: effectiveDef, crit: effectiveCrit };
-                    AudioManager.playLevelUpSFX();
-                    const ok = levelUpHero(hero.id);
-                    if (ok) {
-                      trackQuestProgress('hero_level');
-                      const newLevelMult = 1 + level * 0.08;
-                      const newTotal = newLevelMult * rankMult * ascMult;
-                      clearTimeout(statDiffTimer.current);
-                      setStatDiff({
-                        label: `LV ${level} → ${level + 1}`,
-                        color: faction.color,
-                        gains: [
-                          { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * newTotal), color: C.HP   },
-                          { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * newTotal), color: C.ATK  },
-                          { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * newTotal), color: C.DEF  },
-                          { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * newTotal), color: C.CRIT },
-                        ],
-                      });
-                      statDiffTimer.current = setTimeout(() => setStatDiff(null), 3000);
-                    }
-                  } : undefined}
-                  disabled={!canLevelUp}
-                  activeOpacity={canLevelUp ? 0.75 : 1}
-                >
-                  {isMaxLevel ? (
-                    <>
-                      <Ionicons name="trophy" size={14} color={C.GOLD} />
-                      <Text style={[styles.levelUpText, { color: C.GOLD }]}>MAX LEVEL</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Ionicons name="arrow-up-circle" size={14} color={canLevelUp ? faction.color : C.TEXT_DISABLED} />
-                      <Text style={[styles.levelUpText, { color: canLevelUp ? faction.color : C.TEXT_DISABLED }]}>
-                        Level Up  ·  {levelCost} Gold
-                      </Text>
-                      <Text style={[styles.levelUpSub, { color: canLevelUp ? C.TEXT_MUTED : C.TEXT_DISABLED }]}>
-                        {gold} / {levelCost} available
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* ── Fusion ──────────────────────────────────────────────────── */}
-            {owned && (canFuse || canTranscend) && (
-              <View style={styles.section}>
-                <SectionHead label="POWER FORGE" />
-
-                {/* Fusion button */}
-                {canFuse && (
-                  <TouchableOpacity
-                    style={[
-                      styles.forgeBtn,
-                      { borderColor: canAffordFuse ? C.GOLD : C.BORDER,
-                        backgroundColor: canAffordFuse ? C.GOLD + '12' : C.BG_BASE },
-                    ]}
-                    onPress={() => {
-                      const before = { hp: effectiveHp, atk: effectiveAtk, def: effectiveDef, crit: effectiveCrit };
-                      const result = fuseHero(hero.id);
-                      if (result.ok) {
-                        const r = RANK[result.newRank];
-                        triggerForgeAnimation({
-                          topLabel: 'RANK UP',
-                          mainLabel: result.newRank,
-                          bg: r?.bg   ?? C.GOLD,
-                          glow: r?.glow ?? C.GOLD,
-                          text: r?.text ?? C.TEXT,
-                        });
-                        const newRankMult = RANK_STAT_MULT[result.newRank] ?? 1.0;
-                        const newTotal = levelMult * newRankMult * ascMult;
-                        clearTimeout(statDiffTimer.current);
-                        setStatDiff({
-                          label: `${effectiveRankKey} → ${result.newRank}  RANK UP`,
-                          color: r?.bg ?? C.GOLD,
-                          gains: [
-                            { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * newTotal), color: C.HP   },
-                            { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * newTotal), color: C.ATK  },
-                            { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * newTotal), color: C.DEF  },
-                            { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * newTotal), color: C.CRIT },
-                          ],
-                        });
-                        statDiffTimer.current = setTimeout(() => setStatDiff(null), 3000);
-                      } else {
-                        setFusionMsg(
-                          result.reason === 'gold'   ? 'Not enough gold'
-                          : result.reason === 'copies' ? 'Need 3 copies'
-                          : 'Cannot fuse'
-                        );
-                        setTimeout(() => setFusionMsg(''), 2200);
-                      }
-                    }}
-                    disabled={!canAffordFuse}
-                    activeOpacity={canAffordFuse ? 0.8 : 1}
-                  >
-                    <Ionicons name="git-merge-outline" size={15} color={canAffordFuse ? C.GOLD : C.TEXT_DISABLED} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.forgeBtnTitle, { color: canAffordFuse ? C.GOLD : C.TEXT_DISABLED }]}>
-                        FUSION  ·  {effectiveRankKey} → {fusionRankNext}
-                      </Text>
-                      <Text style={styles.forgeBtnSub}>
-                        Consumes 3 copies  ·  {fusionCost.toLocaleString()} Gold
-                      </Text>
-                    </View>
-                    <Text style={[styles.forgeBtnCopies, { color: copies >= 3 ? C.GOLD : C.TEXT_DISABLED }]}>
-                      {copies} / 3
-                    </Text>
-                  </TouchableOpacity>
-                )}
-
-                {fusionMsg !== '' && (
-                  <Text style={styles.forgeMsg}>{fusionMsg}</Text>
-                )}
-
-                {/* Transcendence button */}
-                {canTranscend && (
-                  <TouchableOpacity
-                    style={[
-                      styles.forgeBtn,
-                      { borderColor: canAffordTranscend ? C.PRIMARY : C.BORDER,
-                        backgroundColor: canAffordTranscend ? C.PRIMARY + '12' : C.BG_BASE,
-                        marginTop: canFuse ? 6 : 0 },
-                    ]}
-                    onPress={() => {
-                      const result = transcendHero(hero.id);
-                      if (result.ok) {
-                        triggerForgeAnimation({
-                          topLabel:  'TRANSCENDED',
-                          mainLabel: `LV ${result.newMaxLevel}`,
-                          bg:   C.PRIMARY,
-                          glow: C.PRIMARY_LIGHT,
-                          text: C.TEXT,
-                        });
-                        clearTimeout(statDiffTimer.current);
-                        setStatDiff({
-                          label: `MAX LV ${maxLevel} → ${maxLevel + 5}`,
-                          color: C.PRIMARY_LIGHT,
-                          transcendOnly: true,
-                        });
-                        statDiffTimer.current = setTimeout(() => setStatDiff(null), 3000);
-                      } else {
-                        setTranscendMsg(
-                          result.reason === 'gold'   ? 'Not enough gold'
-                          : result.reason === 'copies' ? 'Need 5 copies'
-                          : 'Cannot transcend'
-                        );
-                        setTimeout(() => setTranscendMsg(''), 2200);
-                      }
-                    }}
-                    disabled={!canAffordTranscend}
-                    activeOpacity={canAffordTranscend ? 0.8 : 1}
-                  >
-                    <Ionicons name="arrow-up-circle" size={15} color={canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.forgeBtnTitle, { color: canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>
-                        TRANSCEND  ·  Max Lv {maxLevel} → {maxLevel + 5}
-                      </Text>
-                      <Text style={styles.forgeBtnSub}>
-                        Consumes 5 copies  ·  {transcendCost.toLocaleString()} Gold
-                      </Text>
-                    </View>
-                    <Text style={[styles.forgeBtnCopies, { color: copies >= 5 ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>
-                      {copies} / 5
-                    </Text>
-                  </TouchableOpacity>
-                )}
-
-                {transcendMsg !== '' && (
-                  <Text style={[styles.forgeMsg, { color: C.PRIMARY_LIGHT }]}>{transcendMsg}</Text>
-                )}
-              </View>
-            )}
-
-            {/* ── Ascension ─────────────────────────────────────────────── */}
-            {owned && (
-              <View style={styles.section}>
-                <View style={styles.ascHead}>
-                  <SectionHead label="ASCENSION" />
-                  <View style={styles.ascTierRow}>
-                    {[1, 2, 3].map(t => (
-                      <View
-                        key={t}
-                        style={[
-                          styles.ascTierStar,
-                          {
-                            borderColor:     t <= ascension ? ascItemColor : C.BORDER,
-                            backgroundColor: t <= ascension ? ascItemColor + '22' : 'transparent',
-                          },
-                        ]}
-                      >
-                        <Text style={[styles.ascTierStarTxt, { color: t <= ascension ? ascItemColor : C.TEXT_DISABLED }]}>
-                          ★
-                        </Text>
-                      </View>
-                    ))}
-                    <Text style={styles.ascTierLabel}>{ascension} / 3</Text>
-                    {ascension >= ASCENSION_MAX && (
-                      <View style={[styles.ascMaxBadge, { backgroundColor: C.GOLD + '20', borderColor: C.GOLD + '55' }]}>
-                        <Text style={[styles.ascMaxTxt, { color: C.GOLD }]}>MAX</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-
-                {/* Stat boost line */}
-                <Text style={styles.ascBoostLine}>
-                  {'Stat boost: '}
-                  <Text style={{ color: ascItemColor, fontWeight: '900' }}>
-                    {ascension > 0 ? `+${Math.round((ascMult - 1) * 100)}%` : 'none'}
-                  </Text>
-                  {ascension < ASCENSION_MAX && (
-                    <Text style={{ color: C.TEXT_MUTED }}>
-                      {` → +${Math.round((ASCENSION_STAT_MULT[ascension + 1] - 1) * 100)}% on next tier`}
-                    </Text>
-                  )}
-                </Text>
-
-                {/* Required item preview + Ascend button */}
-                {ascension < ASCENSION_MAX && requiredItem && (
-                  <>
-                    {/* Item card — shows exactly what the player needs */}
-                    <View style={[styles.ascItemCard, { borderColor: ascItemColor + '40', backgroundColor: ascItemColor + '0C' }]}>
-                      <LinearGradient
-                        colors={[ascItemColor + '18', 'transparent']}
-                        style={StyleSheet.absoluteFill}
-                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                      />
-                      {/* Item image */}
-                      <View style={[styles.ascItemImgWrap, { borderColor: ascItemColor + '50', backgroundColor: ascItemColor + '12' }]}>
-                        <Image source={requiredItem.image} style={styles.ascItemImg} resizeMode="contain" />
-                      </View>
-                      {/* Info */}
-                      <View style={styles.ascItemInfo}>
-                        <View style={styles.ascItemNameRow}>
-                          <View style={[styles.ascItemRankBadge, { backgroundColor: ascItemColor + '22', borderColor: ascItemColor + '55' }]}>
-                            <Text style={[styles.ascItemRankTxt, { color: ascItemColor }]}>{requiredItem.rankLabel}</Text>
-                          </View>
-                          <Text style={[styles.ascItemName, { color: ascItemColor }]} numberOfLines={1}>
-                            {requiredItem.name}
-                          </Text>
-                        </View>
-                        <Text style={styles.ascItemLore} numberOfLines={2}>{requiredItem.lore}</Text>
-                      </View>
-                      {/* Owned badge */}
-                      <View style={[
-                        styles.ascOwnedBadge,
-                        { backgroundColor: ownedItemCount >= 1 ? ascItemColor + '25' : C.BG_MID,
-                          borderColor:     ownedItemCount >= 1 ? ascItemColor : C.BORDER },
-                      ]}>
-                        <Text style={[styles.ascOwnedNum, { color: ownedItemCount >= 1 ? ascItemColor : C.TEXT_DISABLED }]}>
-                          {ownedItemCount}
-                        </Text>
-                        <Text style={styles.ascOwnedLbl}>owned</Text>
-                      </View>
-                    </View>
-
-                    {/* Ascend button */}
-                    <TouchableOpacity
-                      style={[
-                        styles.forgeBtn,
-                        {
-                          borderColor:     canAscend ? ascItemColor : C.BORDER,
-                          backgroundColor: canAscend ? ascItemColor + '12' : C.BG_BASE,
-                          marginTop: 6,
-                        },
-                      ]}
-                      onPress={() => {
-                        if (!canAscend) return;
-                        const before = { hp: effectiveHp, atk: effectiveAtk, def: effectiveDef, crit: effectiveCrit };
-                        const result = ascendHero(hero.id);
-                        if (result.ok) {
-                          triggerForgeAnimation({
-                            topLabel:  'ASCENDED',
-                            mainLabel: `TIER ${result.newTier}`,
-                            bg:   ascItemColor,
-                            glow: ascItemColor,
-                            text: C.TEXT,
-                          });
-                          const newAscMult = ASCENSION_STAT_MULT[ascension + 1] ?? 1;
-                          const newTotal = levelMult * rankMult * newAscMult;
-                          clearTimeout(statDiffTimer.current);
-                          setStatDiff({
-                            label: `ASCENSION TIER ${ascension} → ${result.newTier}`,
-                            color: ascItemColor,
-                            gains: [
-                              { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * newTotal), color: C.HP   },
-                              { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * newTotal), color: C.ATK  },
-                              { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * newTotal), color: C.DEF  },
-                              { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * newTotal), color: C.CRIT },
-                            ],
-                          });
-                          statDiffTimer.current = setTimeout(() => setStatDiff(null), 3000);
-                        } else {
-                          setAscendMsg(
-                            result.reason === 'missing_item' ? `Need ${requiredItem.name}`
-                            : 'Cannot ascend'
-                          );
-                          setTimeout(() => setAscendMsg(''), 2200);
-                        }
-                      }}
-                      disabled={!canAscend}
-                      activeOpacity={canAscend ? 0.8 : 1}
-                    >
-                      <Ionicons name="sparkles" size={15} color={canAscend ? ascItemColor : C.TEXT_DISABLED} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.forgeBtnTitle, { color: canAscend ? ascItemColor : C.TEXT_DISABLED }]}>
-                          {`ASCEND  ·  Tier ${ascension} → ${ascension + 1}`}
-                        </Text>
-                        <Text style={styles.forgeBtnSub}>
-                          {`Consumes 1 × ${requiredItem.name}  ·  +${Math.round((ASCENSION_STAT_MULT[ascension + 1] - 1) * 100)}% all stats`}
-                        </Text>
-                      </View>
-                      <Text style={[styles.forgeBtnCopies, { color: ownedItemCount >= 1 ? ascItemColor : C.TEXT_DISABLED }]}>
-                        {ownedItemCount} / 1
-                      </Text>
-                    </TouchableOpacity>
-
-                    {ascendMsg !== '' && (
-                      <Text style={[styles.forgeMsg, { color: ascItemColor }]}>{ascendMsg}</Text>
-                    )}
-                  </>
-                )}
-              </View>
-            )}
-
-            {/* Convert Excess Copies → Tower Coins */}
-            {owned && (
-              <ConvertCopiesWidget
-                hero={hero}
-                heroData={heroData}
-                onConvert={convertExcessCopies}
-              />
-            )}
-
-            {/* Skills */}
-            <View style={styles.section}>
-              <SectionHead label="SKILLS" />
-              {hero.skills.map((sk, i) => (
-                <View key={i} style={styles.skillRow}>
-                  <View style={[styles.skillCost, { borderColor: faction.color, backgroundColor: faction.color + '18' }]}>
-                    <Text style={[styles.skillCostText, { color: faction.color }]}>{sk.cost}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.skillName}>{sk.name}</Text>
-                    <Text style={styles.skillDesc}>{sk.description}</Text>
-                  </View>
-                  {sk.damage > 0 && (
-                    <View style={styles.skillDmgBadge}>
-                      <Text style={styles.skillDmgText}>{sk.damage}×</Text>
-                    </View>
-                  )}
-                </View>
-              ))}
-            </View>
-
-            {/* Trump card */}
-            <View style={styles.section}>
-              <SectionHead label="TRUMP CARD" />
-              <View style={[styles.trumpBox, { borderColor: faction.color + '55' }]}>
-                <LinearGradient
-                  colors={[faction.color + '22', 'transparent']}
-                  style={StyleSheet.absoluteFill}
+            {/* Tab content — fixed height, no scroll */}
+            <View style={[styles.tabArea, activeTab === 'forge' && styles.tabAreaForge]}>
+              {/* Frosted-glass background only on non-Forge tabs */}
+              {activeTab !== 'forge' && (
+                <>
+                  <BlurView intensity={45} tint="dark" style={StyleSheet.absoluteFill} pointerEvents="none" />
+                  <View style={styles.tabAreaTint} pointerEvents="none" />
+                </>
+              )}
+              {activeTab === 'profile' && (
+                <ProfileTab
+                  hero={hero} faction={faction} owned={owned}
+                  inTeam={inTeam} teamFull={teamFull} addToTeam={addToTeam}
+                  level={level} maxLevel={maxLevel}
+                  transcendence={transcendence} ascension={ascension}
+                  ascMult={ascMult} ascItemColor={ascItemColor}
+                  effectiveHp={effectiveHp} effectiveAtk={effectiveAtk}
+                  effectiveDef={effectiveDef} effectiveCrit={effectiveCrit}
+                  saving={saving} saved={saved} handleDownload={handleDownload}
                 />
-                <Text style={[styles.trumpName, { color: C.GOLD }]}>
-                  {hero.trumpCard.name.toUpperCase()}
-                </Text>
-                <Text style={[styles.trumpEffect, { color: faction.color }]}>
-                  ✦ {hero.trumpCard.effect}
-                </Text>
-              </View>
+              )}
+              {activeTab === 'skills' && (
+                <SkillsTab hero={hero} faction={faction} />
+              )}
+              {activeTab === 'level' && (
+                <LevelTab
+                  hero={hero} faction={faction} owned={owned} gold={gold}
+                  level={level} maxLevel={maxLevel} levelCost={levelCost}
+                  canLevelUp={canLevelUp} isMaxLevel={isMaxLevel} copies={copies}
+                  transcendence={transcendence} canTranscend={canTranscend}
+                  canAffordTranscend={canAffordTranscend} transcendCost={transcendCost}
+                  ascension={ascension} canAscend={canAscend}
+                  requiredItem={requiredItem} ownedItemCount={ownedItemCount} ascItemColor={ascItemColor}
+                  onLevelUp={handleLevelUp} onTranscend={handleTranscend} onAscend={handleAscend}
+                  fusionMsg={fusionMsg} transcendMsg={transcendMsg} ascendMsg={ascendMsg}
+                  statDiff={statDiff}
+                />
+              )}
+              {activeTab === 'forge' && (
+                <ForgeTab
+                  hero={hero} faction={faction} owned={owned} gold={gold} copies={copies}
+                  effectiveRankKey={effectiveRankKey} rankIdx={rankIdx}
+                  canFuse={canFuse} canAffordFuse={canAffordFuse}
+                  fusionCost={fusionCost} fusionRankNext={fusionRankNext}
+                  forgeActive={forgeActive}
+                  heroData={heroData}
+                  onFuse={handleFuse} onConvert={convertExcessCopies}
+                  fusionMsg={fusionMsg}
+                />
+              )}
             </View>
-
-            {/* Team button */}
-            {owned && (
-              <TouchableOpacity
-                style={[
-                  styles.teamBtn,
-                  teamFull
-                    ? { borderColor: C.BORDER_STRONG, backgroundColor: C.BG_BASE }
-                    : {
-                        borderColor: inTeam ? C.DANGER : faction.color,
-                        backgroundColor: inTeam ? C.DANGER + '18' : faction.color + '18',
-                      },
-                ]}
-                onPress={teamFull ? undefined : () => addToTeam(hero.id)}
-                disabled={teamFull}
-                activeOpacity={teamFull ? 1 : 0.75}
-              >
-                <Ionicons
-                  name={inTeam ? 'remove-circle-outline' : teamFull ? 'people-outline' : 'add-circle-outline'}
-                  size={16}
-                  color={inTeam ? C.DANGER : teamFull ? C.TEXT_MUTED : faction.color}
-                />
-                <Text style={[styles.teamBtnText, {
-                  color: inTeam ? C.DANGER : teamFull ? C.TEXT_MUTED : faction.color,
-                }]}>
-                  {inTeam ? 'REMOVE FROM TEAM' : teamFull ? 'TEAM FULL  (3 / 3)' : 'ADD TO TEAM'}
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            {!owned && (
-              <View style={styles.lockedBanner}>
-                <Ionicons name="lock-closed" size={14} color={C.GOLD} />
-                <Text style={styles.lockedText}>Unlock via Summon</Text>
-              </View>
-            )}
-
-            {/* Share card — visible for owned heroes */}
-            {owned && (
-              <TouchableOpacity
-                style={[
-                  styles.shareBtn,
-                  saved && { borderColor: C.SUCCESS, backgroundColor: C.SUCCESS + '18' },
-                ]}
-                onPress={handleDownload}
-                disabled={saving}
-                activeOpacity={0.75}
-              >
-                <Ionicons
-                  name={saved ? 'checkmark-done-outline' : saving ? 'hourglass-outline' : 'share-social-outline'}
-                  size={16}
-                  color={saved ? C.SUCCESS : C.TEXT_MUTED}
-                />
-                <Text style={[styles.shareBtnText, saved && { color: C.SUCCESS }]}>
-                  {saved ? 'SHARED!' : saving ? 'SHARING…' : 'SHARE CARD'}
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            <View style={{ height: 8 }} />
-          </ScrollView>
+          </View>
         </View>
       </SafeAreaView>
 
-      {/* ── Power forge animation overlay (fusion / transcend / ascend) ─────── */}
+      {/* Full-screen forge burst overlay */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        {/* Screen flash */}
-        <Animated.View
-          style={[StyleSheet.absoluteFill, { opacity: fuseFlash, backgroundColor: forgeBadge.bg }]}
-        />
-
-        {/* Expanding burst rings */}
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: fuseFlash, backgroundColor: forgeBadge.bg }]} />
         {[fuseRing1, fuseRing2, fuseRing3].map((ring, i) => (
-          <Animated.View
-            key={i}
-            style={[
-              styles.fuseBurst,
-              {
-                borderColor: forgeBadge.glow,
-                opacity: ring.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 0.65, 0] }),
-                transform: [{
-                  scale: ring.interpolate({ inputRange: [0, 1], outputRange: [0.05, 2.4 + i * 0.55] }),
-                }],
-              },
-            ]}
-          />
+          <Animated.View key={i} style={[styles.fuseBurst, {
+            borderColor: forgeBadge.glow,
+            opacity: ring.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 0.65, 0] }),
+            transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [0.05, 2.4 + i * 0.55] }) }],
+          }]} />
         ))}
-
-        {/* Centered forge badge */}
         <View style={styles.fuseBadgeWrap}>
-          <Animated.View
-            style={[
-              styles.fuseBadgeCard,
-              {
-                opacity: fuseBadge,
-                transform: [{ scale: fuseBadge.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }) }],
-                borderColor: forgeBadge.glow,
-                shadowColor: forgeBadge.glow,
-              },
-            ]}
-          >
-            <LinearGradient
-              colors={[forgeBadge.bg + '44', 'transparent']}
-              style={StyleSheet.absoluteFill}
-            />
-            <Text style={styles.fuseBadgeLabel}>{forgeBadge.topLabel}</Text>
-            <Text
-              style={[
-                styles.fuseBadgeRankText,
-                {
-                  fontSize: (forgeBadge.mainLabel?.length ?? 0) <= 2 ? 66 : 38,
-                  color:           forgeBadge.text,
-                  textShadowColor: forgeBadge.glow,
-                },
-              ]}
-            >
-              {forgeBadge.mainLabel}
-            </Text>
-            <Text style={styles.fuseBadgeHeroName}>{hero.name.toUpperCase()}</Text>
+          <Animated.View style={[styles.fuseBadgeCard, {
+            opacity: fuseBadge,
+            transform: [{ scale: fuseBadge.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }) }],
+            borderColor: forgeBadge.glow,
+            shadowColor: forgeBadge.glow,
+          }]}>
+            <LinearGradient colors={[forgeBadge.bg + '44', 'transparent']} style={StyleSheet.absoluteFill} />
+            <Text style={styles.fuseBadgeLbl}>{forgeBadge.topLabel}</Text>
+            <Text style={[styles.fuseBadgeRank, {
+              fontSize: (forgeBadge.mainLabel?.length ?? 0) <= 2 ? 64 : 36,
+              color: forgeBadge.text, textShadowColor: forgeBadge.glow,
+            }]}>{forgeBadge.mainLabel}</Text>
+            <Text style={styles.fuseBadgeHero}>{hero.name.toUpperCase()}</Text>
           </Animated.View>
         </View>
       </View>
-
     </View>
   );
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
-
-function SectionHead({ label }) {
-  return <Text style={styles.sectionHead}>{label}</Text>;
-}
+// ── Small sub-components ──────────────────────────────────────────────────────
 
 function TagChip({ label, color }) {
   return (
-    <View style={[styles.tagChip, { borderColor: color + '55', backgroundColor: color + '18' }]}>
-      <Text style={[styles.tagText, { color }]}>{label}</Text>
+    <View style={[shared.tagChip, { borderColor: color + '55', backgroundColor: color + '18' }]}>
+      <Text style={[shared.tagTxt, { color }]}>{label}</Text>
     </View>
   );
 }
 
-function StatBlock({ label, value, color, boosted }) {
-  return (
-    <View style={[styles.statBlock, { borderColor: color + '40' }]}>
-      <Text style={[styles.statVal, { color }]}>{value}</Text>
-      <Text style={styles.statLbl}>{label}</Text>
-      {boosted && <Text style={[styles.statBoost, { color }]}>▲</Text>}
-    </View>
-  );
-}
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
+const shared = StyleSheet.create({
+  sHead: { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '900', letterSpacing: 2.5, marginBottom: 5 },
+  tagChip: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4, borderWidth: 1 },
+  tagTxt:  { fontSize: 8, fontWeight: '700', letterSpacing: 0.4 },
+});
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.BG_DEEP },
+  root:    { flex: 1, backgroundColor: C.BG_DEEP },
+  bgImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', opacity: 0.72 },
   safe: { flex: 1 },
+  body: { flex: 1, flexDirection: 'row', padding: BODY_PAD, gap: 12 },
 
-  body: {
-    flex: 1,
-    flexDirection: 'row',
-    padding: BODY_PAD,
-    gap: 14,
-  },
-
-  // Card column — width applied inline (CARD_W computed per-render with safe area insets)
-  cardCol: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-
-  // Floating back button overlaid on card top-left
+  cardCol: { alignItems: 'center', justifyContent: 'center', position: 'relative' },
   backBtn: {
-    position: 'absolute',
-    top: 8, left: 8,
-    width: 30, height: 30,
-    borderRadius: 15,
-    backgroundColor: C.BG_CARD,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: C.BORDER,
-    zIndex: 20,
-    shadowColor: C.SHADOW,
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
+    position: 'absolute', top: 8, left: 8,
+    width: 30, height: 30, borderRadius: 15,
+    backgroundColor: C.BG_CARD, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: C.BORDER, zIndex: 20,
   },
 
-  // Floating download button overlaid on card top-right
-  downloadBtn: {
-    position: 'absolute',
-    top: 8, right: 8,
-    width: 30, height: 30,
-    borderRadius: 15,
-    backgroundColor: C.BG_CARD,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: C.BORDER,
-    zIndex: 20,
-    shadowColor: C.SHADOW,
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
+  infoCol: { flex: 1, flexDirection: 'column' },
+
+  nameRow:    { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 6 },
+  factionDot: { width: 8, height: 8, borderRadius: 4 },
+  heroName:   { flex: 1, fontSize: 15, fontWeight: '900', letterSpacing: 2, color: C.TEXT },
+  rankBadge:  { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  rankTxt:    { fontSize: 11, fontWeight: '900', color: C.TEXT },
+  copiesBadge:{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: C.PRIMARY_GLOW, borderWidth: 1, borderColor: C.BORDER_STRONG },
+  copiesTxt:  { fontSize: 10, fontWeight: '900', color: C.PRIMARY_LIGHT },
+
+  factionStrip: { height: 2, borderRadius: 1, marginBottom: 8 },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 8 },
+
+  tabArea: {
+    flex: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: C.BORDER,
+    padding: 6,
+  },
+  tabAreaForge: {
+    borderRadius: 0,
+    borderWidth: 0,
+    padding: 0,
+  },
+  tabAreaTint: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: C.GLASS_3,
   },
 
-  // Info column
-  infoCol: { flex: 1 },
-  infoContent: { paddingBottom: 8 },
+  // ── Tab content shared ───────────────────────────────────────────────────
+  tabContent:    { flex: 1, gap: 6 },
+  forgeTabFill:  { position: 'relative', gap: 0 },
 
-  nameRow: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: 8, marginBottom: 8,
-  },
-  factionDot: { width: 9, height: 9, borderRadius: 5 },
-  heroName: {
-    flex: 1, fontSize: 16, fontWeight: '900', letterSpacing: 2,
-  },
-  rankBadge:   { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 5 },
-  rankText:    { fontSize: 12, fontWeight: '900' },
-  copiesBadge: {
-    paddingHorizontal: 7, paddingVertical: 3, borderRadius: 5,
-    backgroundColor: C.PRIMARY_GLOW, borderWidth: 1, borderColor: C.BORDER_STRONG,
-  },
-  copiesText: { fontSize: 11, fontWeight: '900', color: C.PRIMARY_LIGHT },
+  // ── Profile ──────────────────────────────────────────────────────────────
+  aboutCard: { paddingHorizontal: 10, paddingVertical: 8 },
+  aboutTxt:  { fontSize: 11, color: C.TEXT, lineHeight: 16 },
 
-  statsHead: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between', marginBottom: 7,
+  statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, flex: 1 },
+  statCell: {
+    width: '48.5%', paddingHorizontal: 10, paddingVertical: 8,
+    justifyContent: 'space-between',
   },
-  lvBadge: {
-    paddingHorizontal: 8, paddingVertical: 2,
-    borderRadius: 5, borderWidth: 1,
+  statVal:     { fontSize: 20, fontWeight: '900', color: C.TEXT },
+  statKey:     { fontSize: 9, fontWeight: '900', color: C.TEXT_SOFT, letterSpacing: 1.5, marginTop: -2 },
+  statBarWrap: { marginTop: 5 },
+
+  infoRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
+  infoPill: {
+    paddingHorizontal: 8, paddingVertical: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
   },
-  lvBadgeText: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
+  infoPillTxt: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
+  infoPillSub: { fontSize: 9, fontWeight: '900', color: C.TEXT },
 
-  statBoost: { fontSize: 6, fontWeight: '900', marginTop: 1 },
+  chipRow: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', marginTop: 2 },
 
-  levelUpBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, borderWidth: 1.5, borderRadius: 10,
-    paddingVertical: 11, paddingHorizontal: 14,
+  // ── Skills ───────────────────────────────────────────────────────────────
+  skillCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 9,
+    paddingHorizontal: 10, paddingVertical: 9,
   },
-  levelUpText: { fontWeight: '900', fontSize: 12, letterSpacing: 0.5, flex: 1 },
-  levelUpSub:  { fontSize: 9, fontWeight: '600', textAlign: 'right' },
-
-  factionStrip: {
-    height: 3, borderRadius: 2, marginBottom: 10,
-  },
-
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 12 },
-  tagChip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 5, borderWidth: 1 },
-  tagText: { fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
-
-  section:     { marginBottom: 12 },
-  sectionHead: {
-    fontSize: 8, color: C.TEXT_MUTED,
-    fontWeight: '800', letterSpacing: 2.5, marginBottom: 7,
-  },
-
-  aboutText: {
-    fontSize: 11, color: C.TEXT_SOFT, lineHeight: 17,
-  },
-
-  statsRow:  { flexDirection: 'row', gap: 6 },
-  statBlock: {
-    flex: 1, alignItems: 'center', paddingVertical: 8,
-    borderRadius: 8, borderWidth: 1, backgroundColor: C.BG_BASE,
-  },
-  statVal: { fontSize: 16, fontWeight: '900' },
-  statLbl: { fontSize: 7, color: C.TEXT_MUTED, fontWeight: '800', letterSpacing: 1, marginTop: 2 },
-
-  skillRow: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    marginBottom: 6, padding: 9, borderRadius: 8,
-    backgroundColor: C.BG_BASE,
-    borderWidth: 1, borderColor: C.BORDER,
-  },
-  skillCost: {
-    width: 28, height: 28, borderRadius: 14,
+  skillCostBadge: {
+    width: 30, height: 30, borderRadius: 15,
     alignItems: 'center', justifyContent: 'center', borderWidth: 1.5,
-    marginTop: 1,
   },
-  skillCostText: { fontWeight: '900', fontSize: 12 },
-  skillName:     { color: C.TEXT, fontWeight: '700', fontSize: 12, marginBottom: 2 },
-  skillDesc:     { color: C.TEXT_MUTED, fontSize: 10, lineHeight: 14 },
-  skillDmgBadge: {
-    backgroundColor: C.HP + '18',
-    borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
-    marginTop: 2,
+  skillCostTxt: { fontWeight: '900', fontSize: 13, color: C.TEXT },
+  skillBody:    { flex: 1 },
+  skillName:    { fontSize: 11, fontWeight: '800', color: C.TEXT, marginBottom: 1 },
+  skillDesc:    { fontSize: 10, color: C.TEXT_SOFT, lineHeight: 14 },
+  skillDmg: {
+    backgroundColor: C.HP + '18', borderRadius: 4,
+    paddingHorizontal: 6, paddingVertical: 3,
   },
-  skillDmgText: { color: C.HP, fontWeight: '900', fontSize: 11 },
+  skillDmgTxt: { fontSize: 11, fontWeight: '900', color: C.HP },
 
-  trumpBox: {
-    borderRadius: 9, padding: 12,
-    borderWidth: 1, overflow: 'hidden', position: 'relative',
-    backgroundColor: C.BG_BASE,
-  },
-  trumpName:   { fontSize: 13, fontWeight: '900', letterSpacing: 1, marginBottom: 4 },
-  trumpEffect: { fontSize: 11, fontWeight: '700', lineHeight: 15 },
-
-  teamBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, borderWidth: 1.5, borderRadius: 10,
-    paddingVertical: 11, marginBottom: 8,
-  },
-  teamBtnText: { fontWeight: '900', fontSize: 12, letterSpacing: 1 },
-
-  forgeBtn: {
+  trumpCard: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1.5, borderRadius: 10,
-    paddingVertical: 10, paddingHorizontal: 12,
+    paddingHorizontal: 12, paddingVertical: 10,
+    flex: 1,
   },
-  forgeBtnTitle: { fontSize: 11, fontWeight: '900', letterSpacing: 0.4 },
-  forgeBtnSub:   { fontSize: 9, color: C.TEXT_MUTED, marginTop: 2 },
-  forgeBtnCopies:{ fontSize: 12, fontWeight: '900' },
-  forgeMsg:      { fontSize: 10, color: C.GOLD, fontWeight: '700', textAlign: 'center', marginTop: 4 },
+  trumpLeft:   { flex: 1 },
+  trumpLabel:  { fontSize: 9, fontWeight: '900', color: C.TEXT_SOFT, letterSpacing: 2, marginBottom: 2 },
+  trumpName:   { fontSize: 12, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
+  trumpEffect: { fontSize: 10, fontWeight: '700', flex: 1, lineHeight: 14, color: C.TEXT_SOFT },
 
-  statDiffPanel:  { borderRadius: 8, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 6 },
-  statDiffHeader: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
-  statDiffLabel:  { fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
-  statDiffGrid:   { gap: 3 },
-  statDiffRow:    { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statDiffStat:   { fontSize: 9, fontWeight: '900', width: 30, letterSpacing: 0.5 },
-  statDiffBefore: { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '700', minWidth: 34, textAlign: 'right' },
-  statDiffAfter:  { fontSize: 9, fontWeight: '900', minWidth: 34, textAlign: 'right' },
-  statDiffGain:   { fontSize: 9, fontWeight: '900', minWidth: 30 },
-  statDiffNote:   { fontSize: 9, color: C.TEXT_MUTED, fontStyle: 'italic' },
+  // ── Level ────────────────────────────────────────────────────────────────
+  levelLayout: { flex: 1, flexDirection: 'row', gap: 6 },
+  levelLeft:   { width: '38%' },
+  levelRight:  { flex: 1, gap: 6 },
 
-  ascHead:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
-  ascTierRow:    { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ascTierStar:   { width: 22, height: 22, borderRadius: 5, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  ascTierStarTxt:{ fontSize: 12, lineHeight: 14 },
-  ascTierLabel:  { fontSize: 10, fontWeight: '900', color: C.TEXT_MUTED, marginLeft: 4 },
-  ascMaxBadge:   { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, marginLeft: 4 },
-  ascMaxTxt:     { fontSize: 8, fontWeight: '900', letterSpacing: 0.5 },
-  ascBoostLine:  { fontSize: 10, color: C.TEXT_MUTED, marginBottom: 6 },
-
-  // Item preview card
-  ascItemCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderRadius: 10, borderWidth: 1, overflow: 'hidden',
-    paddingVertical: 9, paddingHorizontal: 10, marginBottom: 2,
-    position: 'relative',
+  levelRingCard: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 10, gap: 8,
   },
-  ascItemImgWrap: {
-    width: 48, height: 48, borderRadius: 8, borderWidth: 1,
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  },
-  ascItemImg: { width: 38, height: 38 },
-  ascItemInfo: { flex: 1, gap: 3 },
-  ascItemNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  ascItemRankBadge: { borderRadius: 3, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1 },
-  ascItemRankTxt: { fontSize: 7, fontWeight: '900', letterSpacing: 0.5 },
-  ascItemName: { fontSize: 11, fontWeight: '900', flex: 1 },
-  ascItemLore: { fontSize: 9, color: C.TEXT_MUTED, lineHeight: 13 },
-  ascOwnedBadge: {
-    alignItems: 'center', justifyContent: 'center',
-    borderRadius: 8, borderWidth: 1,
-    paddingHorizontal: 8, paddingVertical: 5, flexShrink: 0,
-  },
-  ascOwnedNum: { fontSize: 16, fontWeight: '900', lineHeight: 18 },
-  ascOwnedLbl: { fontSize: 7, color: C.TEXT_MUTED, fontWeight: '700', letterSpacing: 0.3 },
 
-  lockedBanner: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 10,
-    backgroundColor: C.BG_BASE, borderRadius: 10,
-    borderWidth: 1, borderColor: C.BORDER,
+  ringOuter: {
+    width: 80, height: 80, borderRadius: 40,
+    borderWidth: 3, alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
   },
-  lockedText: { color: C.GOLD, fontSize: 11, fontWeight: '700' },
-
-  shareBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, borderWidth: 1, borderRadius: 10, borderColor: C.BORDER,
-    paddingVertical: 10, marginTop: 6, backgroundColor: C.BG_BASE,
+  ringFill: {
+    position: 'absolute', width: 80, height: 80, borderRadius: 40,
+    borderWidth: 3, overflow: 'hidden',
   },
-  shareBtnText: { fontSize: 11, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1 },
+  ringMask: {
+    position: 'absolute', width: 80, height: 80,
+    top: 0, right: 0,
+    transformOrigin: 'left center',
+  },
+  ringCenter: { alignItems: 'center' },
+  ringLevel:  { fontSize: 24, fontWeight: '900', lineHeight: 26, color: C.TEXT },
+  ringMax:    { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '700' },
 
+  lvUpBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    borderWidth: 1, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5,
+  },
+  lvUpTxt:   { fontSize: 10, fontWeight: '900', color: C.TEXT },
+  lockedHint:{ fontSize: 9, color: C.TEXT_MUTED, fontWeight: '700' },
 
-  // ── Fusion animation ─────────────────────────────────────────────────────────
+  upgradeCard: {
+    flex: 1, padding: 10, gap: 3,
+  },
+  upgradeTop:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  upgradeName:    { flex: 1, fontSize: 9, fontWeight: '900', letterSpacing: 1, color: C.TEXT },
+  upgradeBadge:   { borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
+  upgradeBadgeTxt:{ fontSize: 9, fontWeight: '900', color: C.TEXT },
+  upgradeSub:     { fontSize: 9, color: C.TEXT_SOFT, lineHeight: 13 },
+  upgradeCost:    { fontSize: 9, fontWeight: '800', color: C.TEXT },
+  upgradeBtn: {
+    marginTop: 4, borderWidth: 1, borderRadius: 5,
+    paddingVertical: 8, alignItems: 'center',
+  },
+  upgradeBtnTxt: { fontSize: 8, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
+  upgradeHint:   { fontSize: 9, color: C.TEXT_SOFT, marginTop: 2 },
+  upgradeErr:    { fontSize: 8, fontWeight: '700', textAlign: 'center', marginTop: 2, color: C.TEXT_SOFT },
+  ascTierRow:    { flexDirection: 'row', gap: 2 },
+  ascStar:       { fontSize: 10 },
+
+  diffPanel:  { borderRadius: 8, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 7 },
+  diffHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 5 },
+  diffLabel:  { fontSize: 9, fontWeight: '900', letterSpacing: 0.6, color: C.TEXT },
+  diffRow:    { flexDirection: 'row', gap: 8 },
+  diffCell:   { flex: 1, alignItems: 'center' },
+  diffStat:   { fontSize: 8, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
+  diffBefore: { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '700' },
+  diffAfter:  { fontSize: 9, fontWeight: '900', color: C.SUCCESS },
+  diffNote:   { fontSize: 9, color: C.TEXT_SOFT, fontStyle: 'italic' },
+
+  // ── Forge ────────────────────────────────────────────────────────────────
+  galaxyWrap: { flex: 1, borderRadius: 12, overflow: 'hidden', position: 'relative' },
+  galaxyBadge: {
+    position: 'absolute', top: 10, right: 10,
+    alignItems: 'flex-end', gap: 4,
+  },
+  rankChip: {
+    borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3,
+    borderWidth: 1,
+  },
+  rankChipTxt: { fontSize: 11, fontWeight: '900' },
+  fuseHint:    { fontSize: 8, fontWeight: '900', letterSpacing: 1 },
+
+  // ── Forge overlay (buttons on top of video) ──────────────────────────────
+  forgeOverlay: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    paddingHorizontal: 12, paddingTop: 28, paddingBottom: 10,
+  },
+  forgeOverlayRow: {
+    flexDirection: 'row', gap: 10,
+  },
+  forgeOverlayBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderWidth: 1, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 8,
+  },
+  forgeOverlayLabel: { fontSize: 10, fontWeight: '900', letterSpacing: 0.8, color: C.TEXT },
+  forgeOverlaySub:   { fontSize: 8,  fontWeight: '600', color: C.TEXT_ON_DARK_SOFT,      marginTop: 1 },
+  forgeOverlayErr:   { fontSize: 9, color: C.GOLD, fontWeight: '700', textAlign: 'center', marginTop: 6 },
+
+  // ── Forge overlay ─────────────────────────────────────────────────────────
   fuseBurst: {
-    position: 'absolute',
-    width: 160, height: 160, borderRadius: 80,
-    borderWidth: 2.5,
-    top: H / 2 - 80,
-    left: W / 2 - 80,
+    position: 'absolute', width: 160, height: 160, borderRadius: 80, borderWidth: 2.5,
+    top: H / 2 - 80, left: W / 2 - 80,
   },
   fuseBadgeWrap: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    alignItems: 'center', justifyContent: 'center',
   },
   fuseBadgeCard: {
-    borderRadius: 18,
-    overflow: 'hidden',
-    paddingHorizontal: 48,
-    paddingVertical: 26,
-    alignItems: 'center',
-    borderWidth: 2,
-    backgroundColor: C.BG_DEEP,
-    shadowOpacity: 0.95,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 36,
-    elevation: 16,
+    borderRadius: 18, overflow: 'hidden', paddingHorizontal: 48, paddingVertical: 24,
+    alignItems: 'center', borderWidth: 2, backgroundColor: C.BG_DEEP,
+    shadowOpacity: 0.95, shadowOffset: { width: 0, height: 0 }, shadowRadius: 36, elevation: 16,
   },
-  fuseBadgeLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 5,
-    color: C.TEXT_MUTED,
-    marginBottom: 8,
-  },
-  fuseBadgeRankText: {
-    fontSize: 66,
-    fontWeight: '900',
-    letterSpacing: 8,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
-  },
-  fuseBadgeHeroName: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: C.TEXT_MUTED,
-    letterSpacing: 1.5,
-    marginTop: 10,
-  },
+  fuseBadgeLbl:  { fontSize: 10, fontWeight: '800', letterSpacing: 5, color: C.TEXT_SOFT, marginBottom: 6 },
+  fuseBadgeRank: { fontWeight: '900', letterSpacing: 8, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 22 },
+  fuseBadgeHero: { fontSize: 10, fontWeight: '700', color: C.TEXT_SOFT, letterSpacing: 1.5, marginTop: 8 },
 });

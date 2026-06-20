@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, Image, Animated,
-  Easing, Dimensions,
+  Easing, useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as SplashScreen from 'expo-splash-screen';
@@ -9,10 +9,6 @@ import { C } from '../theme/colors';
 import useGameStore from '../store/gameStore';
 import { HEROES } from '../data/heroes';
 import { APP_INFO } from '../constants/appInfo';
-
-const { width: W, height: H } = Dimensions.get('window');
-
-const BAR_W = W * 0.52;
 
 const TIPS = [
   'Assembling your war council…',
@@ -54,7 +50,12 @@ const PRELOAD_SOURCES = [
 ];
 
 export default function LoadingScreen({ navigation }) {
-  const hasSeenOnboarding = useGameStore(s => s.hasSeenOnboarding);
+  // Live window dimensions — re-reads after the landscape orientation lock
+  // settles, so the splash always fills the real screen (no stale portrait
+  // width that would leave the right edge clipped).
+  const { width: W, height: H } = useWindowDimensions();
+  const BAR_W = W * 0.52;
+
   const progressAnim = useRef(new Animated.Value(0)).current;
   const tipFade      = useRef(new Animated.Value(1)).current;
   const screenFade   = useRef(new Animated.Value(0)).current;
@@ -71,11 +72,31 @@ export default function LoadingScreen({ navigation }) {
   }, []);
 
   // Progress bar — smooth cubic fill over 2400 ms to give images time to decode,
-  // then navigate to Home once both the bar and a minimum wait have elapsed.
+  // then navigate ONLY once BOTH the bar animation AND store hydration have finished.
+  // Reading hasSeenOnboarding at mount used to race AsyncStorage rehydrate: if the bar
+  // finished first, a returning player was wrongly sent to Onboarding. We now wait for
+  // persist hydration and read the flag fresh at navigation time.
   useEffect(() => {
     const listenerId = progressAnim.addListener(({ value }) =>
       setPercent(Math.round(value * 100))
     );
+
+    let navigated = false;
+    let barDone   = false;
+    let hydrated  = useGameStore.persist.hasHydrated();
+
+    const tryNavigate = () => {
+      if (navigated || !barDone || !hydrated) return;
+      navigated = true;
+      const seen = useGameStore.getState().hasSeenOnboarding;
+      navigation.replace(seen ? 'Home' : 'Onboarding');
+    };
+
+    // onFinishHydration only fires for hydrations that complete AFTER subscribing, so we
+    // seed `hydrated` from hasHydrated() above for the already-rehydrated case.
+    const unsub = useGameStore.persist.onFinishHydration(() => { hydrated = true; tryNavigate(); });
+    // Safety net: never hang on the splash if hydration somehow stalls.
+    const hydrationFallback = setTimeout(() => { hydrated = true; tryNavigate(); }, 5000);
 
     Animated.timing(progressAnim, {
       toValue:  1,
@@ -84,10 +105,14 @@ export default function LoadingScreen({ navigation }) {
       useNativeDriver: false,
     }).start(() => {
       setPercent(100);
-      setTimeout(() => navigation.replace(hasSeenOnboarding ? 'Home' : 'Onboarding'), 200);
+      setTimeout(() => { barDone = true; tryNavigate(); }, 200);
     });
 
-    return () => progressAnim.removeListener(listenerId);
+    return () => {
+      progressAnim.removeListener(listenerId);
+      if (unsub) unsub();
+      clearTimeout(hydrationFallback);
+    };
   }, []);
 
   // Rotate tips every 1.4 s with fade crossfade
@@ -110,7 +135,7 @@ export default function LoadingScreen({ navigation }) {
   return (
     <Animated.View style={[styles.root, { opacity: screenFade }]}>
 
-      <Image source={SPLASH_IMG} style={[StyleSheet.absoluteFill, { width: W, height: H }]} resizeMode="cover" />
+      <Image source={SPLASH_IMG} style={[StyleSheet.absoluteFill, { width: "100%", height: H }]} resizeMode="cover" />
 
       <LinearGradient colors={['rgba(6,3,15,0.45)', 'transparent']} style={styles.vigTop} />
       <LinearGradient colors={['transparent', 'rgba(6,3,15,0.72)', 'rgba(6,3,15,0.97)']} style={styles.vigBottom} />
@@ -131,7 +156,7 @@ export default function LoadingScreen({ navigation }) {
       <View style={styles.loadingArea}>
         <Animated.Text style={[styles.tip, { opacity: tipFade }]}>{TIPS[tipIndex]}</Animated.Text>
 
-        <View style={styles.barTrack}>
+        <View style={[styles.barTrack, { width: BAR_W }]}>
           <Animated.View style={[styles.barGlow, { width: barFillWidth }]} />
           <Animated.View style={[styles.barFill, { width: barFillWidth }]}>
             <LinearGradient
@@ -155,8 +180,8 @@ export default function LoadingScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.BG_SCREEN },
 
-  vigTop:    { position: 'absolute', top: 0, left: 0, right: 0, height: H * 0.25 },
-  vigBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: H * 0.42 },
+  vigTop:    { position: 'absolute', top: 0, left: 0, right: 0, height: '25%' },
+  vigBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '42%' },
 
   // Off-screen preload container — clipped to 0×0, invisible to the user
   preloadContainer: {
@@ -184,7 +209,7 @@ const styles = StyleSheet.create({
   tip: { fontSize: 11, color: C.PRIMARY_LIGHT + 'C7', letterSpacing: 0.6, fontStyle: 'italic', marginBottom: 4 },
 
   barTrack: {
-    width: BAR_W, height: 6, borderRadius: 3,
+    height: 6, borderRadius: 3,
     backgroundColor: C.BORDER, overflow: 'hidden', position: 'relative',
   },
   barGlow: {
