@@ -106,7 +106,11 @@ let _lastSpeed = 1;
 const SIDE_PAD = 8;
 const CARD_GAP = 6;
 const SIDE_W   = Math.floor(W / 2) - SIDE_PAD * 2;
-const CARD_W   = Math.floor((SIDE_W - CARD_GAP * 2) / 3 * 0.80);
+const CARD_W   = Math.floor((SIDE_W - CARD_GAP * 2) / 3 * 0.76);
+// Explicit margin between the three battle cards. Screen-proportional so it scales,
+// and wide enough to clear a card's 1.15× attack-scale + lunge without overlapping a
+// neighbour. Applied as the cardRow flex `gap`.
+const CARD_MARGIN = Math.max(12, Math.round(SIDE_W * 0.045));
 // Smaller cards to leave room for the action bar
 const CARD_H   = Math.min(Math.max(60, Math.floor(SH * 0.36)), 200);
 const IMG_H    = CARD_H;
@@ -1817,10 +1821,10 @@ const S = StyleSheet.create({
   },
   cardRow: {
     flexDirection: 'row',
-    // space-evenly puts the CARD_W ×0.80 slack BETWEEN the cards (not just the outer
-    // edges, as justifyContent:'center' did), giving each card room for its 1.15×
-    // attack-scale + lunge so an animating card never visually overlaps its neighbours.
-    justifyContent: 'space-evenly',
+    justifyContent: 'center',
+    // Explicit margin between cards so they never sit cramped/overlapping. CARD_MARGIN
+    // also clears each card's 1.15× attack-scale + lunge.
+    gap: CARD_MARGIN,
   },
   divider: {
     width: 1,
