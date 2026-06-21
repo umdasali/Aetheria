@@ -104,16 +104,33 @@ function MatrixColumn({ x, chars, head, trail, duration, containerH }) {
   );
 }
 
+// All require() calls must be static — no dynamic paths allowed.
+// SOVEREIGN falls back to S-Rank until its own video is added.
+const RANK_VIDEOS = {
+  C:         require('../../../assets/video/C-Rank.mp4'),
+  B:         require('../../../assets/video/B-Rank.mp4'),
+  A:         require('../../../assets/video/A-Rank.mp4'),
+  S:         require('../../../assets/video/S-Rank.mp4'),
+  SOVEREIGN: require('../../../assets/video/S-Rank.mp4'),
+};
+
 export default function ForgeViz({ rank = 'C' }) {
   const [dim, setDim] = useState({ w: 0, h: 0 });
   const cfg     = RANK_CFG[rank] ?? RANK_CFG.C;
   const charSet = CHAR_SETS[rank] ?? CHAR_SETS.C;
 
-  // expo-video: loop + muted background video
+  // expo-video: loop + muted background video — initial source is rank-specific
   const player = useVideoPlayer(
-    require('../../../assets/video/C-Rank.mp4'),
+    RANK_VIDEOS[rank] ?? RANK_VIDEOS.C,
     p => { p.loop = true; p.muted = true; p.play(); }
   );
+
+  // Swap video when rank changes (e.g. after fusion on the Forge tab).
+  // replaceAsync loads off the main thread — avoids the UI-freeze warning from replace().
+  useEffect(() => {
+    const src = RANK_VIDEOS[rank] ?? RANK_VIDEOS.C;
+    player.replaceAsync(src).then(() => player.play()).catch(() => {});
+  }, [rank]);
 
   // Generate columns once per rank / container-width
   const columns = useMemo(() => {

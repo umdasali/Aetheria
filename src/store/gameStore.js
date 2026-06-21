@@ -510,6 +510,8 @@ const useGameStore = create(
         const state = get();
         if (state.gems < DUNGEON_REFILL_COST) return false;
         const used = state.dungeonResetDate === today ? state.dungeonAttemptsUsed : 0;
+        // Energy already full — never charge gems for a no-op.
+        if (used <= 0) return false;
         set({
           gems:                state.gems - DUNGEON_REFILL_COST,
           dungeonResetDate:    today,

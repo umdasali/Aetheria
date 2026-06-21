@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, Image, TouchableOpacity, ScrollView, FlatList,
   Animated, Dimensions, StyleSheet,
@@ -380,6 +381,14 @@ export default function WorldMapScreen({ navigation }) {
   const markerScale = useRef(
     FACTION_KEYS.reduce((acc, k) => ({ ...acc, [k]: new Animated.Value(1) }), {})
   ).current;
+
+  // World map BGM — start on focus, stop on blur
+  useFocusEffect(
+    useCallback(() => {
+      AudioManager.startCollectionBGM();
+      return () => AudioManager.stopCollectionBGM();
+    }, [])
+  );
 
   // Continuous breathing glow on all marker rings
   useEffect(() => {

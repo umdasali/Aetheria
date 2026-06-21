@@ -5,11 +5,12 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getActiveEvents, getUpcomingEvents, getEndedEvents, secondsUntilEnd } from '../data/events';
+import { getActiveEvents, getUpcomingEvents, getEndedEvents, secondsUntilEnd, secondsUntilStart } from '../data/events';
 import { getHeroById } from '../data/heroes';
 import { C, RANK } from '../theme/colors';
 import HeroCard from '../components/HeroCard';
 import useGameStore from '../store/gameStore';
+import AudioManager from '../utils/AudioManager';
 
 const { width: W, height: H } = Dimensions.get('window');
 const EV_HERO_W = Math.round(H * 0.38);
@@ -26,11 +27,15 @@ function formatCountdown(seconds) {
 }
 
 function EventCard({ event, onEnter, isGuaranteed }) {
-  const [secs, setSecs] = useState(() => secondsUntilEnd(event));
+  const [secs,      setSecs]      = useState(() => secondsUntilEnd(event));
+  const [startSecs, setStartSecs] = useState(() => secondsUntilStart(event));
   const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const id = setInterval(() => setSecs(secondsUntilEnd(event)), 1000);
+    const id = setInterval(() => {
+      setSecs(secondsUntilEnd(event));
+      setStartSecs(secondsUntilStart(event));
+    }, 1000);
     return () => clearInterval(id);
   }, [event]);
 
@@ -50,7 +55,8 @@ function EventCard({ event, onEnter, isGuaranteed }) {
   const featuredHero = event.featuredHeroId ? getHeroById(event.featuredHeroId) : null;
   const rateUpHeroes = (event.rateUpHeroIds ?? []).map(getHeroById).filter(Boolean);
   const accent       = event.accentColor ?? C.PRIMARY;
-  const isActive     = secs > 0;
+  const isUpcoming   = startSecs > 0;
+  const isActive     = !isUpcoming && secs > 0;
 
   return (
     <View style={[s.card, { borderColor: accent + '55' }]}>
@@ -90,10 +96,14 @@ function EventCard({ event, onEnter, isGuaranteed }) {
           {/* Countdown */}
           <View style={s.countdownRow}>
             <Ionicons name="time-outline" size={13} color={C.TEXT_MUTED} />
-            <Text style={s.countdownLabel}>ENDS IN</Text>
-            <Text style={[s.countdownValue, secs < 3600 && { color: C.DANGER }]}>
-              {formatCountdown(secs)}
+            <Text style={s.countdownLabel}>
+              {isUpcoming ? 'STARTS IN' : isActive ? 'ENDS IN' : 'ENDED'}
             </Text>
+            {(isUpcoming || isActive) && (
+              <Text style={[s.countdownValue, isActive && secs < 3600 && { color: C.DANGER }]}>
+                {isUpcoming ? formatCountdown(startSecs) : formatCountdown(secs)}
+              </Text>
+            )}
           </View>
 
           {/* Rate-up heroes */}
@@ -101,7 +111,7 @@ function EventCard({ event, onEnter, isGuaranteed }) {
             <View style={s.rateUpRow}>
               <Text style={s.rateUpLabel}>RATE UP</Text>
               {rateUpHeroes.map(hero => {
-                const r = RANK[hero.rank];
+                const r = RANK[hero.effectiveRank ?? hero.rank];
                 return (
                   <View key={hero.id} style={[s.rateUpChip, { borderColor: r.glow + '88' }]}>
                     <View style={[s.rateUpDot, { backgroundColor: r.bg }]}>
@@ -163,7 +173,7 @@ function EventCard({ event, onEnter, isGuaranteed }) {
 
 export default function EventScreen({ navigation }) {
   const insets         = useSafeAreaInsets();
-  const eventGuarantee = useGameStore(s => s.eventGuarantee);
+  const eventGuarantee = useGameStore(s => s.eventGuarantee ?? {});
   const [tab, setTab]  = useState('active');
 
   // Banners rotate on a fixed cadence, so these are always populated (no dead tabs).
@@ -183,7 +193,7 @@ export default function EventScreen({ navigation }) {
     <View style={[s.root, { paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
       {/* Header */}
       <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.75}>
+        <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} style={s.backBtn} activeOpacity={0.75}>
           <Ionicons name="chevron-back" size={22} color={C.TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
@@ -203,7 +213,7 @@ export default function EventScreen({ navigation }) {
         {[['active', 'ACTIVE'], ['upcoming', 'UPCOMING'], ['ended', 'ENDED']].map(([key, label]) => {
           const active = tab === key;
           return (
-            <TouchableOpacity key={key} style={[s.tabBtn, active && s.tabBtnActive]} onPress={() => setTab(key)} activeOpacity={0.75}>
+            <TouchableOpacity key={key} style={[s.tabBtn, active && s.tabBtnActive]} onPress={() => { AudioManager.playButtonSFX(); setTab(key); }} activeOpacity={0.75}>
               <Text style={[s.tabTxt, active && s.tabTxtActive]}>{label}</Text>
             </TouchableOpacity>
           );

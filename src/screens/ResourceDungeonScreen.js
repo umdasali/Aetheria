@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import useGameStore from '../store/gameStore';
 import {
-  DUNGEON_DEFS, DAILY_DUNGEON_ATTEMPTS, DUNGEON_REFILL_COST,
+  DUNGEON_DEFS, DAILY_DUNGEON_ATTEMPTS, DUNGEON_REFILL_COST, DUNGEON_REFILL_AMOUNT,
   getDungeonEnemyGroup, getDungeonReward, getDiffColor,
   MATERIAL_EXCHANGE_RECIPES,
 } from '../data/resourceDungeons';
@@ -636,7 +636,8 @@ const ef = StyleSheet.create({
 
 // ── Attempts HUD (header right side) ─────────────────────────────────────────
 function AttemptsHud({ attemptsLeft, total, onRefill }) {
-  const col = attemptsLeft > 0 ? C.SUCCESS : C.DANGER;
+  const col    = attemptsLeft > 0 ? C.SUCCESS : C.DANGER;
+  const isFull = attemptsLeft >= total;
   return (
     <View style={hud.wrap}>
       <View style={[hud.pill, { borderColor: col + '66' }]}>
@@ -644,10 +645,14 @@ function AttemptsHud({ attemptsLeft, total, onRefill }) {
         <Text style={[hud.count, { color: col }]}>{attemptsLeft}</Text>
         <Text style={hud.total}>/ {total}</Text>
       </View>
-      <TouchableOpacity style={hud.refill} onPress={onRefill} activeOpacity={0.8}>
-        <Ionicons name="add" size={11} color={C.PRIMARY_LIGHT} />
-        <Image source={GEM_IMG} style={hud.gemImg} resizeMode="contain" />
-        <Text style={hud.refillTxt}>{DUNGEON_REFILL_COST}</Text>
+      <TouchableOpacity
+        style={[hud.refill, isFull && hud.refillFull]}
+        onPress={onRefill}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={11} color={isFull ? C.TEXT_DISABLED : C.PRIMARY_LIGHT} />
+        <Image source={GEM_IMG} style={[hud.gemImg, isFull && { opacity: 0.4 }]} resizeMode="contain" />
+        <Text style={[hud.refillTxt, isFull && { color: C.TEXT_DISABLED }]}>{DUNGEON_REFILL_COST}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -666,6 +671,9 @@ const hud = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 3,
     borderRadius: 8, paddingHorizontal: 9, paddingVertical: 6,
     borderWidth: 1, borderColor: C.PRIMARY_LIGHT + '55', backgroundColor: C.PRIMARY_GLOW,
+  },
+  refillFull: {
+    borderColor: C.BORDER_SUBTLE, backgroundColor: C.GLASS_3, opacity: 0.55,
   },
   gemImg:    { width: 13, height: 13 },
   refillTxt: { fontSize: 11, fontWeight: '900', color: C.PRIMARY_LIGHT },
@@ -723,12 +731,35 @@ export default function ResourceDungeonScreen({ navigation }) {
 
   const handleRefill = () => {
     AudioManager.playButtonSFX();
-    if (!refillDungeonAttempts()) {
-      Alert.alert('Not Enough Gems', `Refilling costs ${DUNGEON_REFILL_COST} gems.`, [{ text: 'OK' }]);
-    } else {
-      AudioManager.playRewardClaimSFX();
-      tick(n => n + 1);
+
+    // Guard: energy already full
+    if (attemptsLeft >= DAILY_DUNGEON_ATTEMPTS) {
+      Alert.alert('Energy Full', 'You already have maximum energy!', [{ text: 'OK' }]);
+      return;
     }
+
+    // How many runs the player will actually gain (capped by used slots)
+    const usedToday   = DAILY_DUNGEON_ATTEMPTS - attemptsLeft;
+    const willRestore = Math.min(DUNGEON_REFILL_AMOUNT, usedToday);
+
+    Alert.alert(
+      'Refill Energy',
+      `Spend ${DUNGEON_REFILL_COST} gems to restore ${willRestore} run${willRestore !== 1 ? 's' : ''}?\n\nCurrent energy: ${attemptsLeft} / ${DAILY_DUNGEON_ATTEMPTS}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: `Spend ${DUNGEON_REFILL_COST} Gems`,
+          onPress: () => {
+            if (!refillDungeonAttempts()) {
+              Alert.alert('Not Enough Gems', `You need ${DUNGEON_REFILL_COST} gems to refill.`, [{ text: 'OK' }]);
+            } else {
+              AudioManager.playRewardClaimSFX();
+              tick(n => n + 1);
+            }
+          },
+        },
+      ],
+    );
   };
 
   const handleExchange = (recipe) => {

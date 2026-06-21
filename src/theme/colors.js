@@ -102,6 +102,10 @@ export const C = {
   OVERLAY_MID:  'rgba(0,0,0,0.45)',       // video-skip / floating button bg
   OVERLAY_VOID: 'rgba(6,2,18,0.78)',      // deep-purple modal / tutorial overlay
 
+  // ── Frosted-glass panel (real glassmorphism: translucent, backdrop bleeds through) ──
+  GLASS_EDGE:   'rgba(255,255,255,0.20)',                          // bright hairline edge that reads as "glass"
+  GRAD_GLASS:   ['rgba(255,255,255,0.10)', 'rgba(12,7,30,0.52)'],  // panel fill: top sheen → dark-purple translucent base
+
   // ── Leaderboard medal palette ─────────────────────────────────────────────
   MEDAL_GOLD:        '#FFD700',                // gold rank (= SOVEREIGN_GOLD value)
   MEDAL_GOLD_DIM:    '#7A5500',                // subdued gold label color
@@ -147,6 +151,7 @@ export const C = {
 
   // ── Shadow base ────────────────────────────────────────────────────────────
   SHADOW: '#000000',   // shadowColor base — opacity controlled by shadowOpacity
+  TEXT_SHADOW: 'rgba(0,0,0,0.9)',   // legibility shadow for text over images/glass
 };
 
 // ── Rank badge colors — hierarchy: SOVEREIGN > S > A > B > C ─────────────────
@@ -154,7 +159,7 @@ export const RANK = {
   SOVEREIGN: { bg: '#FFD700', text: '#1A0A00', glow: '#FFEC6E' },
   S:         { bg: '#F72585', text: '#FFFFFF', glow: '#FF85C2' },
   A:         { bg: '#7B2FBE', text: '#E9D5FF', glow: '#C084FC' },
-  B:         { bg: '#0284C7', text: '#E0F2FE', glow: '#7DD3FC' },
+  B:         { bg: '#e2620d', text: '#E0F2FE', glow: '#ee9f6a' },
   C:         { bg: '#059669', text: '#D1FAE5', glow: '#6EE7B7' },
 };
 

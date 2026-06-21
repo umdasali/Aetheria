@@ -35,20 +35,28 @@ const COINS_PER_COPY = { SOVEREIGN: 200, S: 80, A: 35, B: 15, C: 8 };
 // ── Glass panel helper ────────────────────────────────────────────────────────
 function Glass({ style, children, borderColor }) {
   return (
-    <View style={[glass.wrap, style, borderColor ? { borderColor } : null]}>
-      <BlurView intensity={55} tint="dark" style={StyleSheet.absoluteFill} />
-      {/* Dark backing (was a faint white tint) so card text stays legible over the
-          bright blurred hero portrait behind the body. */}
-      <LinearGradient colors={[C.OVERLAY_3, C.OVERLAY_4]} style={StyleSheet.absoluteFill} />
+    <View style={[glass.outer, style, borderColor ? { borderColor } : null]}>
+      <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+      {/* Real frosted glass: a top white sheen fading into a translucent dark-purple
+          base. Translucent (not opaque black) so the vibrant backdrop bleeds through =
+          glassy; the 0.52 base + the bright GLASS_EDGE keep text readable. */}
+      <LinearGradient
+        colors={C.GRAD_GLASS}
+        start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
       {children}
     </View>
   );
 }
 const glass = StyleSheet.create({
-  wrap: {
-    borderRadius: 10, overflow: 'hidden',
-    borderWidth: 1, borderColor: C.BORDER,
+  outer: {
+    borderRadius: 12, overflow: 'hidden',
+    borderWidth: 1, borderColor: C.GLASS_EDGE,
     position: 'relative',
+    // Soft elevation lifts the panel off the backdrop so it reads as floating glass.
+    shadowColor: C.SHADOW, shadowOpacity: 0.35, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
 });
 
@@ -142,9 +150,9 @@ function TabBar({ active, onChange, accent }) {
       {TABS.map(t => {
         const on = active === t.key;
         return (
-          <TouchableOpacity key={t.key} style={tb.tab} onPress={() => onChange(t.key)} activeOpacity={0.7}>
-            <Ionicons name={t.icon} size={12} color={on ? accent : C.TEXT_DISABLED} />
-            <Text style={[tb.label, { color: on ? accent : C.TEXT_DISABLED }]}>{t.label}</Text>
+          <TouchableOpacity key={t.key} style={tb.tab} onPress={() => { AudioManager.playButtonSFX(); onChange(t.key); }} activeOpacity={0.7}>
+            <Ionicons name={t.icon} size={13} color={on ? accent : C.TEXT_MUTED} />
+            <Text style={[tb.label, { color: on ? accent : C.TEXT_MUTED }]}>{t.label}</Text>
             {on && <View style={[tb.bar, { backgroundColor: accent }]} />}
           </TouchableOpacity>
         );
@@ -161,8 +169,8 @@ const tb = StyleSheet.create({
     borderColor: C.BORDER_SUBTLE,
     marginBottom: 8,
   },
-  tab:   { flex: 1, alignItems: 'center', paddingVertical: 6, gap: 2 },
-  label: { fontSize: 7, fontWeight: '900', letterSpacing: 1.2 },
+  tab:   { flex: 1, alignItems: 'center', paddingVertical: 7, gap: 2 },
+  label: { fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
   bar:   { height: 2, width: '50%', borderRadius: 1, marginTop: 2 },
 });
 
@@ -182,9 +190,9 @@ function ProfileTab({
   return (
     <View style={styles.tabContent}>
       {/* About glass card */}
-      <Glass style={styles.aboutCard}>
+      {/* <Glass style={styles.aboutCard}> */}
         <Text style={styles.aboutTxt} numberOfLines={2}>{hero.about}</Text>
-      </Glass>
+      {/* </Glass> */}
 
       {/* 2×2 stat grid */}
       <View style={styles.statGrid}>
@@ -194,33 +202,35 @@ function ProfileTab({
           { key: 'DEF',  val: effectiveDef,  color: accent },
           { key: 'CRIT', val: effectiveCrit, color: accent },
         ].map(({ key, val, color }) => (
-          <Glass key={key} style={styles.statCell}>
+          // <Glass key={key} style={styles.statCell}>
+          <View key={key} style={styles.statCell}>
             <Text style={[styles.statVal, { color }]}>{val.toLocaleString()}</Text>
             <Text style={styles.statKey}>{key}</Text>
             <View style={styles.statBarWrap}>
               <StatBar value={val} max={STAT_ABS_MAX[key]} color={color} />
             </View>
-          </Glass>
+          {/* // </Glass> */}
+          </View>
         ))}
       </View>
 
       {/* Level + ascension info row */}
       <View style={styles.infoRow}>
-        <Glass style={styles.infoPill}>
+        <View style={styles.infoPill}>
           <Text style={[styles.infoPillTxt, { color: accent }]}>Lv.{level}/{maxLevel}</Text>
           {transcendence > 0 && <Text style={[styles.infoPillSub, { color: C.GOLD }]}>✦{transcendence}</Text>}
-        </Glass>
+        </View>
         {ascension > 0 && (
-          <Glass style={styles.infoPill}>
+          <View style={styles.infoPill}>
             <Text style={[styles.infoPillTxt, { color: ascItemColor }]}>
               ★{ascension}  +{Math.round((ascMult - 1) * 100)}%
             </Text>
-          </Glass>
+          </View>
         )}
         {hero.element && (
-          <Glass style={styles.infoPill}>
+          <View style={styles.infoPill}>
             <Text style={[styles.infoPillTxt, { color: C.CYAN }]}>{hero.element}</Text>
-          </Glass>
+          </View>
         )}
       </View>
 
@@ -256,45 +266,70 @@ function SkillsTab({ hero, faction }) {
   const accent = faction.color;
   return (
     <View style={styles.tabContent}>
-      {hero.skills.map((sk, i) => (
-        <Glass key={i} style={styles.skillCard} borderColor={accent + '30'}>
-          {/* Cost badge */}
-          <View style={[styles.skillCostBadge, { borderColor: accent + '70', backgroundColor: accent + '18' }]}>
-            <Text style={[styles.skillCostTxt, { color: accent }]}>{sk.cost}</Text>
-          </View>
-          {/* Body */}
-          <View style={styles.skillBody}>
-            <Text style={styles.skillName}>{sk.name}</Text>
-            <Text style={styles.skillDesc} numberOfLines={2}>{sk.description}</Text>
-          </View>
-          {/* Damage */}
-          {sk.damage > 0 && (
-            <View style={styles.skillDmg}>
-              <Text style={styles.skillDmgTxt}>{sk.damage}×</Text>
+      {hero.skills.map((sk, i) => {
+        const energyCost = sk.cost * 20;
+        const isHeal = sk.damage === 0;
+        const isAOE  = sk.damage > 0 && /\ball\b|enemies|every/i.test(sk.description);
+        const typeLabel = isHeal ? 'HEAL' : isAOE ? 'AOE' : 'ATK';
+        const typeColor = isHeal ? C.SUCCESS : isAOE ? C.SECONDARY : accent;
+        return (
+          <Glass key={i} style={styles.skillCard} borderColor={accent + '40'}>
+            <LinearGradient
+              colors={[accent + '1A', 'transparent']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+            {/* Skill index + energy cost */}
+            <View style={[styles.skillNumBadge, { borderColor: accent + '60', backgroundColor: accent + '18' }]}>
+              <Text style={[styles.skillNumTxt, { color: accent }]}>{i + 1}</Text>
+              <Text style={[styles.skillNrgTxt, { color: accent + 'BB' }]}>{energyCost}E</Text>
             </View>
-          )}
-          {sk.damage === 0 && (
-            <View style={[styles.skillDmg, { backgroundColor: C.SUCCESS + '20' }]}>
-              <Text style={[styles.skillDmgTxt, { color: C.SUCCESS }]}>HEAL</Text>
+            {/* Body */}
+            <View style={styles.skillBody}>
+              <View style={styles.skillNameRow}>
+                <Text style={styles.skillName}>{sk.name}</Text>
+                <View style={[styles.skillTypePill, { backgroundColor: typeColor + '20', borderColor: typeColor + '60' }]}>
+                  <Text style={[styles.skillTypeTxt, { color: typeColor }]}>{typeLabel}</Text>
+                </View>
+              </View>
+              <Text style={styles.skillDesc} numberOfLines={2}>{sk.description}</Text>
             </View>
-          )}
-        </Glass>
-      ))}
+            {/* Multiplier / heal icon */}
+            {sk.damage > 0 ? (
+              <View style={[styles.skillDmg, { backgroundColor: accent + '1A', borderColor: accent + '55', borderWidth: 1 }]}>
+                <Text style={[styles.skillDmgTxt, { color: accent }]}>{sk.damage}×</Text>
+              </View>
+            ) : (
+              <View style={[styles.skillDmg, { backgroundColor: C.SUCCESS + '1A', borderColor: C.SUCCESS + '55', borderWidth: 1 }]}>
+                <Ionicons name="heart-outline" size={13} color={C.SUCCESS} />
+              </View>
+            )}
+          </Glass>
+        );
+      })}
 
-      {/* Trump card */}
-      <Glass style={styles.trumpCard} borderColor={accent + '55'}>
+      {/* Trump Card — premium full-width panel */}
+      <Glass style={styles.trumpCard} borderColor={C.GOLD + '80'}>
         <LinearGradient
-          colors={[accent + '25', 'transparent']}
+          colors={[C.GOLD + '28', C.PRIMARY + '14', 'transparent']}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
         />
+        {/* Icon */}
+        <View style={styles.trumpIconWrap}>
+          <Ionicons name="flash" size={16} color={C.GOLD} />
+        </View>
+        {/* Text */}
         <View style={styles.trumpLeft}>
           <Text style={styles.trumpLabel}>TRUMP CARD</Text>
-          <Text style={[styles.trumpName, { color: C.GOLD }]}>{hero.trumpCard.name.toUpperCase()}</Text>
+          <Text style={[styles.trumpName, { color: C.SOVEREIGN_GOLD }]}>{hero.trumpCard.name.toUpperCase()}</Text>
+          <Text style={styles.trumpEffect} numberOfLines={2}>{hero.trumpCard.effect}</Text>
         </View>
-        <Text style={[styles.trumpEffect, { color: accent }]} numberOfLines={2}>
-          ✦ {hero.trumpCard.effect}
-        </Text>
+        {/* Damage × ALL badge */}
+        <View style={[styles.skillDmg, styles.trumpDmgWrap, { backgroundColor: C.GOLD + '22', borderColor: C.GOLD + '66', borderWidth: 1 }]}>
+          <Text style={[styles.skillDmgTxt, { color: C.GOLD }]}>{hero.trumpCard.damage}×</Text>
+          <Text style={styles.trumpDmgAll}>ALL</Text>
+        </View>
       </Glass>
     </View>
   );
@@ -312,71 +347,53 @@ function LevelTab({
 }) {
   const accent = faction.color;
 
-  // Arc ring — drawn as a thin border-radius circle with a clip-path trick:
-  // We use two rotating half-covers to reveal a % of the ring.
-  const pct     = level / maxLevel;
-  const degrees = Math.round(pct * 360);
-
   return (
     <View style={styles.tabContent}>
       <View style={styles.levelLayout}>
 
-        {/* LEFT — level ring */}
-        <View style={styles.levelLeft}>
-          <Glass style={styles.levelRingCard} borderColor={accent + '50'}>
-            {/* Outer glow ring background */}
-            <View style={[styles.ringOuter, { borderColor: accent + '25' }]}>
-              {/* Filled arc using a gradient overlay trick */}
-              <View style={[styles.ringFill, { borderColor: accent }]}>
-                {/* Mask the unfilled portion */}
-                <View
-                  style={[
-                    styles.ringMask,
-                    {
-                      backgroundColor: C.BG_STATS,
-                      transform: [{ rotate: `${degrees}deg` }],
-                    },
-                  ]}
-                />
-              </View>
-              {/* Center content */}
-              <View style={styles.ringCenter}>
-                <Text style={[styles.ringLevel, { color: accent }]}>{level}</Text>
-                <Text style={styles.ringMax}>/ {maxLevel}</Text>
-              </View>
-            </View>
+        {/* LEFT — level glass card */}
+        <Glass style={styles.levelLeftCard} borderColor={accent + '55'}>
+          <LinearGradient
+            colors={[accent + '22', 'transparent']}
+            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Text style={styles.levelCaption}>LEVEL</Text>
+          {/* Big level number */}
+          <View style={styles.levelNumRow}>
+            <Text style={[styles.ringLevel, { color: accent }]}>{level}</Text>
+            <Text style={styles.ringMax}>/{maxLevel}</Text>
+          </View>
+          {/* XP-style progress bar */}
+          <View style={styles.levelBarWrap}>
+            <StatBar value={level} max={maxLevel} color={accent} />
+          </View>
+          {/* Level-up button */}
+          {owned ? (
+            <TouchableOpacity
+              style={[styles.lvUpBtn, {
+                borderColor: isMaxLevel ? C.GOLD + '55' : canLevelUp ? accent + '80' : C.BORDER,
+                backgroundColor: isMaxLevel ? C.GOLD + '10' : canLevelUp ? accent + '18' : 'transparent',
+              }]}
+              onPress={canLevelUp ? onLevelUp : undefined}
+              disabled={!canLevelUp}
+              activeOpacity={0.75}
+            >
+              <Ionicons
+                name={isMaxLevel ? 'trophy-outline' : 'arrow-up-circle-outline'}
+                size={11}
+                color={isMaxLevel ? C.GOLD : canLevelUp ? accent : C.TEXT_DISABLED}
+              />
+              <Text style={[styles.lvUpTxt, { color: isMaxLevel ? C.GOLD : canLevelUp ? accent : C.TEXT_DISABLED }]}>
+                {isMaxLevel ? 'MAX LEVEL' : `${levelCost.toLocaleString()} G`}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.lockedHint}>UNLOCK TO LEVEL</Text>
+          )}
+        </Glass>
 
-            {/* Level up button */}
-            {owned && (
-              <TouchableOpacity
-                style={[
-                  styles.lvUpBtn,
-                  {
-                    borderColor: isMaxLevel ? C.GOLD + '55' : canLevelUp ? accent + '80' : C.BORDER,
-                    backgroundColor: isMaxLevel ? C.GOLD + '10' : canLevelUp ? accent + '15' : 'transparent',
-                  },
-                ]}
-                onPress={canLevelUp ? onLevelUp : undefined}
-                disabled={!canLevelUp}
-                activeOpacity={0.75}
-              >
-                <Ionicons
-                  name={isMaxLevel ? 'trophy-outline' : 'arrow-up-outline'}
-                  size={11}
-                  color={isMaxLevel ? C.GOLD : canLevelUp ? accent : C.TEXT_DISABLED}
-                />
-                <Text style={[styles.lvUpTxt, { color: isMaxLevel ? C.GOLD : canLevelUp ? accent : C.TEXT_DISABLED }]}>
-                  {isMaxLevel ? 'MAX' : `${levelCost.toLocaleString()} G`}
-                </Text>
-              </TouchableOpacity>
-            )}
-            {!owned && (
-              <Text style={styles.lockedHint}>UNLOCK TO LEVEL</Text>
-            )}
-          </Glass>
-        </View>
-
-        {/* RIGHT — transcend + ascend panels */}
+        {/* RIGHT — transcend + ascend glass panels */}
         <View style={styles.levelRight}>
           {/* Transcendence */}
           <Glass
@@ -394,9 +411,7 @@ function LevelTab({
                 <Text style={[styles.upgradeBadgeTxt, { color: copies >= TRANSCEND_COPIES ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>{copies}/{TRANSCEND_COPIES}</Text>
               </View>
             </View>
-            <Text style={styles.upgradeSub}>
-              Max Lv {maxLevel} → {maxLevel + 5}
-            </Text>
+            <Text style={styles.upgradeSub}>Max Lv {maxLevel} → {maxLevel + 5}</Text>
             <Text style={[styles.upgradeCost, { color: canAffordTranscend ? C.GOLD : C.TEXT_DISABLED }]}>
               {transcendCost.toLocaleString()} G
             </Text>
@@ -441,9 +456,7 @@ function LevelTab({
                 ))}
               </View>
             </View>
-            <Text style={styles.upgradeSub}>
-              {requiredItem ? requiredItem.name : 'Item required'}
-            </Text>
+            <Text style={styles.upgradeSub}>{requiredItem ? requiredItem.name : 'Item required'}</Text>
             <Text style={[styles.upgradeCost, { color: ownedItemCount >= 1 ? ascItemColor : C.TEXT_DISABLED }]}>
               {ownedItemCount} / 1 owned
             </Text>
@@ -839,16 +852,18 @@ export default function HeroDetailScreen({ route, navigation }) {
         resizeMode="cover"
         blurRadius={22}
       />
-      {/* BlurView adds frosted-glass finish on top */}
-      <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} />
-      {/* Gradient veil — darker on right (text area) to guarantee legibility on light hero images */}
+      {/* Light frost on top (the image already carries blurRadius 22, so keep this gentle
+          — heavy stacking is what made the screen feel murky). */}
+      <BlurView intensity={16} tint="dark" style={StyleSheet.absoluteFill} />
+      {/* Gradient veils lightened so the hero art + faction colour bleed through and give
+          the frosted-glass panels a vibrant backdrop, while panels carry their own contrast. */}
       <LinearGradient
-        colors={[C.BG_DEEP + 'A0', C.BG_BASE + 'C8', C.BG_DEEP + 'A0']}
+        colors={[C.BG_DEEP + '6E', C.BG_BASE + '99', C.BG_DEEP + '6E']}
         start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
       <LinearGradient
-        colors={[C.OVERLAY_2, C.OVERLAY_3]}
+        colors={[C.OVERLAY_1, C.OVERLAY_2]}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
         style={StyleSheet.absoluteFill}
       />
@@ -906,7 +921,9 @@ export default function HeroDetailScreen({ route, navigation }) {
               {/* Frosted-glass background only on non-Forge tabs */}
               {activeTab !== 'forge' && (
                 <>
-                  <BlurView intensity={45} tint="dark" style={StyleSheet.absoluteFill} pointerEvents="none" />
+                  {/* Gentle container frost — the inner Glass cards carry the real depth now,
+                      so this stays light to avoid the old stacked-blur murk. */}
+                  <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} pointerEvents="none" />
                   <View style={styles.tabAreaTint} pointerEvents="none" />
                 </>
               )}
@@ -1023,7 +1040,8 @@ const styles = StyleSheet.create({
 
   nameRow:    { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 6 },
   factionDot: { width: 8, height: 8, borderRadius: 4 },
-  heroName:   { flex: 1, fontSize: 15, fontWeight: '900', letterSpacing: 2, color: C.TEXT },
+  heroName:   { flex: 1, fontSize: 16, fontWeight: '900', letterSpacing: 2, color: C.TEXT,
+    textShadowColor: C.TEXT_SHADOW, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 5 },
   rankBadge:  { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   rankTxt:    { fontSize: 11, fontWeight: '900', color: C.TEXT },
   copiesBadge:{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: C.PRIMARY_GLOW, borderWidth: 1, borderColor: C.BORDER_STRONG },
@@ -1037,8 +1055,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: C.BORDER,
-    padding: 6,
+    borderColor: C.GLASS_EDGE,
+    padding: 10,
   },
   tabAreaForge: {
     borderRadius: 0,
@@ -1051,7 +1069,7 @@ const styles = StyleSheet.create({
   },
 
   // ── Tab content shared ───────────────────────────────────────────────────
-  tabContent:    { flex: 1, gap: 6 },
+  tabContent:    { flex: 1, gap: 8 },
   forgeTabFill:  { position: 'relative', gap: 0 },
 
   // ── Profile ──────────────────────────────────────────────────────────────
@@ -1063,7 +1081,8 @@ const styles = StyleSheet.create({
     width: '48.5%', paddingHorizontal: 10, paddingVertical: 8,
     justifyContent: 'space-between',
   },
-  statVal:     { fontSize: 20, fontWeight: '900', color: C.TEXT },
+  statVal:     { fontSize: 20, fontWeight: '900', color: C.TEXT,
+    textShadowColor: C.TEXT_SHADOW, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   statKey:     { fontSize: 9, fontWeight: '900', color: C.TEXT_SOFT, letterSpacing: 1.5, marginTop: -2 },
   statBarWrap: { marginTop: 5 },
 
@@ -1080,70 +1099,67 @@ const styles = StyleSheet.create({
   // ── Skills ───────────────────────────────────────────────────────────────
   skillCard: {
     flexDirection: 'row', alignItems: 'center', gap: 9,
-    paddingHorizontal: 10, paddingVertical: 9,
+    paddingHorizontal: 10, paddingVertical: 10,
   },
-  skillCostBadge: {
-    width: 30, height: 30, borderRadius: 15,
+  skillNumBadge: {
+    width: 38, height: 38, borderRadius: 8,
     alignItems: 'center', justifyContent: 'center', borderWidth: 1.5,
   },
-  skillCostTxt: { fontWeight: '900', fontSize: 13, color: C.TEXT },
-  skillBody:    { flex: 1 },
-  skillName:    { fontSize: 11, fontWeight: '800', color: C.TEXT, marginBottom: 1 },
-  skillDesc:    { fontSize: 10, color: C.TEXT_SOFT, lineHeight: 14 },
+  skillNumTxt:   { fontSize: 14, fontWeight: '900', lineHeight: 16 },
+  skillNrgTxt:   { fontSize: 7, fontWeight: '800', letterSpacing: 0.3, marginTop: -2 },
+  skillNameRow:  { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 },
+  skillTypePill: { borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1 },
+  skillTypeTxt:  { fontSize: 7, fontWeight: '900', letterSpacing: 0.5 },
+  skillBody:     { flex: 1 },
+  skillName:     { fontSize: 11, fontWeight: '800', color: C.TEXT },
+  skillDesc:     { fontSize: 10, color: C.TEXT_SOFT, lineHeight: 14 },
   skillDmg: {
-    backgroundColor: C.HP + '18', borderRadius: 4,
-    paddingHorizontal: 6, paddingVertical: 3,
+    borderRadius: 6, paddingHorizontal: 7, paddingVertical: 6,
+    alignItems: 'center', justifyContent: 'center', minWidth: 36,
   },
-  skillDmgTxt: { fontSize: 11, fontWeight: '900', color: C.HP },
+  skillDmgTxt: { fontSize: 11, fontWeight: '900' },
 
   trumpCard: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingHorizontal: 12, paddingVertical: 10,
     flex: 1,
   },
+  trumpIconWrap: {
+    width: 34, height: 34, borderRadius: 8,
+    backgroundColor: C.GOLD + '22', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: C.GOLD + '55',
+  },
   trumpLeft:   { flex: 1 },
-  trumpLabel:  { fontSize: 9, fontWeight: '900', color: C.TEXT_SOFT, letterSpacing: 2, marginBottom: 2 },
-  trumpName:   { fontSize: 12, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
-  trumpEffect: { fontSize: 10, fontWeight: '700', flex: 1, lineHeight: 14, color: C.TEXT_SOFT },
+  trumpLabel:  { fontSize: 8, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 2.5, marginBottom: 1 },
+  trumpName:   { fontSize: 12, fontWeight: '900', letterSpacing: 0.5, marginBottom: 2 },
+  trumpEffect: { fontSize: 9, fontWeight: '700', lineHeight: 13, color: C.TEXT_SOFT },
+  trumpDmgWrap:{ gap: 1 },
+  trumpDmgAll: { fontSize: 7, fontWeight: '900', color: C.GOLD, letterSpacing: 0.8, textAlign: 'center' },
 
   // ── Level ────────────────────────────────────────────────────────────────
   levelLayout: { flex: 1, flexDirection: 'row', gap: 6 },
-  levelLeft:   { width: '38%' },
   levelRight:  { flex: 1, gap: 6 },
 
-  levelRingCard: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 10, gap: 8,
+  levelLeftCard: {
+    width: '38%', padding: 12,
+    alignItems: 'center', justifyContent: 'center', gap: 6,
   },
+  levelNumRow:  { flexDirection: 'row', alignItems: 'flex-end', gap: 3 },
+  levelCaption: { fontSize: 8, fontWeight: '800', letterSpacing: 2.5, color: C.TEXT_MUTED },
+  levelBarWrap: { width: '100%' },
 
-  ringOuter: {
-    width: 80, height: 80, borderRadius: 40,
-    borderWidth: 3, alignItems: 'center', justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  ringFill: {
-    position: 'absolute', width: 80, height: 80, borderRadius: 40,
-    borderWidth: 3, overflow: 'hidden',
-  },
-  ringMask: {
-    position: 'absolute', width: 80, height: 80,
-    top: 0, right: 0,
-    transformOrigin: 'left center',
-  },
-  ringCenter: { alignItems: 'center' },
-  ringLevel:  { fontSize: 24, fontWeight: '900', lineHeight: 26, color: C.TEXT },
-  ringMax:    { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '700' },
+  ringLevel: { fontSize: 28, fontWeight: '900', lineHeight: 30, color: C.TEXT },
+  ringMax:   { fontSize: 10, color: C.TEXT_SOFT, fontWeight: '700', marginBottom: 3 },
 
   lvUpBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    borderWidth: 1, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5,
+    borderWidth: 1, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6,
+    width: '100%', justifyContent: 'center',
   },
-  lvUpTxt:   { fontSize: 10, fontWeight: '900', color: C.TEXT },
-  lockedHint:{ fontSize: 9, color: C.TEXT_MUTED, fontWeight: '700' },
+  lvUpTxt:    { fontSize: 10, fontWeight: '900', color: C.TEXT },
+  lockedHint: { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '700' },
 
-  upgradeCard: {
-    flex: 1, padding: 10, gap: 3,
-  },
+  upgradeCard: { flex: 1, padding: 10, gap: 3 },
   upgradeTop:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
   upgradeName:    { flex: 1, fontSize: 9, fontWeight: '900', letterSpacing: 1, color: C.TEXT },
   upgradeBadge:   { borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
@@ -1154,9 +1170,9 @@ const styles = StyleSheet.create({
     marginTop: 4, borderWidth: 1, borderRadius: 5,
     paddingVertical: 8, alignItems: 'center',
   },
-  upgradeBtnTxt: { fontSize: 8, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
+  upgradeBtnTxt: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
   upgradeHint:   { fontSize: 9, color: C.TEXT_SOFT, marginTop: 2 },
-  upgradeErr:    { fontSize: 8, fontWeight: '700', textAlign: 'center', marginTop: 2, color: C.TEXT_SOFT },
+  upgradeErr:    { fontSize: 9, fontWeight: '700', textAlign: 'center', marginTop: 2, color: C.TEXT_SOFT },
   ascTierRow:    { flexDirection: 'row', gap: 2 },
   ascStar:       { fontSize: 10 },
 
@@ -1165,7 +1181,7 @@ const styles = StyleSheet.create({
   diffLabel:  { fontSize: 9, fontWeight: '900', letterSpacing: 0.6, color: C.TEXT },
   diffRow:    { flexDirection: 'row', gap: 8 },
   diffCell:   { flex: 1, alignItems: 'center' },
-  diffStat:   { fontSize: 8, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
+  diffStat:   { fontSize: 9, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
   diffBefore: { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '700' },
   diffAfter:  { fontSize: 9, fontWeight: '900', color: C.SUCCESS },
   diffNote:   { fontSize: 9, color: C.TEXT_SOFT, fontStyle: 'italic' },
@@ -1181,7 +1197,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   rankChipTxt: { fontSize: 11, fontWeight: '900' },
-  fuseHint:    { fontSize: 8, fontWeight: '900', letterSpacing: 1 },
+  fuseHint:    { fontSize: 9, fontWeight: '900', letterSpacing: 1 },
 
   // ── Forge overlay (buttons on top of video) ──────────────────────────────
   forgeOverlay: {
@@ -1197,7 +1213,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 8,
   },
   forgeOverlayLabel: { fontSize: 10, fontWeight: '900', letterSpacing: 0.8, color: C.TEXT },
-  forgeOverlaySub:   { fontSize: 8,  fontWeight: '600', color: C.TEXT_ON_DARK_SOFT,      marginTop: 1 },
+  forgeOverlaySub:   { fontSize: 9,  fontWeight: '600', color: C.TEXT_ON_DARK,           marginTop: 1 },
   forgeOverlayErr:   { fontSize: 9, color: C.GOLD, fontWeight: '700', textAlign: 'center', marginTop: 6 },
 
   // ── Forge overlay ─────────────────────────────────────────────────────────

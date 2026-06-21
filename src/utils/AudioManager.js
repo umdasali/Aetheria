@@ -116,7 +116,7 @@ function getButtonPlayer() {
 
 // ── Reward Claim SFX ─────────────────────────────────────────────────────────
 
-const REWARD_CLAIM_SFX = require('../../assets/audio/Collection/reward-claim.wav');
+const REWARD_CLAIM_SFX = require('../../assets/audio/Collection/reward-claim.mp3');
 
 let _rewardClaimPlayer = null;
 

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  View, Text, StyleSheet, TouchableOpacity, PanResponder, Animated, Dimensions, Alert, ActivityIndicator, ScrollView, Linking,
+  View, Text, StyleSheet, TouchableOpacity, PanResponder, Animated, Dimensions, Alert, ActivityIndicator, Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -500,49 +500,71 @@ export default function SettingsScreen({ navigation }) {
             <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']} style={StyleSheet.absoluteFill} />
             <View style={[styles.rowBorder, { borderColor: C.BORDER }]} />
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.infoScroll}>
-              <View style={styles.gameTitleBlock}>
+            <View style={styles.infoLayout}>
+              {/* Left: Branding */}
+              <View style={styles.infoBrand}>
                 <Text style={styles.gameTitle}>AETHERIA</Text>
                 <Text style={styles.gameSubtitle}>Legends Unbound</Text>
-                <Text style={styles.gameDesc}>
+                <View style={[styles.infoDivider, { marginVertical: 8 }]} />
+                <Text style={styles.gameDesc} numberOfLines={5}>
                   {APP_INFO.factionCount} factions. {APP_INFO.heroCount} legends. One war to decide the fate of Aetheria.
-                  Collect powerful heroes, forge unstoppable squads, and unleash devastating
-                  Trump Cards across {APP_INFO.stageCount} story-driven battles. As darkness tears open the
-                  dimensional veil, only you can unite the forces of Emberveil, Glaciara,
-                  Sunspire, Verdania, and Voidmark against the void that consumes all.
+                  Collect heroes, forge squads, and unleash Trump Cards across {APP_INFO.stageCount} story-driven battles.
                 </Text>
               </View>
 
-              <View style={styles.infoDivider} />
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Studio</Text>
-                <Text style={styles.infoVal}>{APP_INFO.studio}</Text>
+              {/* Vertical divider */}
+              <View style={styles.infoVDivider} />
+
+              {/* Right: Info rows */}
+              <View style={styles.infoRows}>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Studio</Text>
+                  <Text style={styles.infoVal}>{APP_INFO.studio}</Text>
+                </View>
+                <View style={styles.infoDivider} />
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Website</Text>
+                  <Text style={[styles.infoVal, { flex: 1, textAlign: 'right' }]} numberOfLines={1}>{APP_INFO.website}</Text>
+                </View>
+                <View style={styles.infoDivider} />
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Version</Text>
+                  <Text style={styles.infoVal}>{APP_INFO.version}</Text>
+                </View>
+                <View style={styles.infoDivider} />
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Build</Text>
+                  <Text style={styles.infoVal}>Expo 56 · RN 0.85</Text>
+                </View>
+                <View style={styles.infoDivider} />
+                <TouchableOpacity
+                  style={styles.infoRow}
+                  onPress={() => { AudioManager.playButtonSFX(); Linking.openURL(APP_INFO.privacyUrl).catch(() => {}); }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.infoLabel}>Privacy Policy</Text>
+                  <Ionicons name="open-outline" size={14} color={C.PRIMARY_LIGHT} />
+                </TouchableOpacity>
+                <View style={styles.infoDivider} />
+                <TouchableOpacity
+                  style={styles.infoRow}
+                  onPress={() => { AudioManager.playButtonSFX(); Linking.openURL(APP_INFO.termsUrl).catch(() => {}); }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.infoLabel}>Terms of Service</Text>
+                  <Ionicons name="open-outline" size={14} color={C.PRIMARY_LIGHT} />
+                </TouchableOpacity>
+                <View style={styles.infoDivider} />
+                <TouchableOpacity
+                  style={styles.infoRow}
+                  onPress={() => { AudioManager.playButtonSFX(); Linking.openURL(APP_INFO.accountDeletionUrl).catch(() => {}); }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.infoLabel}>Account Deletion</Text>
+                  <Ionicons name="open-outline" size={14} color={C.PRIMARY_LIGHT} />
+                </TouchableOpacity>
               </View>
-              <View style={styles.infoDivider} />
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Website</Text>
-                <Text style={styles.infoVal}>{APP_INFO.website}</Text>
-              </View>
-              <View style={styles.infoDivider} />
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Version</Text>
-                <Text style={styles.infoVal}>{APP_INFO.version}</Text>
-              </View>
-              <View style={styles.infoDivider} />
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Build</Text>
-                <Text style={styles.infoVal}>Expo 56 · React Native 0.85</Text>
-              </View>
-              <View style={styles.infoDivider} />
-              <TouchableOpacity
-                style={styles.infoRow}
-                onPress={() => { AudioManager.playButtonSFX(); Linking.openURL(APP_INFO.privacyUrl).catch(() => {}); }}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.infoLabel}>Privacy Policy</Text>
-                <Ionicons name="open-outline" size={15} color={C.PRIMARY_LIGHT} />
-              </TouchableOpacity>
-            </ScrollView>
+            </View>
           </View>
 
         )}
@@ -679,14 +701,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
-  infoScroll: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    paddingBottom: 16,
+  infoLayout: {
+    flex: 1, flexDirection: 'row',
+    paddingHorizontal: 16, paddingVertical: 12, gap: 16,
   },
-  gameTitleBlock: {
-    paddingVertical: 16,
-    gap: 6,
+  infoBrand: {
+    flex: 1, justifyContent: 'center',
+  },
+  infoVDivider: {
+    width: 1, backgroundColor: C.BORDER_SUBTLE,
+  },
+  infoRows: {
+    flex: 1.4, justifyContent: 'center',
   },
   gameTitle: {
     fontSize: 18, fontWeight: '900', color: C.GOLD,
@@ -694,15 +720,15 @@ const styles = StyleSheet.create({
   },
   gameSubtitle: {
     fontSize: 11, fontWeight: '700', color: C.TEXT_MUTED,
-    letterSpacing: 1.5, marginBottom: 6,
+    letterSpacing: 1.5,
   },
   gameDesc: {
-    fontSize: 11, color: C.TEXT_SOFT, lineHeight: 18,
+    fontSize: 11, color: C.TEXT_SOFT, lineHeight: 17,
     fontWeight: '500',
   },
   infoRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 7,
   },
   infoDivider: { height: 1, backgroundColor: C.BORDER_SUBTLE },
   infoLabel: { fontSize: 12, fontWeight: '700', color: C.TEXT_SOFT },

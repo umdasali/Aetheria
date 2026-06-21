@@ -53,7 +53,7 @@ export default function DailyQuestScreen({ navigation }) {
   );
 
   const handleClaim = (quest) => {
-    AudioManager.playButtonSFX();
+    AudioManager.playRewardClaimSFX();
     claimQuestReward(quest.id, quest.reward.gems, quest.reward.gold);
   };
 

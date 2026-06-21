@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { ACHIEVEMENT_DEFS, ACHIEVEMENT_CATEGORIES } from '../data/achievements';
+import AudioManager from '../utils/AudioManager';
 import { C } from '../theme/colors';
 
 const { width: W } = Dimensions.get('window');
@@ -119,7 +120,7 @@ export default function AchievementScreen({ navigation }) {
           {canClaim && (
             <TouchableOpacity
               style={s.claimBtn}
-              onPress={() => claimAchievementReward(def.id)}
+              onPress={() => { AudioManager.playRewardClaimSFX(); claimAchievementReward(def.id); }}
               activeOpacity={0.8}
             >
               <LinearGradient
@@ -140,7 +141,7 @@ export default function AchievementScreen({ navigation }) {
     <View style={[s.root, { paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
       {/* Header */}
       <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.75}>
+        <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} style={s.backBtn} activeOpacity={0.75}>
           <Ionicons name="chevron-back" size={22} color={C.TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
@@ -172,7 +173,7 @@ export default function AchievementScreen({ navigation }) {
               <TouchableOpacity
                 key={cat}
                 style={[s.catBtn, active && s.catBtnActive]}
-                onPress={() => setActiveCategory(cat)}
+                onPress={() => { AudioManager.playButtonSFX(); setActiveCategory(cat); }}
                 activeOpacity={0.75}
               >
                 <Ionicons

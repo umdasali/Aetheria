@@ -524,7 +524,7 @@ export default function LeaderboardScreen({ navigation }) {
   const [ownRank,   setOwnRank]   = useState(null);
   const [ownScore,  setOwnScore]  = useState(null);
   const [ownUserId, setOwnUserId] = useState(null);
-  const [loading,   setLoading]   = useState(false);
+  const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
 
   // Monotonic request id — only the most recent load is allowed to commit state,
