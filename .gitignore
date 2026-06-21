@@ -41,5 +41,10 @@ yarn-error.*
 /ios
 /android
 
+# Builds
+*.apk
+*.aab
+*.ipa
+
 # Claude Code agent worktrees (ephemeral)
 .claude/worktrees/
