@@ -88,7 +88,7 @@ function getSFXPlayer() {
 
 // ── Card Flip SFX ─────────────────────────────────────────────────────────────
 
-const CARD_FLIP_SFX = require('../../assets/audio/Summon/card-flip.wav');
+const CARD_FLIP_SFX = require('../../assets/audio/Summon/card-flip.m4a');
 
 let _cardFlipPlayer = null;
 
@@ -102,7 +102,7 @@ function getCardFlipPlayer() {
 
 // ── Button Click SFX ──────────────────────────────────────────────────────────
 
-const BUTTON_SFX = require('../../assets/audio/button/button-click-fx-2.wav');
+const BUTTON_SFX = require('../../assets/audio/button/button-click-fx-2.m4a');
 
 let _buttonPlayer = null;
 
@@ -130,7 +130,7 @@ function getRewardClaimPlayer() {
 
 // ── Power Forge SFX ───────────────────────────────────────────────────────────
 
-const POWER_FORGE_SFX = require('../../assets/audio/Collection/power-forge.wav');
+const POWER_FORGE_SFX = require('../../assets/audio/Collection/power-forge.m4a');
 
 let _powerForgePlayer = null;
 

@@ -15,7 +15,7 @@ export const FACTIONS = {
     name: 'SUNSPIRE',
     color: '#D4A017',
     accentColor: '#F5C842',
-    image: require('../../assets/faction/SUNSPIRE.png'),
+    image: require('../../assets/faction/SUNSPIRE.webp'),
   },
   VERDANIA: {
     name: 'VERDANIA',
@@ -27,7 +27,7 @@ export const FACTIONS = {
     name: 'VOIDMARK',
     color: '#9B59B6',
     accentColor: '#D7BDE2',
-    image: require('../../assets/faction/VOIDMARK.png'),
+    image: require('../../assets/faction/VOIDMARK.webp'),
   },
   // Sand-and-moon dynasty realm — Egyptian-inspired desert kingdom of dunes,
   // moonlit nights, and the honored dead. (NOT sun-aligned — sand & moon.)

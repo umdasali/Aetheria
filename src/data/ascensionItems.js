@@ -10,7 +10,7 @@ export const ASCENSION_ITEMS = [
     rankLabel: 'SOVEREIGN',
     forRanks:  ['SOVEREIGN'],
     price:     800,
-    image:     require('../../assets/Character-Ascension/aetheria-core.png'),
+    image:     require('../../assets/Character-Ascension/aetheria-core.webp'),
     lore:      'Born at the convergence of all five factions, this crystallized fragment pulses with the raw heartbeat of the realm itself. Only those who have surpassed all mortal limits may channel it.',
   },
   {
@@ -30,7 +30,7 @@ export const ASCENSION_ITEMS = [
     rankLabel: 'A RANK',
     forRanks:  ['A'],
     price:     300,
-    image:     require('../../assets/Character-Ascension/the-lost-butterfly.png'),
+    image:     require('../../assets/Character-Ascension/the-lost-butterfly.webp'),
     lore:      'A spirit that drifted between worlds for centuries, preserved in amber silence. Even frozen, its wings remember the wind — and the strength it carried.',
   },
   {
@@ -40,7 +40,7 @@ export const ASCENSION_ITEMS = [
     rankLabel: 'B / C RANK',
     forRanks:  ['B', 'C'],
     price:     150,
-    image:     require('../../assets/Character-Ascension/the-lost-hope.png'),
+    image:     require('../../assets/Character-Ascension/the-lost-hope.webp'),
     lore:      'Half a vow. Half a flight. Torn from something greater, yet it refuses to accept the journey is over. Even shattered, its power endures.',
   },
 ];

@@ -123,7 +123,9 @@
       "Bash(md5 assets/heroes/hero_054.webp assets/heroes/hero_055.webp assets/heroes/hero_018.webp)",
       "Bash(grep -E \"\\\\.env$\")",
       "Bash(grep -rnE \"#[0-9a-fA-F]{3,8}\" src/screens src/components)",
-      "Bash(awk -F: '{print $1}')"
+      "Bash(awk -F: '{print $1}')",
+      "Bash(xargs ls -la)",
+      "Bash(awk '{if \\($5 > 102400\\) print $5, $9}')"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

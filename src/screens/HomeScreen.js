@@ -31,7 +31,7 @@ const SUMMON_THUMB = require('../../assets/heroes/hero_002.webp');
 
 
 const SIDE_MENU = [
-  { key: 'heroes',  image: require('../../assets/currency/heroes.png'),   label: 'Heroes', a11yLabel: 'Heroes',             badge: false, accent: C.GOLD,          screen: 'Collection'  },
+  { key: 'heroes',  image: require('../../assets/currency/heroes.webp'),   label: 'Heroes', a11yLabel: 'Heroes',             badge: false, accent: C.GOLD,          screen: 'Collection'  },
   { key: 'daily',   image: require('../../assets/currency/packs.png'),    label: 'Daily',  a11yLabel: 'Claim Daily Reward', badge: false, accent: C.CYAN,          screen: 'DailyReward' },
   { key: 'quests',  image: require('../../assets/home/quest.png'),        label: 'Quests', a11yLabel: 'Daily Quests',       badge: false, accent: C.SUCCESS,       screen: 'DailyQuests' },
   { key: 'team',    image: require('../../assets/home/team.png'),         label: 'Team',   a11yLabel: 'Build Team',         badge: false, accent: C.PRIMARY_LIGHT, screen: 'TeamBuild'   },
