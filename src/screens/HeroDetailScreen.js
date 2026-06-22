@@ -519,6 +519,7 @@ function ForgeTab({
   onFuse, onConvert,
   fusionMsg,
 }) {
+  const rankKey = hero.sovereign ? 'SOVEREIGN' : effectiveRankKey;
   const rank    = RANK_COLORS[effectiveRankKey] || RANK_COLORS[hero.rank];
   const rate    = COINS_PER_COPY[effectiveRankKey] ?? COINS_PER_COPY.C;
   const maxConv = heroData?.copies ?? 0;
@@ -529,7 +530,7 @@ function ForgeTab({
     <View style={[styles.tabContent, styles.forgeTabFill]}>
       {/* Video — fills the entire tab */}
       <View style={[StyleSheet.absoluteFill, { borderRadius: 12, overflow: 'hidden' }]}>
-        <ForgeViz rank={effectiveRankKey} />
+        <ForgeViz rank={rankKey} />
       </View>
 
       {/* Top-right rank badge */}

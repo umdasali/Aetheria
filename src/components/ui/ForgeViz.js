@@ -111,7 +111,7 @@ const RANK_VIDEOS = {
   B:         require('../../../assets/video/B-Rank.mp4'),
   A:         require('../../../assets/video/A-Rank.mp4'),
   S:         require('../../../assets/video/S-Rank.mp4'),
-  SOVEREIGN: require('../../../assets/video/S-Rank.mp4'),
+  SOVEREIGN: require('../../../assets/video/Sovereign-Rank.mp4'),
 };
 
 export default function ForgeViz({ rank = 'C' }) {
@@ -191,10 +191,10 @@ function PulsingRankBadge({ rank, cx, cy }) {
   const rc      = RANK[rank] ?? RANK.C;
   const isSov   = rank === 'SOVEREIGN';
   const label   = isSov ? '✦' : rank;
-  const CORE    = isSov ? 68 : 52;
-  const RING    = isSov ? 110 : 90;
-  const DUR     = isSov ? 1200 : 1600;
-  const RINGS   = isSov ? 3 : 2;   // extra ring for SOVEREIGN
+  const CORE    = 52;
+  const RING    = 90;
+  const DUR     = 1600;
+  const RINGS   = 2;   // extra ring for SOVEREIGN
 
   const anims = useRef(Array.from({ length: RINGS }, () => new Animated.Value(0))).current;
 
@@ -231,13 +231,13 @@ function PulsingRankBadge({ rank, cx, cy }) {
         style={[styles.rankCore, {
           left: cx - CORE / 2, top: cy - CORE / 2,
           width: CORE, height: CORE, borderRadius: CORE / 2,
-          backgroundColor: rc.bg + 'E8',
+          backgroundColor: rc.bg + '33',
           borderColor: rc.glow,
           borderWidth: isSov ? 2.5 : 2,
         }]}
       >
-        {isSov && <Text style={[styles.rankCoreSub, { color: rc.text }]}>SOVEREIGN</Text>}
-        <Text style={[styles.rankCoreTxt, { color: rc.text, fontSize: isSov ? 22 : 18 }]}>{label}</Text>
+        {/* {isSov && <Text style={[styles.rankCoreSub, { color: C.SOVEREIGN_GOLD, fontSize: 32 }]}>🐉</Text>} */}
+        <Text style={[styles.rankCoreTxt, { color: isSov ? C.SOVEREIGN_GOLD : rc.text, fontSize: isSov ? 22 : 18 }]}>{isSov ? 'SOV' : label }</Text>
       </View>
     </>
   );

@@ -126,7 +126,9 @@
       "Bash(awk -F: '{print $1}')",
       "Bash(xargs ls -la)",
       "Bash(awk '{if \\($5 > 102400\\) print $5, $9}')",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Skill(artifact-design)",
+      "Skill(artifact-design:*)"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

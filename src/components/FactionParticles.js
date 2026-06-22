@@ -1,348 +1,164 @@
-import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { View, Animated, StyleSheet, Dimensions } from 'react-native';
-import { FACTION_PARTICLES } from '../theme/colors';
+import { useEffect, useRef, useMemo, useState } from 'react';
+import { View, Text, Animated, StyleSheet, Dimensions } from 'react-native';
+import { FACTION_MATRIX } from '../theme/colors';
 
 const { width: W, height: H } = Dimensions.get('window');
-const rnd  = (mn, mx) => mn + Math.random() * (mx - mn);
-const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const CHAR_H   = 13;
+const TRAIL    = 9;
 
-// ─── Per-faction effect name ──────────────────────────────────────────────────
-const EFFECT = {
-  EMBERVEIL: 'fire',
-  GLACIARA:  'snow',
-  SUNSPIRE:  'sparkle',
-  VERDANIA:  'leaf',
-  VOIDMARK:  'void',
-  KHEMARA:   'sparkle',   // sand & moon — pale dust motes glinting in moonlight
+// ─── Per-faction character sets ───────────────────────────────────────────────
+const CHAR_SETS = {
+  // EMBERVEIL — fire kanji + ember hex + lava symbols
+  EMBERVEIL: [
+    '炎','火','焔','燃','熱','煙','灼','炽',
+    'F','F','4','5','0','0','A','5',
+    '◈','♨','╬','◊','▲','△','⬡',
+    '0','x','F','F','6','B','3','5',
+  ],
+  // GLACIARA — ice kanji + nordic runes + cryo hex
+  GLACIARA: [
+    '氷','冷','雪','凍','霜','結','寒','晶',
+    'ᚱ','ᚦ','ᚨ','ᚾ','ᛁ','ᛏ','ᛚ','ᛜ',
+    '0','0','B','4','D','8','8','1',
+    '◆','◇','❄','✦','⬡','⬢','▷',
+  ],
+  // SUNSPIRE — holy kanji + sacred symbols + gold hex
+  SUNSPIRE: [
+    '光','聖','神','輝','祈','天','明','照',
+    '☀','✧','★','⊕','✶','✴','☆','✺',
+    'F','F','D','7','0','0','C','9',
+    'I','V','X','L','C','M','Ω','Φ',
+  ],
+  // VERDANIA — nature kanji + botanical runes + green hex
+  VERDANIA: [
+    '葉','森','木','草','花','実','芽','根',
+    '⬢','⊕','◉','✦','❧','☘','♧','✿',
+    '2','E','C','C','7','1','2','7',
+    'A','E','6','C','F','5','2','B',
+  ],
+  // VOIDMARK — void kanji + arcane operators + purple hex
+  VOIDMARK: [
+    '虚','闇','滅','空','無','冥','幽','霊',
+    '∑','∆','∞','∂','√','∫','≡','⊕',
+    '◈','⟁','⟐','✦','★','☆','⬡','◉',
+    '9','B','5','9','B','6','8','E',
+  ],
+  // KHEMARA — sand/moon kanji + celestial symbols + amber hex
+  KHEMARA: [
+    '砂','月','星','時','夢','遥','幻','蜃',
+    '☽','☾','✦','✧','⊛','⊕','◌','◎',
+    'C','9','A','8','4','C','F','F',
+    'F','3','C','D','A','B','7','8',
+  ],
 };
 
-// ─── Color palettes & glows (defined in theme/colors.js) ─────────────────────
-const PAL  = FACTION_PARTICLES.palettes;
-const GLOW = FACTION_PARTICLES.glows;
+// ─── Per-faction column/speed config ─────────────────────────────────────────
+const FACTION_CFG = {
+  EMBERVEIL: { cols: 10, minDur: 1600, maxDur: 3000 },
+  GLACIARA:  { cols: 11, minDur: 3200, maxDur: 5800 },
+  SUNSPIRE:  { cols:  9, minDur: 2200, maxDur: 4200 },
+  VERDANIA:  { cols: 10, minDur: 2600, maxDur: 5000 },
+  VOIDMARK:  { cols: 12, minDur: 1400, maxDur: 2800 },
+  KHEMARA:   { cols:  9, minDur: 2800, maxDur: 5200 },
+};
 
-// ─── Particle generators ──────────────────────────────────────────────────────
-// Counts kept lean: fire 10 / snow 12 / sparkle 9 / leaf 8 / void 10
-// Reduces concurrent Animated loops from 102 → ~50, preventing JS-thread jank.
-function genParticles(effect) {
-  const c = PAL[effect];
-  switch (effect) {
-    case 'fire':
-      return Array.from({ length: 10 }, () => ({
-        x:        rnd(0, W),
-        startY:   rnd(H * 0.55, H + 10),
-        rise:     rnd(110, 210),
-        size:     rnd(3, 8),
-        color:    pick(c),
-        duration: rnd(900, 1700),
-        delay:    rnd(0, 1400),
-        opacity:  rnd(0.55, 0.88),
-      }));
-
-    case 'snow':
-      return Array.from({ length: 12 }, () => ({
-        startX:   rnd(0, W),
-        drift:    rnd(-18, 18),
-        size:     rnd(3, 7),
-        color:    pick(c),
-        duration: rnd(4000, 7000),
-        delay:    rnd(0, 3500),
-        opacity:  rnd(0.5, 0.9),
-      }));
-
-    case 'sparkle':
-      return Array.from({ length: 9 }, () => ({
-        x:        rnd(10, W - 10),
-        y:        rnd(10, H - 10),
-        size:     rnd(2, 6),
-        color:    pick(c),
-        duration: rnd(650, 1300),
-        delay:    rnd(0, 1400),
-        opacity:  rnd(0.7, 1.0),
-      }));
-
-    case 'leaf':
-      return Array.from({ length: 8 }, () => {
-        const startX = rnd(-10, W + 10);
-        return {
-          startX,
-          xDrift:   rnd(-70, 70),
-          size:     rnd(5, 10),
-          color:    pick(c),
-          duration: rnd(3000, 5500),
-          delay:    rnd(0, 2500),
-          opacity:  rnd(0.5, 0.8),
-        };
-      });
-
-    case 'void':
-      return Array.from({ length: 10 }, () => ({
-        x:        rnd(0, W),
-        startY:   rnd(H * 0.1, H * 0.9),
-        floatUp:  rnd(30, 60),
-        size:     rnd(4, 11),
-        color:    pick(c),
-        duration: rnd(1400, 3000),
-        delay:    rnd(0, 2200),
-      }));
-
-    default:
-      return [];
-  }
+function randChar(set) {
+  return set[Math.floor(Math.random() * set.length)] ?? '0';
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-const MAX = 12; // maximum particle count across all effects
-
-export default function FactionParticles({ faction }) {
-  const effect       = EFFECT[faction];
-  const [active, setActive] = useState(true);
-  const screenOpacity = useRef(new Animated.Value(1)).current;
-
-  // Fade out after the entrance window, then stop all animations
-  useEffect(() => {
-    if (!effect) return;
-    const fadeTimer = setTimeout(() => {
-      Animated.timing(screenOpacity, {
-        toValue: 0, duration: 2000, useNativeDriver: true,
-      }).start(() => setActive(false));
-    }, 2500);
-    return () => clearTimeout(fadeTimer);
-  }, [effect]);
-
-  const particles = useMemo(() => genParticles(effect), [effect]);
-
-  // Unified animated value pools (MAX slots, only active-effect slots are used)
-  const yAnims   = useRef(Array.from({ length: MAX }, () => new Animated.Value(0))).current;
-  const xAnims   = useRef(Array.from({ length: MAX }, () => new Animated.Value(0))).current;
-  const opAnims  = useRef(Array.from({ length: MAX }, () => new Animated.Value(0))).current;
-  const sclAnims = useRef(Array.from({ length: MAX }, () => new Animated.Value(1))).current;
+// ─── Single falling column ────────────────────────────────────────────────────
+function MatrixColumn({ x, chars, head, trail, duration, containerH }) {
+  const anim = useRef(new Animated.Value(0)).current;
+  const colH = chars.length * CHAR_H;
 
   useEffect(() => {
-    if (!effect || !particles.length) return;
+    const loop = Animated.loop(
+      Animated.timing(anim, { toValue: 1, duration, useNativeDriver: true })
+    );
+    loop.start();
+    return () => { loop.stop(); anim.stopAnimation(); };
+  }, []);
 
-    const built = particles.map((p, i) => {
-      switch (effect) {
-
-        // ── Fire: rises from bottom, fades as it goes up ─────────────────────
-        case 'fire':
-          yAnims[i].setValue(p.startY);
-          opAnims[i].setValue(p.opacity);
-          return Animated.loop(Animated.sequence([
-            Animated.delay(p.delay),
-            Animated.parallel([
-              Animated.timing(yAnims[i],  { toValue: p.startY - p.rise, duration: p.duration, useNativeDriver: true }),
-              Animated.timing(opAnims[i], { toValue: 0,                  duration: p.duration, useNativeDriver: true }),
-            ]),
-            Animated.parallel([
-              Animated.timing(yAnims[i],  { toValue: p.startY, duration: 0, useNativeDriver: true }),
-              Animated.timing(opAnims[i], { toValue: p.opacity, duration: 0, useNativeDriver: true }),
-            ]),
-          ]));
-
-        // ── Snow: drifts from top to bottom with gentle horizontal sway ───────
-        case 'snow':
-          yAnims[i].setValue(-20);
-          xAnims[i].setValue(p.startX);
-          opAnims[i].setValue(p.opacity);
-          return Animated.loop(Animated.sequence([
-            Animated.delay(p.delay),
-            Animated.parallel([
-              Animated.timing(yAnims[i], { toValue: H + 20, duration: p.duration, useNativeDriver: true }),
-              Animated.sequence([
-                Animated.timing(xAnims[i], { toValue: p.startX + p.drift, duration: p.duration / 2, useNativeDriver: true }),
-                Animated.timing(xAnims[i], { toValue: p.startX - p.drift, duration: p.duration / 2, useNativeDriver: true }),
-              ]),
-            ]),
-            Animated.parallel([
-              Animated.timing(yAnims[i], { toValue: -20,     duration: 0, useNativeDriver: true }),
-              Animated.timing(xAnims[i], { toValue: p.startX, duration: 0, useNativeDriver: true }),
-            ]),
-          ]));
-
-        // ── Sparkle: twinkles in/out at fixed positions ───────────────────────
-        case 'sparkle':
-          opAnims[i].setValue(0);
-          sclAnims[i].setValue(0.4);
-          return Animated.loop(Animated.sequence([
-            Animated.delay(p.delay),
-            Animated.parallel([
-              Animated.timing(opAnims[i],  { toValue: p.opacity, duration: p.duration * 0.5, useNativeDriver: true }),
-              Animated.timing(sclAnims[i], { toValue: 1.6,       duration: p.duration * 0.5, useNativeDriver: true }),
-            ]),
-            Animated.parallel([
-              Animated.timing(opAnims[i],  { toValue: 0,   duration: p.duration * 0.5, useNativeDriver: true }),
-              Animated.timing(sclAnims[i], { toValue: 0.4, duration: p.duration * 0.5, useNativeDriver: true }),
-            ]),
-          ]));
-
-        // ── Leaf: drifts diagonally from top ──────────────────────────────────
-        case 'leaf':
-          yAnims[i].setValue(-20);
-          xAnims[i].setValue(p.startX);
-          opAnims[i].setValue(p.opacity);
-          return Animated.loop(Animated.sequence([
-            Animated.delay(p.delay),
-            Animated.parallel([
-              Animated.timing(yAnims[i], { toValue: H + 20,            duration: p.duration, useNativeDriver: true }),
-              Animated.timing(xAnims[i], { toValue: p.startX + p.xDrift, duration: p.duration, useNativeDriver: true }),
-            ]),
-            Animated.parallel([
-              Animated.timing(yAnims[i], { toValue: -20,      duration: 0, useNativeDriver: true }),
-              Animated.timing(xAnims[i], { toValue: p.startX, duration: 0, useNativeDriver: true }),
-            ]),
-          ]));
-
-        // ── Void: pulses out of nowhere and dissolves, drifts upward ─────────
-        case 'void':
-          yAnims[i].setValue(p.startY);
-          opAnims[i].setValue(0);
-          sclAnims[i].setValue(0.3);
-          return Animated.loop(Animated.sequence([
-            Animated.delay(p.delay),
-            Animated.parallel([
-              Animated.timing(opAnims[i],  { toValue: 0.75,              duration: p.duration * 0.35, useNativeDriver: true }),
-              Animated.timing(sclAnims[i], { toValue: 1.9,               duration: p.duration * 0.5,  useNativeDriver: true }),
-              Animated.timing(yAnims[i],   { toValue: p.startY - p.floatUp, duration: p.duration,     useNativeDriver: true }),
-            ]),
-            Animated.parallel([
-              Animated.timing(opAnims[i],  { toValue: 0,   duration: p.duration * 0.65, useNativeDriver: true }),
-              Animated.timing(sclAnims[i], { toValue: 0.3, duration: p.duration * 0.5,  useNativeDriver: true }),
-            ]),
-            Animated.timing(yAnims[i], { toValue: p.startY, duration: 0, useNativeDriver: true }),
-          ]));
-
-        default:
-          return null;
-      }
-    }).filter(Boolean);
-
-    const composite = Animated.parallel(built);
-    // Delay start until after the screen-entry fade (~300 ms) so particle loops
-    // don't compete with the navigation transition on the JS thread.
-    const timer = setTimeout(() => composite.start(), 320);
-    return () => { clearTimeout(timer); composite.stop(); };
-  }, [effect]);
-
-  if (!effect || !active) return null;
-
-  const glow = GLOW[effect];
+  const ty = anim.interpolate({
+    inputRange:  [0, 1],
+    outputRange: [-colH, containerH + CHAR_H],
+  });
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, { opacity: screenOpacity }]} pointerEvents="none">
-
-      {/* ── Fire ─────────────────────────────────────────────────────────── */}
-      {effect === 'fire' && particles.map((p, i) => (
-        <Animated.View
+    <Animated.View
+      pointerEvents="none"
+      style={{ position: 'absolute', left: x, top: 0, transform: [{ translateY: ty }] }}
+    >
+      {chars.map((ch, i) => (
+        <Text
           key={i}
           style={{
-            position: 'absolute',
-            left: p.x,
-            top: 0,
-            width: p.size,
-            height: p.size,
-            borderRadius: p.size / 2,
-            backgroundColor: p.color,
-            opacity: opAnims[i],
-            transform: [{ translateY: yAnims[i] }],
-            shadowColor: glow,
-            shadowOpacity: 0.9,
-            shadowOffset: { width: 0, height: 0 },
-            shadowRadius: p.size * 1.5,
-            elevation: 4,
+            height: CHAR_H,
+            lineHeight: CHAR_H,
+            fontSize: 11,
+            fontWeight: i === 0 ? '900' : '600',
+            color: i === 0 ? head : trail,
+            opacity: i === 0 ? 1 : Math.max(0.03, 1 - i / TRAIL),
           }}
-        />
+        >
+          {ch}
+        </Text>
       ))}
-
-      {/* ── Snow ─────────────────────────────────────────────────────────── */}
-      {effect === 'snow' && particles.map((p, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: p.size,
-            height: p.size,
-            borderRadius: p.size / 2,
-            backgroundColor: p.color,
-            opacity: opAnims[i],
-            transform: [{ translateX: xAnims[i] }, { translateY: yAnims[i] }],
-            shadowColor: glow,
-            shadowOpacity: 0.5,
-            shadowOffset: { width: 0, height: 0 },
-            shadowRadius: p.size,
-          }}
-        />
-      ))}
-
-      {/* ── Sparkle ──────────────────────────────────────────────────────── */}
-      {effect === 'sparkle' && particles.map((p, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            position: 'absolute',
-            left: p.x,
-            top: p.y,
-            width: p.size,
-            height: p.size,
-            borderRadius: p.size / 2,
-            backgroundColor: p.color,
-            opacity: opAnims[i],
-            transform: [{ scale: sclAnims[i] }],
-            shadowColor: glow,
-            shadowOpacity: 1,
-            shadowOffset: { width: 0, height: 0 },
-            shadowRadius: p.size * 2.5,
-            elevation: 5,
-          }}
-        />
-      ))}
-
-      {/* ── Leaf ─────────────────────────────────────────────────────────── */}
-      {effect === 'leaf' && particles.map((p, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: p.size * 1.7,
-            height: p.size,
-            borderRadius: p.size * 0.8,
-            backgroundColor: p.color,
-            opacity: opAnims[i],
-            transform: [{ translateX: xAnims[i] }, { translateY: yAnims[i] }],
-            shadowColor: glow,
-            shadowOpacity: 0.5,
-            shadowOffset: { width: 0, height: 0 },
-            shadowRadius: p.size,
-          }}
-        />
-      ))}
-
-      {/* ── Void ─────────────────────────────────────────────────────────── */}
-      {effect === 'void' && particles.map((p, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            position: 'absolute',
-            left: p.x,
-            top: 0,
-            width: p.size,
-            height: p.size,
-            borderRadius: p.size / 2,
-            backgroundColor: p.color,
-            opacity: opAnims[i],
-            transform: [{ translateY: yAnims[i] }, { scale: sclAnims[i] }],
-            shadowColor: glow,
-            shadowOpacity: 1,
-            shadowOffset: { width: 0, height: 0 },
-            shadowRadius: p.size * 2,
-            elevation: 5,
-          }}
-        />
-      ))}
-
     </Animated.View>
   );
 }
+
+// ─── Main component ───────────────────────────────────────────────────────────
+export default function FactionParticles({ faction }) {
+  const cfg     = FACTION_CFG[faction];
+  const colors  = FACTION_MATRIX[faction];
+  const charSet = CHAR_SETS[faction];
+  const [dim, setDim] = useState({ w: W, h: H });
+
+  const columns = useMemo(() => {
+    if (!cfg || !dim.w) return [];
+    const colW = Math.floor(dim.w / cfg.cols);
+    return Array.from({ length: cfg.cols }, (_, i) => ({
+      id:       i,
+      x:        i * colW,
+      chars:    Array.from(
+        { length: TRAIL + Math.floor(Math.random() * 6) },
+        () => randChar(charSet),
+      ),
+      duration: Math.round(cfg.minDur + Math.random() * (cfg.maxDur - cfg.minDur)),
+    }));
+  }, [faction, dim.w]);
+
+  if (!cfg || !colors) return null;
+
+  return (
+    <View
+      style={StyleSheet.absoluteFill}
+      pointerEvents="none"
+      onLayout={e => setDim({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+    >
+      <View style={styles.rain} pointerEvents="none">
+        {columns.map(col => (
+          <MatrixColumn
+            key={col.id}
+            x={col.x}
+            chars={col.chars}
+            head={colors.head}
+            trail={colors.trail}
+            duration={col.duration}
+            containerH={dim.h}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  rain: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    overflow: 'hidden',
+    opacity:  0.30,
+  },
+});

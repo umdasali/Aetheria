@@ -158,16 +158,22 @@ export default function CloudAuthScreen({ navigation }) {
         const migratedCloud = migrate(cloudSave, cloudSave.schemaVersion ?? 0);
         const cleanCloud = sanitizeState(migratedCloud) || migratedCloud;
 
-        let local = useGameStore.getState();
-        // If this device still holds a DIFFERENT user's progress, wipe it before merging
-        // so account A's leftover data can never bleed into account B's cloud save.
-        if (local.localUserId && local.localUserId !== currentUid) {
+        const local = useGameStore.getState();
+        const isDifferentUser = local.localUserId && local.localUserId !== currentUid;
+
+        if (isDifferentUser) {
+          // Switching accounts: wipe local state and load the cloud save directly.
+          // Never run resolveConflict here — after resetStore() the blank local state
+          // gets a fresh updatedAt (or inherits starter heroes) that would corrupt the
+          // incoming user's data.
           await useGameStore.getState().resetStore();
-          local = useGameStore.getState();
+          useGameStore.setState({ ...cleanCloud, cloudAccountEmail: user.email, localUserId: currentUid });
+        } else {
+          // Same user re-authenticating: merge to reconcile any offline edits.
+          const merged = resolveConflict(local, cleanCloud);
+          useGameStore.setState({ ...merged, cloudAccountEmail: user.email, localUserId: currentUid });
+          await withTimeout(uploadSave({ ...merged, cloudAccountEmail: user.email }), SYNC_TIMEOUT_MS);
         }
-        const merged = resolveConflict(local, cleanCloud);
-        useGameStore.setState({ ...merged, cloudAccountEmail: user.email, localUserId: currentUid });
-        await withTimeout(uploadSave({ ...merged, cloudAccountEmail: user.email }), SYNC_TIMEOUT_MS);
       } else {
         const local = useGameStore.getState();
         if (local.localUserId === currentUid) {

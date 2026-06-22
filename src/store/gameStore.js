@@ -149,9 +149,13 @@ const useGameStore = create(
 
       // Wipes AsyncStorage and resets Zustand to defaults.
       // Call this when a new or different user signs in to prevent data leakage.
+      // Uses rawSet (not the wrapped set) so updatedAt stays 0 — if we used the
+      // wrapped set it would stamp Date.now(), making the blank reset state appear
+      // newer than the incoming user's cloud save and causing resolveConflict to
+      // discard the cloud data in favour of the empty local state.
       resetStore: async () => {
         await AsyncStorage.removeItem('trump-card-game-storage');
-        set({ ...INITIAL_STATE });
+        rawSet({ ...INITIAL_STATE });
       },
 
       addHero: (heroId) => {

@@ -166,6 +166,17 @@ export const RANK = {
 // Alias — import from here, not from data/heroes.js
 export const RANK_COLORS = RANK;
 
+// ── Faction matrix rain colors ────────────────────────────────────────────────
+// Head = brightest leading character; trail = column body color.
+export const FACTION_MATRIX = {
+  EMBERVEIL: { head: '#FF6B35', trail: '#FF4500' },
+  GLACIARA:  { head: '#E0F7FF', trail: '#81D4FA' },
+  SUNSPIRE:  { head: '#FFF9C4', trail: '#FFD700' },
+  VERDANIA:  { head: '#A8E6CF', trail: '#2ECC71' },
+  VOIDMARK:  { head: '#D7BDE2', trail: '#9B59B6' },
+  KHEMARA:   { head: '#FFF3CD', trail: '#C9A84C' },
+};
+
 // ── Faction particle palettes ─────────────────────────────────────────────────
 // Used by FactionParticles.js — faction-specific ambient color arrays.
 export const FACTION_PARTICLES = {
