@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  View, Text, StyleSheet, TouchableOpacity, PanResponder, Animated, Dimensions, Alert, ActivityIndicator, Linking,
+  View, Text, StyleSheet, TouchableOpacity, PanResponder, Animated, Dimensions, Alert, ActivityIndicator, Linking, Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -156,8 +156,9 @@ export default function SettingsScreen({ navigation }) {
   const [authUser,  setAuthUser]  = useState(getUser());
   const [lastSync,  setLastSync]  = useState(null);
   const [syncing,   setSyncing]   = useState(false);
-  const [signingOut, setSignOut]  = useState(false);
-  const [deleting,   setDeleting] = useState(false);
+  const [signingOut,     setSignOut]       = useState(false);
+  const [deleting,       setDeleting]      = useState(false);
+  const [restartVisible, setRestartVisible] = useState(false);
 
   // Keep auth state in sync; re-read on focus so returning from CloudAuth is instant
   useEffect(() => onAuthChanged(setAuthUser), []);
@@ -182,20 +183,18 @@ export default function SettingsScreen({ navigation }) {
   const handleSignOut = useCallback(() => {
     Alert.alert(
       'Disconnect Account',
-      'Your local progress stays on this device. Signing in with a different account will replace it.',
+      'This will sign you out and reset all local progress. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Disconnect',
+          text: 'Disconnect & Reset',
           style: 'destructive',
           onPress: async () => {
             setSignOut(true);
             await signOut();
-            // Keep localUserId (the previous owner's id) so that if a DIFFERENT account
-            // signs in later, syncAndClose detects the mismatch and wipes this account's
-            // leftover progress before loading theirs. Only clear the connected email.
-            useGameStore.setState({ cloudAccountEmail: null });
+            await useGameStore.getState().resetStore();
             setSignOut(false);
+            setRestartVisible(true);
           },
         },
       ]
@@ -228,7 +227,7 @@ export default function SettingsScreen({ navigation }) {
                       useGameStore.setState({ cloudAccountEmail: null, localUserId: null });
                       setDeleting(false);
                       Alert.alert('Account Deleted', 'Your account and data have been removed.', [
-                        { text: 'OK', onPress: () => navigation.navigate('Home') },
+                        { text: 'OK', onPress: () => navigation.reset({ index: 0, routes: [{ name: 'Loading' }] }) },
                       ]);
                     } catch (e) {
                       setDeleting(false);
@@ -570,6 +569,40 @@ export default function SettingsScreen({ navigation }) {
         )}
 
       </SafeAreaView>
+
+      {/* ── Forced restart modal (non-dismissable) ── */}
+      <Modal
+        visible={restartVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={styles.restartOverlay}>
+          <View style={styles.restartCard}>
+            <LinearGradient colors={[C.BG_MID, C.BG_CARD]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+            <View style={[StyleSheet.absoluteFill, styles.restartBorder]} pointerEvents="none" />
+            <View style={styles.restartIconWrap}>
+              <LinearGradient colors={[C.DANGER, C.PRIMARY]} style={styles.restartIconGrad}>
+                <Ionicons name="power-outline" size={26} color={C.TEXT} />
+              </LinearGradient>
+            </View>
+            <Text style={styles.restartTitle}>SIGNED OUT</Text>
+            <Text style={styles.restartMsg}>
+              Your session has ended and local data has been reset.{'\n'}The game must restart to continue.
+            </Text>
+            <TouchableOpacity
+              style={styles.restartBtn}
+              onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Loading' }] })}
+              activeOpacity={0.82}
+            >
+              <LinearGradient colors={C.GRAD_PINK} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.restartBtnGrad}>
+                <Ionicons name="refresh-outline" size={15} color={C.TEXT} />
+                <Text style={styles.restartBtnTxt}>RESTART NOW</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -733,4 +766,34 @@ const styles = StyleSheet.create({
   infoDivider: { height: 1, backgroundColor: C.BORDER_SUBTLE },
   infoLabel: { fontSize: 12, fontWeight: '700', color: C.TEXT_SOFT },
   infoVal:   { fontSize: 12, fontWeight: '800', color: C.TEXT_MUTED },
+
+  // Restart modal
+  restartOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.82)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  restartCard: {
+    width: 300, borderRadius: 16, overflow: 'hidden',
+    alignItems: 'center', padding: 28, position: 'relative',
+  },
+  restartBorder: { borderRadius: 16, borderWidth: 1, borderColor: C.BORDER_STRONG },
+  restartIconWrap: { marginBottom: 14 },
+  restartIconGrad: {
+    width: 56, height: 56, borderRadius: 28,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  restartTitle: {
+    fontSize: 18, fontWeight: '900', color: C.TEXT,
+    letterSpacing: 3, marginBottom: 10, textAlign: 'center',
+  },
+  restartMsg: {
+    fontSize: 11, color: C.TEXT_MUTED, lineHeight: 17,
+    textAlign: 'center', fontWeight: '500', marginBottom: 22,
+  },
+  restartBtn:     { borderRadius: 10, overflow: 'hidden', width: '100%' },
+  restartBtnGrad: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 12, gap: 7,
+  },
+  restartBtnTxt: { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
 });

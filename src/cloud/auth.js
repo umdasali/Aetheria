@@ -57,6 +57,9 @@ export async function signOut() {
 }
 
 export async function getUID() {
+  // Use the in-memory cache first — avoids a network round-trip when the user is
+  // already signed in (e.g. right after signInWithPassword resolves).
+  if (_cachedUser) return _cachedUser.id;
   const { data } = await supabase.auth.getSession();
   return data.session?.user?.id ?? null;
 }

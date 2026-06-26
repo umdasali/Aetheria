@@ -31,16 +31,16 @@ function pickSaveFields(state) {
   return save;
 }
 
-export async function uploadSave(state) {
+export async function uploadSave(state, uid = null) {
   try {
-    const uid = await getUID();
-    if (!uid) return { ok: false, error: new Error('Not signed in') };
+    const effectiveUid = uid ?? await getUID();
+    if (!effectiveUid) return { ok: false, error: new Error('Not signed in') };
 
     const { error } = await supabase
       .from('game_saves')
       .upsert(
         {
-          user_id: uid,
+          user_id: effectiveUid,
           data: { ...pickSaveFields(state), schemaVersion: SCHEMA_VERSION, updatedAt: Date.now() },
         },
         { onConflict: 'user_id' }
@@ -57,15 +57,15 @@ export async function uploadSave(state) {
   }
 }
 
-export async function downloadSave() {
+export async function downloadSave(uid = null) {
   try {
-    const uid = await getUID();
-    if (!uid) return { ok: false, error: new Error('Not signed in') };
+    const effectiveUid = uid ?? await getUID();
+    if (!effectiveUid) return { ok: false, error: new Error('Not signed in') };
 
     const { data, error } = await supabase
       .from('game_saves')
       .select('data')
-      .eq('user_id', uid)
+      .eq('user_id', effectiveUid)
       .maybeSingle();
 
     if (error) {

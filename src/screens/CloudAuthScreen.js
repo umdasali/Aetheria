@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions,
-  Animated, ActivityIndicator, AppState,
+  Animated, ActivityIndicator, AppState, Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -111,8 +111,10 @@ export default function CloudAuthScreen({ navigation }) {
   const [loading,     setLoading]    = useState(false);
   const [error,       setError]      = useState('');
   const [info,        setInfo]       = useState('');
-  const [countdown,   setCountdown]  = useState(0);
-  const [verifyEmail, setVerifyEmail]= useState('');
+  const [countdown,     setCountdown]    = useState(0);
+  const [verifyEmail,   setVerifyEmail]  = useState('');
+  // null → hidden | 'loading' → syncing phase | 'done' → restart prompt
+  const [cloudSyncState, setCloudSyncState] = useState(null);
 
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -147,52 +149,80 @@ export default function CloudAuthScreen({ navigation }) {
 
   // ── Cloud sync after verified sign-in ─────────────────────────────────────
   const syncAndClose = async (user) => {
-    try {
-      const currentUid = user.id;
-      const { data: cloudSave } = await withTimeout(downloadSave(), SYNC_TIMEOUT_MS);
+    const currentUid = user.id;
 
-      if (cloudSave) {
-        // Protect the running app: migrate + sanitize the downloaded save before it
-        // touches the store, so an old-schema or tampered cloud save can't crash or
-        // corrupt state (mirrors the local AsyncStorage rehydrate guards).
-        const migratedCloud = migrate(cloudSave, cloudSave.schemaVersion ?? 0);
+    // Auth succeeded — stop the button spinner and show the loading phase.
+    setLoading(false);
+    setCloudSyncState('loading');
+
+    // Snapshot the pre-login store state so we can decide how to handle conflicts.
+    const existingLocal = useGameStore.getState();
+
+    // True when a DIFFERENT user's data is sitting in the store (e.g. device sharing).
+    const isDifferentUser = existingLocal.localUserId && existingLocal.localUserId !== currentUid;
+
+    // True when the local save is unclaimed — either never logged in or just logged
+    // out (resetStore sets localUserId back to null).
+    // IMPORTANT: we must NOT run resolveConflict against an unclaimed local state.
+    // After logout, checkTowerWeekReset() fires via onRehydrateStorage and stamps
+    // updatedAt = Date.now() on the blank INITIAL_STATE. resolveConflict then sees
+    // localTs > cloudTs and picks local gems/gold (150/10000) over the real cloud
+    // values, permanently destroying purchased currency when it re-uploads.
+    const isUnclaimed = !existingLocal.localUserId;
+
+    if (isDifferentUser) {
+      await useGameStore.getState().resetStore();
+    }
+
+    try {
+      const downloadResult = await withTimeout(downloadSave(currentUid), SYNC_TIMEOUT_MS);
+
+      if (!downloadResult.ok) {
+        // Supabase returned an error (not a timeout — those throw to the catch below).
+        // Don't touch the cloud save; just stamp auth info so the player can play.
+        // The sync queue will retry automatically.
+        useGameStore.setState({ cloudAccountEmail: user.email, localUserId: currentUid });
+      } else if (downloadResult.data) {
+        // ── Existing cloud save found ──────────────────────────────────────────
+        // Migrate + sanitize before touching the store so an old-schema or tampered
+        // cloud save can't crash or corrupt state.
+        const migratedCloud = migrate(downloadResult.data, downloadResult.data.schemaVersion ?? 0);
         const cleanCloud = sanitizeState(migratedCloud) || migratedCloud;
 
-        const local = useGameStore.getState();
-        const isDifferentUser = local.localUserId && local.localUserId !== currentUid;
-
-        if (isDifferentUser) {
-          // Switching accounts: wipe local state and load the cloud save directly.
-          // Never run resolveConflict here — after resetStore() the blank local state
-          // gets a fresh updatedAt (or inherits starter heroes) that would corrupt the
-          // incoming user's data.
-          await useGameStore.getState().resetStore();
+        if (isDifferentUser || isUnclaimed) {
+          // Account switch OR returning after logout — load cloud save directly.
+          // Merging is unsafe here: a blank/reset local state carries a fresh
+          // updatedAt from checkTowerWeekReset and would win the LWW comparison,
+          // silently replacing real gems/gold with initial-state defaults.
           useGameStore.setState({ ...cleanCloud, cloudAccountEmail: user.email, localUserId: currentUid });
         } else {
-          // Same user re-authenticating: merge to reconcile any offline edits.
+          // Same authenticated user re-opening the app — merge to keep any
+          // offline edits made since the last sync (e.g. gems earned mid-flight).
+          const local = useGameStore.getState();
           const merged = resolveConflict(local, cleanCloud);
           useGameStore.setState({ ...merged, cloudAccountEmail: user.email, localUserId: currentUid });
-          await withTimeout(uploadSave({ ...merged, cloudAccountEmail: user.email }), SYNC_TIMEOUT_MS);
+          await withTimeout(uploadSave({ ...merged, cloudAccountEmail: user.email }, currentUid), SYNC_TIMEOUT_MS);
         }
       } else {
+        // ── No cloud save yet (ok=true, data=null) ─────────────────────────────
+        // First login for this account — upload the current local state so it
+        // becomes the player's initial cloud save (preserves offline progress).
+        // Note: handleSignUp already sets localUserId before syncAndClose runs,
+        // so a brand-new account always hits this branch with isUnclaimed=false
+        // and the local state contains the player's real offline progress.
         const local = useGameStore.getState();
-        if (local.localUserId === currentUid) {
-          await withTimeout(uploadSave({ ...local, cloudAccountEmail: user.email }), SYNC_TIMEOUT_MS);
-          useGameStore.setState({ cloudAccountEmail: user.email, localUserId: currentUid });
-        } else {
-          await useGameStore.getState().resetStore();
-          const fresh = useGameStore.getState();
-          await withTimeout(uploadSave({ ...fresh, cloudAccountEmail: user.email }), SYNC_TIMEOUT_MS);
-          useGameStore.setState({ cloudAccountEmail: user.email, localUserId: currentUid });
-        }
+        await withTimeout(uploadSave({ ...local, cloudAccountEmail: user.email }, currentUid), SYNC_TIMEOUT_MS);
+        useGameStore.setState({ cloudAccountEmail: user.email, localUserId: currentUid });
       }
     } catch (e) {
       console.warn('[CloudAuth] sync error:', e?.message ?? e?.code);
-      setLoading(false);
-      setInfo('Signed in. Sync failed — your progress may not be current.');
-      return;
+      // Network timeout or unhandled error — mark the user as signed in so they
+      // can keep playing. Their cloud save will sync on the next connection.
+      useGameStore.setState({ cloudAccountEmail: user.email, localUserId: currentUid });
     }
-    navigation.goBack();
+
+    // Always reach here — transition to the restart prompt.
+    setCloudSyncState('done');
   };
 
   // ── Submit handlers ───────────────────────────────────────────────────────
@@ -224,7 +254,20 @@ export default function CloudAuthScreen({ navigation }) {
     setLoading(true); setError(''); setInfo('');
     try {
       const user = await withTimeout(signUp(email.trim().toLowerCase(), password));
-      await useGameStore.getState().resetStore();
+
+      // Only wipe local data when it belongs to a DIFFERENT existing user — this
+      // stops their progress leaking into the new account.
+      // A player with no prior account (localUserId === null) keeps their offline
+      // progress; it will be uploaded as their first cloud save after verification.
+      const existing = useGameStore.getState();
+      if (existing.localUserId && existing.localUserId !== user.id) {
+        await useGameStore.getState().resetStore();
+      }
+      // Claim this save for the newly created account immediately so that
+      // syncAndClose treats the current local data as belonging to this user
+      // and uploads it rather than treating it as a foreign account's data.
+      useGameStore.setState({ localUserId: user.id });
+
       verifyPasswordRef.current = password;
       setVerifyEmail(user.email);
       startCooldown();
@@ -467,6 +510,58 @@ export default function CloudAuthScreen({ navigation }) {
           </Animated.View>
         </View>
       </SafeAreaView>
+
+      {/* ── Cloud sync modal: loading → restart (non-dismissable) ── */}
+      <Modal
+        visible={cloudSyncState !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={s.restartOverlay}>
+          <View style={s.restartCard}>
+            <LinearGradient colors={[C.BG_MID, C.BG_CARD]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+            <View style={[StyleSheet.absoluteFill, s.restartBorder]} pointerEvents="none" />
+
+            {cloudSyncState === 'loading' ? (
+              <>
+                <View style={s.restartIconWrap}>
+                  <LinearGradient colors={[C.PRIMARY, C.CYAN]} style={s.restartIconGrad}>
+                    <Ionicons name="cloud-download-outline" size={26} color={C.TEXT} />
+                  </LinearGradient>
+                </View>
+                <Text style={s.restartTitle}>LOADING SAVE</Text>
+                <Text style={s.restartMsg}>
+                  Fetching your cloud data…{'\n'}Please wait a moment.
+                </Text>
+                <ActivityIndicator size="large" color={C.PRIMARY_LIGHT} style={{ marginTop: 4 }} />
+              </>
+            ) : (
+              <>
+                <View style={s.restartIconWrap}>
+                  <LinearGradient colors={[C.SUCCESS, C.CYAN]} style={s.restartIconGrad}>
+                    <Ionicons name="checkmark-done-outline" size={26} color={C.TEXT} />
+                  </LinearGradient>
+                </View>
+                <Text style={s.restartTitle}>SIGNED IN</Text>
+                <Text style={s.restartMsg}>
+                  Your cloud save has been loaded.{'\n'}The game must restart to apply your progress.
+                </Text>
+                <TouchableOpacity
+                  style={s.restartBtn}
+                  onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Loading' }] })}
+                  activeOpacity={0.82}
+                >
+                  <LinearGradient colors={C.GRAD_PINK} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.restartBtnGrad}>
+                    <Ionicons name="refresh-outline" size={15} color={C.TEXT} />
+                    <Text style={s.restartBtnTxt}>RESTART NOW</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -559,4 +654,34 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   verifyEmail: { fontSize: 11, fontWeight: '800', color: C.PRIMARY_LIGHT, marginTop: 2 },
+
+  // Restart modal
+  restartOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.82)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  restartCard: {
+    width: 300, borderRadius: 16, overflow: 'hidden',
+    alignItems: 'center', padding: 28, position: 'relative',
+  },
+  restartBorder: { borderRadius: 16, borderWidth: 1, borderColor: C.BORDER_STRONG },
+  restartIconWrap: { marginBottom: 14 },
+  restartIconGrad: {
+    width: 56, height: 56, borderRadius: 28,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  restartTitle: {
+    fontSize: 18, fontWeight: '900', color: C.TEXT,
+    letterSpacing: 3, marginBottom: 10, textAlign: 'center',
+  },
+  restartMsg: {
+    fontSize: 11, color: C.TEXT_MUTED, lineHeight: 17,
+    textAlign: 'center', fontWeight: '500', marginBottom: 22,
+  },
+  restartBtn:     { borderRadius: 10, overflow: 'hidden', width: '100%' },
+  restartBtnGrad: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 12, gap: 7,
+  },
+  restartBtnTxt:  { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
 });

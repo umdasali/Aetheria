@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { GEM_PACKS, BUNDLES, HERO_PACKS, IAP_ENABLED } from '../data/shopPacks';
 import { resolvePurchase } from '../shop/purchaseHandler';
+import { restorePurchases } from '../utils/RevenueCatManager';
 import { getHeroById } from '../data/heroes';
 import { getAscensionItemById } from '../data/ascensionItems';
 import HeroCard from '../components/HeroCard';
@@ -257,6 +258,19 @@ export default function ShopScreen({ navigation }) {
     return 'Purchase complete!';
   };
 
+  const handleRestore = async () => {
+    if (purchasingRef.current) return;
+    purchasingRef.current = true;
+    setPurchasing(true);
+    try {
+      const res = await restorePurchases();
+      showToast(res.ok ? 'Purchases restored!' : 'Nothing to restore', res.ok);
+    } finally {
+      purchasingRef.current = false;
+      setPurchasing(false);
+    }
+  };
+
   const handleBuy = async (pack) => {
     if (purchasingRef.current) return;
     purchasingRef.current = true;
@@ -268,10 +282,16 @@ export default function ShopScreen({ navigation }) {
         AudioManager.playRewardClaimSFX();
         showToast(successMsg(pack), true);
       } else {
-        const msg = res.reason === 'gems' ? 'Not enough gems!'
-          : res.reason === 'unavailable' ? 'Coming soon — not yet available'
-          : 'Purchase failed';
-        showToast(msg, false);
+        if (res.reason === 'cancelled') {
+          // User dismissed the billing sheet — no toast needed
+        } else {
+          const msg = res.reason === 'gems'           ? 'Not enough gems!'
+            : res.reason === 'unavailable'            ? 'Coming soon — not yet available'
+            : res.reason === 'not_configured'         ? 'Store not available right now'
+            : res.reason === 'product_not_found'      ? 'Product unavailable — try again later'
+            : 'Purchase failed. Please try again.';
+          showToast(msg, false);
+        }
       }
     } finally {
       purchasingRef.current = false;
@@ -367,6 +387,15 @@ export default function ShopScreen({ navigation }) {
             <View style={s.sideHint}>
               <View style={s.sideHintLine} />
               <Text style={s.sideHintTxt}>{activeHint}</Text>
+              {IAP_ENABLED && (
+                <TouchableOpacity
+                  style={s.restoreBtn}
+                  onPress={handleRestore}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.restoreTxt}>Restore Purchases</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
@@ -475,6 +504,8 @@ const s = StyleSheet.create({
   sideHint:     { flex: 1, justifyContent: 'flex-end', paddingBottom: 4, gap: 7 },
   sideHintLine: { height: 1, backgroundColor: C.BORDER_SUBTLE },
   sideHintTxt:  { fontSize: 8, color: C.TEXT_DISABLED, fontWeight: '500', lineHeight: 13, fontStyle: 'italic' },
+  restoreBtn:   { paddingVertical: 6, alignItems: 'center' },
+  restoreTxt:   { fontSize: 8, color: C.TEXT_MUTED, fontWeight: '700', letterSpacing: 0.5, textDecorationLine: 'underline' },
 
   content: { flex: 1, padding: PAD, gap: GAP },
   secStrip: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 18 },

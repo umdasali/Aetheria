@@ -1,9 +1,9 @@
 import { useState, useRef, useMemo, memo, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Animated, Image, Dimensions, FlatList,
+  Animated, Image, FlatList, useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -12,14 +12,10 @@ import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
 import { C, RANK_COLORS, RANK } from '../theme/colors';
 
-const { width: W } = Dimensions.get('window');
-
 const SIDEBAR_W = 148;
 const COLS      = 5;
 const GRID_PAD  = 12;
 const GAP       = 7;
-const CARD_W    = Math.floor((W - SIDEBAR_W - GRID_PAD * 2 - GAP * (COLS - 7)) / COLS);
-const CARD_H    = Math.floor(CARD_W * 1.42);
 
 const FACTION_FILTERS = [
   { key: 'All',       label: 'All Heroes' },
@@ -35,6 +31,14 @@ const SORT_OPTIONS = ['Default', 'Rank', 'Name'];
 const RANK_ORDER   = { SOVEREIGN: -1, S: 0, A: 1, B: 2, C: 3 };
 
 export default function CollectionScreen({ navigation }) {
+  const { width: W }                                        = useWindowDimensions();
+  const { bottom: bottomInset,
+          left: leftInset, right: rightInset }              = useSafeAreaInsets();
+  const cardW = useMemo(
+    () => Math.floor((W - leftInset - rightInset - SIDEBAR_W - GRID_PAD * 2 - GAP * (COLS - 1)) / COLS),
+    [W, leftInset, rightInset],
+  );
+  const cardH = useMemo(() => Math.floor(cardW * 1.42), [cardW]);
   const ownedHeroes    = useGameStore(s => s.ownedHeroes);
   const team           = useGameStore(s => s.team);
   const heroCollection = useGameStore(s => s.heroCollection);
@@ -81,14 +85,16 @@ export default function CollectionScreen({ navigation }) {
       onTeam={inTeam(hero.id)}
       effectiveRank={heroCollection[hero.id]?.effectiveRank ?? hero.rank}
       onPress={handleHeroPress}
+      cardW={cardW}
+      cardH={cardH}
     />
-  ), [isOwned, inTeam, handleHeroPress, heroCollection]);
+  ), [isOwned, inTeam, handleHeroPress, heroCollection, cardW, cardH]);
 
   return (
     <View style={styles.root}>
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
 
         {/* ══ TOP BAR ══ */}
         <View style={styles.topBar}>
@@ -181,7 +187,7 @@ export default function CollectionScreen({ navigation }) {
             numColumns={COLS}
             key={`${filter}-${COLS}`}
             keyExtractor={(h) => h.id}
-            contentContainerStyle={styles.grid}
+            contentContainerStyle={[styles.grid, { paddingBottom: GRID_PAD + bottomInset }]}
             columnWrapperStyle={styles.gridRow}
             showsVerticalScrollIndicator={false}
             extraData={team}
@@ -192,8 +198,8 @@ export default function CollectionScreen({ navigation }) {
             windowSize={5}
             removeClippedSubviews
             getItemLayout={(_data, index) => ({
-              length: CARD_H,
-              offset: Math.floor(index / COLS) * (CARD_H + GAP) + GRID_PAD,
+              length: cardH,
+              offset: Math.floor(index / COLS) * (cardH + GAP) + GRID_PAD,
               index,
             })}
           />
@@ -205,7 +211,7 @@ export default function CollectionScreen({ navigation }) {
 
 // ─── HeroGridCard ─────────────────────────────────────────────────────────────
 
-const HeroGridCard = memo(function HeroGridCard({ hero, owned, onTeam, effectiveRank, onPress }) {
+const HeroGridCard = memo(function HeroGridCard({ hero, owned, onTeam, effectiveRank, onPress, cardW, cardH }) {
   const [imgErr, setImgErr] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const faction   = FACTIONS[hero.faction];
@@ -218,7 +224,7 @@ const HeroGridCard = memo(function HeroGridCard({ hero, owned, onTeam, effective
 
   return (
     <TouchableOpacity
-      style={[styles.gridCard, !owned && styles.gridCardLocked, onTeam && styles.gridCardInTeam]}
+      style={[styles.gridCard, { width: cardW, height: cardH }, !owned && styles.gridCardLocked, onTeam && styles.gridCardInTeam]}
       onPress={() => onPress(hero.id)}
       activeOpacity={0.82}
     >
@@ -330,12 +336,11 @@ const styles = StyleSheet.create({
   sortOptTextActive:{ color: C.PRIMARY_LIGHT, fontWeight: '700' },
 
   // Grid
-  grid:    { padding: GRID_PAD, paddingBottom: 20 },
+  grid:    { padding: GRID_PAD },
   gridRow: { gap: GAP, marginBottom: GAP },
 
   // Grid card
   gridCard: {
-    width: CARD_W, height: CARD_H,
     borderRadius: 8, overflow: 'hidden',
     backgroundColor: C.BG_CARD,
   },

@@ -1,16 +1,14 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Image, Dimensions, Animated, Alert,
+  Dimensions, Animated, Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import HeroCard from '../components/HeroCard';
-import FactionParticles from '../components/FactionParticles';
 import ForgeViz from '../components/ui/ForgeViz';
 import { HEROES, FACTIONS } from '../data/heroes';
 import useGameStore, { FUSION_COPIES, TRANSCEND_COPIES } from '../store/gameStore';
@@ -23,42 +21,10 @@ import { RANK_STAT_MULT } from '../utils/battleEngine';
 import { C, RANK, RANK_COLORS } from '../theme/colors';
 
 const { width: W, height: H } = Dimensions.get('window');
-const BODY_PAD  = 12;
+const BODY_PAD = 12;
 const RANK_ORDER = ['C', 'B', 'A', 'S'];
-
-// Absolute stat ceilings across all heroes — bars differ per hero
 const STAT_ABS_MAX = { HP: 25000, ATK: 3000, DEF: 2500, CRIT: 2500 };
-
-// Tower coins earned per copy by rank
 const COINS_PER_COPY = { SOVEREIGN: 200, S: 80, A: 35, B: 15, C: 8 };
-
-// ── Glass panel helper ────────────────────────────────────────────────────────
-function Glass({ style, children, borderColor }) {
-  return (
-    <View style={[glass.outer, style, borderColor ? { borderColor } : null]}>
-      <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
-      {/* Real frosted glass: a top white sheen fading into a translucent dark-purple
-          base. Translucent (not opaque black) so the vibrant backdrop bleeds through =
-          glassy; the 0.52 base + the bright GLASS_EDGE keep text readable. */}
-      <LinearGradient
-        colors={C.GRAD_GLASS}
-        start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      {children}
-    </View>
-  );
-}
-const glass = StyleSheet.create({
-  outer: {
-    borderRadius: 12, overflow: 'hidden',
-    borderWidth: 1, borderColor: C.GLASS_EDGE,
-    position: 'relative',
-    // Soft elevation lifts the panel off the backdrop so it reads as floating glass.
-    shadowColor: C.SHADOW, shadowOpacity: 0.35, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 }, elevation: 5,
-  },
-});
 
 // ── Chip button ───────────────────────────────────────────────────────────────
 function Chip({ icon, label, color, onPress, disabled }) {
@@ -75,66 +41,42 @@ function Chip({ icon, label, color, onPress, disabled }) {
   );
 }
 const chip = StyleSheet.create({
-  wrap: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 6, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 5 },
+  wrap:  { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 6, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 5 },
   label: { fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
 });
 
-// ── Pixel-accurate progress bar ───────────────────────────────────────────────
-// Uses onLayout → animates an Animated.Value to pixel width (not %).
-// This guarantees bars actually end at different positions.
-function StatBar({ value, max, color }) {
+// ── Progress bar ──────────────────────────────────────────────────────────────
+function StatBar({ value, max, color, height = 7 }) {
   const [trackW, setTrackW] = useState(0);
   const fillAnim = useRef(new Animated.Value(0)).current;
 
-  const onLayout = useCallback((e) => {
-    const w = e.nativeEvent.layout.width;
-    setTrackW(w);
-  }, []);
+  const onLayout = useCallback((e) => setTrackW(e.nativeEvent.layout.width), []);
 
   useEffect(() => {
     if (trackW === 0) return;
     const target = Math.round(Math.min(value / max, 1) * trackW);
-    Animated.timing(fillAnim, {
-      toValue: target,
-      duration: 800,
-      useNativeDriver: false,
-    }).start();
+    Animated.timing(fillAnim, { toValue: target, duration: 900, useNativeDriver: false }).start();
   }, [trackW, value, max]);
 
   return (
     <View
       onLayout={onLayout}
-      style={[sb.track, { backgroundColor: color + '18' }]}
+      style={[sb.track, { height, borderRadius: height / 2, backgroundColor: color + '1A' }]}
     >
-      <Animated.View
-        style={[sb.fill, { width: fillAnim, backgroundColor: color }]}
-      />
-      {/* Leading glow nub */}
-      {trackW > 0 && (
-        <Animated.View
-          style={[sb.nub, {
-            backgroundColor: color,
-            shadowColor: color,
-            left: Animated.subtract(fillAnim, 3),
-          }]}
+      <Animated.View style={[sb.fill, { width: fillAnim, backgroundColor: color, borderRadius: height / 2 }]}>
+        <LinearGradient
+          colors={['rgba(255,255,255,0.22)', 'transparent']}
+          start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
         />
-      )}
+      </Animated.View>
     </View>
   );
 }
 const sb = StyleSheet.create({
-  track: { height: 5, borderRadius: 3, overflow: 'visible', position: 'relative' },
-  fill:  { height: '100%', borderRadius: 3, position: 'absolute', left: 0, top: 0 },
-  nub:   {
-    position: 'absolute', top: -2, width: 6, height: 9, borderRadius: 3,
-    shadowOpacity: 1, shadowRadius: 4, shadowOffset: { width: 0, height: 0 }, elevation: 4,
-  },
+  track: { overflow: 'hidden', position: 'relative' },
+  fill:  { height: '100%', position: 'absolute', left: 0, top: 0, overflow: 'hidden' },
 });
-
-// ── Section heading ───────────────────────────────────────────────────────────
-function SHead({ label }) {
-  return <Text style={shared.sHead}>{label}</Text>;
-}
 
 // ── Tab bar ───────────────────────────────────────────────────────────────────
 const TABS = [
@@ -144,16 +86,16 @@ const TABS = [
   { key: 'forge',   label: 'FORGE',   icon: 'git-merge-outline' },
 ];
 
-function TabBar({ active, onChange, accent }) {
+function TabBar({ active, onChange }) {
   return (
     <View style={tb.row}>
       {TABS.map(t => {
         const on = active === t.key;
         return (
           <TouchableOpacity key={t.key} style={tb.tab} onPress={() => { AudioManager.playButtonSFX(); onChange(t.key); }} activeOpacity={0.7}>
-            <Ionicons name={t.icon} size={13} color={on ? accent : C.TEXT_MUTED} />
-            <Text style={[tb.label, { color: on ? accent : C.TEXT_MUTED }]}>{t.label}</Text>
-            {on && <View style={[tb.bar, { backgroundColor: accent }]} />}
+            <Ionicons name={t.icon} size={13} color={on ? C.PRIMARY_LIGHT : C.TEXT_MUTED} />
+            <Text style={[tb.label, { color: on ? C.PRIMARY_LIGHT : C.TEXT_MUTED }]}>{t.label}</Text>
+            {on && <View style={tb.bar} />}
           </TouchableOpacity>
         );
       })}
@@ -161,70 +103,51 @@ function TabBar({ active, onChange, accent }) {
   );
 }
 const tb = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    backgroundColor: C.BG_STATS,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: C.BORDER_SUBTLE,
-    marginBottom: 8,
-  },
+  row:   { flexDirection: 'row', backgroundColor: C.BG_STATS, borderRadius: 8, borderWidth: 1, borderColor: C.BORDER_SUBTLE, marginBottom: 8 },
   tab:   { flex: 1, alignItems: 'center', paddingVertical: 7, gap: 2 },
   label: { fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
-  bar:   { height: 2, width: '50%', borderRadius: 1, marginTop: 2 },
+  bar:   { height: 2, width: '50%', borderRadius: 1, marginTop: 2, backgroundColor: C.PRIMARY_LIGHT },
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TAB CONTENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ── 1. Profile ────────────────────────────────────────────────────────────────
 function ProfileTab({
-  hero, faction, owned, inTeam, teamFull, addToTeam,
-  level, maxLevel, transcendence, ascension, ascMult, ascItemColor,
+  hero, owned, inTeam, teamFull, addToTeam,
+  level, maxLevel, transcendence, ascension, ascMult,
   effectiveHp, effectiveAtk, effectiveDef, effectiveCrit,
   saving, saved, handleDownload,
 }) {
-  const accent = faction.color;
-
   return (
     <View style={styles.tabContent}>
-      {/* About glass card */}
-      {/* <Glass style={styles.aboutCard}> */}
-        <Text style={styles.aboutTxt} numberOfLines={2}>{hero.about}</Text>
-      {/* </Glass> */}
+      <Text style={styles.aboutTxt} numberOfLines={2}>{hero.about}</Text>
 
-      {/* 2×2 stat grid */}
       <View style={styles.statGrid}>
         {[
-          { key: 'HP',   val: effectiveHp,   color: accent },
-          { key: 'ATK',  val: effectiveAtk,  color: accent },
-          { key: 'DEF',  val: effectiveDef,  color: accent },
-          { key: 'CRIT', val: effectiveCrit, color: accent },
-        ].map(({ key, val, color }) => (
-          // <Glass key={key} style={styles.statCell}>
+          { key: 'HP',   val: effectiveHp },
+          { key: 'ATK',  val: effectiveAtk },
+          { key: 'DEF',  val: effectiveDef },
+          { key: 'CRIT', val: effectiveCrit },
+        ].map(({ key, val }) => (
           <View key={key} style={styles.statCell}>
-            <Text style={[styles.statVal, { color }]}>{val.toLocaleString()}</Text>
+            <Text style={styles.statVal}>{val.toLocaleString()}</Text>
             <Text style={styles.statKey}>{key}</Text>
             <View style={styles.statBarWrap}>
-              <StatBar value={val} max={STAT_ABS_MAX[key]} color={color} />
+              <StatBar value={val} max={STAT_ABS_MAX[key]} color={C.PRIMARY} />
             </View>
-          {/* // </Glass> */}
           </View>
         ))}
       </View>
 
-      {/* Level + ascension info row */}
       <View style={styles.infoRow}>
         <View style={styles.infoPill}>
-          <Text style={[styles.infoPillTxt, { color: accent }]}>Lv.{level}/{maxLevel}</Text>
+          <Text style={styles.infoPillTxt}>Lv.{level}/{maxLevel}</Text>
           {transcendence > 0 && <Text style={[styles.infoPillSub, { color: C.GOLD }]}>✦{transcendence}</Text>}
         </View>
         {ascension > 0 && (
           <View style={styles.infoPill}>
-            <Text style={[styles.infoPillTxt, { color: ascItemColor }]}>
-              ★{ascension}  +{Math.round((ascMult - 1) * 100)}%
-            </Text>
+            <Text style={styles.infoPillTxt}>★{ascension}  +{Math.round((ascMult - 1) * 100)}%</Text>
           </View>
         )}
         {hero.element && (
@@ -234,14 +157,13 @@ function ProfileTab({
         )}
       </View>
 
-      {/* Action chips */}
       <View style={styles.chipRow}>
         {owned ? (
           <>
             <Chip
               icon={inTeam ? 'remove-circle-outline' : teamFull ? 'people-outline' : 'add-circle-outline'}
               label={inTeam ? 'REMOVE' : teamFull ? 'TEAM FULL' : 'ADD TO TEAM'}
-              color={inTeam ? C.DANGER : teamFull ? C.TEXT_MUTED : accent}
+              color={inTeam ? C.DANGER : teamFull ? C.TEXT_MUTED : C.PRIMARY}
               onPress={teamFull ? undefined : () => addToTeam(hero.id)}
               disabled={teamFull}
             />
@@ -261,9 +183,7 @@ function ProfileTab({
   );
 }
 
-// ── 2. Skills ─────────────────────────────────────────────────────────────────
-function SkillsTab({ hero, faction }) {
-  const accent = faction.color;
+function SkillsTab({ hero }) {
   return (
     <View style={styles.tabContent}>
       {hero.skills.map((sk, i) => {
@@ -271,20 +191,13 @@ function SkillsTab({ hero, faction }) {
         const isHeal = sk.damage === 0;
         const isAOE  = sk.damage > 0 && /\ball\b|enemies|every/i.test(sk.description);
         const typeLabel = isHeal ? 'HEAL' : isAOE ? 'AOE' : 'ATK';
-        const typeColor = isHeal ? C.SUCCESS : isAOE ? C.SECONDARY : accent;
+        const typeColor = isHeal ? C.SUCCESS : isAOE ? C.SECONDARY : C.PRIMARY_LIGHT;
         return (
-          <Glass key={i} style={styles.skillCard} borderColor={accent + '40'}>
-            <LinearGradient
-              colors={[accent + '1A', 'transparent']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-            {/* Skill index + energy cost */}
-            <View style={[styles.skillNumBadge, { borderColor: accent + '60', backgroundColor: accent + '18' }]}>
-              <Text style={[styles.skillNumTxt, { color: accent }]}>{i + 1}</Text>
-              <Text style={[styles.skillNrgTxt, { color: accent + 'BB' }]}>{energyCost}E</Text>
+          <View key={i} style={styles.skillCard}>
+            <View style={styles.skillNumBadge}>
+              <Text style={styles.skillNumTxt}>{i + 1}</Text>
+              <Text style={styles.skillNrgTxt}>{energyCost}E</Text>
             </View>
-            {/* Body */}
             <View style={styles.skillBody}>
               <View style={styles.skillNameRow}>
                 <Text style={styles.skillName}>{sk.name}</Text>
@@ -294,246 +207,221 @@ function SkillsTab({ hero, faction }) {
               </View>
               <Text style={styles.skillDesc} numberOfLines={2}>{sk.description}</Text>
             </View>
-            {/* Multiplier / heal icon */}
             {sk.damage > 0 ? (
-              <View style={[styles.skillDmg, { backgroundColor: accent + '1A', borderColor: accent + '55', borderWidth: 1 }]}>
-                <Text style={[styles.skillDmgTxt, { color: accent }]}>{sk.damage}×</Text>
+              <View style={styles.skillDmg}>
+                <Text style={styles.skillDmgTxt}>{sk.damage}×</Text>
               </View>
             ) : (
-              <View style={[styles.skillDmg, { backgroundColor: C.SUCCESS + '1A', borderColor: C.SUCCESS + '55', borderWidth: 1 }]}>
+              <View style={[styles.skillDmg, { borderColor: C.SUCCESS + '55' }]}>
                 <Ionicons name="heart-outline" size={13} color={C.SUCCESS} />
               </View>
             )}
-          </Glass>
+          </View>
         );
       })}
 
-      {/* Trump Card — premium full-width panel */}
-      <Glass style={styles.trumpCard} borderColor={C.GOLD + '80'}>
-        <LinearGradient
-          colors={[C.GOLD + '28', C.PRIMARY + '14', 'transparent']}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        {/* Icon */}
+      <View style={styles.trumpCard}>
         <View style={styles.trumpIconWrap}>
           <Ionicons name="flash" size={16} color={C.GOLD} />
         </View>
-        {/* Text */}
         <View style={styles.trumpLeft}>
           <Text style={styles.trumpLabel}>TRUMP CARD</Text>
-          <Text style={[styles.trumpName, { color: C.SOVEREIGN_GOLD }]}>{hero.trumpCard.name.toUpperCase()}</Text>
+          <Text style={styles.trumpName}>{hero.trumpCard.name.toUpperCase()}</Text>
           <Text style={styles.trumpEffect} numberOfLines={2}>{hero.trumpCard.effect}</Text>
         </View>
-        {/* Damage × ALL badge */}
-        <View style={[styles.skillDmg, styles.trumpDmgWrap, { backgroundColor: C.GOLD + '22', borderColor: C.GOLD + '66', borderWidth: 1 }]}>
+        <View style={[styles.skillDmg, styles.trumpDmgWrap]}>
           <Text style={[styles.skillDmgTxt, { color: C.GOLD }]}>{hero.trumpCard.damage}×</Text>
           <Text style={styles.trumpDmgAll}>ALL</Text>
         </View>
-      </Glass>
+      </View>
     </View>
   );
 }
 
-// ── 3. Level ──────────────────────────────────────────────────────────────────
 function LevelTab({
-  hero, faction, owned, gold,
+  hero, owned,
   level, maxLevel, levelCost, canLevelUp, isMaxLevel, copies,
   transcendence, canTranscend, canAffordTranscend, transcendCost,
   ascension, canAscend, requiredItem, ownedItemCount, ascItemColor,
   onLevelUp, onTranscend, onAscend,
-  fusionMsg, transcendMsg, ascendMsg,
-  statDiff,
+  transcendMsg, ascendMsg,
 }) {
-  const accent = faction.color;
-
+  const pct = Math.min(100, Math.round((level / maxLevel) * 100));
   return (
     <View style={styles.tabContent}>
-      <View style={styles.levelLayout}>
 
-        {/* LEFT — level glass card */}
-        <Glass style={styles.levelLeftCard} borderColor={accent + '55'}>
-          <LinearGradient
-            colors={[accent + '22', 'transparent']}
-            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <Text style={styles.levelCaption}>LEVEL</Text>
-          {/* Big level number */}
-          <View style={styles.levelNumRow}>
-            <Text style={[styles.ringLevel, { color: accent }]}>{level}</Text>
-            <Text style={styles.ringMax}>/{maxLevel}</Text>
+      {/* ── Level progress card ────────────────────────────────────────────── */}
+      <View style={[styles.lvCard, styles.card]}>
+        {/* Top row: label + big number + percent */}
+        <View style={styles.lvTopRow}>
+          <Text style={styles.lvCaption}>LEVEL</Text>
+          <View style={styles.lvNumWrap}>
+            <Text style={styles.lvNum}>{level}</Text>
+            <Text style={styles.lvDenom}>/ {maxLevel}</Text>
           </View>
-          {/* XP-style progress bar */}
-          <View style={styles.levelBarWrap}>
-            <StatBar value={level} max={maxLevel} color={accent} />
+          <View style={styles.lvPctWrap}>
+            <Text style={styles.lvPct}>{pct}%</Text>
           </View>
-          {/* Level-up button */}
-          {owned ? (
-            <TouchableOpacity
-              style={[styles.lvUpBtn, {
-                borderColor: isMaxLevel ? C.GOLD + '55' : canLevelUp ? accent + '80' : C.BORDER,
-                backgroundColor: isMaxLevel ? C.GOLD + '10' : canLevelUp ? accent + '18' : 'transparent',
-              }]}
-              onPress={canLevelUp ? onLevelUp : undefined}
-              disabled={!canLevelUp}
-              activeOpacity={0.75}
-            >
-              <Ionicons
-                name={isMaxLevel ? 'trophy-outline' : 'arrow-up-circle-outline'}
-                size={11}
-                color={isMaxLevel ? C.GOLD : canLevelUp ? accent : C.TEXT_DISABLED}
-              />
-              <Text style={[styles.lvUpTxt, { color: isMaxLevel ? C.GOLD : canLevelUp ? accent : C.TEXT_DISABLED }]}>
-                {isMaxLevel ? 'MAX LEVEL' : `${levelCost.toLocaleString()} G`}
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <Text style={styles.lockedHint}>UNLOCK TO LEVEL</Text>
-          )}
-        </Glass>
+        </View>
 
-        {/* RIGHT — transcend + ascend glass panels */}
-        <View style={styles.levelRight}>
-          {/* Transcendence */}
-          <Glass
-            style={[styles.upgradeCard, { opacity: !owned ? 0.4 : 1 }]}
-            borderColor={canAffordTranscend ? C.PRIMARY + '70' : C.BORDER_SUBTLE}
+        {/* Progress bar — taller, full width */}
+        <View style={styles.lvBarWrap}>
+          <StatBar value={level} max={maxLevel} color={C.PRIMARY} height={9} />
+        </View>
+
+        {/* Level-up button */}
+        {owned ? (
+          <TouchableOpacity
+            style={[styles.lvBtn, isMaxLevel
+              ? { borderColor: C.GOLD + '60', backgroundColor: C.GOLD + '12' }
+              : canLevelUp
+              ? { borderColor: C.PRIMARY + '80', backgroundColor: C.PRIMARY + '20' }
+              : { borderColor: C.BORDER_SUBTLE, backgroundColor: C.BG_STATS }
+            ]}
+            onPress={canLevelUp ? onLevelUp : undefined}
+            disabled={!canLevelUp || isMaxLevel}
+            activeOpacity={0.75}
           >
-            <LinearGradient
-              colors={canAffordTranscend ? [C.PRIMARY + '20', 'transparent'] : ['transparent', 'transparent']}
-              style={StyleSheet.absoluteFill}
+            <Ionicons
+              name={isMaxLevel ? 'trophy-outline' : 'arrow-up-circle-outline'}
+              size={15}
+              color={isMaxLevel ? C.GOLD : canLevelUp ? C.PRIMARY_LIGHT : C.TEXT_DISABLED}
             />
-            <View style={styles.upgradeTop}>
-              <Ionicons name="arrow-up-circle-outline" size={13} color={canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED} />
-              <Text style={[styles.upgradeName, { color: canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>TRANSCEND</Text>
-              <View style={[styles.upgradeBadge, { backgroundColor: copies >= TRANSCEND_COPIES ? C.PRIMARY + '25' : C.BG_STATS }]}>
-                <Text style={[styles.upgradeBadgeTxt, { color: copies >= TRANSCEND_COPIES ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>{copies}/{TRANSCEND_COPIES}</Text>
-              </View>
+            <Text style={[styles.lvBtnTxt, {
+              color: isMaxLevel ? C.GOLD : canLevelUp ? C.PRIMARY_LIGHT : C.TEXT_DISABLED,
+            }]}>
+              {isMaxLevel
+                ? 'MAX LEVEL'
+                : canLevelUp
+                ? `LEVEL UP  ·  ${levelCost.toLocaleString()} G`
+                : `NEED  ${levelCost.toLocaleString()} G`}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={[styles.lvBtn, { borderColor: C.BORDER_SUBTLE, backgroundColor: C.BG_STATS }]}>
+            <Ionicons name="lock-closed-outline" size={15} color={C.TEXT_DISABLED} />
+            <Text style={[styles.lvBtnTxt, { color: C.TEXT_DISABLED }]}>UNLOCK TO LEVEL</Text>
+          </View>
+        )}
+      </View>
+
+      {/* ── Transcend + Ascend row ─────────────────────────────────────────── */}
+      <View style={styles.upgradeRow}>
+
+        {/* Transcend */}
+        <View style={[styles.upgradeCard2, styles.card, { opacity: !owned ? 0.45 : 1 }]}>
+          <View style={styles.upgradeHead2}>
+            <View style={[styles.upgradeIconBox, { backgroundColor: canAffordTranscend ? C.PRIMARY + '20' : C.BG_STATS }]}>
+              <Ionicons name="arrow-up-circle-outline" size={15} color={canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED} />
             </View>
-            <Text style={styles.upgradeSub}>Max Lv {maxLevel} → {maxLevel + 5}</Text>
-            <Text style={[styles.upgradeCost, { color: canAffordTranscend ? C.GOLD : C.TEXT_DISABLED }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.upgradeTitle2, { color: canAffordTranscend ? C.TEXT : C.TEXT_DISABLED }]}>TRANSCEND</Text>
+              <Text style={styles.upgradeSub2}>Lv cap  {maxLevel} → {maxLevel + 5}</Text>
+            </View>
+            <View style={[styles.copyBadge, { backgroundColor: copies >= TRANSCEND_COPIES ? C.PRIMARY + '28' : C.BG_STATS }]}>
+              <Text style={[styles.copyBadgeTxt, { color: copies >= TRANSCEND_COPIES ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>
+                {copies}/{TRANSCEND_COPIES}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.upgradeDivider} />
+
+          <View style={styles.upgradeFoot2}>
+            <Text style={[styles.upgradeCost2, { color: canAffordTranscend ? C.GOLD : C.TEXT_DISABLED }]}>
               {transcendCost.toLocaleString()} G
             </Text>
-            {owned && canTranscend && (
+            {owned && canTranscend ? (
               <TouchableOpacity
-                style={[styles.upgradeBtn, {
-                  borderColor: canAffordTranscend ? C.PRIMARY : C.BORDER,
-                  backgroundColor: canAffordTranscend ? C.PRIMARY + '20' : 'transparent',
-                }]}
+                style={[styles.upgradeActionBtn, canAffordTranscend
+                  ? { borderColor: C.PRIMARY + '80', backgroundColor: C.PRIMARY + '22' }
+                  : { borderColor: C.BORDER_SUBTLE, backgroundColor: 'transparent' }
+                ]}
                 onPress={canAffordTranscend ? onTranscend : undefined}
                 disabled={!canAffordTranscend}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.upgradeBtnTxt, { color: canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>
+                <Text style={[styles.upgradeActionTxt, { color: canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED }]}>
                   {canAffordTranscend ? 'TRANSCEND' : 'NEED GOLD'}
                 </Text>
               </TouchableOpacity>
-            )}
-            {(!owned || !canTranscend) && (
-              <Text style={styles.upgradeHint}>
+            ) : (
+              <Text style={styles.upgradeNote2}>
                 {!owned ? 'Unlock first' : transcendence >= 4 ? 'MAX REACHED' : `${copies}/${TRANSCEND_COPIES} copies`}
               </Text>
             )}
-            {transcendMsg !== '' && <Text style={[styles.upgradeErr, { color: C.PRIMARY_LIGHT }]}>{transcendMsg}</Text>}
-          </Glass>
+          </View>
+          {transcendMsg !== '' && <Text style={[styles.upgradeErr2, { color: C.PRIMARY_LIGHT }]}>{transcendMsg}</Text>}
+        </View>
 
-          {/* Ascension */}
-          <Glass
-            style={[styles.upgradeCard, { opacity: !owned ? 0.4 : 1 }]}
-            borderColor={canAscend ? ascItemColor + '70' : C.BORDER_SUBTLE}
-          >
-            <LinearGradient
-              colors={canAscend ? [ascItemColor + '20', 'transparent'] : ['transparent', 'transparent']}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.upgradeTop}>
-              <Ionicons name="sparkles-outline" size={13} color={canAscend ? ascItemColor : C.TEXT_DISABLED} />
-              <Text style={[styles.upgradeName, { color: canAscend ? ascItemColor : C.TEXT_DISABLED }]}>ASCEND</Text>
-              <View style={styles.ascTierRow}>
-                {[1, 2, 3].map(t => (
-                  <Text key={t} style={[styles.ascStar, { color: t <= ascension ? ascItemColor : C.TEXT_DISABLED }]}>★</Text>
-                ))}
-              </View>
+        {/* Ascend */}
+        <View style={[styles.upgradeCard2, styles.card, { opacity: !owned ? 0.45 : 1 }]}>
+          <View style={styles.upgradeHead2}>
+            <View style={[styles.upgradeIconBox, { backgroundColor: canAscend ? ascItemColor + '20' : C.BG_STATS }]}>
+              <Ionicons name="sparkles-outline" size={15} color={canAscend ? ascItemColor : C.TEXT_DISABLED} />
             </View>
-            <Text style={styles.upgradeSub}>{requiredItem ? requiredItem.name : 'Item required'}</Text>
-            <Text style={[styles.upgradeCost, { color: ownedItemCount >= 1 ? ascItemColor : C.TEXT_DISABLED }]}>
-              {ownedItemCount} / 1 owned
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.upgradeTitle2, { color: canAscend ? C.TEXT : C.TEXT_DISABLED }]}>ASCEND</Text>
+              <Text style={styles.upgradeSub2}>{requiredItem ? requiredItem.name : 'Item required'}</Text>
+            </View>
+            <View style={styles.ascStarRow}>
+              {[1, 2, 3].map(t => (
+                <Text key={t} style={[styles.ascStar2, { color: t <= ascension ? ascItemColor : C.TEXT_DISABLED }]}>★</Text>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.upgradeDivider} />
+
+          <View style={styles.upgradeFoot2}>
+            <Text style={[styles.upgradeCost2, { color: ownedItemCount >= 1 ? ascItemColor : C.TEXT_DISABLED }]}>
+              {ownedItemCount} / 1 item
             </Text>
-            {owned && ascension < ASCENSION_MAX && requiredItem && (
+            {owned && ascension < ASCENSION_MAX && requiredItem ? (
               <TouchableOpacity
-                style={[styles.upgradeBtn, {
-                  borderColor: canAscend ? ascItemColor : C.BORDER,
-                  backgroundColor: canAscend ? ascItemColor + '20' : 'transparent',
-                }]}
+                style={[styles.upgradeActionBtn, canAscend
+                  ? { borderColor: ascItemColor + '80', backgroundColor: ascItemColor + '22' }
+                  : { borderColor: C.BORDER_SUBTLE, backgroundColor: 'transparent' }
+                ]}
                 onPress={canAscend ? onAscend : undefined}
                 disabled={!canAscend}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.upgradeBtnTxt, { color: canAscend ? ascItemColor : C.TEXT_DISABLED }]}>
-                  {canAscend ? `ASCEND → TIER ${ascension + 1}` : 'NEED ITEM'}
+                <Text style={[styles.upgradeActionTxt, { color: canAscend ? ascItemColor : C.TEXT_DISABLED }]}>
+                  {canAscend ? `ASCEND  T${ascension + 1}` : 'NEED ITEM'}
                 </Text>
               </TouchableOpacity>
+            ) : (
+              <Text style={[styles.upgradeNote2, ascension >= ASCENSION_MAX && { color: C.GOLD }]}>
+                {ascension >= ASCENSION_MAX ? 'MAX TIER' : !owned ? 'Unlock first' : 'No item'}
+              </Text>
             )}
-            {ascension >= ASCENSION_MAX && (
-              <Text style={[styles.upgradeHint, { color: C.GOLD }]}>MAX TIER</Text>
-            )}
-            {ascendMsg !== '' && <Text style={[styles.upgradeErr, { color: ascItemColor }]}>{ascendMsg}</Text>}
-          </Glass>
+          </View>
+          {ascendMsg !== '' && <Text style={[styles.upgradeErr2, { color: ascItemColor }]}>{ascendMsg}</Text>}
         </View>
       </View>
 
-      {/* Stat diff panel */}
-      {statDiff && (
-        <Glass style={[styles.diffPanel, { borderColor: statDiff.color + '55' }]}>
-          <LinearGradient colors={[statDiff.color + '12', 'transparent']} style={StyleSheet.absoluteFill} />
-          <View style={styles.diffHeader}>
-            <Ionicons name="trending-up" size={10} color={statDiff.color} />
-            <Text style={[styles.diffLabel, { color: statDiff.color }]}>{statDiff.label}</Text>
-          </View>
-          {statDiff.transcendOnly ? (
-            <Text style={styles.diffNote}>Level up to unlock extra potential</Text>
-          ) : (
-            <View style={styles.diffRow}>
-              {statDiff.gains.map(({ stat, before, after, color }) => (
-                <View key={stat} style={styles.diffCell}>
-                  <Text style={[styles.diffStat, { color }]}>{stat}</Text>
-                  <Text style={styles.diffBefore}>{before.toLocaleString()}</Text>
-                  <Text style={[styles.diffAfter, { color: C.SUCCESS }]}>+{(after - before).toLocaleString()}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </Glass>
-      )}
     </View>
   );
 }
 
-// ── 4. Forge ──────────────────────────────────────────────────────────────────
 function ForgeTab({
-  hero, faction, owned, gold, copies,
+  hero, owned, copies,
   effectiveRankKey, rankIdx, canFuse, canAffordFuse, fusionCost, fusionRankNext,
-  forgeActive,
-  heroData,
-  onFuse, onConvert,
-  fusionMsg,
+  heroData, onFuse, onConvert, fusionMsg,
 }) {
   const rankKey = hero.sovereign ? 'SOVEREIGN' : effectiveRankKey;
   const rank    = RANK_COLORS[effectiveRankKey] || RANK_COLORS[hero.rank];
   const rate    = COINS_PER_COPY[effectiveRankKey] ?? COINS_PER_COPY.C;
   const maxConv = heroData?.copies ?? 0;
-  const accent  = canFuse ? (RANK[fusionRankNext]?.bg ?? faction.color) : faction.color;
+  const accent  = canFuse ? (RANK[fusionRankNext]?.bg ?? C.PRIMARY) : C.PRIMARY;
 
   return (
-    // Video bleeds edge-to-edge — negative margin cancels tabArea's padding
     <View style={[styles.tabContent, styles.forgeTabFill]}>
-      {/* Video — fills the entire tab */}
       <View style={[StyleSheet.absoluteFill, { borderRadius: 12, overflow: 'hidden' }]}>
         <ForgeViz rank={rankKey} />
       </View>
 
-      {/* Top-right rank badge */}
       <View style={styles.galaxyBadge} pointerEvents="none">
         <View style={[styles.rankChip, { backgroundColor: rank.bg + 'CC', borderColor: rank.glow + '80' }]}>
           <Text style={[styles.rankChipTxt, { color: rank.text }]}>{effectiveRankKey}</Text>
@@ -548,27 +436,16 @@ function ForgeTab({
         )}
       </View>
 
-      {/* Bottom action overlay — buttons float on the video */}
       <View style={styles.forgeOverlay} pointerEvents="box-none">
-        {/* Gradient veil so buttons stay readable */}
-        <LinearGradient
-          colors={['transparent', C.OVERLAY_DEEP]}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
+        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.82)']} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <View style={styles.forgeOverlayRow}>
-          {/* Fusion button */}
           {owned && (
             <TouchableOpacity
-              style={[
-                styles.forgeOverlayBtn,
-                {
-                  borderColor: canAffordFuse ? accent + 'AA' : C.GLASS_7,
-                  backgroundColor: canAffordFuse ? accent + '28' : C.OVERLAY_2,
-                  opacity: !canFuse ? 0.45 : 1,
-                },
-              ]}
+              style={[styles.forgeOverlayBtn, {
+                borderColor: canAffordFuse ? accent + 'AA' : C.GLASS_7,
+                backgroundColor: canAffordFuse ? accent + '28' : C.OVERLAY_2,
+                opacity: !canFuse ? 0.45 : 1,
+              }]}
               onPress={canFuse && canAffordFuse ? onFuse : undefined}
               disabled={!canFuse || !canAffordFuse}
               activeOpacity={0.7}
@@ -579,21 +456,14 @@ function ForgeTab({
                   {canFuse ? 'FUSION' : hero.sovereign ? 'APEX LOCKED' : rankIdx >= 3 ? 'MAX RANK' : 'FUSION'}
                 </Text>
                 <Text style={styles.forgeOverlaySub}>
-                  {canFuse
-                    ? `${copies}/${FUSION_COPIES} copies · ${fusionCost.toLocaleString()} G`
-                    : `Requires ${FUSION_COPIES} copies`}
+                  {canFuse ? `${copies}/${FUSION_COPIES} copies · ${fusionCost.toLocaleString()} G` : `Requires ${FUSION_COPIES} copies`}
                 </Text>
               </View>
             </TouchableOpacity>
           )}
-
-          {/* Convert copies button */}
           {owned && maxConv > 0 && (
             <TouchableOpacity
-              style={[styles.forgeOverlayBtn, {
-                borderColor: C.GOLD + '88',
-                backgroundColor: C.OVERLAY_2,
-              }]}
+              style={[styles.forgeOverlayBtn, { borderColor: C.GOLD + '88', backgroundColor: C.OVERLAY_2 }]}
               onPress={() => {
                 Alert.alert(
                   'Convert Copies',
@@ -614,10 +484,7 @@ function ForgeTab({
             </TouchableOpacity>
           )}
         </View>
-
-        {fusionMsg !== '' && (
-          <Text style={styles.forgeOverlayErr}>{fusionMsg}</Text>
-        )}
+        {fusionMsg !== '' && <Text style={styles.forgeOverlayErr}>{fusionMsg}</Text>}
       </View>
     </View>
   );
@@ -649,17 +516,16 @@ export default function HeroDetailScreen({ route, navigation }) {
   const [transcendMsg, setTranscendMsg] = useState('');
   const [ascendMsg,    setAscendMsg]    = useState('');
   const [statDiff,     setStatDiff]     = useState(null);
-  const [forgeActive,  setForgeActive]  = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saved,  setSaved]  = useState(false);
+  const [, setForgeActive] = useState(false);
+  const [saving,       setSaving]       = useState(false);
+  const [saved,        setSaved]        = useState(false);
 
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
-  const cardRef       = useRef(null);
-  const diffTimerRef  = useRef(null);
+  const cardRef      = useRef(null);
+  const diffTimerRef = useRef(null);
 
   useEffect(() => () => { if (diffTimerRef.current) clearTimeout(diffTimerRef.current); }, []);
 
-  // ── Forge overlay animation refs ──────────────────────────────────────────
   const fuseFlash = useRef(new Animated.Value(0)).current;
   const fuseScale = useRef(new Animated.Value(1)).current;
   const fuseRing1 = useRef(new Animated.Value(0)).current;
@@ -674,7 +540,6 @@ export default function HeroDetailScreen({ route, navigation }) {
     fuseRing1.setValue(0); fuseRing2.setValue(0); fuseRing3.setValue(0);
     fuseBadge.setValue(0);
     AudioManager.playPowerForgeSFX();
-
     Animated.sequence([
       Animated.timing(fuseFlash, { toValue: 0.68, duration: 130, useNativeDriver: true }),
       Animated.timing(fuseFlash, { toValue: 0,    duration: 520, useNativeDriver: true }),
@@ -716,7 +581,7 @@ export default function HeroDetailScreen({ route, navigation }) {
     setSaving(false);
   };
 
-  // ── Derived hero data ─────────────────────────────────────────────────────
+  // ── Derived data ──────────────────────────────────────────────────────────
   const cardHAvail = H - topInset - bottomInset - BODY_PAD * 2;
   const CARD_W = Math.floor(cardHAvail * (220 / 320));
 
@@ -753,7 +618,6 @@ export default function HeroDetailScreen({ route, navigation }) {
   const effectiveDef  = Math.round(hero.def  * totalMult);
   const effectiveCrit = Math.round(hero.crit * totalMult);
 
-  // Fusion
   const rankIdx        = RANK_ORDER.indexOf(effectiveRankKey);
   const canFuse        = owned && copies >= FUSION_COPIES && rankIdx >= 0 && rankIdx < 3;
   const fusionCosts    = [2000, 5000, 10000];
@@ -761,20 +625,17 @@ export default function HeroDetailScreen({ route, navigation }) {
   const fusionRankNext = canFuse ? RANK_ORDER[rankIdx + 1] : null;
   const canAffordFuse  = canFuse && gold >= fusionCost;
 
-  // Transcendence
-  const canTranscend        = owned && copies >= TRANSCEND_COPIES && transcendence < 4;
-  const transcendCosts      = [8000, 15000, 25000, 40000];
-  const transcendCost       = transcendCosts[transcendence] ?? 0;
-  const canAffordTranscend  = canTranscend && gold >= transcendCost;
+  const canTranscend       = owned && copies >= TRANSCEND_COPIES && transcendence < 4;
+  const transcendCosts     = [8000, 15000, 25000, 40000];
+  const transcendCost      = transcendCosts[transcendence] ?? 0;
+  const canAffordTranscend = canTranscend && gold >= transcendCost;
 
-  // Ascension
   const ascItemId      = RANK_TO_ASCENSION_ITEM_ID[rankKey] ?? null;
   const requiredItem   = ascItemId ? getAscensionItemById(ascItemId) : null;
   const ownedItemCount = requiredItem ? ((ascensionInventory ?? {})[requiredItem.id] || 0) : 0;
   const canAscend      = owned && ascension < ASCENSION_MAX && ownedItemCount >= 1;
   const ascItemColor   = requiredItem ? (RANK[requiredItem.rankKey]?.bg ?? C.PRIMARY) : C.PRIMARY;
 
-  // ── Action handlers ───────────────────────────────────────────────────────
   const handleLevelUp = useCallback(() => {
     const before = { hp: effectiveHp, atk: effectiveAtk, def: effectiveDef, crit: effectiveCrit };
     AudioManager.playLevelUpSFX();
@@ -782,11 +643,11 @@ export default function HeroDetailScreen({ route, navigation }) {
       trackQuestProgress('hero_level');
       const nm = 1 + level * 0.08;
       const nt = nm * rankMult * ascMult;
-      showStatDiff(`LV ${level} → ${level + 1}`, faction.color, [
-        { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * nt), color: faction.color },
-        { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * nt), color: faction.color },
-        { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * nt), color: faction.color },
-        { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * nt), color: faction.color },
+      showStatDiff(`LV ${level} → ${level + 1}`, C.PRIMARY_LIGHT, [
+        { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * nt), color: C.PRIMARY_LIGHT },
+        { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * nt), color: C.PRIMARY_LIGHT },
+        { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * nt), color: C.PRIMARY_LIGHT },
+        { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * nt), color: C.PRIMARY_LIGHT },
       ]);
     }
   }, [effectiveHp, effectiveAtk, effectiveDef, effectiveCrit, level, rankMult, ascMult]);
@@ -802,10 +663,10 @@ export default function HeroDetailScreen({ route, navigation }) {
       const nm = RANK_STAT_MULT[result.newRank] ?? 1.0;
       const nt = levelMult * nm * ascMult;
       showStatDiff(`${effectiveRankKey} → ${result.newRank}  RANK UP`, r?.bg ?? C.GOLD, [
-        { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * nt), color: faction.color },
-        { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * nt), color: faction.color },
-        { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * nt), color: faction.color },
-        { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * nt), color: faction.color },
+        { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * nt), color: C.PRIMARY_LIGHT },
+        { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * nt), color: C.PRIMARY_LIGHT },
+        { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * nt), color: C.PRIMARY_LIGHT },
+        { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * nt), color: C.PRIMARY_LIGHT },
       ]);
     } else {
       setFusionMsg(result.reason === 'gold' ? 'Not enough gold' : result.reason === 'copies' ? `Need ${FUSION_COPIES} copies` : 'Cannot fuse');
@@ -832,10 +693,10 @@ export default function HeroDetailScreen({ route, navigation }) {
       const na = ASCENSION_STAT_MULT[ascension + 1] ?? 1;
       const nt = levelMult * rankMult * na;
       showStatDiff(`ASCENSION TIER ${ascension} → ${result.newTier}`, ascItemColor, [
-        { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * nt), color: faction.color },
-        { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * nt), color: faction.color },
-        { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * nt), color: faction.color },
-        { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * nt), color: faction.color },
+        { stat: 'HP',   before: before.hp,   after: Math.round(hero.hp   * nt), color: C.PRIMARY_LIGHT },
+        { stat: 'ATK',  before: before.atk,  after: Math.round(hero.atk  * nt), color: C.PRIMARY_LIGHT },
+        { stat: 'DEF',  before: before.def,  after: Math.round(hero.def  * nt), color: C.PRIMARY_LIGHT },
+        { stat: 'CRIT', before: before.crit, after: Math.round(hero.crit * nt), color: C.PRIMARY_LIGHT },
       ]);
     } else {
       setAscendMsg(result.reason === 'missing_item' ? `Need ${requiredItem?.name}` : 'Cannot ascend');
@@ -843,32 +704,9 @@ export default function HeroDetailScreen({ route, navigation }) {
     }
   }, [effectiveHp, effectiveAtk, effectiveDef, effectiveCrit, ascension, ascItemColor, levelMult, rankMult]);
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <View style={styles.root}>
-      {/* Hero image — native blur so colours bleed through */}
-      <Image
-        source={hero.image}
-        style={styles.bgImage}
-        resizeMode="cover"
-        blurRadius={22}
-      />
-      {/* Light frost on top (the image already carries blurRadius 22, so keep this gentle
-          — heavy stacking is what made the screen feel murky). */}
-      <BlurView intensity={16} tint="dark" style={StyleSheet.absoluteFill} />
-      {/* Gradient veils lightened so the hero art + faction colour bleed through and give
-          the frosted-glass panels a vibrant backdrop, while panels carry their own contrast. */}
-      <LinearGradient
-        colors={[C.BG_DEEP + '6E', C.BG_BASE + '99', C.BG_DEEP + '6E']}
-        start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <LinearGradient
-        colors={[C.OVERLAY_1, C.OVERLAY_2]}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <FactionParticles faction={hero.faction} />
+      <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
         <View style={styles.body}>
@@ -883,14 +721,11 @@ export default function HeroDetailScreen({ route, navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* RIGHT — tab panel */}
+          {/* RIGHT — info panel */}
           <View style={styles.infoCol}>
-            {/* Static header */}
             <View style={styles.nameRow}>
-              <View style={[styles.factionDot, { backgroundColor: faction.color }]} />
-              <Text style={[styles.heroName, { color: faction.color }]} numberOfLines={1}>
-                {hero.name.toUpperCase()}
-              </Text>
+              <View style={[styles.rankDot, { backgroundColor: rank.bg }]} />
+              <Text style={styles.heroName} numberOfLines={1}>{hero.name.toUpperCase()}</Text>
               <View style={[styles.rankBadge, { backgroundColor: rank.bg }]}>
                 <Text style={[styles.rankTxt, { color: rank.text }]}>{effectiveRankKey}</Text>
               </View>
@@ -901,51 +736,33 @@ export default function HeroDetailScreen({ route, navigation }) {
               )}
             </View>
 
-            <LinearGradient
-              colors={[faction.color + '40', 'transparent']}
-              style={styles.factionStrip}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-            />
+            <View style={styles.divider} />
 
             <View style={styles.tagRow}>
-              <TagChip label={faction.label ?? hero.faction} color={faction.color} />
+              <TagChip label={faction.label ?? hero.faction} color={C.TEXT_MUTED} />
               <TagChip label={hero.class}   color={C.PRIMARY_LIGHT} />
-              <TagChip label={hero.element} color={C.CYAN}          />
-              <TagChip label={hero.effect}  color={C.SECONDARY}     />
+              <TagChip label={hero.element} color={C.CYAN} />
+              <TagChip label={hero.effect}  color={C.SECONDARY} />
             </View>
 
-            {/* Tab bar */}
-            <TabBar active={activeTab} onChange={setActiveTab} accent={faction.color} />
+            <TabBar active={activeTab} onChange={setActiveTab} />
 
-            {/* Tab content — fixed height, no scroll */}
             <View style={[styles.tabArea, activeTab === 'forge' && styles.tabAreaForge]}>
-              {/* Frosted-glass background only on non-Forge tabs */}
-              {activeTab !== 'forge' && (
-                <>
-                  {/* Gentle container frost — the inner Glass cards carry the real depth now,
-                      so this stays light to avoid the old stacked-blur murk. */}
-                  <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} pointerEvents="none" />
-                  <View style={styles.tabAreaTint} pointerEvents="none" />
-                </>
-              )}
               {activeTab === 'profile' && (
                 <ProfileTab
-                  hero={hero} faction={faction} owned={owned}
+                  hero={hero} owned={owned}
                   inTeam={inTeam} teamFull={teamFull} addToTeam={addToTeam}
                   level={level} maxLevel={maxLevel}
-                  transcendence={transcendence} ascension={ascension}
-                  ascMult={ascMult} ascItemColor={ascItemColor}
+                  transcendence={transcendence} ascension={ascension} ascMult={ascMult}
                   effectiveHp={effectiveHp} effectiveAtk={effectiveAtk}
                   effectiveDef={effectiveDef} effectiveCrit={effectiveCrit}
                   saving={saving} saved={saved} handleDownload={handleDownload}
                 />
               )}
-              {activeTab === 'skills' && (
-                <SkillsTab hero={hero} faction={faction} />
-              )}
+              {activeTab === 'skills' && <SkillsTab hero={hero} />}
               {activeTab === 'level' && (
                 <LevelTab
-                  hero={hero} faction={faction} owned={owned} gold={gold}
+                  hero={hero} owned={owned}
                   level={level} maxLevel={maxLevel} levelCost={levelCost}
                   canLevelUp={canLevelUp} isMaxLevel={isMaxLevel} copies={copies}
                   transcendence={transcendence} canTranscend={canTranscend}
@@ -953,17 +770,15 @@ export default function HeroDetailScreen({ route, navigation }) {
                   ascension={ascension} canAscend={canAscend}
                   requiredItem={requiredItem} ownedItemCount={ownedItemCount} ascItemColor={ascItemColor}
                   onLevelUp={handleLevelUp} onTranscend={handleTranscend} onAscend={handleAscend}
-                  fusionMsg={fusionMsg} transcendMsg={transcendMsg} ascendMsg={ascendMsg}
-                  statDiff={statDiff}
+                  transcendMsg={transcendMsg} ascendMsg={ascendMsg}
                 />
               )}
               {activeTab === 'forge' && (
                 <ForgeTab
-                  hero={hero} faction={faction} owned={owned} gold={gold} copies={copies}
+                  hero={hero} owned={owned} copies={copies}
                   effectiveRankKey={effectiveRankKey} rankIdx={rankIdx}
                   canFuse={canFuse} canAffordFuse={canAffordFuse}
                   fusionCost={fusionCost} fusionRankNext={fusionRankNext}
-                  forgeActive={forgeActive}
                   heroData={heroData}
                   onFuse={handleFuse} onConvert={convertExcessCopies}
                   fusionMsg={fusionMsg}
@@ -974,7 +789,7 @@ export default function HeroDetailScreen({ route, navigation }) {
         </View>
       </SafeAreaView>
 
-      {/* Full-screen forge burst overlay */}
+      {/* Forge burst overlay */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <Animated.View style={[StyleSheet.absoluteFill, { opacity: fuseFlash, backgroundColor: forgeBadge.bg }]} />
         {[fuseRing1, fuseRing2, fuseRing3].map((ring, i) => (
@@ -998,34 +813,44 @@ export default function HeroDetailScreen({ route, navigation }) {
               color: forgeBadge.text, textShadowColor: forgeBadge.glow,
             }]}>{forgeBadge.mainLabel}</Text>
             <Text style={styles.fuseBadgeHero}>{hero.name.toUpperCase()}</Text>
+            {statDiff && !statDiff.transcendOnly && statDiff.gains.length > 0 && (
+              <View style={styles.fuseBadgeStats}>
+                {statDiff.gains.map(({ stat, before, after }) => (
+                  <View key={stat} style={styles.fuseBadgeStatCell}>
+                    <Text style={[styles.fuseBadgeStatName, { color: forgeBadge.glow }]}>{stat}</Text>
+                    <Text style={styles.fuseBadgeStatBefore}>{before.toLocaleString()}</Text>
+                    <Text style={styles.fuseBadgeStatAfter}>→ {after.toLocaleString()}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            {statDiff?.transcendOnly && (
+              <Text style={styles.fuseBadgeStatNote}>Level cap extended</Text>
+            )}
           </Animated.View>
         </View>
       </View>
+
     </View>
   );
 }
 
-// ── Small sub-components ──────────────────────────────────────────────────────
-
 function TagChip({ label, color }) {
   return (
-    <View style={[shared.tagChip, { borderColor: color + '55', backgroundColor: color + '18' }]}>
+    <View style={[shared.tagChip, { borderColor: color + '55', backgroundColor: color + '12' }]}>
       <Text style={[shared.tagTxt, { color }]}>{label}</Text>
     </View>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const shared = StyleSheet.create({
-  sHead: { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '900', letterSpacing: 2.5, marginBottom: 5 },
+  sHead:   { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '900', letterSpacing: 2.5, marginBottom: 5 },
   tagChip: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4, borderWidth: 1 },
   tagTxt:  { fontSize: 8, fontWeight: '700', letterSpacing: 0.4 },
 });
 
 const styles = StyleSheet.create({
-  root:    { flex: 1, backgroundColor: C.BG_DEEP },
-  bgImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', opacity: 0.72 },
+  root: { flex: 1, backgroundColor: C.BG_DEEP },
   safe: { flex: 1 },
   body: { flex: 1, flexDirection: 'row', padding: BODY_PAD, gap: 12 },
 
@@ -1040,90 +865,87 @@ const styles = StyleSheet.create({
   infoCol: { flex: 1, flexDirection: 'column' },
 
   nameRow:    { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 6 },
-  factionDot: { width: 8, height: 8, borderRadius: 4 },
-  heroName:   { flex: 1, fontSize: 16, fontWeight: '900', letterSpacing: 2, color: C.TEXT,
-    textShadowColor: C.TEXT_SHADOW, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 5 },
+  rankDot:    { width: 8, height: 8, borderRadius: 4 },
+  heroName:   { flex: 1, fontSize: 16, fontWeight: '900', letterSpacing: 2, color: C.TEXT },
   rankBadge:  { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  rankTxt:    { fontSize: 11, fontWeight: '900', color: C.TEXT },
+  rankTxt:    { fontSize: 11, fontWeight: '900' },
   copiesBadge:{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: C.PRIMARY_GLOW, borderWidth: 1, borderColor: C.BORDER_STRONG },
   copiesTxt:  { fontSize: 10, fontWeight: '900', color: C.PRIMARY_LIGHT },
 
-  factionStrip: { height: 2, borderRadius: 1, marginBottom: 8 },
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 8 },
+  divider: { height: 1, backgroundColor: C.BORDER_SUBTLE, marginBottom: 8 },
+  tagRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 8 },
 
   tabArea: {
-    flex: 1,
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: C.GLASS_EDGE,
-    padding: 10,
+    flex: 1, borderRadius: 12, overflow: 'hidden',
+    borderWidth: 1, borderColor: C.BORDER_SUBTLE,
+    backgroundColor: C.BG_BASE, padding: 10,
   },
-  tabAreaForge: {
-    borderRadius: 0,
-    borderWidth: 0,
-    padding: 0,
-  },
-  tabAreaTint: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: C.GLASS_3,
-  },
+  tabAreaForge: { borderRadius: 0, borderWidth: 0, padding: 0, backgroundColor: 'transparent' },
 
-  // ── Tab content shared ───────────────────────────────────────────────────
-  tabContent:    { flex: 1, gap: 8 },
-  forgeTabFill:  { position: 'relative', gap: 0 },
+  tabContent:   { flex: 1, gap: 8 },
+  forgeTabFill: { position: 'relative', gap: 0 },
+
+  card: {
+    backgroundColor: C.BG_CARD,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: C.BORDER_SUBTLE,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
 
   // ── Profile ──────────────────────────────────────────────────────────────
-  aboutCard: { paddingHorizontal: 10, paddingVertical: 8 },
-  aboutTxt:  { fontSize: 11, color: C.TEXT, lineHeight: 16 },
-
-  statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, flex: 1 },
+  aboutTxt:  { fontSize: 11, color: C.TEXT_SOFT, lineHeight: 16 },
+  statGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: 5, flex: 1 },
   statCell: {
     width: '48.5%', paddingHorizontal: 10, paddingVertical: 8,
     justifyContent: 'space-between',
+    backgroundColor: C.BG_CARD, borderRadius: 8,
+    borderWidth: 1, borderColor: C.BORDER_SUBTLE,
   },
-  statVal:     { fontSize: 20, fontWeight: '900', color: C.TEXT,
-    textShadowColor: C.TEXT_SHADOW, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
-  statKey:     { fontSize: 9, fontWeight: '900', color: C.TEXT_SOFT, letterSpacing: 1.5, marginTop: -2 },
+  statVal:     { fontSize: 20, fontWeight: '900', color: C.TEXT },
+  statKey:     { fontSize: 9, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 1.5, marginTop: -2 },
   statBarWrap: { marginTop: 5 },
-
-  infoRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
-  infoPill: {
-    paddingHorizontal: 8, paddingVertical: 4,
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-  },
-  infoPillTxt: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
+  infoRow:     { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
+  infoPill:    { paddingHorizontal: 8, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  infoPillTxt: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT_SOFT },
   infoPillSub: { fontSize: 9, fontWeight: '900', color: C.TEXT },
-
-  chipRow: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', marginTop: 2 },
+  chipRow:     { flexDirection: 'row', gap: 7, flexWrap: 'wrap', marginTop: 2 },
 
   // ── Skills ───────────────────────────────────────────────────────────────
   skillCard: {
     flexDirection: 'row', alignItems: 'center', gap: 9,
     paddingHorizontal: 10, paddingVertical: 10,
+    backgroundColor: C.BG_CARD, borderRadius: 10,
+    borderWidth: 1, borderColor: C.BORDER_SUBTLE,
   },
   skillNumBadge: {
-    width: 38, height: 38, borderRadius: 8,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1.5,
+    width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: C.PRIMARY + '40', backgroundColor: C.BG_STATS,
   },
-  skillNumTxt:   { fontSize: 14, fontWeight: '900', lineHeight: 16 },
-  skillNrgTxt:   { fontSize: 7, fontWeight: '800', letterSpacing: 0.3, marginTop: -2 },
-  skillNameRow:  { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 },
-  skillTypePill: { borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1 },
-  skillTypeTxt:  { fontSize: 7, fontWeight: '900', letterSpacing: 0.5 },
-  skillBody:     { flex: 1 },
-  skillName:     { fontSize: 11, fontWeight: '800', color: C.TEXT },
-  skillDesc:     { fontSize: 10, color: C.TEXT_SOFT, lineHeight: 14 },
+  skillNumTxt:  { fontSize: 14, fontWeight: '900', lineHeight: 16, color: C.PRIMARY_LIGHT },
+  skillNrgTxt:  { fontSize: 7, fontWeight: '800', letterSpacing: 0.3, marginTop: -2, color: C.TEXT_MUTED },
+  skillNameRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 },
+  skillTypePill:{ borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1 },
+  skillTypeTxt: { fontSize: 7, fontWeight: '900', letterSpacing: 0.5 },
+  skillBody:    { flex: 1 },
+  skillName:    { fontSize: 11, fontWeight: '800', color: C.TEXT },
+  skillDesc:    { fontSize: 10, color: C.TEXT_SOFT, lineHeight: 14 },
   skillDmg: {
     borderRadius: 6, paddingHorizontal: 7, paddingVertical: 6,
     alignItems: 'center', justifyContent: 'center', minWidth: 36,
+    borderWidth: 1, borderColor: C.BORDER, backgroundColor: C.BG_STATS,
   },
-  skillDmgTxt: { fontSize: 11, fontWeight: '900' },
+  skillDmgTxt: { fontSize: 11, fontWeight: '900', color: C.TEXT_SOFT },
 
   trumpCard: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 12, paddingVertical: 10,
-    flex: 1,
+    paddingHorizontal: 12, paddingVertical: 10, flex: 1,
+    backgroundColor: C.BG_CARD, borderRadius: 10,
+    borderWidth: 1, borderColor: C.GOLD + '40',
   },
   trumpIconWrap: {
     width: 34, height: 34, borderRadius: 8,
@@ -1132,100 +954,79 @@ const styles = StyleSheet.create({
   },
   trumpLeft:   { flex: 1 },
   trumpLabel:  { fontSize: 8, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 2.5, marginBottom: 1 },
-  trumpName:   { fontSize: 12, fontWeight: '900', letterSpacing: 0.5, marginBottom: 2 },
+  trumpName:   { fontSize: 12, fontWeight: '900', letterSpacing: 0.5, marginBottom: 2, color: C.GOLD },
   trumpEffect: { fontSize: 9, fontWeight: '700', lineHeight: 13, color: C.TEXT_SOFT },
   trumpDmgWrap:{ gap: 1 },
   trumpDmgAll: { fontSize: 7, fontWeight: '900', color: C.GOLD, letterSpacing: 0.8, textAlign: 'center' },
 
   // ── Level ────────────────────────────────────────────────────────────────
-  levelLayout: { flex: 1, flexDirection: 'row', gap: 6 },
-  levelRight:  { flex: 1, gap: 6 },
-
-  levelLeftCard: {
-    width: '38%', padding: 12,
-    alignItems: 'center', justifyContent: 'center', gap: 6,
+  lvCard:    { padding: 12, gap: 8 },
+  lvTopRow:  { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  lvCaption: { fontSize: 8, fontWeight: '800', letterSpacing: 2.5, color: C.TEXT_MUTED },
+  lvNumWrap: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
+  lvNum:     { fontSize: 32, fontWeight: '900', lineHeight: 34, color: C.TEXT },
+  lvDenom:   { fontSize: 12, fontWeight: '700', color: C.TEXT_SOFT, marginBottom: 3 },
+  lvPctWrap: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: C.PRIMARY + '18', borderWidth: 1, borderColor: C.PRIMARY + '40' },
+  lvPct:     { fontSize: 10, fontWeight: '900', color: C.PRIMARY_LIGHT, letterSpacing: 0.4 },
+  lvBarWrap: { width: '100%' },
+  lvBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 7, borderWidth: 1, borderRadius: 8,
+    paddingVertical: 10, paddingHorizontal: 14, width: '100%',
   },
-  levelNumRow:  { flexDirection: 'row', alignItems: 'flex-end', gap: 3 },
-  levelCaption: { fontSize: 8, fontWeight: '800', letterSpacing: 2.5, color: C.TEXT_MUTED },
-  levelBarWrap: { width: '100%' },
+  lvBtnTxt: { fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
 
-  ringLevel: { fontSize: 28, fontWeight: '900', lineHeight: 30, color: C.TEXT },
-  ringMax:   { fontSize: 10, color: C.TEXT_SOFT, fontWeight: '700', marginBottom: 3 },
-
-  lvUpBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    borderWidth: 1, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6,
-    width: '100%', justifyContent: 'center',
+  upgradeRow:   { flex: 1, flexDirection: 'row', gap: 8 },
+  upgradeCard2: { flex: 1, padding: 10, gap: 6 },
+  upgradeHead2: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  upgradeIconBox: {
+    width: 32, height: 32, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
   },
-  lvUpTxt:    { fontSize: 10, fontWeight: '900', color: C.TEXT },
-  lockedHint: { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '700' },
-
-  upgradeCard: { flex: 1, padding: 10, gap: 3 },
-  upgradeTop:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  upgradeName:    { flex: 1, fontSize: 9, fontWeight: '900', letterSpacing: 1, color: C.TEXT },
-  upgradeBadge:   { borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
-  upgradeBadgeTxt:{ fontSize: 9, fontWeight: '900', color: C.TEXT },
-  upgradeSub:     { fontSize: 9, color: C.TEXT_SOFT, lineHeight: 13 },
-  upgradeCost:    { fontSize: 9, fontWeight: '800', color: C.TEXT },
-  upgradeBtn: {
-    marginTop: 4, borderWidth: 1, borderRadius: 5,
-    paddingVertical: 8, alignItems: 'center',
+  upgradeTitle2:  { fontSize: 10, fontWeight: '900', letterSpacing: 0.8, color: C.TEXT, marginBottom: 1 },
+  upgradeSub2:    { fontSize: 8, color: C.TEXT_MUTED, letterSpacing: 0.2 },
+  copyBadge:      { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+  copyBadgeTxt:   { fontSize: 9, fontWeight: '900' },
+  ascStarRow:     { flexDirection: 'row', gap: 1 },
+  ascStar2:       { fontSize: 12 },
+  upgradeDivider: { height: 1, backgroundColor: C.BORDER_SUBTLE },
+  upgradeFoot2:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  upgradeCost2:   { fontSize: 10, fontWeight: '800' },
+  upgradeActionBtn: {
+    borderWidth: 1, borderRadius: 6,
+    paddingVertical: 6, paddingHorizontal: 10,
   },
-  upgradeBtnTxt: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
-  upgradeHint:   { fontSize: 9, color: C.TEXT_SOFT, marginTop: 2 },
-  upgradeErr:    { fontSize: 9, fontWeight: '700', textAlign: 'center', marginTop: 2, color: C.TEXT_SOFT },
-  ascTierRow:    { flexDirection: 'row', gap: 2 },
-  ascStar:       { fontSize: 10 },
+  upgradeActionTxt: { fontSize: 9, fontWeight: '900', letterSpacing: 0.4 },
+  upgradeNote2:     { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '700' },
+  upgradeErr2:      { fontSize: 9, fontWeight: '700', textAlign: 'center', color: C.TEXT_SOFT },
 
-  diffPanel:  { borderRadius: 8, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 7 },
-  diffHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 5 },
-  diffLabel:  { fontSize: 9, fontWeight: '900', letterSpacing: 0.6, color: C.TEXT },
-  diffRow:    { flexDirection: 'row', gap: 8 },
-  diffCell:   { flex: 1, alignItems: 'center' },
-  diffStat:   { fontSize: 9, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT },
-  diffBefore: { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '700' },
-  diffAfter:  { fontSize: 9, fontWeight: '900', color: C.SUCCESS },
-  diffNote:   { fontSize: 9, color: C.TEXT_SOFT, fontStyle: 'italic' },
+  fuseBadgeStats: {
+    flexDirection: 'row', gap: 10, marginTop: 14,
+    paddingTop: 12, borderTopWidth: 1, borderTopColor: C.BORDER_SUBTLE,
+  },
+  fuseBadgeStatCell:   { alignItems: 'center', gap: 2, minWidth: 48 },
+  fuseBadgeStatName:   { fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
+  fuseBadgeStatBefore: { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '700' },
+  fuseBadgeStatAfter:  { fontSize: 10, fontWeight: '900', color: C.SUCCESS },
+  fuseBadgeStatNote:   { fontSize: 9, color: C.TEXT_SOFT, fontStyle: 'italic', marginTop: 10 },
 
   // ── Forge ────────────────────────────────────────────────────────────────
-  galaxyWrap: { flex: 1, borderRadius: 12, overflow: 'hidden', position: 'relative' },
-  galaxyBadge: {
-    position: 'absolute', top: 10, right: 10,
-    alignItems: 'flex-end', gap: 4,
-  },
-  rankChip: {
-    borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3,
-    borderWidth: 1,
-  },
-  rankChipTxt: { fontSize: 11, fontWeight: '900' },
-  fuseHint:    { fontSize: 9, fontWeight: '900', letterSpacing: 1 },
-
-  // ── Forge overlay (buttons on top of video) ──────────────────────────────
-  forgeOverlay: {
-    position: 'absolute', left: 0, right: 0, bottom: 0,
-    paddingHorizontal: 12, paddingTop: 28, paddingBottom: 10,
-  },
-  forgeOverlayRow: {
-    flexDirection: 'row', gap: 10,
-  },
-  forgeOverlayBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
-    borderWidth: 1, borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 8,
-  },
+  galaxyBadge:    { position: 'absolute', top: 10, right: 10, alignItems: 'flex-end', gap: 4 },
+  rankChip:       { borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1 },
+  rankChipTxt:    { fontSize: 11, fontWeight: '900' },
+  fuseHint:       { fontSize: 9, fontWeight: '900', letterSpacing: 1 },
+  forgeOverlay:   { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 12, paddingTop: 28, paddingBottom: 10 },
+  forgeOverlayRow:{ flexDirection: 'row', gap: 10 },
+  forgeOverlayBtn:{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
   forgeOverlayLabel: { fontSize: 10, fontWeight: '900', letterSpacing: 0.8, color: C.TEXT },
-  forgeOverlaySub:   { fontSize: 9,  fontWeight: '600', color: C.TEXT_ON_DARK,           marginTop: 1 },
+  forgeOverlaySub:   { fontSize: 9, fontWeight: '600', color: C.TEXT_ON_DARK, marginTop: 1 },
   forgeOverlayErr:   { fontSize: 9, color: C.GOLD, fontWeight: '700', textAlign: 'center', marginTop: 6 },
 
-  // ── Forge overlay ─────────────────────────────────────────────────────────
   fuseBurst: {
     position: 'absolute', width: 160, height: 160, borderRadius: 80, borderWidth: 2.5,
     top: H / 2 - 80, left: W / 2 - 80,
   },
-  fuseBadgeWrap: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    alignItems: 'center', justifyContent: 'center',
-  },
+  fuseBadgeWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   fuseBadgeCard: {
     borderRadius: 18, overflow: 'hidden', paddingHorizontal: 48, paddingVertical: 24,
     alignItems: 'center', borderWidth: 2, backgroundColor: C.BG_DEEP,

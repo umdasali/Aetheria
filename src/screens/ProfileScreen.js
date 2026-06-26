@@ -21,7 +21,7 @@ const RIGHT_W    = W - LEFT_W - 1;
 const HERO_COLS  = 5;
 const HERO_PAD   = 12;
 const HERO_GAP   = 7;
-const HERO_CARD_W = Math.floor((RIGHT_W - HERO_PAD * 2 - HERO_GAP * (HERO_COLS - 12)) / HERO_COLS);
+const HERO_CARD_W = Math.floor((RIGHT_W - HERO_PAD * 2 - HERO_GAP * (HERO_COLS - 1)) / HERO_COLS);
 const HERO_CARD_H = Math.floor(HERO_CARD_W * 320 / 220);
 
 const GEM_IMG = require('../../assets/currency/gem.png');
@@ -204,6 +204,7 @@ export default function ProfileScreen({ navigation }) {
         keyExtractor={id => id}
         numColumns={HERO_COLS}
         contentContainerStyle={s.heroGrid}
+        columnWrapperStyle={{ gap: HERO_GAP }}
         showsVerticalScrollIndicator={false}
         renderItem={({ item: id }) => {
           const hero = getHeroById(id);
@@ -397,8 +398,6 @@ const s = StyleSheet.create({
   },
   heroCardWrap: {
     width: HERO_CARD_W,
-    marginRight: HERO_GAP,
-    marginBottom: 0,
   },
   heroCard: {
     width: HERO_CARD_W,

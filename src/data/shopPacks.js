@@ -21,22 +21,22 @@ import { C } from '../theme/colors';
 // purchaseHandler refuses any `currency:'iap'` pack (never grants for free).
 // The gem-priced EXCLUSIVE Sovereign pack stays fully playable.
 // Flip to true only after IAP is wired and store products are live.
-export const IAP_ENABLED = false;
+export const IAP_ENABLED = true;
 
 const GEM_IMG  = require('../../assets/currency/gem.png');
 const GOLD_IMG = require('../../assets/currency/gold.png');
 const CHEST_IMG = require('../../assets/currency/chest.png');
 
 export const GEM_PACKS = [
-  { id: 'gems_handful', currency: 'iap', productId: 'com.trumpcard.game.gems_300',  priceLabel: '$1.99',  grant: { gems: 300 },  label: '300 Gems',   image: GEM_IMG,   color: C.PRIMARY_LIGHT },
-  { id: 'gems_stack',   currency: 'iap', productId: 'com.trumpcard.game.gems_980',  priceLabel: '$4.99',  grant: { gems: 980 },  label: '980 Gems',   image: GEM_IMG,   color: C.PRIMARY, tag: 'POPULAR' },
-  { id: 'gems_chest',   currency: 'iap', productId: 'com.trumpcard.game.gems_2100', priceLabel: '$9.99',  grant: { gems: 2100 }, label: '2,100 Gems', image: CHEST_IMG, color: C.SECONDARY, tag: 'BEST VALUE' },
-  { id: 'gems_vault',   currency: 'iap', productId: 'com.trumpcard.game.gems_4500', priceLabel: '$19.99', grant: { gems: 4500 }, label: '4,500 Gems', image: CHEST_IMG, color: C.GOLD },
+  { id: 'gems_handful', currency: 'iap', productId: 'aetheria_legends.unbound.gems_300',  priceLabel: '$1.99',  grant: { gems: 300 },  label: '300 Gems',   image: GEM_IMG,   color: C.PRIMARY_LIGHT },
+  { id: 'gems_stack',   currency: 'iap', productId: 'aetheria_legends.unbound.gems_980',  priceLabel: '$4.99',  grant: { gems: 980 },  label: '980 Gems',   image: GEM_IMG,   color: C.PRIMARY, tag: 'POPULAR' },
+  { id: 'gems_chest',   currency: 'iap', productId: 'aetheria_legends.unbound.gems_2100', priceLabel: '$9.99',  grant: { gems: 2100 }, label: '2,100 Gems', image: CHEST_IMG, color: C.SECONDARY, tag: 'BEST VALUE' },
+  { id: 'gems_vault',   currency: 'iap', productId: 'aetheria_legends.unbound.gems_4500', priceLabel: '$19.99', grant: { gems: 4500 }, label: '4,500 Gems', image: CHEST_IMG, color: C.GOLD },
 ];
 
 export const BUNDLES = [
-  { id: 'starter_bundle',     currency: 'iap', productId: 'com.trumpcard.game.bundle_starter', priceLabel: '$2.99',  grant: { gems: 300,  gold: 30000 },  label: 'Starter Bundle',     sublabel: '300 Gems + 30,000 Gold',   image: GOLD_IMG, color: C.CYAN,    tag: 'STARTER' },
-  { id: 'adventurer_bundle',  currency: 'iap', productId: 'com.trumpcard.game.bundle_adv',     priceLabel: '$9.99',  grant: { gems: 1200, gold: 100000 }, label: 'Adventurer Bundle',  sublabel: '1,200 Gems + 100,000 Gold', image: GOLD_IMG, color: C.GOLD,    tag: 'VALUE' },
+  { id: 'starter_bundle',     currency: 'iap', productId: 'aetheria_legends.unbound.bundle_starter', priceLabel: '$2.99',  grant: { gems: 300,  gold: 30000 },  label: 'Starter Bundle',     sublabel: '300 Gems + 30,000 Gold',   image: GOLD_IMG, color: C.CYAN,    tag: 'STARTER' },
+  { id: 'adventurer_bundle',  currency: 'iap', productId: 'aetheria_legends.unbound.bundle_adv',     priceLabel: '$9.99',  grant: { gems: 1200, gold: 100000 }, label: 'Adventurer Bundle',  sublabel: '1,200 Gems + 100,000 Gold', image: GOLD_IMG, color: C.GOLD,    tag: 'VALUE' },
 ];
 
 export const HERO_PACKS = [

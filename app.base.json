@@ -9,7 +9,7 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.trumpcard.game",
+      "bundleIdentifier": "aetheria-legends.unbound",
       "buildNumber": "1",
       "infoPlist": {
         "CADisableMinimumFrameDurationOnPhone": true
@@ -22,10 +22,11 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.trumpcard.game",
+      "package": "aetheria_legends.unbound",
       "versionCode": 1,
       "permissions": [
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "com.android.vending.BILLING"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",

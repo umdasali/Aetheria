@@ -3,6 +3,8 @@ import 'react-native-gesture-handler';
 // AsyncStorage before the user opens CloudAuthScreen.
 import './src/cloud/supabaseConfig';
 import React, { useEffect, useRef, useState } from 'react';
+import { configure as rcConfigure, setUserId as rcSetUserId, logOut as rcLogOut } from './src/utils/RevenueCatManager';
+import { onAuthChanged } from './src/cloud/auth';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, BackHandler, Modal, View, Text, TouchableOpacity } from 'react-native';
 import { C } from './src/theme/colors';
@@ -51,7 +53,20 @@ export default function App() {
   const [quitVisible, setQuitVisible] = useState(false);
 
   useEffect(() => {
-    NavigationBar.setHidden(true);
+    try { NavigationBar.setHidden(true); } catch (_) {}
+  }, []);
+
+  // Initialize RevenueCat once on startup, then keep its userId in sync with
+  // Supabase auth so purchases are always tied to the correct account.
+  useEffect(() => {
+    const { getUser } = require('./src/cloud/auth');
+    const initialUser = getUser();
+    rcConfigure(initialUser?.id ?? null);
+    const unsub = onAuthChanged(user => {
+      if (user) rcSetUserId(user.id);
+      else rcLogOut();
+    });
+    return unsub;
   }, []);
 
   useEffect(() => {

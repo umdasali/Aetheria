@@ -7,8 +7,10 @@ module.exports = {
     ...expo,
     extra: {
       ...expo.extra,
-      supabaseUrl:     process.env.SUPABASE_URL     ?? '',
-      supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? '',
+      supabaseUrl:          process.env.SUPABASE_URL            ?? '',
+      supabaseAnonKey:      process.env.SUPABASE_ANON_KEY       ?? '',
+      revenueCatAndroidKey: process.env.REVENUECAT_ANDROID_KEY  ?? '',
+      revenueCatIosKey:     process.env.REVENUECAT_IOS_KEY      ?? '',
     },
   },
 };
