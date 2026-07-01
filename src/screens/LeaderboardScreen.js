@@ -9,6 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { fetchTopN, fetchOwnRank, submitScore, getCurrentUserId, CATEGORIES } from '../cloud/leaderboardService';
 import { C } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
+import AudioManager from '../utils/AudioManager';
 
 const { width: W } = Dimensions.get('window');
 
@@ -629,18 +631,18 @@ export default function LeaderboardScreen({ navigation }) {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 4 }]}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }}
           style={s.backBtn}
           activeOpacity={0.75}
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={22} color={C.TEXT} />
+          <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
         </TouchableOpacity>
 
         {/* Title */}
         <View style={s.titleBlock}>
-          <Ionicons name="podium" size={16} color={GOLD.color} />
+          <Ionicons name="podium" size={rs(20)} color={GOLD.color} />
           <Text style={s.title}>RANKINGS</Text>
         </View>
 
@@ -652,13 +654,13 @@ export default function LeaderboardScreen({ navigation }) {
               <TouchableOpacity
                 key={tab.key}
                 style={[s.tabPill, active && s.tabPillActive]}
-                onPress={() => setActiveTab(tab.key)}
+                onPress={() => { AudioManager.playButtonSFX(); setActiveTab(tab.key); }}
                 activeOpacity={0.75}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={`${tab.label} leaderboard`}
               >
-                <Ionicons name={active ? tab.icon : tab.icon + '-outline'} size={12} color={active ? C.PRIMARY_LIGHT : C.TEXT_MUTED} />
+                <Ionicons name={active ? tab.icon : tab.icon + '-outline'} size={rs(16)} color={active ? C.PRIMARY_LIGHT : C.TEXT_MUTED} />
                 <Text style={[s.tabPillTxt, active && s.tabPillTxtActive]}>{tab.label}</Text>
               </TouchableOpacity>
             );
@@ -666,7 +668,7 @@ export default function LeaderboardScreen({ navigation }) {
         </View>
 
         <TouchableOpacity
-          onPress={() => loadLeaderboard(true)}
+          onPress={() => { AudioManager.playButtonSFX(); loadLeaderboard(true); }}
           style={s.refreshBtn}
           activeOpacity={0.75}
           disabled={loading}
@@ -675,7 +677,7 @@ export default function LeaderboardScreen({ navigation }) {
         >
           {loading
             ? <ActivityIndicator size="small" color={C.TEXT_ON_DARK} />
-            : <Ionicons name="refresh-outline" size={18} color={C.TEXT_ON_DARK} />
+            : <Ionicons name="refresh-outline" size={rs(22)} color={C.TEXT_ON_DARK} />
           }
         </TouchableOpacity>
       </LinearGradient>
@@ -724,7 +726,7 @@ export default function LeaderboardScreen({ navigation }) {
                   still have data to display underneath. */}
               {error && rows.length > 0 && (
                 <View style={s.errBanner}>
-                  <Ionicons name="cloud-offline-outline" size={12} color={C.DANGER} />
+                  <Ionicons name="cloud-offline-outline" size={rs(16)} color={C.DANGER} />
                   <Text style={s.errBannerTxt} numberOfLines={1}>Couldn’t refresh — showing saved ranks</Text>
                 </View>
               )}
@@ -767,27 +769,27 @@ const s = StyleSheet.create({
   // Header
   header: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, paddingBottom: 10,
+    paddingHorizontal: rs(14), paddingBottom: rs(10),
     borderBottomWidth: 1, borderBottomColor: C.GLASS_6,
-    gap: 12,
+    gap: rs(12),
   },
-  backBtn:   { padding: 6 },
-  titleBlock:{ flexDirection: 'row', alignItems: 'center', gap: 7 },
-  title:     { fontSize: 16, fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
-  refreshBtn:{ padding: 8 },
+  backBtn:   { padding: rs(6) },
+  titleBlock:{ flexDirection: 'row', alignItems: 'center', gap: rs(7) },
+  title:     { fontSize: rf(16), fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
+  refreshBtn:{ padding: rs(8) },
 
-  tabRow: { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  tabRow: { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: rs(6) },
   tabPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 20, borderWidth: 1,
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    paddingHorizontal: rs(12), paddingVertical: rs(6),
+    borderRadius: rs(20), borderWidth: 1,
     borderColor: C.BORDER, backgroundColor: C.GLASS_3,
   },
   tabPillActive: {
     backgroundColor: C.PRIMARY + '33',
     borderColor: C.PRIMARY_LIGHT + '99',
   },
-  tabPillTxt:       { fontSize: 9, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 0.8 },
+  tabPillTxt:       { fontSize: rf(12), fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 0.8 },
   tabPillTxtActive: { color: C.PRIMARY_LIGHT },
 
   // Body
@@ -795,17 +797,17 @@ const s = StyleSheet.create({
 
   // Left panel
   leftPanel: {
-    width: LEFT_W, padding: 12, paddingBottom: 14, gap: 9, overflow: 'hidden',
+    width: LEFT_W, padding: rs(12), paddingBottom: rs(14), gap: rs(9), overflow: 'hidden',
   },
   sectionLbl: {
-    fontSize: 7, fontWeight: '900', color: C.TEXT_DISABLED,
-    letterSpacing: 2.5, marginBottom: 2, marginLeft: 2,
+    fontSize: rf(12), fontWeight: '900', color: C.TEXT_DISABLED,
+    letterSpacing: 2.5, marginBottom: rs(2), marginLeft: rs(2),
   },
-  runnersRow: { flexDirection: 'row', gap: 8, flex: 1 },
+  runnersRow: { flexDirection: 'row', gap: rs(8), flex: 1 },
 
-  divider: { flexDirection: 'row', alignItems: 'center', gap: 8, marginVertical: 2 },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: rs(8), marginVertical: rs(2) },
   dividerLine: { flex: 1, height: 1, backgroundColor: C.PRIMARY + '44' },
-  dividerTxt:  { fontSize: 7, fontWeight: '900', color: C.PRIMARY + 'BB', letterSpacing: 2 },
+  dividerTxt:  { fontSize: rf(12), fontWeight: '900', color: C.PRIMARY + 'BB', letterSpacing: 2 },
 
   // Separator
   separator: { width: 1, backgroundColor: C.BORDER_SUBTLE, marginVertical: 12 },
@@ -814,28 +816,28 @@ const s = StyleSheet.create({
   rightPanel: { flex: 1 },
 
   colHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 14, paddingVertical: 8,
+    flexDirection: 'row', alignItems: 'center', gap: rs(10),
+    paddingHorizontal: rs(14), paddingVertical: rs(8),
     backgroundColor: C.BG_STATS,
     borderBottomWidth: 1, borderBottomColor: C.BORDER_SUBTLE,
   },
-  colHdr: { fontSize: 8, fontWeight: '900', color: C.TEXT_DISABLED, letterSpacing: 1.5 },
+  colHdr: { fontSize: rf(12), fontWeight: '900', color: C.TEXT_DISABLED, letterSpacing: 1.5 },
 
   // Error banner (refresh failed but data is still shown)
   errBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 14, paddingVertical: 6,
+    flexDirection: 'row', alignItems: 'center', gap: rs(6),
+    paddingHorizontal: rs(14), paddingVertical: rs(6),
     backgroundColor: C.DANGER + '1A',
     borderBottomWidth: 1, borderBottomColor: C.DANGER + '44',
   },
-  errBannerTxt: { flex: 1, fontSize: 9, fontWeight: '700', color: C.DANGER, letterSpacing: 0.5 },
+  errBannerTxt: { flex: 1, fontSize: rf(12), fontWeight: '700', color: C.DANGER, letterSpacing: 0.5 },
 
   // Empty state
   emptyWrap: {
-    flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24,
+    flex: 1, alignItems: 'center', justifyContent: 'center', gap: rs(8), padding: rs(24),
   },
-  emptyIcon:  { fontSize: 40 },
-  emptyTitle: { fontSize: 13, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 1 },
-  emptyBody:  { fontSize: 10, color: C.TEXT_DISABLED, textAlign: 'center', lineHeight: 16 },
+  emptyIcon:  { fontSize: rf(40) },
+  emptyTitle: { fontSize: rf(14), fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 1 },
+  emptyBody:  { fontSize: rf(12), color: C.TEXT_DISABLED, textAlign: 'center', lineHeight: rf(18) },
 
 });

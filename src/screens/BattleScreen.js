@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Animated, Image, Modal, Alert, Dimensions, BackHandler,
+  Animated, Image, Modal, Alert, Dimensions, BackHandler, useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +16,7 @@ import { stageGoldReward } from '../data/story';
 import { ASCENSION_STAT_MULT } from '../data/ascensionItems';
 import { isBossFloor } from '../data/towerData';
 import { C } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 import {
   calculateDamage, applyTrumpCard, applyHealSkill,
   allDefeated, getSmartAIAction,
@@ -135,13 +136,14 @@ const mkUnit = (raw) => ({
 });
 
 // Status effect display config (colors use C tokens)
+// overlayTint: absoluteFill card tint while active. pulseMin/Max/Ms: anim range + half-period.
 const STATUS_DISPLAY = {
-  burn:    { label: 'BRN', color: C.WARNING },
-  poison:  { label: 'PSN', color: C.SUCCESS },
-  chill:   { label: 'CHI', color: C.CYAN    },
-  shatter: { label: 'DEF-', color: C.DANGER  },
-  weaken:  { label: 'ATK-', color: C.PRIMARY },
-  stun:    { label: '⚡STN', color: C.GOLD   },
+  burn:    { label: 'BRN',  icon: '🔥', color: C.WARNING,  overlayTint: 'rgba(217,119,6,0.22)',   pulseMin: 0.15, pulseMax: 0.55, pulseMs: 550  },
+  poison:  { label: 'PSN',  icon: '☠',  color: C.SUCCESS,  overlayTint: 'rgba(5,150,105,0.18)',   pulseMin: 0.12, pulseMax: 0.38, pulseMs: 800  },
+  chill:   { label: 'CHI',  icon: '❄',  color: C.CYAN,     overlayTint: 'rgba(8,145,178,0.16)',   pulseMin: 0.10, pulseMax: 0.30, pulseMs: 1100 },
+  shatter: { label: 'DEF-', icon: '💢', color: C.DANGER,   overlayTint: 'rgba(220,38,38,0.14)',   pulseMin: 0.10, pulseMax: 0.28, pulseMs: 900  },
+  weaken:  { label: 'ATK-', icon: '⬇',  color: C.PRIMARY,  overlayTint: 'rgba(124,58,237,0.16)',  pulseMin: 0.10, pulseMax: 0.28, pulseMs: 950  },
+  stun:    { label: 'STN',  icon: '⚡', color: C.GOLD,     overlayTint: 'rgba(217,119,6,0.26)',   pulseMin: 0.25, pulseMax: 0.65, pulseMs: 380  },
 };
 
 const mkAnims = () =>
@@ -204,6 +206,14 @@ export default function BattleScreen({ navigation, route }) {
   const dungeonMode    = route?.params?.dungeonMode    || false;
   const dungeonId      = route?.params?.dungeonId      || null;
   const dungeonRewards = route?.params?.dungeonRewards || null;
+
+  // Live screen dimensions — recalculated on resize (Expo web, tablet rotation, etc.)
+  const { width: dynW, height: dynH } = useWindowDimensions();
+  const dynSideW      = Math.floor(dynW / 2) - SIDE_PAD * 2;
+  const dynCardW      = Math.floor((dynSideW - CARD_GAP * 2) / 3 * 0.76);
+  const dynCardMargin = Math.max(12, Math.round(dynSideW * 0.045));
+  const dynCardH      = Math.min(Math.max(60, Math.floor(dynH * 0.36)), 200);
+  const dynPillH      = Math.min(Math.max(38, Math.floor(dynH * 0.10)), 62);
 
   const battleBg = useMemo(
     () => getBattleBg(dungeonMode, dungeonId, towerMode, towerFloor, chapterId),
@@ -494,6 +504,9 @@ export default function BattleScreen({ navigation, route }) {
 
   useEffect(() => {
     if (!isEnemyTurn || battleResult) return;
+    // Don't start the enemy turn while a Trump Card cut-in is still playing —
+    // wait for onDone to clear trumpCutIn, then this effect re-fires cleanly.
+    if (trumpCutIn) return;
     if (aiRunning.current) return;
 
     aiRunning.current = true;
@@ -511,11 +524,20 @@ export default function BattleScreen({ navigation, route }) {
       const dotMsgs = [];
       curEnemies = curEnemies.map((e, i) => {
         if (e.currentHp <= 0 || !(e.statusEffects || []).length) return e;
+        const dotType = (e.statusEffects || []).find(fx => fx.type === 'burn') ? 'burn'
+                      : (e.statusEffects || []).find(fx => fx.type === 'poison') ? 'poison'
+                      : null;
         const { unit, dotDamage, messages } = processStatusEffects(e);
         dotMsgs.push(...messages);
         if (dotDamage > 0) {
           setTimeout(() => triggerHit(enemyAnims, i), 60);
-          return { ...unit, lastDamage: dotDamage, lastCrit: false, damageKey: (e.damageKey || 0) + 1 };
+          return {
+            ...unit,
+            lastDotDamage: dotDamage,
+            dotKey:        (e.dotKey || 0) + 1,
+            dotType,
+            lastDamage:    0,
+          };
         }
         return unit;
       });
@@ -669,10 +691,11 @@ export default function BattleScreen({ navigation, route }) {
     }, aiDelay);
 
     return () => clearTimeout(timer);
-  // Intentional stale closure: only re-trigger when the turn flips or the battle ends.
+  // Intentional stale closure: only re-trigger when the turn flips, the battle ends,
+  // or the Trump Card cut-in clears (trumpCutIn: non-null → null triggers the AI start).
   // Including playerTeam/enemyTeam would re-fire mid-turn as those are mutated here.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEnemyTurn, battleResult]);
+  }, [isEnemyTurn, battleResult, trumpCutIn]);
 
   // ── Player action ─────────────────────────────────────────────────────────
 
@@ -911,7 +934,7 @@ export default function BattleScreen({ navigation, route }) {
   if (!hydrated) {
     return (
       <LinearGradient colors={C.GRAD_BG} style={[S.root, S.center]}>
-        <Ionicons name="sync" size={32} color={C.PRIMARY_LIGHT} />
+        <Ionicons name="sync" size={rs(32)} color={C.PRIMARY_LIGHT} />
       </LinearGradient>
     );
   }
@@ -921,7 +944,7 @@ export default function BattleScreen({ navigation, route }) {
   if (!playerTeam.length) {
     return (
       <LinearGradient colors={C.GRAD_BG} style={[S.root, S.center]}>
-        <Ionicons name="warning" size={44} color={C.GOLD} />
+        <Ionicons name="warning" size={rs(44)} color={C.GOLD} />
         <Text style={S.warnTitle}>No Team Selected!</Text>
         <Text style={S.warnSub}>Add heroes to your team before battling.</Text>
         <TouchableOpacity style={S.goBackBtn} onPress={() => navigation.goBack()}>
@@ -944,7 +967,7 @@ export default function BattleScreen({ navigation, route }) {
 
   return (
     <View style={S.root}>
-      <Image source={battleBg} style={[StyleSheet.absoluteFill, { width: '100%', height: SH }]} resizeMode="cover" />
+      <Image source={battleBg} style={StyleSheet.absoluteFill} resizeMode="cover" />
       <LinearGradient colors={C.GRAD_BATTLE} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={S.safe} edges={['top', 'bottom', 'left', 'right']}>
@@ -979,7 +1002,7 @@ export default function BattleScreen({ navigation, route }) {
             accessibilityRole="button"
             accessibilityLabel={`Battle speed ${speed} times, tap to change`}
           >
-            <Ionicons name="play-forward" size={11} color={speed > 1 ? C.GOLD : C.TEXT_MUTED} />
+            <Ionicons name="play-forward" size={rs(19)} color={speed > 1 ? C.GOLD : C.TEXT_MUTED} />
             <Text style={[S.speedBtnTxt, speed > 1 && { color: C.GOLD }]}>{speed}×</Text>
           </TouchableOpacity>
 
@@ -1026,13 +1049,13 @@ export default function BattleScreen({ navigation, route }) {
               </View>
               {enemyEnergy >= ENEMY_SKILL_COSTS[0] && (
                 <View style={S.enTeamIntent}>
-                  <Ionicons name="flash" size={9} color={C.GOLD} />
+                  <Ionicons name="flash" size={rs(18)} color={C.GOLD} />
                   <Text style={S.enTeamIntentTxt}>SKILL</Text>
                 </View>
               )}
             </View>
 
-            <View style={S.cardRow}>
+            <View style={[S.cardRow, { gap: dynCardMargin }]}>
               {enemyTeam.map((e, i) => (
                 <BattleCard
                   key={`e${i}`}
@@ -1046,6 +1069,8 @@ export default function BattleScreen({ navigation, route }) {
                   onPress={e.currentHp > 0 && !inputLocked ? () => setSelectedEnemy(i) : undefined}
                   accessibilityLabel={e.currentHp > 0 && !inputLocked ? `Target ${e.name}` : undefined}
                   accessibilityRole="button"
+                  cardW={dynCardW}
+                  cardH={dynCardH}
                 />
               ))}
             </View>
@@ -1057,7 +1082,7 @@ export default function BattleScreen({ navigation, route }) {
           {/* — Player side — */}
           <View style={S.teamSide}>
             <Text style={[S.teamLabel, { color: C.PRIMARY }]}>YOUR TEAM</Text>
-            <View style={S.cardRow}>
+            <View style={[S.cardRow, { gap: dynCardMargin }]}>
               {playerTeam.map((h, i) => (
                 <BattleCard
                   key={`p${i}`}
@@ -1069,7 +1094,6 @@ export default function BattleScreen({ navigation, route }) {
                   flashAnim={playerAnims[i]?.flash}
                   scaleAnim={playerAnims[i]?.scale}
                   lungeAnim={playerAnims[i]?.lungeX}
-                  // tap a living non-active hero to switch who attacks this turn
                   canSwitch={!isEnemyTurn && !inputLocked && h.currentHp > 0 && i !== currentTurnIdx}
                   onPress={
                     !isEnemyTurn && !inputLocked && h.currentHp > 0 && i !== currentTurnIdx
@@ -1082,6 +1106,8 @@ export default function BattleScreen({ navigation, route }) {
                       : undefined
                   }
                   accessibilityRole="button"
+                  cardW={dynCardW}
+                  cardH={dynCardH}
                 />
               ))}
             </View>
@@ -1118,6 +1144,7 @@ export default function BattleScreen({ navigation, route }) {
                       disabled={inputLocked}
                       accessibilityLabel="Normal attack"
                       accessibilityRole="button"
+                      pillH={dynPillH}
                     />
 
                     {skill0 ? (
@@ -1132,6 +1159,7 @@ export default function BattleScreen({ navigation, route }) {
                         dimmed={energy < skill0.cost * 20}
                         accessibilityLabel={`Use ${skill0.name}`}
                         accessibilityRole="button"
+                        pillH={dynPillH}
                       />
                     ) : (
                       <PillBtn
@@ -1141,6 +1169,7 @@ export default function BattleScreen({ navigation, route }) {
                         onPress={() => {}}
                         disabled
                         dimmed
+                        pillH={dynPillH}
                       />
                     )}
 
@@ -1156,6 +1185,7 @@ export default function BattleScreen({ navigation, route }) {
                         dimmed={energy < skill1.cost * 20}
                         accessibilityLabel={`Use ${skill1.name}`}
                         accessibilityRole="button"
+                        pillH={dynPillH}
                       />
                     ) : null}
 
@@ -1169,6 +1199,7 @@ export default function BattleScreen({ navigation, route }) {
                       glow={ultiReady}
                       accessibilityLabel="Use Trump Card"
                       accessibilityRole="button"
+                      pillH={dynPillH}
                     />
                   </View>
                 </>
@@ -1251,22 +1282,43 @@ const _fxKey = (arr) => (arr || []).map(fx => `${fx.type}:${fx.duration}`).join(
 // affect any card's appearance, so they must NOT cause a re-render.
 function _cardEqual(prev, next) {
   return (
-    prev.unit.currentHp  === next.unit.currentHp  &&
-    prev.unit.damageKey  === next.unit.damageKey   &&
-    prev.unit.lastDamage === next.unit.lastDamage  &&
-    prev.unit.lastCrit   === next.unit.lastCrit    &&
-    prev.unit.healKey    === next.unit.healKey     &&
-    prev.unit.shield     === next.unit.shield      &&
-    prev.unit.stunned    === next.unit.stunned     &&
-    prev.isActive        === next.isActive         &&
-    prev.isSelected      === next.isSelected       &&
-    prev.canSwitch       === next.canSwitch        &&
-    prev.side            === next.side             &&
+    prev.unit.currentHp     === next.unit.currentHp     &&
+    prev.unit.damageKey     === next.unit.damageKey      &&
+    prev.unit.lastDamage    === next.unit.lastDamage     &&
+    prev.unit.lastCrit      === next.unit.lastCrit       &&
+    prev.unit.healKey       === next.unit.healKey        &&
+    prev.unit.dotKey        === next.unit.dotKey         &&
+    prev.unit.shield        === next.unit.shield         &&
+    prev.unit.stunned       === next.unit.stunned        &&
+    prev.isActive           === next.isActive            &&
+    prev.isSelected         === next.isSelected          &&
+    prev.canSwitch          === next.canSwitch           &&
+    prev.side               === next.side                &&
+    prev.cardW              === next.cardW               &&
+    prev.cardH              === next.cardH               &&
     _fxKey(prev.unit.statusEffects) === _fxKey(next.unit.statusEffects)
   );
 }
 
-const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSelected, factionColor, shakeAnim, flashAnim, scaleAnim, lungeAnim, onPress, canSwitch, accessibilityLabel, accessibilityRole }) {
+// Spring-in badge — each badge pops to scale(1) from scale(0) when first mounted.
+function BadgePill({ cfg, label }) {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(scaleAnim, { toValue: 1, friction: 6, tension: 140, useNativeDriver: true }).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <View style={[S.statusEffectBadge, { backgroundColor: cfg.color + '33', borderColor: cfg.color }]}>
+        <Text style={[S.statusEffectText, { color: cfg.color }]}>{label}</Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSelected, factionColor, shakeAnim, flashAnim, scaleAnim, lungeAnim, onPress, canSwitch, accessibilityLabel, accessibilityRole, cardW: propCardW, cardH: propCardH }) {
+  const cardW = propCardW ?? CARD_W;
+  const cardH = propCardH ?? CARD_H;
   // Stable fallback Animated values so we never create new objects in render
   const _shake  = useRef(new Animated.Value(0)).current;
   const _scale  = useRef(new Animated.Value(1)).current;
@@ -1320,26 +1372,25 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hpRatio]);
 
-  // Primary status → glow color. Stun wins; otherwise the first active effect.
-  const stunned     = (unit.stunned || 0) > 0;
-  const primaryFx   = (unit.statusEffects || [])[0];
-  const statusColor = stunned
-    ? STATUS_DISPLAY.stun.color
-    : (primaryFx && STATUS_DISPLAY[primaryFx.type] ? STATUS_DISPLAY[primaryFx.type].color : null);
+  // Primary status → config. Stun wins; otherwise the first active effect.
+  const stunned       = (unit.stunned || 0) > 0;
+  const primaryFx     = (unit.statusEffects || [])[0];
+  const primaryFxType = stunned ? 'stun' : (primaryFx?.type ?? null);
+  const primaryFxCfg  = primaryFxType ? STATUS_DISPLAY[primaryFxType] : null;
+  const statusColor   = primaryFxCfg?.color ?? null;
 
-  // Pulsing status aura — loops opacity while a status is active. This is a pure
-  // overlay; if a frame is ever dropped the card underneath stays fully visible.
+  // Pulsing tint overlay — per-status timing and opacity range.
   const glowPulse = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    if (!statusColor || defeated) { glowPulse.setValue(0); return; }
-    glowPulse.setValue(0.3);
+    if (!primaryFxCfg || defeated) { glowPulse.setValue(0); return; }
+    glowPulse.setValue(primaryFxCfg.pulseMin);
     const loop = Animated.loop(Animated.sequence([
-      Animated.timing(glowPulse, { toValue: 0.7,  duration: 720, useNativeDriver: true }),
-      Animated.timing(glowPulse, { toValue: 0.25, duration: 720, useNativeDriver: true }),
+      Animated.timing(glowPulse, { toValue: primaryFxCfg.pulseMax, duration: primaryFxCfg.pulseMs, useNativeDriver: true }),
+      Animated.timing(glowPulse, { toValue: primaryFxCfg.pulseMin, duration: primaryFxCfg.pulseMs, useNativeDriver: true }),
     ]));
     loop.start();
     return () => loop.stop();
-  }, [statusColor, defeated, glowPulse]);
+  }, [primaryFxType, defeated, glowPulse]);
 
   // Stun stars — a small cluster that spins above the head while stunned.
   const stunSpin = useRef(new Animated.Value(0)).current;
@@ -1353,6 +1404,37 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
     return () => loop.stop();
   }, [stunned, defeated, stunSpin]);
   const stunRotate = stunSpin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+
+  // One-shot colored flash when a new status is applied to this unit.
+  const statusFlash      = useRef(new Animated.Value(0)).current;
+  const statusFlashColor = useRef(null);
+  const prevFxKey        = useRef('');
+  const currentFxKey     = _fxKey(unit.statusEffects);
+  useEffect(() => {
+    const prev = prevFxKey.current;
+    prevFxKey.current = currentFxKey;
+    if (!currentFxKey || defeated) return;
+    const prevCount = prev.split(',').filter(Boolean).length;
+    const currCount = currentFxKey.split(',').filter(Boolean).length;
+    if (currCount > prevCount && (unit.statusEffects || []).length > 0) {
+      const newest = unit.statusEffects[unit.statusEffects.length - 1];
+      const cfg = newest ? STATUS_DISPLAY[newest.type] : null;
+      if (cfg) {
+        statusFlashColor.current = cfg.overlayTint;
+        statusFlash.setValue(1);
+        Animated.timing(statusFlash, { toValue: 0, duration: 350, useNativeDriver: true }).start();
+        AudioManager.playStatusSFX(newest.type);
+      }
+    }
+  }, [currentFxKey, defeated]);
+
+  // One-shot green flash when a heal lands.
+  const healFlash = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!unit.healKey) return;
+    healFlash.setValue(0.85);
+    Animated.timing(healFlash, { toValue: 0, duration: 500, useNativeDriver: true }).start();
+  }, [unit.healKey]);
 
   const imgSrc = side === 'enemy'
     ? (unit.imageKey && ENEMY_IMAGES[unit.imageKey] ? ENEMY_IMAGES[unit.imageKey] : null)
@@ -1374,7 +1456,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
       onPress={onPress}
       disabled={!onPress}
       activeOpacity={0.85}
-      style={S.cardTouch}
+      style={[S.cardTouch, { width: cardW }]}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={onPress ? (accessibilityRole ?? 'button') : undefined}
     >
@@ -1385,7 +1467,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
       </Text>
 
       {/* HP label + bar */}
-      <View style={S.hpBarRow}>
+      <View style={[S.hpBarRow, { width: cardW }]}>
         <Text style={S.hpLabel}>HP</Text>
         <View style={S.hpBarBg}>
           {/* Ghost trail — lingers at old HP, then catches up */}
@@ -1402,6 +1484,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
       <Animated.View style={[
         S.card,
         {
+          width: cardW, height: cardH,
           borderColor: cardBorderColor,
           borderWidth: isSelected || isActive ? 2.5 : 1,
           opacity: deathAlpha,
@@ -1418,18 +1501,38 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           <Image source={imgSrc} style={S.cardImg} resizeMode="cover" />
         ) : (
           <View style={[S.cardImg, S.cardImgFb]}>
-            <Text style={{ fontSize: 28 }}>{side === 'enemy' ? '👹' : '⚔️'}</Text>
+            <Text style={{ fontSize: rf(28) }}>{side === 'enemy' ? '👹' : '⚔️'}</Text>
           </View>
         )}
 
-        {/* Pulsing status aura — color keyed to the active status effect */}
+        {/* Pulsing filled tint — color + opacity keyed to the primary status effect */}
+        {primaryFxCfg && !defeated && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              { borderRadius: 10, backgroundColor: primaryFxCfg.overlayTint, opacity: glowPulse },
+            ]}
+          />
+        )}
+        {/* Thin border ring on top of the tint for extra definition */}
         {statusColor && !defeated && (
           <Animated.View
             pointerEvents="none"
             style={[
               StyleSheet.absoluteFill,
-              { borderRadius: 10, borderWidth: 2.5, borderColor: statusColor, opacity: glowPulse },
+              { borderRadius: 10, borderWidth: 1.5, borderColor: statusColor, opacity: glowPulse },
             ]}
+          />
+        )}
+
+        {/* Status particle VFX — sparks/drops/crystals/shards per effect type */}
+        {primaryFxCfg && !defeated && (
+          <StatusParticles
+            type={primaryFxType}
+            cfg={primaryFxCfg}
+            cardW={cardW}
+            cardH={cardH}
           />
         )}
 
@@ -1451,6 +1554,27 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           ]} />
         )}
 
+        {/* Status application flash — one-shot tint on debuff land */}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { borderRadius: 10, backgroundColor: statusFlashColor.current ?? 'transparent', opacity: statusFlash },
+          ]}
+        />
+
+        {/* Heal flash — bright green glow when HP is restored */}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { borderRadius: 10, backgroundColor: 'rgba(16,185,129,0.60)', opacity: healFlash },
+          ]}
+        />
+
+        {/* Heal burst — rising sparkle particles (same pattern as FloatingHeal) */}
+        <HealBurst trigger={unit.healKey} imgH={cardH} />
+
         {/* Active faction ring */}
         {isActive && (
           <View style={[S.activeRing, { borderColor: factionColor || C.PRIMARY }]} />
@@ -1464,7 +1588,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
         {/* Shield badge */}
         {(unit.shield || 0) > 0 && (
           <View style={S.shieldBadge}>
-            <Ionicons name="shield" size={9} color={C.CYAN} />
+            <Ionicons name="shield" size={rs(18)} color={C.CYAN} />
           </View>
         )}
 
@@ -1485,32 +1609,33 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
         {/* Status effect badges (statusEffects array + stun counter) */}
         {((unit.statusEffects || []).length > 0 || (unit.stunned || 0) > 0) && !defeated && (
           <View style={S.statusEffectRow}>
-            {(unit.stunned || 0) > 0 && (() => {
-              const d = STATUS_DISPLAY.stun;
-              return (
-                <View style={[S.statusEffectBadge, { backgroundColor: d.color + '33', borderColor: d.color }]}>
-                  <Text style={[S.statusEffectText, { color: d.color }]}>
-                    {unit.stunned > 1 ? `${d.label}·${unit.stunned}` : d.label}
-                  </Text>
-                </View>
-              );
-            })()}
-            {unit.statusEffects.map((fx, i) => {
+            {(unit.stunned || 0) > 0 && (
+              <BadgePill
+                key="stun"
+                cfg={STATUS_DISPLAY.stun}
+                label={`${STATUS_DISPLAY.stun.icon} ${STATUS_DISPLAY.stun.label}·${unit.stunned}`}
+              />
+            )}
+            {(unit.statusEffects || []).map((fx, i) => {
               const d = STATUS_DISPLAY[fx.type];
               if (!d) return null;
               return (
-                <View key={i} style={[S.statusEffectBadge, { backgroundColor: d.color + '33', borderColor: d.color }]}>
-                  <Text style={[S.statusEffectText, { color: d.color }]}>{d.label}</Text>
-                </View>
+                <BadgePill
+                  key={`${fx.type}-${i}`}
+                  cfg={d}
+                  label={`${d.icon} ${d.label}·${fx.duration}`}
+                />
               );
             })}
           </View>
         )}
 
         {/* Floating damage */}
-        <FloatingDamage value={unit.lastDamage} isCrit={unit.lastCrit} trigger={unit.damageKey} />
+        <FloatingDamage value={unit.lastDamage} isCrit={unit.lastCrit} trigger={unit.damageKey} imgH={cardH} />
         {/* Floating heal */}
-        <FloatingHeal value={unit.lastHeal} trigger={unit.healKey} />
+        <FloatingHeal value={unit.lastHeal} trigger={unit.healKey} imgH={cardH} />
+        {/* Floating DOT damage — distinct color + icon, rises from bottom */}
+        <FloatingStatusDamage value={unit.lastDotDamage} dotType={unit.dotType} trigger={unit.dotKey} imgH={cardH} />
 
         {/* Name strip */}
         <View style={S.cardNameStrip}>
@@ -1520,7 +1645,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
         {/* Defeated overlay */}
         {defeated && (
           <View style={S.defeatedOv}>
-            <Ionicons name="close-circle" size={26} color={C.DANGER} />
+            <Ionicons name="close-circle" size={rs(26)} color={C.DANGER} />
           </View>
         )}
       </Animated.View>
@@ -1530,10 +1655,11 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
 
 // ─── FloatingDamage ───────────────────────────────────────────────────────────
 
-const FloatingDamage = React.memo(function FloatingDamage({ value, isCrit, trigger }) {
+const FloatingDamage = React.memo(function FloatingDamage({ value, isCrit, trigger, imgH }) {
   const yAnim  = useRef(new Animated.Value(0)).current;
   const opAnim = useRef(new Animated.Value(0)).current;
   const scAnim = useRef(new Animated.Value(1)).current;
+  const _imgH  = imgH ?? IMG_H;
 
   useEffect(() => {
     if (!trigger || !value) return;
@@ -1541,7 +1667,7 @@ const FloatingDamage = React.memo(function FloatingDamage({ value, isCrit, trigg
     opAnim.setValue(1);
     scAnim.setValue(isCrit ? 1.4 : 1.15);
     Animated.parallel([
-      Animated.timing(yAnim,  { toValue: -(IMG_H * 0.7), duration: 820, useNativeDriver: true }),
+      Animated.timing(yAnim,  { toValue: -(_imgH * 0.7), duration: 820, useNativeDriver: true }),
       Animated.timing(scAnim, { toValue: 1.0, duration: 200, useNativeDriver: true }),
       Animated.sequence([
         Animated.delay(440),
@@ -1555,7 +1681,7 @@ const FloatingDamage = React.memo(function FloatingDamage({ value, isCrit, trigg
     <Animated.Text style={[
       S.floatDmg,
       {
-        fontSize:  isCrit ? 18 : 13,
+        fontSize:  isCrit ? rf(18) : rf(13),
         color:     isCrit ? C.GOLD : C.TEXT,
         transform: [{ translateY: yAnim }, { scale: scAnim }],
         opacity:   opAnim,
@@ -1564,20 +1690,21 @@ const FloatingDamage = React.memo(function FloatingDamage({ value, isCrit, trigg
       {isCrit ? '💥' : ''}-{value}{isCrit ? '!' : ''}
     </Animated.Text>
   );
-}, (prev, next) => prev.trigger === next.trigger);
+}, (prev, next) => prev.trigger === next.trigger && prev.imgH === next.imgH);
 
 // ─── FloatingHeal ─────────────────────────────────────────────────────────────
 
-const FloatingHeal = React.memo(function FloatingHeal({ value, trigger }) {
+const FloatingHeal = React.memo(function FloatingHeal({ value, trigger, imgH }) {
   const yAnim  = useRef(new Animated.Value(0)).current;
   const opAnim = useRef(new Animated.Value(0)).current;
+  const _imgH  = imgH ?? IMG_H;
 
   useEffect(() => {
     if (!trigger || !value) return;
     yAnim.setValue(0);
     opAnim.setValue(1);
     Animated.parallel([
-      Animated.timing(yAnim,  { toValue: -(IMG_H * 0.55), duration: 750, useNativeDriver: true }),
+      Animated.timing(yAnim,  { toValue: -(_imgH * 0.55), duration: 750, useNativeDriver: true }),
       Animated.sequence([
         Animated.delay(350),
         Animated.timing(opAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
@@ -1594,7 +1721,249 @@ const FloatingHeal = React.memo(function FloatingHeal({ value, trigger }) {
       +{value}
     </Animated.Text>
   );
-}, (prev, next) => prev.trigger === next.trigger);
+}, (prev, next) => prev.trigger === next.trigger && prev.imgH === next.imgH);
+
+// ─── FloatingStatusDamage ─────────────────────────────────────────────────────
+// DOT ticks (burn / poison) rise from the bottom of the card in their status color.
+
+const FloatingStatusDamage = React.memo(function FloatingStatusDamage({ value, dotType, trigger, imgH }) {
+  const yAnim  = useRef(new Animated.Value(0)).current;
+  const opAnim = useRef(new Animated.Value(0)).current;
+  const _imgH  = imgH ?? IMG_H;
+
+  useEffect(() => {
+    if (!trigger || !value) return;
+    yAnim.setValue(0);
+    opAnim.setValue(1);
+    Animated.parallel([
+      Animated.timing(yAnim,  { toValue: -(_imgH * 0.5), duration: 780, useNativeDriver: true }),
+      Animated.sequence([
+        Animated.delay(380),
+        Animated.timing(opAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
+      ]),
+    ]).start();
+  }, [trigger]);
+
+  if (!value) return null;
+  const cfg   = dotType ? STATUS_DISPLAY[dotType] : null;
+  const icon  = cfg?.icon ?? '💧';
+  const color = cfg?.color ?? C.TEXT_MUTED;
+  return (
+    <Animated.Text style={[
+      S.floatDot,
+      { color, transform: [{ translateY: yAnim }], opacity: opAnim },
+    ]}>
+      {icon} -{value}
+    </Animated.Text>
+  );
+}, (prev, next) => prev.trigger === next.trigger && prev.imgH === next.imgH);
+
+// ─── HealBurst ────────────────────────────────────────────────────────────────
+// One-shot burst of green sparkles on heal. Modelled on FloatingHeal:
+//   • starts at opacity 1 immediately (not fade-in) — same proven approach
+//   • uses bottom + alignSelf positioning to stay within overflow:hidden card bounds
+//   • 4 particles spread across different horizontal offsets
+
+const _HEAL_PARTICLES = [
+  { char: '+',  xOff: 0,   bottomBase: 18, dur: 680, delay: 0,   size: 16 },
+  { char: '✦',  xOff: -18, bottomBase: 14, dur: 620, delay: 40,  size: 11 },
+  { char: '✦',  xOff:  18, bottomBase: 14, dur: 640, delay: 60,  size: 11 },
+  { char: '◈',  xOff: 0,   bottomBase: 10, dur: 580, delay: 80,  size: 10 },
+];
+
+function HealParticle({ char, xOff, bottomBase, dur, delay, size, imgH, trigger }) {
+  const yAnim  = useRef(new Animated.Value(0)).current;
+  const xAnim  = useRef(new Animated.Value(0)).current;
+  const opAnim = useRef(new Animated.Value(0)).current;
+  const scAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!trigger) return;
+    yAnim.setValue(0);
+    xAnim.setValue(0);
+    opAnim.setValue(1);
+    scAnim.setValue(1.2);
+    Animated.parallel([
+      Animated.timing(yAnim,  { toValue: -(imgH * 0.58), duration: dur, useNativeDriver: true }),
+      Animated.timing(xAnim,  { toValue: xOff,           duration: dur, useNativeDriver: true }),
+      Animated.timing(scAnim, { toValue: 0.7,            duration: dur, useNativeDriver: true }),
+      Animated.sequence([
+        Animated.delay(Math.round(dur * 0.30)),
+        Animated.timing(opAnim, { toValue: 0, duration: Math.round(dur * 0.70), useNativeDriver: true }),
+      ]),
+    ]).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trigger]);
+
+  return (
+    <Animated.Text
+      style={{
+        position: 'absolute',
+        bottom:      rs(bottomBase),
+        alignSelf:   'center',
+        fontSize:    rf(size),
+        fontWeight:  '900',
+        color:       C.SUCCESS,
+        textShadowColor:  'rgba(0,0,0,0.6)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+        opacity:   opAnim,
+        transform: [{ translateY: yAnim }, { translateX: xAnim }, { scale: scAnim }],
+        zIndex:    22,
+      }}
+    >
+      {char}
+    </Animated.Text>
+  );
+}
+
+const HealBurst = React.memo(function HealBurst({ trigger, imgH }) {
+  return (
+    <>
+      {_HEAL_PARTICLES.map((p, i) => (
+        <HealParticle key={i} {...p} imgH={imgH} trigger={trigger} />
+      ))}
+    </>
+  );
+}, (prev, next) => prev.trigger === next.trigger && prev.imgH === next.imgH);
+
+// ─── StatusParticles ──────────────────────────────────────────────────────────
+// Lightweight looping particle overlay for each status type.
+// Uses a single 0→1 progress anim per spark; all transforms are native-driver safe.
+
+const STATUS_SPARK_CHARS = {
+  burn:    ['·', '∴', '*', '•', '✦'],
+  poison:  ['•', '·', '∙', '◦', '∘'],
+  chill:   ['❄', '·', '✦', '◆', '⬡'],
+  shatter: ['╲', '╱', '◆', '▸', '▴'],
+  weaken:  ['▼', '↓', '∨', '▾', '·'],
+  stun:    ['⚡', '*', '✦', '·', '◦'],
+};
+const STATUS_SPARK_COUNTS = { burn: 5, poison: 4, chill: 5, shatter: 4, weaken: 4, stun: 4 };
+
+function StatusSpark({ type, cardW, cardH, index, count, color }) {
+  const prog = useRef(new Animated.Value(0)).current;
+
+  // Stable per-spark layout + timing — computed once on mount via ref guard.
+  const r = useRef(null);
+  if (!r.current) {
+    const frac   = count > 1 ? index / (count - 1) : 0.5;
+    const chars  = STATUS_SPARK_CHARS[type] || ['·'];
+    const altSign = index % 2 === 0 ? 1 : -1;
+
+    // Starting positions (absolute, as initial translateX/Y from top-left 0,0)
+    const startX =
+      type === 'shatter' || type === 'stun'
+        ? cardW * 0.45                           // burst from center
+        : cardW * 0.12 + frac * cardW * 0.76;   // spread across width
+
+    const startY =
+      type === 'burn'    ? cardH * 0.75          // near bottom → rise
+      : type === 'poison' ? cardH * 0.05         // near top → fall
+      : type === 'shatter'? cardH * 0.38         // mid-card → scatter
+      : type === 'stun'   ? cardH * 0.30         // upper-mid → scatter
+      : type === 'weaken' ? cardH * (0.08 + frac * 0.18)  // top strip
+      :                     cardH * (0.05 + frac * 0.28); // chill: top quarter
+
+    // Movement deltas
+    const deltaX =
+      type === 'shatter' ? altSign * (9  + index * 7)
+      : type === 'stun'  ? altSign * (12 + index * 5)
+      : type === 'chill' ? altSign * 11
+      : type === 'weaken'? altSign * 5
+      :                    altSign * (3  + index * 2);
+
+    const deltaY =
+      type === 'burn'    ? -(cardH * 0.74)
+      : type === 'poison' ?  (cardH * 0.72)
+      : type === 'chill'  ?  (cardH * 0.38)
+      : type === 'shatter'? altSign * (cardH * 0.22 + index * 8)
+      : type === 'stun'   ? altSign * (cardH * 0.18 + index * 7)
+      :                      (cardH * 0.54);     // weaken falls
+
+    r.current = {
+      char:   chars[index % chars.length],
+      delay:  Math.round((index / count) * 650),
+      dur:    type === 'chill'   ? 1700 + index * 200
+            : type === 'shatter' ?  600 + index * 80
+            : type === 'stun'    ?  480 + index * 70
+            : type === 'burn'    ?  850 + index * 100
+            :                      950 + index * 120,
+      startX, startY, deltaX, deltaY,
+    };
+  }
+  const p = r.current;
+
+  useEffect(() => {
+    let stopped = false;
+    const runCycle = () => {
+      if (stopped) return;
+      prog.setValue(0);
+      Animated.timing(prog, { toValue: 1, duration: p.dur, useNativeDriver: true })
+        .start(({ finished }) => { if (finished && !stopped) runCycle(); });
+    };
+    const t = setTimeout(runCycle, p.delay);
+    return () => { stopped = true; clearTimeout(t); prog.stopAnimation(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // All interpolations derived from the single 0→1 progress value.
+  const tX  = type === 'chill'
+    ? prog.interpolate({ inputRange: [0, 0.33, 0.66, 1], outputRange: [p.startX, p.startX + p.deltaX, p.startX, p.startX + p.deltaX * 0.5] })
+    : prog.interpolate({ inputRange: [0, 1], outputRange: [p.startX, p.startX + p.deltaX] });
+
+  const tY  = prog.interpolate({ inputRange: [0, 1], outputRange: [p.startY, p.startY + p.deltaY] });
+
+  const op  =
+    type === 'burn'    ? prog.interpolate({ inputRange: [0, 0.12, 0.55, 1], outputRange: [0, 0.85, 0.5,  0] })
+    : type === 'poison' ? prog.interpolate({ inputRange: [0, 0.10, 0.65, 1], outputRange: [0, 0.75, 0.4,  0] })
+    : type === 'chill'  ? prog.interpolate({ inputRange: [0, 0.18, 0.80, 1], outputRange: [0, 0.70, 0.55, 0] })
+    : type === 'shatter'? prog.interpolate({ inputRange: [0, 0.18, 0.55, 1], outputRange: [0, 1.0,  0.5,  0] })
+    : type === 'weaken' ? prog.interpolate({ inputRange: [0, 0.14, 0.72, 1], outputRange: [0, 0.68, 0.32, 0] })
+    :                     prog.interpolate({ inputRange: [0, 0.20, 0.55, 1], outputRange: [0, 1.0,  0.6,  0] }); // stun
+
+  const sc  =
+    type === 'burn'    ? prog.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0.8, 1.1, 0.5] })
+    : type === 'shatter'? prog.interpolate({ inputRange: [0, 0.18, 1], outputRange: [1.4, 1.0, 0.3] })
+    : type === 'stun'   ? prog.interpolate({ inputRange: [0, 0.20, 1], outputRange: [1.3, 1.0, 0.4] })
+    :                     prog.interpolate({ inputRange: [0, 0.5,  1], outputRange: [0.8, 1.0, 0.7] });
+
+  return (
+    <Animated.Text
+      style={{
+        position: 'absolute',
+        top: 0, left: 0,
+        fontSize: 9,
+        fontWeight: '900',
+        color,
+        transform: [{ translateX: tX }, { translateY: tY }, { scale: sc }],
+        opacity: op,
+      }}
+    >
+      {p.char}
+    </Animated.Text>
+  );
+}
+
+function StatusParticles({ type, cfg, cardW, cardH }) {
+  if (!type || !cfg) return null;
+  const count = STATUS_SPARK_COUNTS[type] ?? 4;
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden', borderRadius: 10 }]}>
+      {Array.from({ length: count }, (_, i) => (
+        <StatusSpark
+          key={i}
+          type={type}
+          cardW={cardW}
+          cardH={cardH}
+          index={i}
+          count={count}
+          color={cfg.color}
+        />
+      ))}
+    </View>
+  );
+}
 
 // ─── TrumpCutIn ───────────────────────────────────────────────────────────────
 // Full-screen cinematic when a Trump Card fires: the hero portrait slams in from
@@ -1720,7 +2089,7 @@ const EnemyCutIn = React.memo(function EnemyCutIn({ enemy, onDone }) {
             <Image source={imgSrc} style={S.cutInFillImg} resizeMode="cover" />
           ) : (
             <View style={[S.cutInFillImg, S.cutInPortraitFb]}>
-              <Text style={{ fontSize: 56 }}>👹</Text>
+              <Text style={{ fontSize: rf(56) }}>👹</Text>
             </View>
           )}
           <LinearGradient colors={['transparent', C.BG_VOID]} style={S.enemyCutInFade} />
@@ -1732,13 +2101,13 @@ const EnemyCutIn = React.memo(function EnemyCutIn({ enemy, onDone }) {
 
 // ─── PillBtn ──────────────────────────────────────────────────────────────────
 
-const PillBtn = React.memo(function PillBtn({ label, sub, colors, onPress, disabled, dimmed, glow, accessibilityLabel, accessibilityRole }) {
+const PillBtn = React.memo(function PillBtn({ label, sub, colors, onPress, disabled, dimmed, glow, pillH, accessibilityLabel, accessibilityRole }) {
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.75}
-      style={[S.pillBtn, glow && S.pillBtnGlow]}
+      style={[S.pillBtn, glow && S.pillBtnGlow, pillH && { height: pillH, borderRadius: pillH / 2 }]}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={accessibilityRole ?? 'button'}
     >
@@ -1764,45 +2133,45 @@ const S = StyleSheet.create({
   root:   { flex: 1, backgroundColor: C.BG_DEEP },
   bgImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.55 },
   safe:   { flex: 1 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: rs(30) },
 
   // ── Header ──
   header: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 12, paddingVertical: 6, gap: 10,
+    paddingHorizontal: rs(12), paddingVertical: rs(6), gap: rs(10),
     backgroundColor: C.BG_RAISED,
     borderBottomWidth: 1, borderBottomColor: C.BORDER,
   },
-  quitBtn:      { borderRadius: 8, overflow: 'hidden' },
-  quitBtnInner: { paddingHorizontal: 14, paddingVertical: 7 },
-  quitText:     { fontSize: 12, fontWeight: '800', color: C.TEXT, letterSpacing: 0.5 },
+  quitBtn:      { borderRadius: rs(8), overflow: 'hidden' },
+  quitBtnInner: { paddingHorizontal: rs(14), paddingVertical: rs(7) },
+  quitText:     { fontSize: rf(12), fontWeight: '800', color: C.TEXT, letterSpacing: 0.5 },
 
   headerMid:   { flex: 1 },
-  headerTitle: { fontSize: 13, fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
-  turnLabel:      { fontSize: 10, color: C.TEXT_MUTED, fontWeight: '600', letterSpacing: 0.5 },
-  turnCountLabel: { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '600' },
+  headerTitle: { fontSize: rf(13), fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
+  turnLabel:      { fontSize: rf(13), color: C.TEXT_MUTED, fontWeight: '600', letterSpacing: 0.5 },
+  turnCountLabel: { fontSize: rf(12), color: C.TEXT_MUTED, fontWeight: '600' },
 
-  energyWrap: { width: 96 },
-  energyLbl:  { fontSize: 9, color: C.GOLD, fontWeight: '700', marginBottom: 3 },
+  energyWrap: { width: rs(96) },
+  energyLbl:  { fontSize: rf(12), color: C.GOLD, fontWeight: '700', marginBottom: 3 },
   energyBg:   { height: 5, backgroundColor: C.BG_MID, borderRadius: 3, overflow: 'hidden' },
   energyFill: { height: 5, borderRadius: 3 },
 
   speedBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
-    paddingHorizontal: 8, paddingVertical: 5,
-    borderRadius: 8, borderWidth: 1,
+    paddingHorizontal: rs(8), paddingVertical: rs(5),
+    borderRadius: rs(8), borderWidth: 1,
     borderColor: C.BORDER, backgroundColor: C.GLASS_3,
   },
   speedBtnActive: { borderColor: C.GOLD, backgroundColor: C.GOLD_GLOW },
-  speedBtnTxt:    { fontSize: 11, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 0.3 },
+  speedBtnTxt:    { fontSize: rf(13), fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 0.3 },
 
   turnPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    borderRadius: 8, borderWidth: 1,
-    paddingHorizontal: 8, paddingVertical: 4,
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    borderRadius: rs(8), borderWidth: 1,
+    paddingHorizontal: rs(8), paddingVertical: 4,
   },
   turnDot:  { width: 6, height: 6, borderRadius: 3 },
-  turnText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
+  turnText: { fontSize: rf(12), fontWeight: '800', letterSpacing: 0.5 },
 
   // ── Arena ──
   arena: {
@@ -1816,8 +2185,8 @@ const S = StyleSheet.create({
     paddingHorizontal: SIDE_PAD,
   },
   teamLabel: {
-    fontSize: 11, fontWeight: '900', letterSpacing: 2.5,
-    marginBottom: 5,
+    fontSize: rf(13), fontWeight: '900', letterSpacing: 2.5,
+    marginBottom: rs(5),
   },
   cardRow: {
     flexDirection: 'row',
@@ -1836,31 +2205,31 @@ const S = StyleSheet.create({
   cardTouch: { width: CARD_W, alignItems: 'center' },
 
   hpNumber: {
-    fontSize: 14, fontWeight: '900', letterSpacing: 0.3,
+    fontSize: rf(14), fontWeight: '900', letterSpacing: 0.3,
     marginBottom: 2,
   },
   hpBarRow: {
     flexDirection: 'row', alignItems: 'center',
     width: CARD_W, gap: 4, marginBottom: 3,
   },
-  hpLabel:  { fontSize: 8, fontWeight: '800', color: C.TEXT_SOFT, letterSpacing: 0.3 },
+  hpLabel:  { fontSize: rf(8), fontWeight: '800', color: C.TEXT_SOFT, letterSpacing: 0.3 },
   hpBarBg:     { flex: 1, height: 5, backgroundColor: C.BG_BOTTOM, borderRadius: 3, overflow: 'hidden' },
   hpBarFill:   { height: 5, borderRadius: 3 },
   hpGhostFill: { position: 'absolute', top: 0, left: 0, height: 5, backgroundColor: C.WARNING, borderRadius: 3, opacity: 0.45 },
 
   // Shared enemy-team energy bar (under the ENEMY TEAM label; mirrors the
   // player's single energy bar in the header).
-  enTeamEnergyRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6, paddingHorizontal: 6 },
-  enTeamEnergyLbl: { fontSize: 8, fontWeight: '800', color: C.GOLD, letterSpacing: 0.5 },
+  enTeamEnergyRow: { flexDirection: 'row', alignItems: 'center', gap: rs(5), marginBottom: rs(6), paddingHorizontal: rs(6) },
+  enTeamEnergyLbl: { fontSize: rf(13), fontWeight: '800', color: C.GOLD, letterSpacing: 0.5 },
   enTeamEnergyBg:  { flex: 1, height: 5, backgroundColor: C.BG_MID, borderRadius: 3, overflow: 'hidden' },
   enTeamEnergyFill:{ height: 5, borderRadius: 3 },
   enTeamIntent:    { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  enTeamIntentTxt: { fontSize: 7, fontWeight: '900', color: C.GOLD, letterSpacing: 0.3 },
+  enTeamIntentTxt: { fontSize: rf(7), fontWeight: '900', color: C.GOLD, letterSpacing: 0.3 },
 
   card: {
     width: CARD_W,
     height: CARD_H,
-    borderRadius: 10,
+    borderRadius: rs(10),
     overflow: 'hidden',
     backgroundColor: C.BG_CARD,
     shadowColor: C.PRIMARY,
@@ -1874,7 +2243,7 @@ const S = StyleSheet.create({
 
   activeRing: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    borderRadius: 10, borderWidth: 2.5, zIndex: 8,
+    borderRadius: rs(10), borderWidth: 2.5, zIndex: 8,
   },
   shieldBadge: {
     position: 'absolute', top: 4, right: 4,
@@ -1889,7 +2258,7 @@ const S = StyleSheet.create({
     borderWidth: 1, borderColor: C.PRIMARY,
     zIndex: 10,
   },
-  switchHintText: { fontSize: 8, color: C.PRIMARY, fontWeight: '900', letterSpacing: 0.5 },
+  switchHintText: { fontSize: rf(13), color: C.PRIMARY, fontWeight: '900', letterSpacing: 0.5 },
 
   targetBadge: {
     position: 'absolute', top: 4, left: 4,
@@ -1898,18 +2267,18 @@ const S = StyleSheet.create({
     borderWidth: 1, borderColor: C.GOLD,
     zIndex: 10,
   },
-  targetBadgeText: { fontSize: 8, color: C.GOLD, fontWeight: '900', letterSpacing: 0.5 },
+  targetBadgeText: { fontSize: rf(13), color: C.GOLD, fontWeight: '900', letterSpacing: 0.5 },
 
   cardNameStrip: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: C.OVERLAY_4,
     paddingVertical: 3, paddingHorizontal: 4,
   },
-  cardName: { fontSize: 8, color: C.TEXT, fontWeight: '700', textAlign: 'center' },
+  cardName: { fontSize: rf(8), color: C.TEXT, fontWeight: '700', textAlign: 'center' },
 
   statusEffectRow: {
     position: 'absolute',
-    bottom: 18,
+    bottom: rs(18),
     left: 0, right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -1925,7 +2294,7 @@ const S = StyleSheet.create({
     paddingVertical: 1,
   },
   statusEffectText: {
-    fontSize: 7,
+    fontSize: rf(7),
     fontWeight: '900',
     letterSpacing: 0.3,
   },
@@ -1937,7 +2306,7 @@ const S = StyleSheet.create({
     zIndex: 16,
   },
   stunStarText: {
-    fontSize: 11,
+    fontSize: rf(13),
     fontWeight: '900',
     color: C.GOLD,
     letterSpacing: 1,
@@ -1948,7 +2317,7 @@ const S = StyleSheet.create({
 
   floatDmg: {
     position: 'absolute',
-    bottom: 8,
+    bottom: rs(8),
     alignSelf: 'center',
     fontWeight: '900',
     textShadowColor: 'rgba(0,0,0,0.7)',
@@ -1958,12 +2327,23 @@ const S = StyleSheet.create({
   },
   floatHeal: {
     position: 'absolute',
-    bottom: 22,
+    bottom: rs(22),
     alignSelf: 'center',
-    fontSize: 14,
+    fontSize: rf(14),
     fontWeight: '900',
     color: C.SUCCESS,
     textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    zIndex: 21,
+  },
+  floatDot: {
+    position: 'absolute',
+    bottom: rs(8),
+    alignSelf: 'center',
+    fontSize: rf(12),
+    fontWeight: '800',
+    textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
     zIndex: 21,
@@ -2008,16 +2388,16 @@ const S = StyleSheet.create({
     paddingRight: Math.floor(W * 0.06),
   },
   cutInLabel: {
-    fontSize: 12, fontWeight: '900', letterSpacing: 4,
+    fontSize: rf(12), fontWeight: '900', letterSpacing: 4,
     color: C.TEXT_ON_DARK_MUTED,
   },
   cutInRule: {
-    width: 54, height: 3, borderRadius: 2,
-    marginTop: 8, marginBottom: 10,
+    width: rs(54), height: 3, borderRadius: 2,
+    marginTop: rs(8), marginBottom: rs(10),
   },
   cutInHeroName: {
-    fontSize: 16, fontWeight: '800', letterSpacing: 1,
-    marginBottom: 6,
+    fontSize: rf(16), fontWeight: '800', letterSpacing: 1,
+    marginBottom: rs(6),
     textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -2056,7 +2436,7 @@ const S = StyleSheet.create({
     justifyContent: 'center',
   },
   enemyCutInFrame: {
-    borderRadius: 14,
+    borderRadius: rs(14),
     borderWidth: 2.5,
     overflow: 'hidden',
     backgroundColor: C.BG_MID,
@@ -2069,49 +2449,49 @@ const S = StyleSheet.create({
   // ── Bottom area (transparent) ──
   bottomArea: {
     paddingTop: 4,
-    paddingBottom: 8,
-    paddingHorizontal: 8,
+    paddingBottom: rs(8),
+    paddingHorizontal: rs(8),
     backgroundColor: 'transparent',
   },
   statusMsg: {
     alignSelf: 'center',
-    fontSize: 10, color: C.TEXT_SOFT,
+    fontSize: rf(13), color: C.TEXT_SOFT,
     fontStyle: 'italic', fontWeight: '600',
-    letterSpacing: 0.3, marginBottom: 5,
+    letterSpacing: 0.3, marginBottom: rs(5),
   },
 
   // ── Action bar ──
   actionBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: rs(8),
   },
 
   // Active hero tag (left side of action bar)
   heroTag: {
-    width: 82,
-    paddingRight: 8,
+    width: rs(82),
+    paddingRight: rs(8),
     borderRightWidth: 1,
     borderRightColor: C.BORDER,
     justifyContent: 'center',
   },
   heroTagBadge: {
-    fontSize: 7, color: C.PRIMARY, fontWeight: '900',
+    fontSize: rf(13), color: C.PRIMARY, fontWeight: '900',
     letterSpacing: 1.5, marginBottom: 2,
   },
   heroTagName: {
-    fontSize: 11, fontWeight: '800', color: C.TEXT,
+    fontSize: rf(13), fontWeight: '800', color: C.TEXT,
     letterSpacing: 0.2,
   },
   heroTagHint: {
-    fontSize: 7, color: C.GOLD, fontWeight: '700', marginTop: 2,
+    fontSize: rf(13), color: C.GOLD, fontWeight: '700', marginTop: 2,
   },
 
   // Pill buttons row
   pillRow: {
     flex: 1,
     flexDirection: 'row',
-    gap: 6,
+    gap: rs(6),
   },
   pillBtn: {
     flex: 1,
@@ -2134,29 +2514,29 @@ const S = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: rs(10),
   },
-  pillBtnLabel:    { fontSize: 11, fontWeight: '800', color: C.TEXT, letterSpacing: 0.2 },
+  pillBtnLabel:    { fontSize: rf(13), fontWeight: '800', color: C.TEXT, letterSpacing: 0.2 },
   pillBtnLabelDim: { color: C.TEXT_DISABLED },
-  pillBtnSub:      { fontSize: 8, color: C.TEXT_ON_DARK, fontWeight: '600', marginTop: 1 },
+  pillBtnSub:      { fontSize: rf(13), color: C.TEXT_ON_DARK, fontWeight: '600', marginTop: 1 },
   pillBtnSubDim:   { color: C.TEXT_ON_DARK_DIM },
 
   enemyThinking: {
     flex: 1, textAlign: 'center',
-    fontSize: 12, color: C.TEXT_MUTED,
+    fontSize: rf(12), color: C.TEXT_MUTED,
     fontStyle: 'italic', fontWeight: '600',
-    paddingVertical: 10,
+    paddingVertical: rs(10),
   },
 
   // ── No-team ──
-  warnTitle: { fontSize: 18, fontWeight: '700', color: C.GOLD, marginTop: 14, marginBottom: 8 },
-  warnSub:   { fontSize: 12, color: C.TEXT_MUTED, textAlign: 'center', lineHeight: 18, marginBottom: 20 },
+  warnTitle: { fontSize: rf(18), fontWeight: '700', color: C.GOLD, marginTop: rs(14), marginBottom: rs(8) },
+  warnSub:   { fontSize: rf(12), color: C.TEXT_MUTED, textAlign: 'center', lineHeight: rf(18), marginBottom: rs(20) },
   goBackBtn: {
-    backgroundColor: C.PRIMARY_GLOW, borderRadius: 10,
-    paddingVertical: 11, paddingHorizontal: 26,
+    backgroundColor: C.PRIMARY_GLOW, borderRadius: rs(10),
+    paddingVertical: rs(11), paddingHorizontal: rs(26),
     borderWidth: 1, borderColor: C.PRIMARY,
   },
-  goBackText: { color: C.PRIMARY, fontSize: 14, fontWeight: '700' },
+  goBackText: { color: C.PRIMARY, fontSize: rf(14), fontWeight: '700' },
 
   // ── Energy tutorial modal ──
   tutOverlay: {
@@ -2167,33 +2547,33 @@ const S = StyleSheet.create({
   },
   tutCard: {
     width: Math.min(W * 0.62, 480),
-    borderRadius: 14, overflow: 'hidden',
+    borderRadius: rs(14), overflow: 'hidden',
     borderWidth: 1, borderColor: C.BORDER_STRONG,
-    padding: 18,
+    padding: rs(18),
     shadowColor: C.PRIMARY,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.45, shadowRadius: 20, elevation: 12,
   },
   tutAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 3 },
   tutTitle: {
-    fontSize: 16, fontWeight: '900', color: C.TEXT,
+    fontSize: rf(16), fontWeight: '900', color: C.TEXT,
     letterSpacing: 3.5, textAlign: 'center', marginBottom: 2,
   },
   tutSub: {
-    fontSize: 9, color: C.TEXT_ON_DARK_MUTED,
-    textAlign: 'center', letterSpacing: 0.5, marginBottom: 14,
+    fontSize: rf(12), color: C.TEXT_ON_DARK_MUTED,
+    textAlign: 'center', letterSpacing: 0.5, marginBottom: rs(14),
   },
-  tutRows:    { gap: 8, marginBottom: 16 },
-  tutRow:     { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  tutRows:    { gap: rs(8), marginBottom: rs(16) },
+  tutRow:     { flexDirection: 'row', alignItems: 'center', gap: rs(12) },
   tutIconWrap: {
-    width: 32, height: 32, borderRadius: 8,
+    width: rs(32), height: rs(32), borderRadius: rs(8),
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1,
   },
   tutRowText:  { flex: 1 },
-  tutRowLabel: { fontSize: 11, fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
-  tutRowDesc:  { fontSize: 9, color: C.TEXT_ON_DARK_SOFT, marginTop: 1 },
-  tutBtn:      { borderRadius: 10, overflow: 'hidden' },
-  tutBtnInner: { paddingVertical: 12, alignItems: 'center' },
-  tutBtnTxt:   { fontSize: 12, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
+  tutRowLabel: { fontSize: rf(13), fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
+  tutRowDesc:  { fontSize: rf(12), color: C.TEXT_ON_DARK_SOFT, marginTop: 1 },
+  tutBtn:      { borderRadius: rs(10), overflow: 'hidden' },
+  tutBtnInner: { paddingVertical: rs(12), alignItems: 'center' },
+  tutBtnTxt:   { fontSize: rf(12), fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
 });

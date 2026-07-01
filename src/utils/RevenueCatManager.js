@@ -11,16 +11,18 @@ let _ready = false;
 // already signed in, otherwise pass null and call setUserId() after sign-in.
 export async function configure(appUserID = null) {
   const apiKey = Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY;
+  console.log('[RevenueCat] configure — key present:', !!apiKey, '| platform:', Platform.OS);
   if (!apiKey) {
-    if (__DEV__) console.warn('[RevenueCat] No API key — IAP will not work');
+    console.warn('[RevenueCat] No API key — IAP will not work');
     return;
   }
   try {
     if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     Purchases.configure({ apiKey, appUserID: appUserID ?? undefined });
     _ready = true;
+    console.log('[RevenueCat] configured OK');
   } catch (e) {
-    if (__DEV__) console.warn('[RevenueCat] configure failed:', e.message);
+    console.warn('[RevenueCat] configure failed:', e.message);
   }
 }
 

@@ -11,6 +11,7 @@ import { HEROES, FACTIONS } from '../data/heroes';
 import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
 import { C, RANK_COLORS, RANK } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 
 const SIDEBAR_W = 148;
 const COLS      = 5;
@@ -99,7 +100,7 @@ export default function CollectionScreen({ navigation }) {
         {/* ══ TOP BAR ══ */}
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={19} color={C.TEXT} />
+            <Ionicons name="chevron-back" size={rs(19)} color={C.TEXT} />
             <Text style={styles.backText}>BACK</Text>
           </TouchableOpacity>
 
@@ -132,7 +133,7 @@ export default function CollectionScreen({ navigation }) {
                       {fData ? (
                         <Image source={fData.image} style={styles.sideIcon} resizeMode="contain" />
                       ) : (
-                        <Ionicons name="apps" size={15} color={active ? C.TEXT : C.TEXT_MUTED} />
+                        <Ionicons name="apps" size={rs(19)} color={active ? C.TEXT : C.TEXT_MUTED} />
                       )}
                       <Text style={[styles.sideLabel, active && styles.sideLabelActive]}>
                         {f.label}
@@ -156,10 +157,10 @@ export default function CollectionScreen({ navigation }) {
                 onPress={() => { AudioManager.playButtonSFX(); setShowSort(!showSort); }}
                 activeOpacity={0.75}
               >
-                <Ionicons name="funnel-outline" size={12} color={C.TEXT_MUTED} />
+                <Ionicons name="funnel-outline" size={rs(12)} color={C.TEXT_MUTED} />
                 <Text style={styles.sortBtnLabel}>Sort</Text>
                 <Text style={styles.sortBtnValue}>{sortBy}</Text>
-                <Ionicons name={showSort ? 'chevron-up' : 'chevron-down'} size={10} color={C.TEXT_MUTED} />
+                <Ionicons name={showSort ? 'chevron-up' : 'chevron-down'} size={rs(10)} color={C.TEXT_MUTED} />
               </TouchableOpacity>
               {showSort && (
                 <View style={styles.sortDropdown}>
@@ -235,7 +236,7 @@ const HeroGridCard = memo(function HeroGridCard({ hero, owned, onTeam, effective
 
       {imgErr ? (
         <View style={[styles.cardArt, { backgroundColor: faction.color + '40', alignItems: 'center', justifyContent: 'center' }]}>
-          <Text style={{ fontSize: 28 }}>⚔️</Text>
+          <Text style={{ fontSize: rf(28) }}>⚔️</Text>
         </View>
       ) : (
         <Animated.Image
@@ -264,7 +265,7 @@ const HeroGridCard = memo(function HeroGridCard({ hero, owned, onTeam, effective
 
       {!owned && (
         <View style={styles.lockedOverlay}>
-          <Ionicons name="lock-closed" size={18} color={C.GOLD} />
+          <Ionicons name="lock-closed" size={rs(22)} color={C.GOLD} />
         </View>
       )}
 
@@ -281,16 +282,16 @@ const styles = StyleSheet.create({
 
   // ── Top bar ────────────────────────────────────────────────────────────────
   topBar: {
-    height: 48, flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 12,
+    height: rs(48), flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: rs(12),
     backgroundColor: C.BG_BASE,
     borderBottomWidth: 1, borderBottomColor: C.BORDER,
   },
-  backBtn:  { flexDirection: 'row', alignItems: 'center', gap: 3, marginRight: 12 },
-  backText: { color: C.TEXT, fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
+  backBtn:  { flexDirection: 'row', alignItems: 'center', gap: rs(3), marginRight: rs(12) },
+  backText: { color: C.TEXT, fontSize: rf(12), fontWeight: '700', letterSpacing: 0.5 },
   topCenter:{ flex: 1, alignItems: 'center' },
-  topTitle: { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
-  topCount: { fontSize: 9, color: C.TEXT_MUTED, letterSpacing: 0.5, marginTop: 1 },
+  topTitle: { fontSize: rf(13), fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
+  topCount: { fontSize: rf(12), color: C.TEXT_MUTED, letterSpacing: 0.5, marginTop: 1 },
 
   // ── Body ───────────────────────────────────────────────────────────────────
   body: { flex: 1, flexDirection: 'row' },
@@ -305,34 +306,34 @@ const styles = StyleSheet.create({
   },
   sideList: { flex: 1 },
   sideItem: {
-    height: 42, flexDirection: 'row', alignItems: 'center',
+    height: rs(42), flexDirection: 'row', alignItems: 'center',
     paddingLeft: 3, position: 'relative',
   },
   sideItemActive:  { backgroundColor: C.PRIMARY_GLOW },
   sideActiveLine:  { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3 },
-  sideItemRow:     { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 12 },
-  sideIcon:        { width: 18, height: 18 },
-  sideLabel:       { fontSize: 11, color: C.TEXT_MUTED, fontWeight: '600', letterSpacing: 0.2 },
+  sideItemRow:     { flex: 1, flexDirection: 'row', alignItems: 'center', gap: rs(9), paddingHorizontal: rs(12) },
+  sideIcon:        { width: rs(18), height: rs(18) },
+  sideLabel:       { fontSize: rf(13), color: C.TEXT_MUTED, fontWeight: '600', letterSpacing: 0.2 },
   sideLabelActive: { color: C.TEXT, fontWeight: '700' },
-  sideCountBadge:  { marginRight: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
-  sideCountText:   { fontSize: 9, fontWeight: '800' },
+  sideCountBadge:  { marginRight: rs(8), paddingHorizontal: rs(6), paddingVertical: rs(2), borderRadius: rs(8) },
+  sideCountText:   { fontSize: rf(12), fontWeight: '800' },
 
   // Sort — elevated above sibling FlatList so dropdown is never clipped
-  sortArea: { paddingBottom: 6, zIndex: 10, elevation: 10 },
+  sortArea: { paddingBottom: rs(6), zIndex: 10, elevation: 10 },
   sortSep:  { height: 1, backgroundColor: C.BORDER_SUBTLE, marginBottom: 2 },
-  sortBtn:  { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8 },
-  sortBtnLabel:       { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '600' },
-  sortBtnValue:       { flex: 1, fontSize: 9, color: C.TEXT_SOFT, fontWeight: '700' },
+  sortBtn:  { flexDirection: 'row', alignItems: 'center', gap: rs(5), paddingHorizontal: rs(12), paddingVertical: rs(8) },
+  sortBtnLabel:       { fontSize: rf(12), color: C.TEXT_MUTED, fontWeight: '600' },
+  sortBtnValue:       { flex: 1, fontSize: rf(12), color: C.TEXT_SOFT, fontWeight: '700' },
   sortDropdown: {
     position: 'absolute', bottom: '100%', left: 0, right: 0,
     backgroundColor: C.BG_RAISED,
     borderWidth: 1, borderColor: C.BORDER,
-    borderRadius: 8, overflow: 'hidden',
+    borderRadius: rs(8), overflow: 'hidden',
     zIndex: 20, elevation: 20,
   },
-  sortOpt:          { paddingHorizontal: 14, paddingVertical: 9 },
+  sortOpt:          { paddingHorizontal: rs(14), paddingVertical: rs(9) },
   sortOptActive:    { backgroundColor: C.PRIMARY_GLOW },
-  sortOptText:      { color: C.TEXT_MUTED, fontSize: 11, fontWeight: '600' },
+  sortOptText:      { color: C.TEXT_MUTED, fontSize: rf(13), fontWeight: '600' },
   sortOptTextActive:{ color: C.PRIMARY_LIGHT, fontWeight: '700' },
 
   // Grid
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
 
   // Grid card
   gridCard: {
-    borderRadius: 8, overflow: 'hidden',
+    borderRadius: rs(8), overflow: 'hidden',
     backgroundColor: C.BG_CARD,
   },
   gridCardLocked: { opacity: 0.55 },
@@ -351,19 +352,19 @@ const styles = StyleSheet.create({
   cardTopAccent:    { position: 'absolute', top: 0, left: 0, right: 0, height: 3 },
   cardFactionBadge: {
     position: 'absolute', top: 7, left: 7,
-    width: 24, height: 24, borderRadius: 12,
+    width: rs(24), height: rs(24), borderRadius: rs(12),
     alignItems: 'center', justifyContent: 'center', borderWidth: 1,
   },
-  cardFactionIcon: { width: 15, height: 15 },
+  cardFactionIcon: { width: rs(15), height: rs(15) },
   cardRankBadge: {
     position: 'absolute', top: 7, right: 7,
-    borderRadius: 3, paddingHorizontal: 5, paddingVertical: 2,
+    borderRadius: 3, paddingHorizontal: rs(5), paddingVertical: rs(2),
   },
-  cardRankText: { fontSize: 8, fontWeight: '900' },
-  cardBotGrad:  { position: 'absolute', bottom: 0, left: 0, right: 0, height: 44 },
+  cardRankText: { fontSize: rf(11), fontWeight: '900' },
+  cardBotGrad:  { position: 'absolute', bottom: 0, left: 0, right: 0, height: rs(44) },
   cardBottom:   { position: 'absolute', bottom: 5, left: 7, right: 7 },
   cardName: {
-    fontSize: 9, color: C.TEXT, fontWeight: '700', letterSpacing: 0.4,
+    fontSize: rf(12), color: C.TEXT, fontWeight: '700', letterSpacing: 0.4,
     textShadowColor: C.OVERLAY_DEEP,
     textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
   },
   teamDot: {
     position: 'absolute', bottom: 6, right: 6,
-    width: 7, height: 7, borderRadius: 4,
+    width: rs(7), height: rs(7), borderRadius: rs(4),
     backgroundColor: C.SUCCESS, borderWidth: 1, borderColor: C.BG_DEEP,
   },
 

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, Image, StyleSheet, TouchableOpacity, TouchableWithoutFeedback,
-  Animated, Dimensions, Easing, ScrollView,
+  Animated, Dimensions, Easing, ScrollView, useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import AudioManager from '../utils/AudioManager';
 import HeroCard from '../components/HeroCard';
 import { getActiveEvents, STANDARD_BANNER } from '../data/events';
+import { rs, rf } from '../theme/scale';
 
 const WISH_VIDEO = require('../../assets/video/wish-animation.mp4');
 
@@ -189,7 +190,7 @@ const ONE_CW     = Math.floor(ONE_CH * 220 / 320);
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 const CardBack = ({ width, height }) => (
-  <View style={{ width, height, borderRadius: 8, overflow: 'hidden' }}>
+  <View style={{ width, height, borderRadius: rs(8), overflow: 'hidden' }}>
     <LinearGradient
       colors={[C.BG_DARK, C.BG_VOID, C.BG_DARK]}
       start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }}
@@ -291,7 +292,7 @@ const OrnateWishBtn = ({ onPress, disabled, borderCol, gradColors, label, sub, c
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.32)']}
             start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 22 }}
+            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: rs(22) }}
           />
           {/* Double rail lines top */}
           <View style={[s.ornateRail, { top: 6,  opacity: 0.75, backgroundColor: borderCol }]} />
@@ -346,7 +347,7 @@ const SmallCardFront = ({ hero, isNew, isFeatured, width }) => {
   const r = RANK[hero.rank];
   const height = Math.floor(width * 320 / 220);
   return (
-    <View style={{ width, height, borderRadius: 8, overflow: 'hidden' }}>
+    <View style={{ width, height, borderRadius: rs(8), overflow: 'hidden' }}>
       <Image source={hero.image} style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} resizeMode="cover" />
       <LinearGradient
         colors={['transparent', 'transparent', 'rgba(0,0,0,0.88)']}
@@ -373,6 +374,7 @@ const SmallCardFront = ({ hero, isNew, isFeatured, width }) => {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function SummonScreen({ navigation, route }) {
+  const { width: W, height: H } = useWindowDimensions();
   const { top: topInset, bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
   // Per-property selectors — keeps pull-reveal animations free of unrelated re-renders
   const gems                     = useGameStore(s => s.gems);
@@ -417,7 +419,13 @@ export default function SummonScreen({ navigation, route }) {
   const flashGold   = useRef(new Animated.Value(0)).current;
   const flashPurp   = useRef(new Animated.Value(0)).current;
   const shakeAnim   = useRef(new Animated.Value(0)).current;
-  const tapHintAnim = useRef(new Animated.Value(1)).current;
+  const tapHintAnim    = useRef(new Animated.Value(0)).current;
+  const closeBtnOpacity = useRef(new Animated.Value(0)).current;
+
+  // ── Video overlay animations ──────────────────────────────────────────────
+  const videoFadeAnim      = useRef(new Animated.Value(1)).current;
+  const cardOverlayScale   = useRef(new Animated.Value(0.3)).current;
+  const cardOverlayOpacity = useRef(new Animated.Value(0)).current;
 
   const cardAnims = useRef(
     Array.from({ length: 10 }, () => ({
@@ -429,7 +437,9 @@ export default function SummonScreen({ navigation, route }) {
     }))
   ).current;
 
-  const sfxTimers = useRef([]);   // tracked so they can be cancelled on unmount
+  const sfxTimers       = useRef([]);
+  const videoCardTimers = useRef([]);
+  const videoEndedNaturally = useRef(false);
 
   const starYAnims = useRef(
     STARS.map(star => new Animated.Value(star.initPct * H))
@@ -462,7 +472,10 @@ export default function SummonScreen({ navigation, route }) {
   }, []);
 
   // ── SFX timer cleanup on unmount ──────────────────────────────────────────
-  useEffect(() => () => sfxTimers.current.forEach(clearTimeout), []);
+  useEffect(() => () => {
+    sfxTimers.current.forEach(clearTimeout);
+    videoCardTimers.current.forEach(clearTimeout);
+  }, []);
 
   // ── Standard banner: auto-cycle featured S-rank heroes ────────────────────
   useEffect(() => {
@@ -484,15 +497,20 @@ export default function SummonScreen({ navigation, route }) {
   // ── Tap hint pulse ────────────────────────────────────────────────────────
   useEffect(() => {
     if (pullPhase !== 'reveal' || allRevealed || pullResults.length === 1) {
-      tapHintAnim.setValue(1);
+      if (pullPhase !== 'reveal') tapHintAnim.setValue(0);
       return;
     }
-    const loop = Animated.loop(Animated.sequence([
-      Animated.timing(tapHintAnim, { toValue: 0.2, duration: 560, useNativeDriver: true }),
-      Animated.timing(tapHintAnim, { toValue: 1,   duration: 560, useNativeDriver: true }),
-    ]));
-    loop.start();
-    return () => loop.stop();
+    let loop;
+    const fadeIn = Animated.timing(tapHintAnim, { toValue: 1, duration: 280, useNativeDriver: true });
+    fadeIn.start(({ finished }) => {
+      if (!finished) return;
+      loop = Animated.loop(Animated.sequence([
+        Animated.timing(tapHintAnim, { toValue: 0.2, duration: 560, useNativeDriver: true }),
+        Animated.timing(tapHintAnim, { toValue: 1,   duration: 560, useNativeDriver: true }),
+      ]));
+      loop.start();
+    });
+    return () => { fadeIn.stop(); loop?.stop(); };
   }, [pullPhase, allRevealed, pullResults.length]);
 
   // ── Auto-reveal single card after entrance animation settles ─────────────
@@ -503,9 +521,14 @@ export default function SummonScreen({ navigation, route }) {
     }
   }, [pullPhase]);
 
-  // ── Detect all-revealed; activate results screen for multi-pulls ──────────
+  // ── Detect all-revealed; crossfade bar, then activate results ────────────
   useEffect(() => {
     if (pullPhase === 'reveal' && revealCount > 0 && revealCount === pullResults.length) {
+      // Crossfade: tap hint fades out, close button fades in
+      Animated.parallel([
+        Animated.timing(tapHintAnim,    { toValue: 0, duration: 220, useNativeDriver: true }),
+        Animated.timing(closeBtnOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      ]).start();
       setAllRevealed(true);
       if (pullResults.length > 1) {
         const t = setTimeout(() => setPullPhase('results'), 420);
@@ -611,18 +634,10 @@ export default function SummonScreen({ navigation, route }) {
     });
   }, [revealCount, pullResults, cardAnims, doFlashGold, doFlashPurp]);
 
-  // ── Reveal transition (called after video ends or skip tap) ──────────────
-  //
-  // Design: the transition is a single unbroken motion:
-  //   1. Flash builds to full white in 60 ms — summon energy peak; video still
-  //      playing underneath but hidden behind the growing brightness.
-  //   2. At peak: video pauses and phase switches to 'reveal' — completely
-  //      hidden from the user because the screen is solid white.
-  //   3. Flash fades slowly (720 ms, eased out) AND cards bloom in at the same
-  //      time — the cards appear to materialise out of the dissolving light.
-  //
-  // There is no separate void/dark overlay step. transAnim is NOT used here so
-  // there is no mid-sequence dark frame that breaks the visual continuity.
+  // ── Reveal transition ─────────────────────────────────────────────────────
+  // White flash hides the cut in both natural-end and skip paths, so any
+  // positional difference between the video card overlay and the reveal grid
+  // is invisible to the user.
   const transitionToReveal = useCallback(() => {
     if (videoTransitioned.current) return;
     videoTransitioned.current = true;
@@ -630,63 +645,65 @@ export default function SummonScreen({ navigation, route }) {
     const tagged = pendingTagged.current;
     if (!tagged) return;
 
-    // Pre-position cards: slightly below centre and scaled down — they will
-    // emerge upward and bloom outward as the flash dissolves.
+    videoCardTimers.current.forEach(clearTimeout);
+    videoCardTimers.current = [];
+    videoEndedNaturally.current = false;
+
     cardAnims.forEach(ca => {
       ca.flip.setValue(0); ca.glow.setValue(0);
       ca.slideY.setValue(20); ca.opacity.setValue(0); ca.scale.setValue(0.78);
     });
 
-    // Step 1 — quick energy burst to solid white
     Animated.timing(flashWhite, { toValue: 1, duration: 60, useNativeDriver: true }).start(() => {
-      // Step 2 — at peak brightness: stop video + switch phase (invisible to user)
       try { videoPlayer.pause(); } catch (_) {}
       videoTransitioned.current = false;
       setPullPhase('reveal');
 
-      // Step 3 — flash dissolves and cards bloom in as one unified motion
       Animated.parallel([
-        // Light energy slowly dissipates
         Animated.timing(flashWhite, {
           toValue: 0, duration: 720,
           easing: Easing.out(Easing.quad), useNativeDriver: true,
         }),
-        // Cards emerge through the fading light — staggered bloom entrance
         Animated.parallel(
           tagged.map((_, idx) => Animated.sequence([
             Animated.delay(idx * 52),
             Animated.parallel([
-              // Rise slightly into position
               Animated.timing(cardAnims[idx].slideY, {
                 toValue: 0, duration: 340,
                 easing: Easing.out(Easing.back(1.05)),
                 useNativeDriver: true,
               }),
-              // Fade in as flash recedes
               Animated.timing(cardAnims[idx].opacity, {
                 toValue: 1, duration: 260, useNativeDriver: true,
               }),
-              // Scale bloom: small → natural size
               Animated.spring(cardAnims[idx].scale, {
                 toValue: 1, friction: 7, tension: 100, useNativeDriver: true,
               }),
             ]),
           ]))
         ),
-      ]).start(() => setIsAnimating(false)); // unlock tap-to-reveal
+      ]).start(() => setIsAnimating(false));
     });
   }, [videoPlayer, cardAnims, flashWhite]);
 
   // Keep ref in sync so the video-end listener never goes stale
   useEffect(() => { transitionToRevealRef.current = transitionToReveal; }, [transitionToReveal]);
 
-  // Video ended → go to reveal automatically
+  // Video ended → go to reveal automatically (natural-end path)
   useEffect(() => {
     const sub = videoPlayer.addListener('playToEnd', () => {
+      videoEndedNaturally.current = true;
       transitionToRevealRef.current?.();
     });
     return () => sub.remove();
   }, [videoPlayer]);
+
+  // ── Video skip handler ────────────────────────────────────────────────────
+  const handleVideoSkip = useCallback(() => {
+    videoCardTimers.current.forEach(clearTimeout);
+    videoCardTimers.current = [];
+    transitionToReveal();
+  }, [transitionToReveal]);
 
   // ── Pull trigger ──────────────────────────────────────────────────────────
   const doPull = useCallback((count) => {
@@ -747,6 +764,30 @@ export default function SummonScreen({ navigation, route }) {
     // Play wish animation video first, then transition to reveal
     videoPlayer.replay();
     setPullPhase('video');
+
+    // Reset video overlay animations and bar state
+    videoFadeAnim.setValue(1);
+    cardOverlayScale.setValue(0.3);
+    cardOverlayOpacity.setValue(0);
+    tapHintAnim.setValue(0);
+    closeBtnOpacity.setValue(0);
+    videoEndedNaturally.current = false;
+    videoCardTimers.current.forEach(clearTimeout);
+
+    // At 7s: card(s) emerge from center over the still-playing video
+    const vt1 = setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(cardOverlayScale, { toValue: 1, friction: 6, tension: 80, useNativeDriver: true }),
+        Animated.timing(cardOverlayOpacity, { toValue: 1, duration: 800, useNativeDriver: true }),
+      ]).start();
+    }, 7000);
+
+    // At 8.5s: video fades out as cards remain
+    const vt2 = setTimeout(() => {
+      Animated.timing(videoFadeAnim, { toValue: 0, duration: 1500, useNativeDriver: true }).start();
+    }, 8500);
+
+    videoCardTimers.current = [vt1, vt2];
   }, [
     gems, isAnimating, spendGems, pity, ownedHeroes, addHero, videoPlayer,
     activeEvent, activePity, activeGuarantee, activePityLimit,
@@ -765,6 +806,8 @@ export default function SummonScreen({ navigation, route }) {
       setPullResults([]);
       setRevealCount(0);
       setAllRevealed(false);
+      tapHintAnim.setValue(0);
+      closeBtnOpacity.setValue(0);
       Animated.timing(transAnim, { toValue: 0, duration: 280, useNativeDriver: true }).start();
     });
   }, [transAnim]);
@@ -826,7 +869,7 @@ export default function SummonScreen({ navigation, route }) {
           {/* Rank glow ring */}
           <Animated.View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { borderRadius: 8, borderWidth: 2.5, borderColor: r.glow, opacity: ca.glow }]}
+            style={[StyleSheet.absoluteFill, { borderRadius: rs(8), borderWidth: 2.5, borderColor: r.glow, opacity: ca.glow }]}
           />
         </View>
 
@@ -870,21 +913,62 @@ export default function SummonScreen({ navigation, route }) {
   };
 
   // ── Phase: video ─────────────────────────────────────────────────────────
-  const renderVideo = () => (
-    <TouchableWithoutFeedback onPress={transitionToReveal}>
-      <View style={StyleSheet.absoluteFill}>
-        <VideoView
-          player={videoPlayer}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          nativeControls={false}
-        />
-        <View style={s.videoSkipRow} pointerEvents="none">
-          <Text style={s.videoSkipTxt}>TAP TO SKIP  ›</Text>
+  const renderVideo = () => {
+    const isSingle = pullResults.length === 1;
+    const cardW = isSingle ? ONE_CW : TEN_CW;
+    const cardH = isSingle ? ONE_CH : TEN_CH;
+    const firstRow  = pullResults.slice(0, 5);
+    const secondRow = pullResults.slice(5, 10);
+
+    return (
+      <TouchableWithoutFeedback onPress={handleVideoSkip}>
+        <View style={StyleSheet.absoluteFill}>
+          {/* Video fades out as card overlay appears */}
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: videoFadeAnim }]}>
+            <VideoView
+              player={videoPlayer}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              nativeControls={false}
+            />
+          </Animated.View>
+
+          {/* Card(s) emerge from center before video ends */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: [{ scale: cardOverlayScale }],
+                opacity: cardOverlayOpacity,
+              },
+            ]}
+          >
+            {isSingle ? (
+              <CardBack width={cardW} height={cardH} />
+            ) : (
+              <View style={{ gap: rs(10) }}>
+                <View style={{ flexDirection: 'row', gap: rs(8) }}>
+                  {firstRow.map((_, i) => <CardBack key={i} width={cardW} height={cardH} />)}
+                </View>
+                {secondRow.length > 0 && (
+                  <View style={{ flexDirection: 'row', gap: rs(8) }}>
+                    {secondRow.map((_, i) => <CardBack key={i + 5} width={cardW} height={cardH} />)}
+                  </View>
+                )}
+              </View>
+            )}
+          </Animated.View>
+
+          <View style={s.videoSkipRow} pointerEvents="none">
+            <Text style={s.videoSkipTxt}>TAP TO SKIP  ›</Text>
+          </View>
         </View>
-      </View>
-    </TouchableWithoutFeedback>
-  );
+      </TouchableWithoutFeedback>
+    );
+  };
 
   // ── Phase: banner ─────────────────────────────────────────────────────────
   const renderBanner = () => {
@@ -974,7 +1058,7 @@ export default function SummonScreen({ navigation, route }) {
                       </TouchableOpacity>
                     ))}
                   </View>
-                  <Text style={[s.featSectionLabel, { marginTop: 6 }]}>A / B RANK</Text>
+                  <Text style={[s.featSectionLabel, { marginTop: rs(6) }]}>A / B RANK</Text>
                   <View style={s.featMinis}>
                     {standardLowerHeroes.map(h => (
                       <View key={h.id} style={[s.featMiniAB, { borderColor: RANK[h.rank].glow + '55' }]}>
@@ -1002,7 +1086,7 @@ export default function SummonScreen({ navigation, route }) {
                       );
                     })}
                   </View>
-                  <Text style={[s.featSectionLabel, { marginTop: 6 }]}>A / B / C RANK</Text>
+                  <Text style={[s.featSectionLabel, { marginTop: rs(6) }]}>A / B / C RANK</Text>
                   <View style={s.featMinis}>
                     {(activeEvent?.featuredLowerIds ?? []).map(id => {
                       const h = HEROES.find(hero => hero.id === id);
@@ -1023,7 +1107,7 @@ export default function SummonScreen({ navigation, route }) {
               <View style={s.infoCard}>
                 <View style={s.pityHeader}>
                   <Text style={s.infoCardTitle}>PITY COUNTER</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: rs(5) }}>
                     {activePity >= Math.floor(activePityLimit * 0.78) && (
                       <View style={[s.pityWarnBadge, { backgroundColor: C.HP + '22', borderColor: C.HP }]}>
                         <Text style={[s.pityWarnTxt, { color: C.HP }]}>NEAR PITY</Text>
@@ -1124,19 +1208,21 @@ export default function SummonScreen({ navigation, route }) {
 
           {renderCardGrid(cardW, cardH)}
 
-          {/* Bottom action bar */}
+          {/* Bottom action bar — both elements fill the bar, crossfade via opacity */}
           <View style={s.revealBar}>
-            {allRevealed ? (
-              <TouchableOpacity onPress={closeToBanner} activeOpacity={0.85} style={s.closeBtn}>
-                <Ionicons name="close" size={26} color={C.TEXT} />
-              </TouchableOpacity>
-            ) : (
-              !isSingle && (
-                <Animated.Text style={[s.tapHint, { opacity: tapHintAnim }]}>
-                  TAP ANYWHERE TO REVEAL
-                </Animated.Text>
-              )
+            {!isSingle && (
+              <Animated.View style={[StyleSheet.absoluteFill, s.revealBarCenter, { opacity: tapHintAnim }]} pointerEvents="none">
+                <Text style={s.tapHint}>TAP ANYWHERE TO REVEAL</Text>
+              </Animated.View>
             )}
+            <Animated.View
+              style={[StyleSheet.absoluteFill, s.revealBarCenter, { opacity: closeBtnOpacity }]}
+              pointerEvents={allRevealed ? 'auto' : 'none'}
+            >
+              <TouchableOpacity onPress={closeToBanner} activeOpacity={0.85} style={s.closeBtn}>
+                <Ionicons name="close" size={rs(26)} color={C.TEXT} />
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </Animated.View>
       </TouchableWithoutFeedback>
@@ -1165,7 +1251,7 @@ export default function SummonScreen({ navigation, route }) {
             return (
               <View key="FEAT" style={[s.sumChip, { borderColor: C.GOLD }]}>
                 <View style={[s.sumDot, { backgroundColor: C.GOLD }]}>
-                  <Text style={[s.sumDotTxt, { color: RANK.SOVEREIGN.text, fontSize: 8 }]}>★</Text>
+                  <Text style={[s.sumDotTxt, { color: RANK.SOVEREIGN.text, fontSize: rf(13) }]}>★</Text>
                 </View>
                 <Text style={[s.sumCount, { color: C.GOLD }]}>×{count}</Text>
               </View>
@@ -1179,7 +1265,7 @@ export default function SummonScreen({ navigation, route }) {
             return (
               <View key="SOV" style={[s.sumChip, { borderColor: r.glow }]}>
                 <View style={[s.sumDot, { backgroundColor: r.bg }]}>
-                  <Text style={[s.sumDotTxt, { color: r.text, fontSize: 7 }]}>SOV</Text>
+                  <Text style={[s.sumDotTxt, { color: r.text, fontSize: rf(13) }]}>SOV</Text>
                 </View>
                 <Text style={[s.sumCount, { color: r.glow }]}>×{count}</Text>
               </View>
@@ -1201,7 +1287,7 @@ export default function SummonScreen({ navigation, route }) {
         </View>
 
         <TouchableOpacity onPress={closeToBanner} activeOpacity={0.85} style={s.closeBtn}>
-          <Ionicons name="close" size={26} color={C.TEXT} />
+          <Ionicons name="close" size={rs(26)} color={C.TEXT} />
         </TouchableOpacity>
       </View>
     );
@@ -1216,7 +1302,7 @@ export default function SummonScreen({ navigation, route }) {
           onPress={pullPhase === 'banner' ? () => navigation.goBack() : closeToBanner}
           style={s.headerBack}
         >
-          <Ionicons name={pullPhase === 'banner' ? 'chevron-back' : 'close'} size={22} color={C.TEXT} />
+          <Ionicons name={pullPhase === 'banner' ? 'chevron-back' : 'close'} size={rs(22)} color={C.TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>SUMMON</Text>
@@ -1240,7 +1326,7 @@ export default function SummonScreen({ navigation, route }) {
             accessibilityRole="button"
             accessibilityLabel="View summon rates and odds"
           >
-            <Ionicons name="information-circle-outline" size={22} color="rgba(255,255,255,0.85)" />
+            <Ionicons name="information-circle-outline" size={rs(22)} color="rgba(255,255,255,0.85)" />
           </TouchableOpacity>
         )}
         {pullPhase === 'banner' && (
@@ -1249,7 +1335,7 @@ export default function SummonScreen({ navigation, route }) {
             style={s.historyBtn}
             activeOpacity={0.75}
           >
-            <Ionicons name="time-outline" size={20} color="rgba(255,255,255,0.85)" />
+            <Ionicons name="time-outline" size={rs(20)} color="rgba(255,255,255,0.85)" />
           </TouchableOpacity>
         )}
       </LinearGradient>
@@ -1257,7 +1343,7 @@ export default function SummonScreen({ navigation, route }) {
       {/* Phase content */}
       <View style={s.content}>
         {pullPhase === 'banner'  && renderBanner()}
-        {pullPhase === 'reveal'  && renderReveal()}
+        {(pullPhase === 'video' || pullPhase === 'reveal') && renderReveal()}
         {pullPhase === 'results' && renderResults()}
       </View>
 
@@ -1284,10 +1370,10 @@ export default function SummonScreen({ navigation, route }) {
             <View style={s.ratesHeaderRow}>
               <Text style={s.ratesTitle}>SUMMON RATES</Text>
               <TouchableOpacity onPress={() => setShowRates(false)} style={s.ratesClose} accessibilityLabel="Close rates">
-                <Ionicons name="close" size={22} color={C.TEXT} />
+                <Ionicons name="close" size={rs(22)} color={C.TEXT} />
               </TouchableOpacity>
             </View>
-            <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ paddingBottom: 6 }}>
+            <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ paddingBottom: rs(6) }}>
               <Text style={s.ratesSection}>Base probability per summon</Text>
               {[
                 { rank: 'S', pct: '4%',  note: 'incl. rate-up / Sovereign — see below' },
@@ -1308,8 +1394,8 @@ export default function SummonScreen({ navigation, route }) {
               })}
 
               <Text style={s.ratesSection}>Pity (guaranteed S-rank)</Text>
-              <Text style={s.ratesBody}>• The S-rank chance rises to <Text style={s.ratesEm}>8%</Text> from pull 50 and <Text style={s.ratesEm}>15%</Text> from pull 70 (“soft pity”).</Text>
-              <Text style={s.ratesBody}>• An S-rank is <Text style={s.ratesEm}>guaranteed by pull 90</Text> on the standard banner and <Text style={s.ratesEm}>pull 80</Text> on event banners (“hard pity”). The counter carries over between summons and resets when you obtain an S-rank.</Text>
+              <Text style={s.ratesBody}>• The S-rank chance rises to <Text style={s.ratesEm}>8%</Text> from pull 50 and <Text style={s.ratesEm}>15%</Text> from pull 70 ("soft pity").</Text>
+              <Text style={s.ratesBody}>• An S-rank is <Text style={s.ratesEm}>guaranteed by pull 90</Text> on the standard banner and <Text style={s.ratesEm}>pull 80</Text> on event banners ("hard pity"). The counter carries over between summons and resets when you obtain an S-rank.</Text>
 
               <Text style={s.ratesSection}>Featured heroes</Text>
               <Text style={s.ratesBody}>• <Text style={s.ratesEm}>Event banner:</Text> each S-rank has a 50% chance to be the featured hero. If it is not, your <Text style={s.ratesEm}>next</Text> S-rank is guaranteed to be the featured hero.</Text>
@@ -1331,148 +1417,147 @@ const s = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFill },
   videoOverlay: { zIndex: 100 },
   videoSkipRow: {
-    position: 'absolute', bottom: 28, right: 24,
+    position: 'absolute', bottom: rs(28), right: rs(24),
     backgroundColor: C.OVERLAY_MID,
-    borderRadius: 20, paddingHorizontal: 16, paddingVertical: 7,
+    borderRadius: rs(20), paddingHorizontal: rs(16), paddingVertical: rs(7),
     borderWidth: 1, borderColor: C.GLASS_8,
   },
   videoSkipTxt: {
-    color: 'rgba(255,255,255,0.85)', fontSize: 11,
+    color: 'rgba(255,255,255,0.85)', fontSize: rf(13),
     fontWeight: '700', letterSpacing: 1.5,
   },
 
   // Header
   header: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 12, paddingBottom: 10,
+    paddingHorizontal: rs(12), paddingBottom: rs(10),
     borderBottomWidth: 1, borderBottomColor: C.GLASS_7,
   },
-  headerBack:  { padding: 4, marginRight: 6 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
-  headerSub:   { fontSize: 10, color: 'rgba(255,255,255,0.65)', marginTop: 1 },
+  headerBack:  { padding: rs(4), marginRight: rs(6) },
+  headerTitle: { fontSize: rf(18), fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
+  headerSub:   { fontSize: rf(13), color: 'rgba(255,255,255,0.65)', marginTop: 1 },
   gemsChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: C.GLASS_7, borderRadius: 14,
-    paddingHorizontal: 10, paddingVertical: 5,
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    backgroundColor: C.GLASS_7, borderRadius: rs(14),
+    paddingHorizontal: rs(10), paddingVertical: rs(5),
     borderWidth: 1, borderColor: C.GLASS_8,
   },
-  gemsTxt:      { color: C.GOLD, fontSize: 14, fontWeight: '700' },
-  headerGemImg: { width: 16, height: 16, resizeMode: 'contain' },
+  gemsTxt:      { color: C.GOLD, fontSize: rf(14), fontWeight: '700' },
+  headerGemImg: { width: rs(16), height: rs(16), resizeMode: 'contain' },
 
   // ── Rates / odds disclosure modal ───────────────────────────────────────────
   ratesOverlay: {
     backgroundColor: C.OVERLAY_4, alignItems: 'center', justifyContent: 'center',
-    zIndex: 120, paddingHorizontal: 16,
+    zIndex: 120, paddingHorizontal: rs(16),
   },
   ratesCard: {
-    width: '100%', maxWidth: 520, maxHeight: '88%',
-    backgroundColor: C.BG_CARD, borderRadius: 16,
+    width: '100%', maxWidth: rs(520), maxHeight: '88%',
+    backgroundColor: C.BG_CARD, borderRadius: rs(16),
     borderWidth: 1, borderColor: C.BORDER_STRONG,
-    paddingHorizontal: 18, paddingTop: 14, paddingBottom: 16,
+    paddingHorizontal: rs(18), paddingTop: rs(14), paddingBottom: rs(16),
   },
-  ratesHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  ratesTitle: { flex: 1, color: C.TEXT, fontSize: 15, fontWeight: '900', letterSpacing: 2 },
-  ratesClose: { padding: 4 },
+  ratesHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: rs(8) },
+  ratesTitle: { flex: 1, color: C.TEXT, fontSize: rf(15), fontWeight: '900', letterSpacing: 2 },
+  ratesClose: { padding: rs(4) },
   ratesSection: {
-    color: C.GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 1.5,
-    textTransform: 'uppercase', marginTop: 12, marginBottom: 6,
+    color: C.GOLD, fontSize: rf(13), fontWeight: '800', letterSpacing: 1.5,
+    textTransform: 'uppercase', marginTop: rs(12), marginBottom: rs(6),
   },
-  rateRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 3 },
+  rateRow: { flexDirection: 'row', alignItems: 'center', gap: rs(10), paddingVertical: rs(3) },
   rateBadge: {
-    width: 26, height: 22, borderRadius: 5, alignItems: 'center', justifyContent: 'center',
+    width: rs(26), height: rs(22), borderRadius: rs(5), alignItems: 'center', justifyContent: 'center',
   },
-  rateBadgeTxt: { fontSize: 12, fontWeight: '900' },
-  ratePct: { color: C.TEXT, fontSize: 14, fontWeight: '800', minWidth: 42 },
-  rateNote: { color: C.TEXT_MUTED, fontSize: 11, flex: 1 },
-  ratesBody: { color: C.TEXT_SOFT, fontSize: 12.5, lineHeight: 18, marginBottom: 5 },
+  rateBadgeTxt: { fontSize: rf(12), fontWeight: '900' },
+  ratePct: { color: C.TEXT, fontSize: rf(14), fontWeight: '800', minWidth: rs(42) },
+  rateNote: { color: C.TEXT_MUTED, fontSize: rf(13), flex: 1 },
+  ratesBody: { color: C.TEXT_SOFT, fontSize: rf(12.5), lineHeight: rf(18), marginBottom: rs(5) },
   ratesEm: { color: C.TEXT, fontWeight: '800' },
-  ratesFoot: { color: C.TEXT_MUTED, fontSize: 11, lineHeight: 16, marginTop: 12, fontStyle: 'italic' },
+  ratesFoot: { color: C.TEXT_MUTED, fontSize: rf(13), lineHeight: rf(16), marginTop: rs(12), fontStyle: 'italic' },
 
   // ── Banner layout ──────────────────────────────────────────────────────────
   bannerLayout: { flex: 1, flexDirection: 'row' },
 
   bannerLeft: { overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
-  bannerCardWrap: { marginTop: 8 },
+  bannerCardWrap: { marginTop: rs(8) },
 
   // ── Button-column banner header ────────────────────────────────────────────
-  btnColHeader: { alignItems: 'center', paddingBottom: 4 },
+  btnColHeader: { alignItems: 'center', paddingBottom: rs(4) },
   btnColBannerName: {
-    fontSize: 16, fontWeight: '900', letterSpacing: 3, textAlign: 'center',
+    fontSize: rf(16), fontWeight: '900', letterSpacing: 3, textAlign: 'center',
     textShadowColor: 'rgba(0,0,0,0.7)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
-  bannerLimitedRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 4 },
-  bannerLimitedTxt: { fontSize: 10, color: C.GOLD, fontWeight: '700', letterSpacing: 3 },
-  limitedDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: C.GOLD },
+  bannerLimitedRow: { flexDirection: 'row', alignItems: 'center', gap: rs(7), marginTop: rs(4) },
+  bannerLimitedTxt: { fontSize: rf(13), color: C.GOLD, fontWeight: '700', letterSpacing: 3 },
+  limitedDot: { width: rs(4), height: rs(4), borderRadius: rs(2), backgroundColor: C.GOLD },
 
   // ── Right controls ─────────────────────────────────────────────────────────
   bannerRight: {
-    flex: 1, flexDirection: 'column', paddingVertical: 10, paddingHorizontal: 8, gap: 8,
+    flex: 1, flexDirection: 'column', paddingVertical: rs(10), paddingHorizontal: rs(8), gap: rs(8),
   },
   bannerSubCols: {
-    flex: 1, flexDirection: 'row', gap: 8, alignItems: 'center',
+    flex: 1, flexDirection: 'row', gap: rs(8), alignItems: 'center',
   },
   bannerInfoCol: {
-    flex: 1, gap: 8, justifyContent: 'center',
+    flex: 1, gap: rs(8), justifyContent: 'center',
   },
   bannerBtnCol: {
-    flex: 1, gap: 8, justifyContent: 'center',
+    flex: 1, gap: rs(8), justifyContent: 'center',
   },
 
   infoCard: {
-    borderRadius: 10, padding: 10,
+    borderRadius: rs(10), padding: rs(10),
     backgroundColor: C.GLASS_4,
     borderWidth: 1, borderColor: C.BORDER,
   },
-  infoCardTitle: { fontSize: 9, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 2, marginBottom: 6 },
+  infoCardTitle: { fontSize: rf(12), fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 2, marginBottom: rs(6) },
 
-  ratesRow:    { flexDirection: 'row', gap: 8 },
-  rateItem:    { alignItems: 'center', gap: 3 },
-  rateRankPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
-  rateRankLbl: { fontSize: 11, fontWeight: '900' },
-  ratePct:     { fontSize: 10, color: C.TEXT_SOFT, fontWeight: '600' },
+  ratesRow:    { flexDirection: 'row', gap: rs(8) },
+  rateItem:    { alignItems: 'center', gap: rs(3) },
+  rateRankPill: { paddingHorizontal: rs(8), paddingVertical: rs(3), borderRadius: rs(4) },
+  rateRankLbl: { fontSize: rf(13), fontWeight: '900' },
 
-  pityHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  pityCount:  { fontSize: 10, color: C.PRIMARY_LIGHT, fontWeight: '700' },
-  pityBg:     { height: 5, backgroundColor: 'rgba(255,255,255,0.10)', borderRadius: 3, overflow: 'hidden' },
-  pityFill:   { height: '100%', borderRadius: 3 },
-  pityHint:     { fontSize: 8, color: C.TEXT_MUTED, marginTop: 5, fontStyle: 'italic' },
-  pityWarnBadge:{ borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1 },
-  pityWarnTxt:  { fontSize: 7, fontWeight: '900', letterSpacing: 0.5 },
+  pityHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: rs(6) },
+  pityCount:  { fontSize: rf(13), color: C.PRIMARY_LIGHT, fontWeight: '700' },
+  pityBg:     { height: rs(5), backgroundColor: 'rgba(255,255,255,0.10)', borderRadius: rs(3), overflow: 'hidden' },
+  pityFill:   { height: '100%', borderRadius: rs(3) },
+  pityHint:     { fontSize: rf(13), color: C.TEXT_MUTED, marginTop: rs(5), fontStyle: 'italic' },
+  pityWarnBadge:{ borderRadius: rs(4), paddingHorizontal: rs(5), paddingVertical: 1, borderWidth: 1 },
+  pityWarnTxt:  { fontSize: rf(13), fontWeight: '900', letterSpacing: 0.5 },
 
   ornateDisabled: { opacity: 0.42 },
-  ornateOuter:    { marginVertical: 10 },
+  ornateOuter:    { marginVertical: rs(10) },
   ornateGlowRing: {
     position: 'absolute', top: -5, left: -5, right: -5, bottom: -5,
-    borderRadius: 13,
+    borderRadius: rs(13),
   },
   ornateBody: {
-    height: 64, borderRadius: 8, overflow: 'hidden', borderWidth: 2,
+    height: rs(64), borderRadius: rs(8), overflow: 'hidden', borderWidth: 2,
   },
-  ornateRail:    { position: 'absolute', left: 14, right: 14, height: 1 },
-  ornateContent: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 12 },
+  ornateRail:    { position: 'absolute', left: rs(14), right: rs(14), height: 1 },
+  ornateContent: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: rs(16), gap: rs(12) },
   ornateLabel: {
-    fontSize: 14, fontWeight: '900', color: C.TEXT, letterSpacing: 2,
+    fontSize: rf(14), fontWeight: '900', color: C.TEXT, letterSpacing: 2,
     textShadowColor: 'rgba(0,0,0,0.7)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
-  ornateSub:     { fontSize: 7, color: C.SUCCESS, fontWeight: '800', letterSpacing: 1, marginTop: 2 },
-  ornateCostRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ornateCostTxt: { fontSize: 14, fontWeight: '800' },
-  ornateDiamond: { position: 'absolute', width: 12, height: 12, transform: [{ rotate: '45deg' }] },
-  ornateTL:      { top: -6, left: 10 },
-  ornateTR:      { top: -6, right: 10 },
-  ornateBL:      { bottom: -6, left: 10 },
-  ornateBR:      { bottom: -6, right: 10 },
+  ornateSub:     { fontSize: rf(13), color: C.SUCCESS, fontWeight: '800', letterSpacing: 1, marginTop: 2 },
+  ornateCostRow: { flexDirection: 'row', alignItems: 'center', gap: rs(4) },
+  ornateCostTxt: { fontSize: rf(14), fontWeight: '800' },
+  ornateDiamond: { position: 'absolute', width: rs(12), height: rs(12), transform: [{ rotate: '45deg' }] },
+  ornateTL:      { top: -6, left: rs(10) },
+  ornateTR:      { top: -6, right: rs(10) },
+  ornateBL:      { bottom: -6, left: rs(10) },
+  ornateBR:      { bottom: -6, right: rs(10) },
   ornateAccentRow: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  ornateAccentDot: { width: 10, height: 10, transform: [{ rotate: '45deg' }] },
-  ornateParticle:  { position: 'absolute', bottom: 4, width: 4, height: 4, borderRadius: 2 },
-  ornateGemImg:    { width: 18, height: 18, resizeMode: 'contain' },
+  ornateAccentDot: { width: rs(10), height: rs(10), transform: [{ rotate: '45deg' }] },
+  ornateParticle:  { position: 'absolute', bottom: rs(4), width: rs(4), height: rs(4), borderRadius: rs(2) },
+  ornateGemImg:    { width: rs(18), height: rs(18), resizeMode: 'contain' },
 
   noGems: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: C.DANGER + '18', borderRadius: 7, padding: 8,
+    flexDirection: 'row', alignItems: 'center', gap: rs(6),
+    backgroundColor: C.DANGER + '18', borderRadius: rs(7), padding: rs(8),
     borderWidth: 1, borderColor: C.DANGER + '40',
   },
-  noGemsTxt: { flex: 1, fontSize: 10, color: C.TEXT_SOFT, lineHeight: 14 },
+  noGemsTxt: { flex: 1, fontSize: rf(13), color: C.TEXT_SOFT, lineHeight: rf(14) },
 
   // ── Reveal / Results ───────────────────────────────────────────────────────
   revealWrap:  { flex: 1 },
@@ -1481,112 +1566,113 @@ const s = StyleSheet.create({
   singleArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   tenGrid: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
-    gap: 10, paddingHorizontal: 12,
+    gap: rs(10), paddingHorizontal: rs(12),
   },
-  tenRow: { flexDirection: 'row', gap: 8 },
+  tenRow: { flexDirection: 'row', gap: rs(8) },
 
   revealBar: {
-    height: REVEAL_BOT, flexDirection: 'row',
-    alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 16,
+    height: REVEAL_BOT,
   },
-  tapHint: { fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: '700', letterSpacing: 3 },
+  revealBarCenter: {
+    alignItems: 'center', justifyContent: 'center',
+  },
+  tapHint: { fontSize: rf(12), color: 'rgba(255,255,255,0.85)', fontWeight: '700', letterSpacing: 3 },
 
   closeBtn: {
-    width: 44, height: 44, borderRadius: 22,
+    width: rs(44), height: rs(44), borderRadius: rs(22),
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
   },
 
   summaryRow: {
-    flexDirection: 'row', gap: 10, justifyContent: 'center',
-    paddingVertical: 8,
+    flexDirection: 'row', gap: rs(10), justifyContent: 'center',
+    paddingVertical: rs(8),
   },
   sumChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    borderRadius: 8, borderWidth: 1.5,
-    paddingHorizontal: 10, paddingVertical: 5,
+    flexDirection: 'row', alignItems: 'center', gap: rs(6),
+    borderRadius: rs(8), borderWidth: 1.5,
+    paddingHorizontal: rs(10), paddingVertical: rs(5),
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  sumDot: { width: 22, height: 22, borderRadius: 5, alignItems: 'center', justifyContent: 'center' },
-  sumDotTxt: { fontSize: 10, fontWeight: '900' },
-  sumCount:  { fontSize: 14, fontWeight: '700' },
+  sumDot: { width: rs(22), height: rs(22), borderRadius: rs(5), alignItems: 'center', justifyContent: 'center' },
+  sumDotTxt: { fontSize: rf(13), fontWeight: '900' },
+  sumCount:  { fontSize: rf(14), fontWeight: '700' },
 
   // ── Card back ──────────────────────────────────────────────────────────────
-  cbCorner: { position: 'absolute', width: 10, height: 10, borderColor: C.GOLD, borderWidth: 1.5 },
-  cbTL: { top: 5,  left: 5,  borderRightWidth: 0, borderBottomWidth: 0 },
-  cbTR: { top: 5,  right: 5, borderLeftWidth:  0, borderBottomWidth: 0 },
-  cbBL: { bottom: 5, left: 5,  borderRightWidth: 0, borderTopWidth: 0 },
-  cbBR: { bottom: 5, right: 5, borderLeftWidth:  0, borderTopWidth: 0 },
+  cbCorner: { position: 'absolute', width: rs(10), height: rs(10), borderColor: C.GOLD, borderWidth: 1.5 },
+  cbTL: { top: rs(5),  left: rs(5),  borderRightWidth: 0, borderBottomWidth: 0 },
+  cbTR: { top: rs(5),  right: rs(5), borderLeftWidth:  0, borderBottomWidth: 0 },
+  cbBL: { bottom: rs(5), left: rs(5),  borderRightWidth: 0, borderTopWidth: 0 },
+  cbBR: { bottom: rs(5), right: rs(5), borderLeftWidth:  0, borderTopWidth: 0 },
   cbCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  cbSymbol: { fontSize: 18, color: C.GOLD, marginBottom: 4, textShadowColor: C.GOLD, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 8 },
-  cbWord:   { fontSize: 9, color: C.GOLD, fontWeight: '800', letterSpacing: 3, lineHeight: 13 },
+  cbSymbol: { fontSize: rf(18), color: C.GOLD, marginBottom: rs(4), textShadowColor: C.GOLD, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 8 },
+  cbWord:   { fontSize: rf(12), color: C.GOLD, fontWeight: '800', letterSpacing: 3, lineHeight: rf(13) },
 
   // ── Small card front (×10) ─────────────────────────────────────────────────
-  scRank:    { position: 'absolute', top: 4, right: 4, paddingHorizontal: 4, paddingVertical: 2, borderRadius: 3 },
-  scRankTxt: { fontSize: 9, fontWeight: '900' },
+  scRank:    { position: 'absolute', top: rs(4), right: rs(4), paddingHorizontal: rs(4), paddingVertical: 2, borderRadius: rs(3) },
+  scRankTxt: { fontSize: rf(12), fontWeight: '900' },
   scName: {
-    position: 'absolute', bottom: 16, left: 4, right: 4,
-    fontSize: 8, color: C.TEXT, fontWeight: '700', textAlign: 'center',
+    position: 'absolute', bottom: rs(16), left: rs(4), right: rs(4),
+    fontSize: rf(13), color: C.TEXT, fontWeight: '700', textAlign: 'center',
     textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
-  scNew:    { position: 'absolute', bottom: 4, left: 4, right: 4, alignItems: 'center' },
+  scNew:    { position: 'absolute', bottom: rs(4), left: rs(4), right: rs(4), alignItems: 'center' },
   scNewTxt: {
-    fontSize: 7, color: C.SUCCESS, fontWeight: '900', letterSpacing: 0.5,
+    fontSize: rf(13), color: C.SUCCESS, fontWeight: '900', letterSpacing: 0.5,
     textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
   scFeatured: {
-    position: 'absolute', top: 4, left: 4,
-    backgroundColor: C.GOLD + 'CC', borderRadius: 3,
-    paddingHorizontal: 3, paddingVertical: 1,
+    position: 'absolute', top: rs(4), left: rs(4),
+    backgroundColor: C.GOLD + 'CC', borderRadius: rs(3),
+    paddingHorizontal: rs(3), paddingVertical: 1,
   },
-  scFeaturedTxt: { fontSize: 8, color: RANK.SOVEREIGN.text, fontWeight: '900' },
+  scFeaturedTxt: { fontSize: rf(13), color: RANK.SOVEREIGN.text, fontWeight: '900' },
 
   // ── Single card badges ─────────────────────────────────────────────────────
   singleFeatured: {
-    marginTop: 8, alignSelf: 'center',
-    backgroundColor: C.GOLD + '22', borderRadius: 6,
-    paddingHorizontal: 14, paddingVertical: 5,
+    marginTop: rs(8), alignSelf: 'center',
+    backgroundColor: C.GOLD + '22', borderRadius: rs(6),
+    paddingHorizontal: rs(14), paddingVertical: rs(5),
     borderWidth: 1, borderColor: C.GOLD,
   },
-  singleFeaturedTxt: { color: C.GOLD, fontSize: 11, fontWeight: '900', letterSpacing: 2 },
+  singleFeaturedTxt: { color: C.GOLD, fontSize: rf(13), fontWeight: '900', letterSpacing: 2 },
   singleNew: {
-    marginTop: 6, alignSelf: 'center',
-    backgroundColor: C.SUCCESS + '22', borderRadius: 6,
-    paddingHorizontal: 14, paddingVertical: 5,
+    marginTop: rs(6), alignSelf: 'center',
+    backgroundColor: C.SUCCESS + '22', borderRadius: rs(6),
+    paddingHorizontal: rs(14), paddingVertical: rs(5),
     borderWidth: 1, borderColor: C.SUCCESS,
   },
-  singleNewTxt: { color: C.SUCCESS, fontSize: 11, fontWeight: '800', letterSpacing: 2 },
+  singleNewTxt: { color: C.SUCCESS, fontSize: rf(13), fontWeight: '800', letterSpacing: 2 },
 
   // ── 50/50 guarantee row (pity card) ────────────────────────────────────────
   guaranteeRow: {
-    marginTop: 6, borderRadius: 5, borderWidth: 1,
-    paddingHorizontal: 8, paddingVertical: 4,
+    marginTop: rs(6), borderRadius: rs(5), borderWidth: 1,
+    paddingHorizontal: rs(8), paddingVertical: rs(4),
     alignItems: 'center',
   },
-  guaranteeTxt: { fontSize: 8, fontWeight: '900', letterSpacing: 1 },
+  guaranteeTxt: { fontSize: rf(13), fontWeight: '900', letterSpacing: 1 },
 
   // ── Star particle ──────────────────────────────────────────────────────────
   starDot: { position: 'absolute', backgroundColor: 'white' },
 
   // ── History button (header) ────────────────────────────────────────────────
   historyBtn: {
-    marginLeft: 8, padding: 6,
-    borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.10)',
+    marginLeft: rs(8), padding: rs(6),
+    borderRadius: rs(8), backgroundColor: 'rgba(255,255,255,0.10)',
   },
 
   // ── Banner tabs ────────────────────────────────────────────────────────────
   bannerTabs: {
-    flexDirection: 'row', gap: 6,
-    paddingHorizontal: 10, paddingVertical: 6,
+    flexDirection: 'row', gap: rs(6),
+    paddingHorizontal: rs(10), paddingVertical: rs(6),
     backgroundColor: C.BG_DEEP,
     borderBottomWidth: 1, borderBottomColor: C.BORDER_SUBTLE,
   },
   bannerTab: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 12, paddingVertical: 5,
-    borderRadius: 6, borderWidth: 1, borderColor: C.BORDER,
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    paddingHorizontal: rs(12), paddingVertical: rs(5),
+    borderRadius: rs(6), borderWidth: 1, borderColor: C.BORDER,
     backgroundColor: C.GLASS_3,
   },
   bannerTabActive: {
@@ -1594,31 +1680,31 @@ const s = StyleSheet.create({
     borderColor: C.PRIMARY_LIGHT,
   },
   bannerTabTxt: {
-    fontSize: 9, fontWeight: '800', letterSpacing: 1.5,
+    fontSize: rf(12), fontWeight: '800', letterSpacing: 1.5,
     color: C.TEXT_MUTED,
   },
   bannerTabTxtActive: {
     color: C.PRIMARY_LIGHT,
   },
   bannerTabDot: {
-    width: 6, height: 6, borderRadius: 3,
+    width: rs(6), height: rs(6), borderRadius: rs(3),
   },
 
   // ── Standard banner: featured pool ────────────────────────────────────────
-  featDots:      { flexDirection: 'row', gap: 5, justifyContent: 'center', paddingTop: 5 },
-  featDot:       { width: 5, height: 5, borderRadius: 3, backgroundColor: C.GLASS_5 },
-  featDotActive: { width: 14, backgroundColor: C.PRIMARY_LIGHT },
+  featDots:      { flexDirection: 'row', gap: rs(5), justifyContent: 'center', paddingTop: rs(5) },
+  featDot:       { width: rs(5), height: rs(5), borderRadius: rs(3), backgroundColor: C.GLASS_5 },
+  featDotActive: { width: rs(14), backgroundColor: C.PRIMARY_LIGHT },
 
-  featSectionLabel: { fontSize: 8, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1.5, marginBottom: 4 },
-  featMinis:        { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
+  featSectionLabel: { fontSize: rf(13), fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1.5, marginBottom: rs(4) },
+  featMinis:        { flexDirection: 'row', gap: rs(5), flexWrap: 'wrap' },
   featMiniS: {
-    width: 48, height: 48, borderRadius: 8, overflow: 'hidden', borderWidth: 2,
+    width: rs(48), height: rs(48), borderRadius: rs(8), overflow: 'hidden', borderWidth: 2,
   },
   featMiniAB: {
-    width: 32, height: 32, borderRadius: 5, overflow: 'hidden', borderWidth: 1.5,
+    width: rs(32), height: rs(32), borderRadius: rs(5), overflow: 'hidden', borderWidth: 1.5,
   },
   featMiniImg:        { width: '100%', height: '100%' },
-  featMiniActiveRing: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 8, borderWidth: 2 },
+  featMiniActiveRing: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: rs(8), borderWidth: 2 },
   featMiniRankBadge:  { position: 'absolute', bottom: 1, right: 1, paddingHorizontal: 2, borderRadius: 2 },
-  featMiniRankTxt:    { fontSize: 6, fontWeight: '900' },
+  featMiniRankTxt:    { fontSize: rf(6), fontWeight: '900' },
 });

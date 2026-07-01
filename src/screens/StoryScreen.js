@@ -14,6 +14,7 @@ import { CHAPTER_DEFS, STORY_STAGES, STAGE_ORDER, getStagesForChapter, getStageB
 import { ENEMY_GROUPS } from '../data/enemies';
 import AudioManager from '../utils/AudioManager';
 import { C } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 
 const SIDEBAR_W  = 172;
 const PART_LABEL = ['', 'Part  I', 'Part  II', 'Part  III'];
@@ -37,9 +38,9 @@ const ChapterTab = memo(function ChapterTab({ ch, accessible, done, active, onSe
             <Text style={[styles.chNum, { color: active ? tabColor : C.TEXT_MUTED }]}>{ch.id}</Text>
           </View>
           {done ? (
-            <Ionicons name="checkmark-circle" size={14} color={done && active ? tabColor : C.SUCCESS} />
+            <Ionicons name="checkmark-circle" size={rs(18)} color={done && active ? tabColor : C.SUCCESS} />
           ) : !accessible ? (
-            <Ionicons name="lock-closed" size={13} color={C.TEXT_DISABLED} />
+            <Ionicons name="lock-closed" size={rs(17)} color={C.TEXT_DISABLED} />
           ) : null}
         </View>
         <Text style={[styles.chTabTitle, active && { color: C.TEXT }]} numberOfLines={1}>
@@ -153,16 +154,16 @@ export default function StoryScreen({ navigation }) {
               backgroundColor: cardAccentColor + '18',
               borderColor: cardAccentColor,
             }]}>
-              <Ionicons name={PART_ICON[stage.part]} size={10} color={cardAccentColor} />
+              <Ionicons name={PART_ICON[stage.part]} size={rs(10)} color={cardAccentColor} />
               <Text style={[styles.partBadgeTxt, { color: cardAccentColor }]}>
                 {PART_LABEL[stage.part]}
               </Text>
             </View>
 
             {completed ? (
-              <Ionicons name="checkmark-circle" size={16} color={C.SUCCESS} />
+              <Ionicons name="checkmark-circle" size={rs(20)} color={C.SUCCESS} />
             ) : !unlocked ? (
-              <Ionicons name="lock-closed" size={15} color={C.TEXT_DISABLED} />
+              <Ionicons name="lock-closed" size={rs(19)} color={C.TEXT_DISABLED} />
             ) : isBoss ? (
               <View style={styles.bossTag}>
                 <Text style={styles.bossTagTxt}>BOSS</Text>
@@ -181,13 +182,13 @@ export default function StoryScreen({ navigation }) {
           <View style={styles.rewardRow}>
             <Image source={GEM_IMG} style={styles.rewardIcon} resizeMode="contain" />
             <Text style={styles.rewardGems}>{stage.rewards.gems}</Text>
-            <Image source={GOLD_IMG} style={[styles.rewardIcon, { marginLeft: 5 }]} resizeMode="contain" />
+            <Image source={GOLD_IMG} style={[styles.rewardIcon, { marginLeft: rs(5) }]} resizeMode="contain" />
             <Text style={[styles.rewardGems, { color: C.GOLD }]}>
               {stageGoldReward(stage.part)}
             </Text>
             {stage.rewards.heroId && (
               <>
-                <Ionicons name="person-add" size={11} color={chColor} style={{ marginLeft: 5 }} />
+                <Ionicons name="person-add" size={rs(15)} color={chColor} style={{ marginLeft: rs(5) }} />
                 <Text style={[styles.rewardGems, { color: chColor }]}>Hero</Text>
               </>
             )}
@@ -202,7 +203,7 @@ export default function StoryScreen({ navigation }) {
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={styles.enterBtnInner}
               >
-                <Ionicons name={completed ? 'refresh' : 'play'} size={12} color={C.TEXT} />
+                <Ionicons name={completed ? 'refresh' : 'play'} size={rs(12)} color={C.TEXT} />
                 <Text style={styles.enterBtnTxt}>{completed ? 'Replay' : 'Enter'}</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -220,14 +221,14 @@ export default function StoryScreen({ navigation }) {
         {/* Header */}
         <LinearGradient colors={C.GRAD_HEADER} style={styles.header}>
           <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Home'); }} style={styles.hdrBack}>
-            <Ionicons name="chevron-back" size={22} color={C.TEXT} />
+            <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={styles.hdrTitle}>STORY MODE</Text>
             <Text style={styles.hdrSub}>The Void War Chronicles · {CHAPTER_DEFS.length} Chapters · {STAGE_ORDER.length} Stages</Text>
           </View>
           <View style={styles.progressPill}>
-            <Ionicons name="trophy-outline" size={12} color={C.GOLD} />
+            <Ionicons name="trophy-outline" size={rs(12)} color={C.GOLD} />
             <Text style={styles.progressTxt}>{completedChapters.length} / {STAGE_ORDER.length}</Text>
           </View>
         </LinearGradient>
@@ -252,7 +253,7 @@ export default function StoryScreen({ navigation }) {
               </View>
               {isChapterCompleted(selectedChId) && (
                 <View style={styles.chDoneBadge}>
-                  <Ionicons name="trophy" size={13} color={C.GOLD} />
+                  <Ionicons name="trophy" size={rs(17)} color={C.GOLD} />
                   <Text style={styles.chDoneTxt}>Chapter Complete</Text>
                 </View>
               )}
@@ -275,58 +276,58 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.BG_DEEP },
   safe: { flex: 1 },
 
-  header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingTop: 8, paddingBottom: 10, gap: 10, borderBottomWidth: 1, borderBottomColor: C.BORDER },
+  header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: rs(12), paddingTop: rs(8), paddingBottom: rs(10), gap: rs(10), borderBottomWidth: 1, borderBottomColor: C.BORDER },
   hdrBack:      { padding: 4 },
-  hdrTitle:     { fontSize: 18, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
-  hdrSub:       { fontSize: 10, color: 'rgba(255,255,255,0.65)', marginTop: 1 },
-  progressPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(217,119,6,0.15)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: C.GOLD },
-  progressTxt:  { fontSize: 11, color: C.GOLD, fontWeight: '800' },
+  hdrTitle:     { fontSize: rf(18), fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
+  hdrSub:       { fontSize: rf(13), color: 'rgba(255,255,255,0.65)', marginTop: 1 },
+  progressPill: { flexDirection: 'row', alignItems: 'center', gap: rs(5), backgroundColor: 'rgba(217,119,6,0.15)', borderRadius: rs(8), paddingHorizontal: rs(10), paddingVertical: rs(5), borderWidth: 1, borderColor: C.GOLD },
+  progressTxt:  { fontSize: rf(13), color: C.GOLD, fontWeight: '800' },
 
   body:    { flex: 1, flexDirection: 'row' },
 
   sidebar:      { width: SIDEBAR_W, borderRightWidth: 1, borderRightColor: C.BORDER },
-  sidebarScroll:{ padding: 8, gap: 6 },
-  chTab:        { borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: C.BORDER },
-  chTabGrad:    { padding: 10, position: 'relative' },
-  chTabTop:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 },
-  chNumBadge:   { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  chNum:        { fontSize: 11, fontWeight: '900' },
-  chTabTitle:   { fontSize: 11, fontWeight: '800', color: C.TEXT, letterSpacing: 0.2 },
-  chTabSub:     { fontSize: 9, color: C.TEXT_MUTED, marginTop: 2, lineHeight: 13 },
-  chTabAccent:  { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, borderTopLeftRadius: 10, borderBottomLeftRadius: 10 },
+  sidebarScroll:{ padding: rs(8), gap: rs(6) },
+  chTab:        { borderRadius: rs(10), overflow: 'hidden', borderWidth: 1, borderColor: C.BORDER },
+  chTabGrad:    { padding: rs(10), position: 'relative' },
+  chTabTop:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: rs(5) },
+  chNumBadge:   { width: rs(22), height: rs(22), borderRadius: rs(11), alignItems: 'center', justifyContent: 'center' },
+  chNum:        { fontSize: rf(13), fontWeight: '900' },
+  chTabTitle:   { fontSize: rf(13), fontWeight: '800', color: C.TEXT, letterSpacing: 0.2 },
+  chTabSub:     { fontSize: rf(12), color: C.TEXT_MUTED, marginTop: 2, lineHeight: rf(13) },
+  chTabAccent:  { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, borderTopLeftRadius: rs(10), borderBottomLeftRadius: rs(10) },
 
-  content:   { flex: 1, padding: 12, gap: 8 },
+  content:   { flex: 1, padding: rs(12), gap: rs(8) },
   accentLine:{ height: 1, borderRadius: 1 },
 
   chStrip:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  chStripNum:   { fontSize: 9, fontWeight: '900', letterSpacing: 2, marginBottom: 2 },
-  chStripTitle: { fontSize: 17, fontWeight: '900', color: C.TEXT, letterSpacing: 0.5 },
-  chStripSub:   { fontSize: 11, color: C.TEXT_SOFT, marginTop: 2 },
-  chDoneBadge:  { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(217,119,6,0.12)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: C.GOLD },
-  chDoneTxt:    { fontSize: 11, color: C.GOLD, fontWeight: '700' },
+  chStripNum:   { fontSize: rf(12), fontWeight: '900', letterSpacing: 2, marginBottom: 2 },
+  chStripTitle: { fontSize: rf(17), fontWeight: '900', color: C.TEXT, letterSpacing: 0.5 },
+  chStripSub:   { fontSize: rf(13), color: C.TEXT_SOFT, marginTop: 2 },
+  chDoneBadge:  { flexDirection: 'row', alignItems: 'center', gap: rs(5), backgroundColor: 'rgba(217,119,6,0.12)', borderRadius: rs(8), paddingHorizontal: rs(10), paddingVertical: rs(5), borderWidth: 1, borderColor: C.GOLD },
+  chDoneTxt:    { fontSize: rf(13), color: C.GOLD, fontWeight: '700' },
 
-  partsRow: { flex: 1, flexDirection: 'row', gap: 10 },
+  partsRow: { flex: 1, flexDirection: 'row', gap: rs(10) },
 
-  partCard:       { flex: 1, borderRadius: 12, overflow: 'hidden', borderWidth: 1 },
+  partCard:       { flex: 1, borderRadius: rs(12), overflow: 'hidden', borderWidth: 1 },
   partCardDone:   { borderColor: 'rgba(5,150,105,0.4)' },
   partCardLocked: { opacity: 0.48 },
-  partCardGrad:   { flex: 1, padding: 12 },
+  partCardGrad:   { flex: 1, padding: rs(12) },
 
-  partTop:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  partBadge:    { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3, borderWidth: 1 },
-  partBadgeTxt: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
-  bossTag:      { backgroundColor: 'rgba(220,38,38,0.15)', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: C.DANGER },
-  bossTagTxt:   { fontSize: 8, color: C.DANGER, fontWeight: '900', letterSpacing: 1 },
+  partTop:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: rs(8) },
+  partBadge:    { flexDirection: 'row', alignItems: 'center', gap: rs(4), borderRadius: rs(5), paddingHorizontal: rs(7), paddingVertical: rs(3), borderWidth: 1 },
+  partBadgeTxt: { fontSize: rf(12), fontWeight: '800', letterSpacing: 0.5 },
+  bossTag:      { backgroundColor: 'rgba(220,38,38,0.15)', borderRadius: rs(4), paddingHorizontal: rs(6), paddingVertical: 2, borderWidth: 1, borderColor: C.DANGER },
+  bossTagTxt:   { fontSize: rf(11), color: C.DANGER, fontWeight: '900', letterSpacing: 1 },
 
-  stageTitle: { fontSize: 14, fontWeight: '800', color: C.TEXT, marginBottom: 4, letterSpacing: 0.2 },
-  stageDesc:  { fontSize: 10, color: C.TEXT_SOFT, lineHeight: 15, marginBottom: 8, flex: 1 },
+  stageTitle: { fontSize: rf(14), fontWeight: '800', color: C.TEXT, marginBottom: rs(4), letterSpacing: 0.2 },
+  stageDesc:  { fontSize: rf(13), color: C.TEXT_SOFT, lineHeight: rf(15), marginBottom: rs(8), flex: 1 },
   lockedTxt:  { color: C.TEXT_DISABLED },
 
-  rewardRow:  { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 10 },
-  rewardGems: { fontSize: 11, color: C.GOLD, fontWeight: '700' },
-  rewardIcon: { width: 14, height: 14 },
+  rewardRow:  { flexDirection: 'row', alignItems: 'center', gap: rs(3), marginBottom: rs(10) },
+  rewardGems: { fontSize: rf(13), color: C.GOLD, fontWeight: '700' },
+  rewardIcon: { width: rs(14), height: rs(14) },
 
-  enterBtn:      { borderRadius: 8, overflow: 'hidden' },
-  enterBtnInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, gap: 5 },
-  enterBtnTxt:   { fontSize: 12, fontWeight: '800', color: C.TEXT, letterSpacing: 0.5 },
+  enterBtn:      { borderRadius: rs(8), overflow: 'hidden' },
+  enterBtnInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: rs(8), gap: rs(5) },
+  enterBtnTxt:   { fontSize: rf(12), fontWeight: '800', color: C.TEXT, letterSpacing: 0.5 },
 });

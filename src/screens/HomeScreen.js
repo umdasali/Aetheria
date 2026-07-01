@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  Image, Animated, Dimensions, Modal,
+  Image, Animated, Dimensions, Modal, useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AudioManager from '../utils/AudioManager';
@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { HEROES, FACTIONS } from '../data/heroes';
+import { getAvatarImage } from '../data/avatars';
 import { CHAPTER_DEFS } from '../data/story';
 import { QUEST_DEFS } from '../data/dailyQuests';
 import { ACHIEVEMENT_DEFS } from '../data/achievements';
@@ -19,6 +20,7 @@ import WeatherEffect from '../components/WeatherEffect';
 import { C, RANK } from '../theme/colors';
 import { calcPlayerLevel } from '../utils/playerLevel';
 import HeroCard from '../components/HeroCard';
+import { rs, rf } from '../theme/scale';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -42,6 +44,8 @@ const SIDE_MENU = [
 ];
 
 export default function HomeScreen({ navigation }) {
+  const { width: screenW } = useWindowDimensions();
+
   // Per-property selectors — the screen only re-renders when a value it reads changes
   const gems                      = useGameStore(s => s.gems);
   const gold                      = useGameStore(s => s.gold);
@@ -120,10 +124,7 @@ export default function HomeScreen({ navigation }) {
   const teamHeroes  = useMemo(() => team.map((id) => HEROES.find((h) => h.id === id)).filter(Boolean), [team]);
   const displayHero = teamHeroes[0] || HEROES[0];
 
-  // Profile-driven values — fall back to team hero if player hasn't customised
-  const avatarHero   = playerProfile.avatarHeroId
-    ? HEROES.find(h => h.id === playerProfile.avatarHeroId) ?? displayHero
-    : displayHero;
+  const avatarImage = getAvatarImage(playerProfile.avatarId);
   const activeFaction = playerProfile.favoriteFaction
     ? FACTIONS[playerProfile.favoriteFaction]
     : (displayHero ? FACTIONS[displayHero.faction] : null);
@@ -247,11 +248,7 @@ export default function HomeScreen({ navigation }) {
             {/* Avatar + name + xp — tappable to open Profile */}
             <TouchableOpacity style={styles.playerBlock} onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Profile'); }} activeOpacity={0.8}>
               <View style={[styles.avatarFrame, { borderColor: factionColor }]}>
-                {avatarHero?.image ? (
-                  <Image source={avatarHero.image} style={styles.avatarImg} />
-                ) : (
-                  <Ionicons name="person" size={18} color={C.TEXT} />
-                )}
+                <Image source={avatarImage} style={styles.avatarImg} />
                 <LinearGradient
                   colors={['transparent', 'rgba(0,0,0,0.55)']}
                   style={styles.avatarOverlay}
@@ -305,17 +302,17 @@ export default function HomeScreen({ navigation }) {
             {/* Icon buttons */}
             <View style={styles.topIcons}>
               {/* <TouchableOpacity style={styles.topIconBtn}>
-                <Ionicons name="notifications-outline" size={17} color="rgba(255,255,255,0.8)" />
+                <Ionicons name="notifications-outline" size={rs(17)} color="rgba(255,255,255,0.8)" />
                 <View style={styles.notifDot} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.topIconBtn}>
-                <Ionicons name="mail-outline" size={17} color="rgba(255,255,255,0.8)" />
+                <Ionicons name="mail-outline" size={rs(17)} color="rgba(255,255,255,0.8)" />
               </TouchableOpacity> */}
               <TouchableOpacity style={styles.topIconBtn} onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Shop'); }} accessibilityLabel="Open Shop" accessibilityRole="button">
-                <Ionicons name="storefront" size={17} color={C.GOLD} />
+                <Ionicons name="storefront" size={rs(17)} color={C.GOLD} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.topIconBtn} onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Settings'); }} accessibilityLabel="Open Settings" accessibilityRole="button">
-                <Ionicons name="settings-outline" size={17} color="rgba(255,255,255,0.8)" />
+                <Ionicons name="settings-outline" size={rs(17)} color="rgba(255,255,255,0.8)" />
               </TouchableOpacity>
             </View>
           </View>
@@ -347,7 +344,7 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.centerGap} />
 
             {/* ── Right action panels — 2-column tile grid (no scroll) ── */}
-            <View style={styles.rightPanels}>
+            <View style={[styles.rightPanels, { width: (screenW - SIDEBAR_W - 16) / 2 }]}>
               {panelData.map(({ key: k, ...p }) => (
                 <ActionPanel key={k} {...p} />
               ))}
@@ -384,7 +381,7 @@ export default function HomeScreen({ navigation }) {
             {/* Header row */}
             <View style={styles.achHeader}>
               <View style={styles.achIconCircle}>
-                <Ionicons name="ribbon" size={22} color={C.PRIMARY_LIGHT} />
+                <Ionicons name="ribbon" size={rs(22)} color={C.PRIMARY_LIGHT} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.achBadge}>
@@ -401,7 +398,7 @@ export default function HomeScreen({ navigation }) {
             <ScrollView
               style={styles.achList}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8 }}
+              contentContainerStyle={{ gap: rs(8) }}
             >
               {unlockedDefs.map(def => (
                 <View key={def.id} style={styles.achRow}>
@@ -411,7 +408,7 @@ export default function HomeScreen({ navigation }) {
                     style={StyleSheet.absoluteFill}
                   />
                   <View style={styles.achRowIcon}>
-                    <Ionicons name={def.icon ?? 'trophy-outline'} size={18} color={C.PRIMARY_LIGHT} />
+                    <Ionicons name={def.icon ?? 'trophy-outline'} size={rs(18)} color={C.PRIMARY_LIGHT} />
                   </View>
                   <View style={styles.achRowInfo}>
                     <Text style={styles.achRowTitle}>{def.title}</Text>
@@ -454,7 +451,7 @@ export default function HomeScreen({ navigation }) {
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.achBtnViewInner}
                 >
-                  <Ionicons name="ribbon-outline" size={13} color={C.TEXT} />
+                  <Ionicons name="ribbon-outline" size={rs(13)} color={C.TEXT} />
                   <Text style={styles.achBtnViewTxt}>VIEW ACHIEVEMENTS</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -557,7 +554,7 @@ function CurrencyChip({ icon, value, tint, onPress }) {
       <Image source={icon} style={styles.currIcon} resizeMode="contain" />
       <Text style={[styles.currVal, { color: tint }]}>{value.toLocaleString()}</Text>
       <View style={[styles.currAdd, { borderColor: tint + '60' }]}>
-        <Ionicons name="add" size={9} color={tint} />
+        <Ionicons name="add" size={rs(9)} color={tint} />
       </View>
     </TouchableOpacity>
   );
@@ -600,12 +597,12 @@ const SideItem = memo(function SideItem({ icon, image, label, a11yLabel, badge, 
           {badge && (
             <Animated.View
               pointerEvents="none"
-              style={[StyleSheet.absoluteFill, { borderRadius: 8, backgroundColor: accent, opacity: iconGlow }]}
+              style={[StyleSheet.absoluteFill, { borderRadius: rs(8), backgroundColor: accent, opacity: iconGlow }]}
             />
           )}
           {image
             ? <Image source={image} style={styles.sideIcon} resizeMode="contain" />
-            : <Ionicons name={icon} size={18} color={accent} />
+            : <Ionicons name={icon} size={rs(22)} color={accent} />
           }
         </View>
 
@@ -664,7 +661,7 @@ function ActionPanel({ tag, accent, title, sub, thumb, progressRatio, badge, onP
         )}
         {/* <View style={styles.panelEnterRow}>
           <Text style={[styles.panelEnterText, { color: accent }]}>ENTER</Text>
-          <Ionicons name="chevron-forward" size={9} color={accent} />
+          <Ionicons name="chevron-forward" size={rs(9)} color={accent} />
         </View> */}
       </View>
 
@@ -698,16 +695,16 @@ const styles = StyleSheet.create({
 
   // ── Top HUD ──────────────────────────────────
   topHud: {
-    height: 52,
+    height: rs(62),
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 10, gap: 10,
+    paddingHorizontal: rs(20), gap: rs(10),
     // backgroundColor: 'rgba(0,0,0,0.55)',
     // borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.07)',
   },
 
-  playerBlock: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  playerBlock: { flexDirection: 'row', alignItems: 'center', gap: rs(18) },
   avatarFrame: {
-    width: 36, height: 36, borderRadius: 8,
+    width: rs(46), height: rs(46), borderRadius: rs(8),
     borderWidth: 2, overflow: 'hidden',
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(40,18,80,0.9)',
@@ -715,40 +712,40 @@ const styles = StyleSheet.create({
   avatarImg:     { width: '100%', height: '100%', resizeMode: 'cover' },
   avatarOverlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
 
-  nameRow:    { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 },
-  playerName: { fontSize: 11, fontWeight: '800', color: C.TEXT, letterSpacing: 0.8 },
-  lvBadge:    { borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 },
-  lvText:     { fontSize: 10, color: C.TEXT, fontWeight: '900', letterSpacing: 0.5 },
+  nameRow:    { flexDirection: 'row', alignItems: 'center', gap: rs(5), marginBottom: rs(3) },
+  playerName: { fontSize: rf(13), fontWeight: '800', color: C.TEXT, letterSpacing: 0.8 },
+  lvBadge:    { borderRadius: 4, paddingHorizontal: rs(5), paddingVertical: 1 },
+  lvText:     { fontSize: rf(11), color: C.TEXT, fontWeight: '900', letterSpacing: 0.5 },
 
   xpOuter: {
-    width: 88, height: 3,
+    width: rs(88), height: rs(3),
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 2, overflow: 'hidden',
   },
-  xpFill:  { height: 3, borderRadius: 2 },
-  xpLabel: { fontSize: 10, color: 'rgba(255,255,255,0.38)', marginTop: 2, letterSpacing: 0.3 },
+  xpFill:  { height: rs(3), borderRadius: 2 },
+  xpLabel: { fontSize: rf(10), color: 'rgba(255,255,255,0.38)', marginTop: rs(2), letterSpacing: 0.3 },
 
   hudDivider: {
-    width: 1, height: 28,
+    width: 1, height: rs(28),
     backgroundColor: 'rgba(255,255,255,0.1)',
-    marginHorizontal: 2,
+    marginHorizontal: rs(2),
   },
 
-  currRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  currChip: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  currIcon: { width: 20, height: 20 },
-  currVal:  { fontSize: 13, fontWeight: '800', minWidth: 26 },
+  currRow: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
+  currChip: { flexDirection: 'row', alignItems: 'center', gap: rs(5), minHeight: rs(30), paddingVertical: rs(5) },
+  currIcon: { width: rs(20), height: rs(20) },
+  currVal:  { fontSize: rf(15), fontWeight: '800', minWidth: rs(26) },
   currAdd: {
-    width: 15, height: 15, borderRadius: 8,
+    width: rs(15), height: rs(15), borderRadius: rs(8),
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1,
   },
-  currSep: { width: 1, height: 18, backgroundColor: 'rgba(255,255,255,0.1)' },
+  currSep: { width: 1, height: rs(18), backgroundColor: 'rgba(255,255,255,0.1)' },
 
-  topIcons: { flexDirection: 'row', gap: 5 },
+  topIcons: { flexDirection: 'row', gap: rs(5) },
   topIconBtn: {
-    width: 30, height: 30, borderRadius: 7,
+    width: rs(30), height: rs(30), borderRadius: rs(7),
     backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
@@ -756,7 +753,7 @@ const styles = StyleSheet.create({
   },
   notifDot: {
     position: 'absolute', top: 4, right: 4,
-    width: 6, height: 6, borderRadius: 3,
+    width: rs(6), height: rs(6), borderRadius: rs(3),
     backgroundColor: C.SECONDARY, borderWidth: 1, borderColor: C.BG_SCREEN,
   },
 
@@ -767,21 +764,21 @@ const styles = StyleSheet.create({
   leftSidebar: {
     width: SIDEBAR_W,
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingVertical: rs(8),
   },
 
   // Glass panel — 2-column compact grid
   sidePanel: {
-    borderRadius: 14,
+    borderRadius: rs(14),
     overflow: 'hidden',
-    padding: PANEL_PAD,
+    padding: rs(PANEL_PAD),
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: rs(7),
     position: 'relative',
   },
   sidePanelBorder: {
-    borderRadius: 14,
+    borderRadius: rs(14),
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.10)',
   },
@@ -789,7 +786,7 @@ const styles = StyleSheet.create({
   // 2-column grid cell — width fills exactly half minus gap
   sideItem: {
     width: (SIDEBAR_W - PANEL_PAD * 2 - 6) / 2,
-    height: 56,
+    height: rs(65),
     position: 'relative',
   },
 
@@ -797,14 +794,14 @@ const styles = StyleSheet.create({
   sideFace: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
-    borderRadius: 10,
+    borderRadius: rs(10),
     overflow: 'hidden',
     borderWidth: 1,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 6,
+    gap: rs(4),
+    paddingVertical: rs(6),
     shadowColor: C.SHADOW,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.40,
@@ -816,22 +813,22 @@ const styles = StyleSheet.create({
   sideTopLine: {
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: 2, borderTopLeftRadius: 10, borderTopRightRadius: 10,
+    height: 2, borderTopLeftRadius: rs(10), borderTopRightRadius: rs(10),
   },
 
   // Icon container
   sideIconWrap: {
-    width: 28, height: 28,
-    borderRadius: 8,
+    width: rs(34), height: rs(34),
+    borderRadius: rs(9),
     alignItems: 'center', justifyContent: 'center',
     overflow: 'hidden',
     position: 'relative',
   },
-  sideIcon: { width: 18, height: 18 },
+  sideIcon: { width: rs(22), height: rs(22) },
 
   // Label
   sideLabel: {
-    fontSize: 8,
+    fontSize: rf(11),
     fontWeight: '800',
     letterSpacing: 0.5,
     textAlign: 'center',
@@ -846,12 +843,12 @@ const styles = StyleSheet.create({
   },
   sideBadgeRing: {
     position: 'absolute',
-    width: 13, height: 13,
-    borderRadius: 7, borderWidth: 1.5,
+    width: rs(13), height: rs(13),
+    borderRadius: rs(7), borderWidth: 1.5,
   },
   sideBadgeDot: {
-    width: 10, height: 10,
-    borderRadius: 5,
+    width: rs(10), height: rs(10),
+    borderRadius: rs(5),
     borderWidth: 1.5,
     borderColor: C.BG_SCREEN,
   },
@@ -859,13 +856,12 @@ const styles = StyleSheet.create({
   centerGap: { flex: 1 },
 
   rightPanels: {
-    width: (W - SIDEBAR_W - 16) / 2,
-    paddingVertical: 8, paddingRight: 8,
-    flexDirection: 'column', gap: 8,
+    paddingVertical: rs(8), paddingRight: rs(8),
+    flexDirection: 'column', gap: rs(8),
   },
 
   panel: {
-    flex: 1, borderRadius: 10, overflow: 'hidden',
+    flex: 1, borderRadius: rs(10), overflow: 'hidden',
     flexDirection: 'row', position: 'relative',
   },
   panelBg: {
@@ -873,47 +869,47 @@ const styles = StyleSheet.create({
   },
   panelBorder: {
     position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
-    borderRadius: 10, borderWidth: 1,
+    borderRadius: rs(10), borderWidth: 1,
   },
   panelStrip: { width: 4, alignSelf: 'stretch' },
-  panelThumbWrap: { width: 86, position: 'relative', overflow: 'hidden' },
+  panelThumbWrap: { width: rs(100), position: 'relative', overflow: 'hidden' },
   panelThumb: { width: '100%', height: '100%', },
 
-  panelContent: { flex: 1, paddingVertical: 6, paddingLeft: 8, paddingRight: 6 },
-  panelTagRow:  { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
-  panelTag:     { borderRadius: 3, paddingHorizontal: 6, paddingVertical: 2 },
-  panelTagText: { fontSize: 10, color: C.TEXT, fontWeight: '900', letterSpacing: 1.5 },
+  panelContent: { flex: 1, paddingVertical: rs(6), paddingLeft: rs(8), paddingRight: rs(6) },
+  panelTagRow:  { flexDirection: 'row', alignItems: 'center', gap: rs(5), marginBottom: rs(4) },
+  panelTag:     { borderRadius: 3, paddingHorizontal: rs(6), paddingVertical: rs(2) },
+  panelTagText: { fontSize: rf(11), color: C.TEXT, fontWeight: '900', letterSpacing: 1.5 },
   panelNewBadge: {
     backgroundColor: C.SECONDARY, borderRadius: 3,
-    paddingHorizontal: 5, paddingVertical: 1,
+    paddingHorizontal: rs(5), paddingVertical: 1,
   },
-  panelNewText:  { fontSize: 10, color: C.TEXT, fontWeight: '900', letterSpacing: 1 },
+  panelNewText:  { fontSize: rf(11), color: C.TEXT, fontWeight: '900', letterSpacing: 1 },
   panelTitle: {
-    fontSize: 12, color: C.TEXT, fontWeight: '800', letterSpacing: 0.3,
+    fontSize: rf(14), color: C.TEXT, fontWeight: '800', letterSpacing: 0.3,
     textShadowColor: 'rgba(0,0,0,0.7)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
-  panelSub:    { fontSize: 9, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  panelSub:    { fontSize: rf(11), color: 'rgba(255,255,255,0.5)', marginTop: rs(2) },
   panelProgBg: {
     height: 2, backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 1, marginTop: 5, overflow: 'hidden', width: '82%',
+    borderRadius: 1, marginTop: rs(5), overflow: 'hidden', width: '82%',
   },
   panelProgFill: { height: 2, borderRadius: 1 },
-  panelEnterRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4 },
-  panelEnterText:{ fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
+  panelEnterRow: { flexDirection: 'row', alignItems: 'center', gap: rs(2), marginTop: rs(4) },
+  panelEnterText:{ fontSize: rf(10), fontWeight: '900', letterSpacing: 1.2 },
 
   // ── News ticker ──────────────────────────────
   ticker: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: 10, paddingVertical: 4,
+    flexDirection: 'row', alignItems: 'center', gap: rs(8),
+    paddingHorizontal: rs(10), paddingVertical: rs(4),
     backgroundColor: 'rgba(0,0,0,0.82)',
     borderTopWidth: 1, borderTopColor: C.PRIMARY_GLOW,
   },
   tickerTag: {
     backgroundColor: C.PRIMARY, borderRadius: 3,
-    paddingHorizontal: 6, paddingVertical: 2,
+    paddingHorizontal: rs(6), paddingVertical: rs(2),
   },
-  tickerTagText: { fontSize: 10, color: C.TEXT, fontWeight: '900', letterSpacing: 1.5 },
-  tickerText:    { fontSize: 9, color: 'rgba(255,255,255,0.42)', flex: 1, letterSpacing: 0.3 },
+  tickerTagText: { fontSize: rf(10), color: C.TEXT, fontWeight: '900', letterSpacing: 1.5 },
+  tickerText:    { fontSize: rf(9), color: 'rgba(255,255,255,0.42)', flex: 1, letterSpacing: 0.3 },
 
   // ── Milestone modal ───────────────────────────────────────────────────────
   msOverlay: {
@@ -924,11 +920,11 @@ const styles = StyleSheet.create({
   },
   msCard: {
     width: Math.min(W * 0.55, 400),
-    borderRadius: 16,
+    borderRadius: rs(16),
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: C.GOLD + '66',
-    padding: 20,
+    padding: rs(20),
     alignItems: 'center',
     shadowColor: C.GOLD,
     shadowOffset: { width: 0, height: 8 },
@@ -940,48 +936,48 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 0, left: 0, right: 0, height: 3,
   },
   msBadge: {
-    fontSize: 10, fontWeight: '900', color: C.GOLD,
-    letterSpacing: 3, marginBottom: 4, marginTop: 4,
+    fontSize: rf(10), fontWeight: '900', color: C.GOLD,
+    letterSpacing: 3, marginBottom: rs(4), marginTop: rs(4),
   },
   msChapters: {
-    fontSize: 18, fontWeight: '900', color: C.TEXT,
-    letterSpacing: 2, textAlign: 'center', marginBottom: 4,
+    fontSize: rf(18), fontWeight: '900', color: C.TEXT,
+    letterSpacing: 2, textAlign: 'center', marginBottom: rs(4),
   },
   msSub: {
-    fontSize: 10, color: C.TEXT_MUTED, marginBottom: 14,
+    fontSize: rf(10), color: C.TEXT_MUTED, marginBottom: rs(14),
     letterSpacing: 0.5, fontStyle: 'italic',
   },
   msHeroWrap: {
     position: 'relative',
-    marginBottom: 16,
+    marginBottom: rs(16),
   },
-  msHeroCard: { width: 120 },
+  msHeroCard: { width: rs(120) },
   msRankBadge: {
     position: 'absolute', top: 6, right: -8,
-    borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3,
+    borderRadius: rs(5), paddingHorizontal: rs(7), paddingVertical: rs(3),
     shadowColor: C.SHADOW, shadowOpacity: 0.5, shadowRadius: 4, elevation: 6,
   },
-  msRankText: { fontSize: 12, fontWeight: '900' },
-  msAscRow:      { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 8, borderWidth: 1, borderColor: C.GOLD + '40', backgroundColor: C.GOLD + '0C', paddingHorizontal: 10, paddingVertical: 8, width: '100%', marginBottom: 10 },
-  msAscImg:      { width: 36, height: 36 },
+  msRankText: { fontSize: rf(12), fontWeight: '900' },
+  msAscRow:      { flexDirection: 'row', alignItems: 'center', gap: rs(10), borderRadius: rs(8), borderWidth: 1, borderColor: C.GOLD + '40', backgroundColor: C.GOLD + '0C', paddingHorizontal: rs(10), paddingVertical: rs(8), width: '100%', marginBottom: rs(10) },
+  msAscImg:      { width: rs(36), height: rs(36) },
   msAscInfo:     { flex: 1 },
-  msAscName:     { fontSize: 11, fontWeight: '800', color: C.GOLD, letterSpacing: 0.3 },
-  msAscSub:      { fontSize: 9, color: C.TEXT_MUTED, marginTop: 1 },
-  msAscQtyBadge: { borderRadius: 6, borderWidth: 1, borderColor: C.GOLD + '55', backgroundColor: C.GOLD + '22', paddingHorizontal: 8, paddingVertical: 4 },
-  msAscQty:      { fontSize: 13, fontWeight: '900', color: C.GOLD },
-  msBtn: { borderRadius: 10, overflow: 'hidden', width: '100%' },
+  msAscName:     { fontSize: rf(11), fontWeight: '800', color: C.GOLD, letterSpacing: 0.3 },
+  msAscSub:      { fontSize: rf(9), color: C.TEXT_MUTED, marginTop: 1 },
+  msAscQtyBadge: { borderRadius: rs(6), borderWidth: 1, borderColor: C.GOLD + '55', backgroundColor: C.GOLD + '22', paddingHorizontal: rs(8), paddingVertical: rs(4) },
+  msAscQty:      { fontSize: rf(13), fontWeight: '900', color: C.GOLD },
+  msBtn: { borderRadius: rs(10), overflow: 'hidden', width: '100%' },
   msBtnInner: {
-    paddingVertical: 13, alignItems: 'center',
+    paddingVertical: rs(13), alignItems: 'center',
   },
   msBtnText: {
-    fontSize: 14, fontWeight: '900', color: C.TEXT, letterSpacing: 2,
+    fontSize: rf(14), fontWeight: '900', color: C.TEXT, letterSpacing: 2,
   },
 
   // ── Achievement unlock modal ──────────────────────────────────────────────
   achCard: {
     width: Math.min(W * 0.56, 440),
     maxHeight: H * 0.82,
-    borderRadius: 16,
+    borderRadius: rs(16),
     overflow: 'hidden',
     borderWidth: 1.5,
     borderColor: C.PRIMARY_LIGHT + '44',
@@ -992,67 +988,67 @@ const styles = StyleSheet.create({
     elevation: 14,
   },
   achHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingHorizontal: 18, paddingTop: 18, paddingBottom: 14,
+    flexDirection: 'row', alignItems: 'center', gap: rs(12),
+    paddingHorizontal: rs(18), paddingTop: rs(18), paddingBottom: rs(14),
   },
   achIconCircle: {
-    width: 42, height: 42, borderRadius: 21,
+    width: rs(42), height: rs(42), borderRadius: rs(21),
     backgroundColor: C.PRIMARY + '28',
     borderWidth: 1.5, borderColor: C.PRIMARY_LIGHT + '55',
     alignItems: 'center', justifyContent: 'center',
   },
   achBadge: {
-    fontSize: 11, fontWeight: '900', color: C.PRIMARY_LIGHT,
-    letterSpacing: 2.5, marginBottom: 3,
+    fontSize: rf(11), fontWeight: '900', color: C.PRIMARY_LIGHT,
+    letterSpacing: 2.5, marginBottom: rs(3),
   },
   achSubtitle: {
-    fontSize: 9, color: C.TEXT_MUTED, fontStyle: 'italic',
+    fontSize: rf(9), color: C.TEXT_MUTED, fontStyle: 'italic',
   },
   achDivider: {
     height: 1, backgroundColor: C.PRIMARY + '33',
-    marginHorizontal: 18, marginBottom: 4,
+    marginHorizontal: rs(18), marginBottom: rs(4),
   },
   achList: {
     maxHeight: H * 0.44,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingHorizontal: rs(18),
+    paddingVertical: rs(12),
   },
   achRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderRadius: 10, overflow: 'hidden',
+    flexDirection: 'row', alignItems: 'center', gap: rs(10),
+    borderRadius: rs(10), overflow: 'hidden',
     borderWidth: 1, borderColor: C.PRIMARY + '28',
-    paddingHorizontal: 12, paddingVertical: 10,
+    paddingHorizontal: rs(12), paddingVertical: rs(10),
   },
   achRowIcon: {
-    width: 34, height: 34, borderRadius: 10,
+    width: rs(34), height: rs(34), borderRadius: rs(10),
     backgroundColor: C.PRIMARY + '22',
     borderWidth: 1, borderColor: C.PRIMARY_LIGHT + '40',
     alignItems: 'center', justifyContent: 'center',
   },
-  achRowInfo: { flex: 1, gap: 3 },
-  achRowTitle: { fontSize: 11, fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
-  achRowDesc:  { fontSize: 9,  fontWeight: '500', color: C.TEXT_MUTED },
-  achRowReward: { alignItems: 'flex-end', gap: 3 },
-  achRowGems: { fontSize: 10, fontWeight: '800', color: C.PRIMARY_LIGHT },
-  achRowGold: { fontSize: 10, fontWeight: '800', color: C.GOLD },
+  achRowInfo: { flex: 1, gap: rs(3) },
+  achRowTitle: { fontSize: rf(11), fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
+  achRowDesc:  { fontSize: rf(9),  fontWeight: '500', color: C.TEXT_MUTED },
+  achRowReward: { alignItems: 'flex-end', gap: rs(3) },
+  achRowGems: { fontSize: rf(10), fontWeight: '800', color: C.PRIMARY_LIGHT },
+  achRowGold: { fontSize: rf(10), fontWeight: '800', color: C.GOLD },
   achActions: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: 18, paddingTop: 10, paddingBottom: 18,
+    flexDirection: 'row', alignItems: 'center', gap: rs(8),
+    paddingHorizontal: rs(18), paddingTop: rs(10), paddingBottom: rs(18),
   },
   achBtnClose: {
-    paddingHorizontal: 18, paddingVertical: 12,
-    borderRadius: 10, borderWidth: 1, borderColor: C.BORDER,
+    paddingHorizontal: rs(18), paddingVertical: rs(12),
+    borderRadius: rs(10), borderWidth: 1, borderColor: C.BORDER,
     alignItems: 'center', justifyContent: 'center',
   },
   achBtnCloseTxt: {
-    fontSize: 11, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1,
+    fontSize: rf(11), fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1,
   },
-  achBtnView: { flex: 1, borderRadius: 10, overflow: 'hidden' },
+  achBtnView: { flex: 1, borderRadius: rs(10), overflow: 'hidden' },
   achBtnViewInner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, paddingVertical: 12,
+    gap: rs(7), paddingVertical: rs(12),
   },
   achBtnViewTxt: {
-    fontSize: 11, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5,
+    fontSize: rf(11), fontWeight: '900', color: C.TEXT, letterSpacing: 1.5,
   },
 });

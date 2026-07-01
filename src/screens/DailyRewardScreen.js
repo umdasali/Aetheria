@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Image, Animated, Dimensions,
+  Image, Animated, Dimensions, useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import useGameStore from '../store/gameStore';
 import { DAILY_REWARDS } from '../data/dailyRewards';
 import AudioManager from '../utils/AudioManager';
 import { C } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 
 const { height: H } = Dimensions.get('window');
 const GEM_IMG  = require('../../assets/currency/gem.png');
@@ -105,13 +106,13 @@ function DayCard({ reward, state, scale }) {
       {/* ⑤ State chip */}
       <View style={S.dayStateRow}>
         {isClaimed ? (
-          <Ionicons name="checkmark-circle" size={15} color={C.SUCCESS} />
+          <Ionicons name="checkmark-circle" size={rs(19)} color={C.SUCCESS} />
         ) : isToday ? (
           <View style={[S.todayChip, { backgroundColor: accentCol }]}>
             <Text style={S.todayChipTxt}>{isBonus ? 'BONUS' : 'TODAY'}</Text>
           </View>
         ) : (
-          <Ionicons name="lock-closed" size={11} color={C.GLASS_7} />
+          <Ionicons name="lock-closed" size={rs(15)} color={C.GLASS_7} />
         )}
       </View>
     </Animated.View>
@@ -121,6 +122,7 @@ function DayCard({ reward, state, scale }) {
 // ─── DailyRewardScreen ────────────────────────────────────────────────────────
 
 export default function DailyRewardScreen({ navigation }) {
+  const { width: W, height: SH } = useWindowDimensions();
   const { top: topInset, bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
   const dailyStreak      = useGameStore(s => s.dailyStreak);
   const lastClaimDate    = useGameStore(s => s.lastClaimDate);
@@ -236,7 +238,7 @@ export default function DailyRewardScreen({ navigation }) {
         {/* ══ HEADER ══ */}
         <LinearGradient colors={C.GRAD_HEADER} style={[S.header, { paddingTop: topInset + 8 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={S.backBtn} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={22} color={C.TEXT} />
+            <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={S.hdrTitle}>DAILY LOGIN REWARD</Text>
@@ -306,15 +308,15 @@ export default function DailyRewardScreen({ navigation }) {
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={S.claimBtnInner}
                   >
-                    <Ionicons name="gift" size={17} color={C.TEXT} />
+                    <Ionicons name="gift" size={rs(21)} color={C.TEXT} />
                     <Text style={S.claimBtnTxt}>{isBonus ? 'CLAIM BONUS!' : 'CLAIM REWARD'}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </Animated.View>
             ) : (
               <View style={S.claimedBox}>
-                <Ionicons name="checkmark-circle" size={22} color={C.SUCCESS} />
-                <View style={{ gap: 2 }}>
+                <Ionicons name="checkmark-circle" size={rs(22)} color={C.SUCCESS} />
+                <View style={{ gap: rs(2) }}>
                   <Text style={S.claimedTxt}>Claimed!</Text>
                   <Text style={S.countdownTxt}>Next in  {timeLeft}</Text>
                 </View>
@@ -364,7 +366,7 @@ export default function DailyRewardScreen({ navigation }) {
 
             {/* Cycle note */}
             <View style={S.cycleRow}>
-              <Ionicons name="refresh-circle-outline" size={13} color={C.TEXT_ON_DARK_DIM} />
+              <Ionicons name="refresh-circle-outline" size={rs(17)} color={C.TEXT_ON_DARK_DIM} />
               <Text style={S.cycleTxt}>Rewards cycle and reset after Day 7</Text>
             </View>
 
@@ -385,22 +387,22 @@ const S = StyleSheet.create({
   // ── Header ────────────────────────────────────────────────────────────────
   header: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, paddingBottom: 10, gap: 10,
+    paddingHorizontal: rs(14), paddingBottom: rs(10), gap: rs(10),
     borderBottomWidth: 1, borderBottomColor: C.GLASS_5,
   },
   backBtn:   { padding: 4 },
-  hdrTitle:  { fontSize: 15, fontWeight: '900', color: C.TEXT, letterSpacing: 2 },
-  hdrSub:    { fontSize: 9, color: C.TEXT_ON_DARK_MUTED, marginTop: 1 },
+  hdrTitle:  { fontSize: rf(15), fontWeight: '900', color: C.TEXT, letterSpacing: 2 },
+  hdrSub:    { fontSize: rf(12), color: C.TEXT_ON_DARK_MUTED, marginTop: 1 },
 
   streakPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: C.STREAK_ORANGE_BG, borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 7,
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    backgroundColor: C.STREAK_ORANGE_BG, borderRadius: rs(10),
+    paddingHorizontal: rs(12), paddingVertical: rs(7),
     borderWidth: 1, borderColor: C.STREAK_ORANGE_BORDER,
   },
-  streakFire:  { fontSize: 15 },
-  streakNum:   { fontSize: 18, fontWeight: '900', color: C.STREAK_ORANGE },
-  streakLabel: { fontSize: 9, color: C.TEXT_ON_DARK_MUTED, fontWeight: '600' },
+  streakFire:  { fontSize: rf(15) },
+  streakNum:   { fontSize: rf(18), fontWeight: '900', color: C.STREAK_ORANGE },
+  streakLabel: { fontSize: rf(12), color: C.TEXT_ON_DARK_MUTED, fontWeight: '600' },
 
   // ── Body split ────────────────────────────────────────────────────────────
   body: { flex: 1, flexDirection: 'row' },
@@ -409,86 +411,86 @@ const S = StyleSheet.create({
   leftPanel: {
     width: '40%',
     alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 24, gap: 14,
+    paddingHorizontal: rs(24), gap: rs(14),
     borderRightWidth: 1,
   },
 
   // Day X / 7
   dayCounter: { flexDirection: 'row', alignItems: 'baseline' },
-  dayCounterNum: { fontSize: 34, fontWeight: '900', letterSpacing: -1 },
-  dayCounterOf:  { fontSize: 15, fontWeight: '700', color: C.TEXT_ON_DARK_DIM },
+  dayCounterNum: { fontSize: rf(34), fontWeight: '900', letterSpacing: -1 },
+  dayCounterOf:  { fontSize: rf(15), fontWeight: '700', color: C.TEXT_ON_DARK_DIM },
 
-  spotlightLabel: { fontSize: 10, fontWeight: '900', letterSpacing: 2.5 },
+  spotlightLabel: { fontSize: rf(13), fontWeight: '900', letterSpacing: 2.5 },
 
   bigIconWrap: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
-  bigIconGlow: { position: 'absolute', width: 118, height: 118, borderRadius: 59 },
+  bigIconGlow: { position: 'absolute', width: rs(118), height: rs(118), borderRadius: rs(59) },
   bigIconRing: {
-    position: 'absolute', width: 104, height: 104, borderRadius: 52,
+    position: 'absolute', width: rs(104), height: rs(104), borderRadius: rs(52),
     borderWidth: 1,
   },
-  bigIcon:   { width: 78, height: 78 },
-  bothIcons: { flexDirection: 'row', gap: 8 },
+  bigIcon:   { width: rs(78), height: rs(78) },
+  bothIcons: { flexDirection: 'row', gap: rs(8) },
 
   // Amount chips
-  amtRow:  { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  amtChip: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  amtIcon: { width: 16, height: 16 },
+  amtRow:  { flexDirection: 'row', gap: rs(12), alignItems: 'center' },
+  amtChip: { flexDirection: 'row', alignItems: 'center', gap: rs(5) },
+  amtIcon: { width: rs(16), height: rs(16) },
   amtTxt: {
-    fontSize: 20, fontWeight: '900', letterSpacing: 0.3,
+    fontSize: rf(20), fontWeight: '900', letterSpacing: 0.3,
     textShadowColor: C.OVERLAY_3,
     textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
 
   // Claim button
   claimBtnWrap:  { width: '82%' },
-  claimBtn:      { borderRadius: 12, overflow: 'hidden' },
+  claimBtn:      { borderRadius: rs(12), overflow: 'hidden' },
   claimBtnInner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 13,
+    gap: rs(8), paddingVertical: rs(13),
   },
-  claimBtnTxt: { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 1 },
+  claimBtnTxt: { fontSize: rf(13), fontWeight: '900', color: C.TEXT, letterSpacing: 1 },
 
   // Claimed state
   claimedBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
+    flexDirection: 'row', alignItems: 'center', gap: rs(12),
     backgroundColor: C.SUCCESS + '24',
     borderWidth: 1, borderColor: C.SUCCESS + '45',
-    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 11,
+    borderRadius: rs(12), paddingHorizontal: rs(16), paddingVertical: rs(11),
   },
-  claimedTxt:   { fontSize: 13, fontWeight: '800', color: C.SUCCESS },
-  countdownTxt: { fontSize: 10, color: C.TEXT_ON_DARK_MUTED },
+  claimedTxt:   { fontSize: rf(13), fontWeight: '800', color: C.SUCCESS },
+  countdownTxt: { fontSize: rf(13), color: C.TEXT_ON_DARK_MUTED },
 
   // ── Right panel ───────────────────────────────────────────────────────────
   rightPanel: {
     flex: 1,
-    paddingHorizontal: 18, paddingTop: 14, paddingBottom: 10,
-    gap: 12,
+    paddingHorizontal: rs(18), paddingTop: rs(14), paddingBottom: rs(10),
+    gap: rs(12),
   },
 
   rightHeader: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between',
   },
-  calendarTitle: { fontSize: 11, fontWeight: '900', color: C.TEXT_ON_DARK, letterSpacing: 2.5 },
-  calendarSub:   { fontSize: 9, color: C.TEXT_ON_DARK_DIM, marginTop: 3 },
+  calendarTitle: { fontSize: rf(13), fontWeight: '900', color: C.TEXT_ON_DARK, letterSpacing: 2.5 },
+  calendarSub:   { fontSize: rf(12), color: C.TEXT_ON_DARK_DIM, marginTop: rs(3) },
 
   // Streak progress dots
-  dotsRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dot:        { width: 8, height: 8, borderRadius: 4 },
+  dotsRow: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
+  dot:        { width: rs(8), height: rs(8), borderRadius: rs(4) },
   dotClaimed: { backgroundColor: C.SUCCESS },
-  dotToday:   { backgroundColor: C.GOLD, width: 11, height: 11, borderRadius: 6 },
+  dotToday:   { backgroundColor: C.GOLD, width: rs(11), height: rs(11), borderRadius: rs(6) },
   dotFuture:  { backgroundColor: C.GLASS_7 },
 
   // 7-card flex row
-  cardsRow: { flex: 1, flexDirection: 'row', gap: 7 },
+  cardsRow: { flex: 1, flexDirection: 'row', gap: rs(7) },
 
-  cycleRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  cycleTxt: { fontSize: 9, color: C.TEXT_ON_DARK_DIM, fontStyle: 'italic' },
+  cycleRow: { flexDirection: 'row', alignItems: 'center', gap: rs(5) },
+  cycleTxt: { fontSize: rf(12), color: C.TEXT_ON_DARK_DIM, fontStyle: 'italic' },
 
   // ── DayCard ───────────────────────────────────────────────────────────────
   dayCard: {
     flex: 1, height: CARD_H,
-    borderRadius: 11, overflow: 'hidden',
+    borderRadius: rs(11), overflow: 'hidden',
     alignItems: 'center',
     position: 'relative',
   },
@@ -497,20 +499,20 @@ const S = StyleSheet.create({
   dayStrip: { width: '100%', height: 3 },
 
   // ② Day number
-  dayNum: { fontSize: 12, fontWeight: '900', letterSpacing: 0.4, marginTop: 6 },
+  dayNum: { fontSize: rf(12), fontWeight: '900', letterSpacing: 0.4, marginTop: rs(6) },
 
   // ③ Icon zone
   dayIconWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  dayIcon:     { width: 28, height: 28 },
+  dayIcon:     { width: rs(28), height: rs(28) },
 
   // ④ Amount
   dayAmt: {
-    fontSize: 11, fontWeight: '900', letterSpacing: 0.2,
-    paddingHorizontal: 4, marginBottom: 5,
+    fontSize: rf(13), fontWeight: '900', letterSpacing: 0.2,
+    paddingHorizontal: rs(4), marginBottom: rs(5),
   },
 
   // ⑤ State chip
-  dayStateRow: { height: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  todayChip:   { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
-  todayChipTxt:{ fontSize: 7, fontWeight: '900', color: C.TEXT, letterSpacing: 0.8 },
+  dayStateRow: { height: rs(20), alignItems: 'center', justifyContent: 'center', marginBottom: rs(6) },
+  todayChip:   { borderRadius: rs(4), paddingHorizontal: rs(6), paddingVertical: rs(2) },
+  todayChipTxt:{ fontSize: rf(10), fontWeight: '900', color: C.TEXT, letterSpacing: 0.8 },
 });

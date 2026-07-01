@@ -7,7 +7,7 @@ import { CURRENT_VERSION } from '../store/migrations';
 const SCHEMA_VERSION = CURRENT_VERSION;
 
 const SAVE_FIELDS = [
-  'schemaVersion', 'gems', 'gold', 'pity', 'playerUid',
+  'schemaVersion', 'gems', 'gold', 'pity', 'playerUid', 'playerUidSecret',
   'ownedHeroes', 'heroCollection', 'team', 'savedTeams', 'activeTeamPreset',
   'completedChapters', 'milestonesClaimed',
   'lastClaimDate', 'dailyStreak', 'dailyQuests',

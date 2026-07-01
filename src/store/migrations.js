@@ -1,4 +1,4 @@
-export const CURRENT_VERSION = 3;
+export const CURRENT_VERSION = 4;
 
 export function migrate(persistedState, fromVersion) {
   let state = { ...persistedState };
@@ -38,6 +38,19 @@ export function migrate(persistedState, fromVersion) {
       pendingAchievementUnlocks:  state.pendingAchievementUnlocks ?? [],
       eventPity:                  state.eventPity ?? {},
       eventGuarantee:             state.eventGuarantee ?? {},
+    };
+  }
+
+  // v3 → v4: replace hero-based profile picture with a dedicated avatar image id
+  if (fromVersion < 4) {
+    const { avatarHeroId, ...restProfile } = state.playerProfile || {};
+    state = {
+      ...state,
+      schemaVersion: 4,
+      playerProfile: {
+        ...restProfile,
+        avatarId: state.playerProfile?.avatarId ?? 'avatar-01',
+      },
     };
   }
 

@@ -9,6 +9,7 @@ import useGameStore from '../store/gameStore';
 import { QUEST_DEFS, TOTAL_DAILY_GEMS, TOTAL_DAILY_GOLD } from '../data/dailyQuests';
 import AudioManager from '../utils/AudioManager';
 import { C } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 
 const GEM_IMG  = require('../../assets/currency/gem.png');
 const GOLD_IMG = require('../../assets/currency/gold.png');
@@ -66,7 +67,7 @@ export default function DailyQuestScreen({ navigation }) {
         {/* ── Header ── */}
         <LinearGradient colors={C.GRAD_HEADER} style={s.header}>
           <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} style={s.backBtn}>
-            <Ionicons name="chevron-back" size={22} color={C.TEXT} />
+            <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={s.headerTitle}>DAILY QUESTS</Text>
@@ -74,7 +75,7 @@ export default function DailyQuestScreen({ navigation }) {
           </View>
           {allDone && (
             <View style={s.allDoneBadge}>
-              <Ionicons name="checkmark-done" size={12} color={C.SUCCESS} />
+              <Ionicons name="checkmark-done" size={rs(12)} color={C.SUCCESS} />
               <Text style={s.allDoneText}>ALL DONE!</Text>
             </View>
           )}
@@ -119,8 +120,8 @@ export default function DailyQuestScreen({ navigation }) {
                 {/* Left icon */}
                 <View style={[s.iconWrap, { backgroundColor: accentColor + '20', borderColor: accentColor + '55' }]}>
                   {isClaimed
-                    ? <Ionicons name="checkmark-done" size={20} color={C.SUCCESS} />
-                    : <Ionicons name={quest.icon} size={20} color={accentColor} />}
+                    ? <Ionicons name="checkmark-done" size={rs(20)} color={C.SUCCESS} />
+                    : <Ionicons name={quest.icon} size={rs(20)} color={accentColor} />}
                 </View>
 
                 {/* Middle — title + progress */}
@@ -199,7 +200,7 @@ export default function DailyQuestScreen({ navigation }) {
                 <Text style={[s.totalAmt, { color: C.PRIMARY_LIGHT }]}>{gemsEarned}</Text>
                 <Text style={s.totalMax}>/ {TOTAL_DAILY_GEMS} gems</Text>
               </View>
-              <View style={[s.totalItem, { borderLeftWidth: 1, borderLeftColor: C.BORDER, paddingLeft: 12 }]}>
+              <View style={[s.totalItem, { borderLeftWidth: 1, borderLeftColor: C.BORDER, paddingLeft: rs(12) }]}>
                 <Image source={GOLD_IMG} style={s.totalIcon} resizeMode="contain" />
                 <Text style={[s.totalAmt, { color: C.GOLD }]}>{goldEarned}</Text>
                 <Text style={s.totalMax}>/ {TOTAL_DAILY_GOLD} gold</Text>
@@ -219,98 +220,98 @@ const s = StyleSheet.create({
 
   header: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 12, paddingTop: 8, paddingBottom: 10, gap: 10,
+    paddingHorizontal: rs(12), paddingTop: rs(8), paddingBottom: rs(10), gap: rs(10),
     borderBottomWidth: 1, borderBottomColor: C.BORDER,
   },
   backBtn:     { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
-  headerSub:   { fontSize: 10, color: 'rgba(255,255,255,0.6)', marginTop: 1 },
+  headerTitle: { fontSize: rf(18), fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
+  headerSub:   { fontSize: rf(13), color: 'rgba(255,255,255,0.6)', marginTop: 1 },
   allDoneBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: C.SUCCESS + '22', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 5,
+    flexDirection: 'row', alignItems: 'center', gap: rs(4),
+    backgroundColor: C.SUCCESS + '22', borderRadius: rs(8),
+    paddingHorizontal: rs(10), paddingVertical: rs(5),
     borderWidth: 1, borderColor: C.SUCCESS + '55',
   },
-  allDoneText: { fontSize: 10, fontWeight: '900', color: C.SUCCESS, letterSpacing: 1 },
+  allDoneText: { fontSize: rf(13), fontWeight: '900', color: C.SUCCESS, letterSpacing: 1 },
 
   summaryBar: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, paddingVertical: 8, gap: 10,
+    paddingHorizontal: rs(14), paddingVertical: rs(8), gap: rs(10),
   },
   summaryTrack: {
     flex: 1, height: 5, borderRadius: 3,
     backgroundColor: C.BG_MID, overflow: 'hidden',
   },
   summaryFill: { height: 5, borderRadius: 3 },
-  summaryPct:  { fontSize: 10, fontWeight: '900', color: C.TEXT_MUTED, width: 36, textAlign: 'right' },
+  summaryPct:  { fontSize: rf(13), fontWeight: '900', color: C.TEXT_MUTED, width: rs(36), textAlign: 'right' },
 
-  list: { padding: 12, gap: 10, paddingBottom: 24 },
+  list: { padding: rs(12), gap: rs(10), paddingBottom: rs(24) },
 
   card: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderRadius: 12, overflow: 'hidden', borderWidth: 1,
-    borderColor: C.BORDER, padding: 12, position: 'relative',
+    flexDirection: 'row', alignItems: 'center', gap: rs(12),
+    borderRadius: rs(12), overflow: 'hidden', borderWidth: 1,
+    borderColor: C.BORDER, padding: rs(12), position: 'relative',
   },
   cardClaimed: { borderColor: C.SUCCESS + '40', opacity: 0.8 },
 
   iconWrap: {
-    width: 44, height: 44, borderRadius: 10,
+    width: rs(44), height: rs(44), borderRadius: rs(10),
     alignItems: 'center', justifyContent: 'center', borderWidth: 1,
   },
 
   middle: { flex: 1, gap: 3 },
-  questTitle: { fontSize: 13, fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
-  questDesc:  { fontSize: 10, color: C.TEXT_MUTED, lineHeight: 14, marginBottom: 4 },
+  questTitle: { fontSize: rf(13), fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
+  questDesc:  { fontSize: rf(13), color: C.TEXT_MUTED, lineHeight: rf(14), marginBottom: rs(4) },
 
   progTrack: {
     height: 4, borderRadius: 2,
     backgroundColor: C.BG_MID, overflow: 'hidden',
   },
   progFill:  { height: 4, borderRadius: 2 },
-  progLabel: { fontSize: 9, fontWeight: '700', marginTop: 2 },
+  progLabel: { fontSize: rf(12), fontWeight: '700', marginTop: 2 },
 
-  right: { alignItems: 'flex-end', gap: 6, minWidth: 90 },
+  right: { alignItems: 'flex-end', gap: rs(6), minWidth: rs(90) },
 
-  rewardRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' },
+  rewardRow: { flexDirection: 'row', gap: rs(6), flexWrap: 'wrap', justifyContent: 'flex-end' },
   rewardChip: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
-    backgroundColor: C.BG_MID, borderRadius: 5,
-    paddingHorizontal: 6, paddingVertical: 2,
+    backgroundColor: C.BG_MID, borderRadius: rs(5),
+    paddingHorizontal: rs(6), paddingVertical: 2,
     borderWidth: 1, borderColor: C.BORDER,
   },
-  rewardAmt:  { fontSize: 10, fontWeight: '800' },
-  rewardIcon: { width: 14, height: 14 },
-  totalIcon:  { width: 20, height: 20 },
+  rewardAmt:  { fontSize: rf(13), fontWeight: '800' },
+  rewardIcon: { width: rs(14), height: rs(14) },
+  totalIcon:  { width: rs(20), height: rs(20) },
 
-  claimBtn:      { borderRadius: 8, overflow: 'hidden' },
-  claimBtnInner: { paddingHorizontal: 14, paddingVertical: 7, alignItems: 'center' },
-  claimBtnText:  { fontSize: 11, fontWeight: '900', color: C.TEXT, letterSpacing: 1 },
+  claimBtn:      { borderRadius: rs(8), overflow: 'hidden' },
+  claimBtnInner: { paddingHorizontal: rs(14), paddingVertical: rs(7), alignItems: 'center' },
+  claimBtnText:  { fontSize: rf(13), fontWeight: '900', color: C.TEXT, letterSpacing: 1 },
 
   claimedBadge: {
-    backgroundColor: C.SUCCESS + '18', borderRadius: 6,
-    paddingHorizontal: 8, paddingVertical: 4,
+    backgroundColor: C.SUCCESS + '18', borderRadius: rs(6),
+    paddingHorizontal: rs(8), paddingVertical: rs(4),
     borderWidth: 1, borderColor: C.SUCCESS + '40',
   },
-  claimedText: { fontSize: 9, fontWeight: '900', color: C.SUCCESS, letterSpacing: 1 },
+  claimedText: { fontSize: rf(12), fontWeight: '900', color: C.SUCCESS, letterSpacing: 1 },
 
   pendingBadge: {
-    backgroundColor: C.BG_MID, borderRadius: 6,
-    paddingHorizontal: 8, paddingVertical: 4,
+    backgroundColor: C.BG_MID, borderRadius: rs(6),
+    paddingHorizontal: rs(8), paddingVertical: rs(4),
     borderWidth: 1, borderColor: C.BORDER,
   },
-  pendingText: { fontSize: 9, fontWeight: '700', color: C.TEXT_DISABLED, letterSpacing: 0.5 },
+  pendingText: { fontSize: rf(12), fontWeight: '700', color: C.TEXT_DISABLED, letterSpacing: 0.5 },
 
   totalCard: {
-    borderRadius: 12, overflow: 'hidden', borderWidth: 1,
-    borderColor: C.BORDER_STRONG, padding: 14, position: 'relative',
-    marginTop: 4,
+    borderRadius: rs(12), overflow: 'hidden', borderWidth: 1,
+    borderColor: C.BORDER_STRONG, padding: rs(14), position: 'relative',
+    marginTop: rs(4),
   },
   totalLabel: {
-    fontSize: 9, fontWeight: '900', color: C.TEXT_MUTED,
-    letterSpacing: 2.5, marginBottom: 10,
+    fontSize: rf(12), fontWeight: '900', color: C.TEXT_MUTED,
+    letterSpacing: 2.5, marginBottom: rs(10),
   },
-  totalRow:  { flexDirection: 'row', gap: 12 },
-  totalItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  totalAmt:  { fontSize: 20, fontWeight: '900' },
-  totalMax:  { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '600' },
+  totalRow:  { flexDirection: 'row', gap: rs(12) },
+  totalItem: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
+  totalAmt:  { fontSize: rf(20), fontWeight: '900' },
+  totalMax:  { fontSize: rf(12), color: C.TEXT_MUTED, fontWeight: '600' },
 });

@@ -72,6 +72,26 @@ function getBattlePlayer() {
   return _battlePlayer;
 }
 
+// ── Status effect SFX ────────────────────────────────────────────────────────
+
+const STATUS_SFX = {
+  burn:    require('../../assets/audio/statusFX/burn.mp3'),
+  chill:   require('../../assets/audio/statusFX/chill.mp3'),
+  poison:  require('../../assets/audio/statusFX/poison.mp3'),
+  shatter: require('../../assets/audio/statusFX/shatter.mp3'),
+};
+
+const _statusPlayers = {};
+
+function getStatusPlayer(type) {
+  if (!STATUS_SFX[type]) return null;
+  if (!_statusPlayers[type]) {
+    _statusPlayers[type] = createAudioPlayer(STATUS_SFX[type]);
+    _statusPlayers[type].volume = _sfxVolume;
+  }
+  return _statusPlayers[type];
+}
+
 // ── Attack SFX ────────────────────────────────────────────────────────────────
 
 const ATTACK_SFX = require('../../assets/audio/battleScreen/attack-fx.mp3');
@@ -233,6 +253,25 @@ const AudioManager = {
     try { const p = getCardFlipPlayer(); p.seekTo(0); p.play(); } catch (_) {}
   },
 
+  // Play status-effect application SFX. Types without an asset (stun, weaken) are silent.
+  playStatusSFX(type) {
+    try { const p = getStatusPlayer(type); if (p) { p.seekTo(0); p.play(); } } catch (_) {}
+  },
+
+  // Eagerly initialise all SFX players so the first button press has zero delay.
+  // Call this once from LoadingScreen after the splash finishes.
+  prewarmSFX() {
+    try { getButtonPlayer(); }      catch (_) {}
+    try { getRewardClaimPlayer(); } catch (_) {}
+    try { getPowerForgePlayer(); }  catch (_) {}
+    try { getLevelUpPlayer(); }     catch (_) {}
+    try { getVictoryPlayer(); }     catch (_) {}
+    try { getDefeatPlayer(); }      catch (_) {}
+    try { getSFXPlayer(); }         catch (_) {}
+    try { getCardFlipPlayer(); }    catch (_) {}
+    Object.keys(STATUS_SFX).forEach(t => { try { getStatusPlayer(t); } catch (_) {} });
+  },
+
   // Button click SFX
   playButtonSFX() {
     try { const p = getButtonPlayer(); p.seekTo(0); p.play(); } catch (_) {}
@@ -282,6 +321,7 @@ const AudioManager = {
     try { if (_levelUpPlayer)      _levelUpPlayer.volume      = _sfxVolume; } catch (_) {}
     try { if (_victoryPlayer)      _victoryPlayer.volume      = _sfxVolume; } catch (_) {}
     try { if (_defeatPlayer)       _defeatPlayer.volume       = _sfxVolume; } catch (_) {}
+    Object.values(_statusPlayers).forEach(p => { try { if (p) p.volume = _sfxVolume; } catch (_) {} });
   },
 
   getMusicVolume() { return _musicVolume; },
@@ -300,6 +340,7 @@ const AudioManager = {
     try { _levelUpPlayer?.remove();      _levelUpPlayer      = null; } catch (_) {}
     try { _victoryPlayer?.remove();      _victoryPlayer      = null; } catch (_) {}
     try { _defeatPlayer?.remove();       _defeatPlayer       = null; } catch (_) {}
+    Object.keys(_statusPlayers).forEach(t => { try { _statusPlayers[t]?.remove(); delete _statusPlayers[t]; } catch (_) {} });
   },
 };
 

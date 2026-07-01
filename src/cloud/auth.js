@@ -75,14 +75,17 @@ export async function deleteAccount() {
   const uid = await getUID();
   if (!uid) throw new Error('Not signed in');
 
-  // 1. Delete the cloud save row first (RLS lets a user delete their own row).
-  const { error: saveErr } = await supabase.from('game_saves').delete().eq('user_id', uid);
-  if (saveErr) throw saveErr;
-
-  // 2. Delete the auth user via the server-side RPC.
+  // Delete the auth user via the server-side RPC — this alone is enough. Both
+  // game_saves and leaderboards have `on delete cascade` FKs to auth.users
+  // (see 0001_init.sql), so deleting the auth row is one atomic server-side
+  // operation that removes everything. Deliberately NOT doing a separate
+  // client-side `game_saves` delete first: that used to create a window where
+  // the save could be wiped while the auth record (and thus the account)
+  // survived a subsequent failure, misleading the "deletion failed" message
+  // into implying nothing had happened.
   const { error: rpcErr } = await supabase.rpc('delete_account');
   if (rpcErr) throw rpcErr;
 
-  // 3. Clear the local session/token cache.
+  // Clear the local session/token cache.
   await supabase.auth.signOut();
 }

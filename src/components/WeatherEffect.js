@@ -296,7 +296,7 @@ export default function WeatherEffect({ type }) {
   if (type === 'clear') return null;
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]} pointerEvents="none">
       {/* Rain drops */}
       {(type === 'rain' || type === 'thunder') &&
         drops.map((d, i) => (

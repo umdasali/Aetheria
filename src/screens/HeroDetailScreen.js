@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Dimensions, Animated, Alert,
+  Animated, Alert, useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,8 +19,8 @@ import {
 } from '../data/ascensionItems';
 import { RANK_STAT_MULT } from '../utils/battleEngine';
 import { C, RANK, RANK_COLORS } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 
-const { width: W, height: H } = Dimensions.get('window');
 const BODY_PAD = 12;
 const RANK_ORDER = ['C', 'B', 'A', 'S'];
 const STAT_ABS_MAX = { HP: 25000, ATK: 3000, DEF: 2500, CRIT: 2500 };
@@ -35,14 +35,14 @@ function Chip({ icon, label, color, onPress, disabled }) {
       activeOpacity={disabled ? 1 : 0.75}
       style={[chip.wrap, { borderColor: color + '55', backgroundColor: color + '15', opacity: disabled ? 0.45 : 1 }]}
     >
-      <Ionicons name={icon} size={11} color={color} />
+      <Ionicons name={icon} size={rs(19)} color={color} />
       <Text style={[chip.label, { color }]}>{label}</Text>
     </TouchableOpacity>
   );
 }
 const chip = StyleSheet.create({
-  wrap:  { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 6, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 5 },
-  label: { fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
+  wrap:  { flexDirection: 'row', alignItems: 'center', gap: rs(4), borderRadius: rs(6), borderWidth: 1, paddingHorizontal: rs(9), paddingVertical: rs(5) },
+  label: { fontSize: rf(12), fontWeight: '900', letterSpacing: 0.8 },
 });
 
 // ── Progress bar ──────────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ function TabBar({ active, onChange }) {
         const on = active === t.key;
         return (
           <TouchableOpacity key={t.key} style={tb.tab} onPress={() => { AudioManager.playButtonSFX(); onChange(t.key); }} activeOpacity={0.7}>
-            <Ionicons name={t.icon} size={13} color={on ? C.PRIMARY_LIGHT : C.TEXT_MUTED} />
+            <Ionicons name={t.icon} size={rs(21)} color={on ? C.PRIMARY_LIGHT : C.TEXT_MUTED} />
             <Text style={[tb.label, { color: on ? C.PRIMARY_LIGHT : C.TEXT_MUTED }]}>{t.label}</Text>
             {on && <View style={tb.bar} />}
           </TouchableOpacity>
@@ -103,10 +103,10 @@ function TabBar({ active, onChange }) {
   );
 }
 const tb = StyleSheet.create({
-  row:   { flexDirection: 'row', backgroundColor: C.BG_STATS, borderRadius: 8, borderWidth: 1, borderColor: C.BORDER_SUBTLE, marginBottom: 8 },
-  tab:   { flex: 1, alignItems: 'center', paddingVertical: 7, gap: 2 },
-  label: { fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
-  bar:   { height: 2, width: '50%', borderRadius: 1, marginTop: 2, backgroundColor: C.PRIMARY_LIGHT },
+  row:   { flexDirection: 'row', backgroundColor: C.BG_STATS, borderRadius: rs(8), borderWidth: 1, borderColor: C.BORDER_SUBTLE, marginBottom: rs(8) },
+  tab:   { flex: 1, alignItems: 'center', paddingVertical: rs(7), gap: rs(2) },
+  label: { fontSize: rf(12), fontWeight: '900', letterSpacing: 1.2 },
+  bar:   { height: 2, width: '50%', borderRadius: 1, marginTop: rs(2), backgroundColor: C.PRIMARY_LIGHT },
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -213,7 +213,7 @@ function SkillsTab({ hero }) {
               </View>
             ) : (
               <View style={[styles.skillDmg, { borderColor: C.SUCCESS + '55' }]}>
-                <Ionicons name="heart-outline" size={13} color={C.SUCCESS} />
+                <Ionicons name="heart-outline" size={rs(21)} color={C.SUCCESS} />
               </View>
             )}
           </View>
@@ -222,7 +222,7 @@ function SkillsTab({ hero }) {
 
       <View style={styles.trumpCard}>
         <View style={styles.trumpIconWrap}>
-          <Ionicons name="flash" size={16} color={C.GOLD} />
+          <Ionicons name="flash" size={rs(20)} color={C.GOLD} />
         </View>
         <View style={styles.trumpLeft}>
           <Text style={styles.trumpLabel}>TRUMP CARD</Text>
@@ -284,7 +284,7 @@ function LevelTab({
           >
             <Ionicons
               name={isMaxLevel ? 'trophy-outline' : 'arrow-up-circle-outline'}
-              size={15}
+              size={rs(19)}
               color={isMaxLevel ? C.GOLD : canLevelUp ? C.PRIMARY_LIGHT : C.TEXT_DISABLED}
             />
             <Text style={[styles.lvBtnTxt, {
@@ -299,7 +299,7 @@ function LevelTab({
           </TouchableOpacity>
         ) : (
           <View style={[styles.lvBtn, { borderColor: C.BORDER_SUBTLE, backgroundColor: C.BG_STATS }]}>
-            <Ionicons name="lock-closed-outline" size={15} color={C.TEXT_DISABLED} />
+            <Ionicons name="lock-closed-outline" size={rs(19)} color={C.TEXT_DISABLED} />
             <Text style={[styles.lvBtnTxt, { color: C.TEXT_DISABLED }]}>UNLOCK TO LEVEL</Text>
           </View>
         )}
@@ -312,7 +312,7 @@ function LevelTab({
         <View style={[styles.upgradeCard2, styles.card, { opacity: !owned ? 0.45 : 1 }]}>
           <View style={styles.upgradeHead2}>
             <View style={[styles.upgradeIconBox, { backgroundColor: canAffordTranscend ? C.PRIMARY + '20' : C.BG_STATS }]}>
-              <Ionicons name="arrow-up-circle-outline" size={15} color={canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED} />
+              <Ionicons name="arrow-up-circle-outline" size={rs(19)} color={canAffordTranscend ? C.PRIMARY_LIGHT : C.TEXT_DISABLED} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.upgradeTitle2, { color: canAffordTranscend ? C.TEXT : C.TEXT_DISABLED }]}>TRANSCEND</Text>
@@ -358,7 +358,7 @@ function LevelTab({
         <View style={[styles.upgradeCard2, styles.card, { opacity: !owned ? 0.45 : 1 }]}>
           <View style={styles.upgradeHead2}>
             <View style={[styles.upgradeIconBox, { backgroundColor: canAscend ? ascItemColor + '20' : C.BG_STATS }]}>
-              <Ionicons name="sparkles-outline" size={15} color={canAscend ? ascItemColor : C.TEXT_DISABLED} />
+              <Ionicons name="sparkles-outline" size={rs(19)} color={canAscend ? ascItemColor : C.TEXT_DISABLED} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.upgradeTitle2, { color: canAscend ? C.TEXT : C.TEXT_DISABLED }]}>ASCEND</Text>
@@ -418,7 +418,7 @@ function ForgeTab({
 
   return (
     <View style={[styles.tabContent, styles.forgeTabFill]}>
-      <View style={[StyleSheet.absoluteFill, { borderRadius: 12, overflow: 'hidden' }]}>
+      <View style={[StyleSheet.absoluteFill, { borderRadius: rs(12), overflow: 'hidden' }]}>
         <ForgeViz rank={rankKey} />
       </View>
 
@@ -450,7 +450,7 @@ function ForgeTab({
               disabled={!canFuse || !canAffordFuse}
               activeOpacity={0.7}
             >
-              <Ionicons name="git-merge-outline" size={13} color={canAffordFuse ? accent : C.TEXT_ON_DARK_DIM} />
+              <Ionicons name="git-merge-outline" size={rs(21)} color={canAffordFuse ? accent : C.TEXT_ON_DARK_DIM} />
               <View>
                 <Text style={[styles.forgeOverlayLabel, { color: canAffordFuse ? accent : C.TEXT_ON_DARK_DIM }]}>
                   {canFuse ? 'FUSION' : hero.sovereign ? 'APEX LOCKED' : rankIdx >= 3 ? 'MAX RANK' : 'FUSION'}
@@ -476,7 +476,7 @@ function ForgeTab({
               }}
               activeOpacity={0.7}
             >
-              <Ionicons name="refresh-outline" size={13} color={C.GOLD} />
+              <Ionicons name="refresh-outline" size={rs(21)} color={C.GOLD} />
               <View>
                 <Text style={[styles.forgeOverlayLabel, { color: C.GOLD }]}>CONVERT</Text>
                 <Text style={styles.forgeOverlaySub}>×{maxConv} copies · {rate} coins each</Text>
@@ -521,6 +521,7 @@ export default function HeroDetailScreen({ route, navigation }) {
   const [saved,        setSaved]        = useState(false);
 
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
+  const { width: screenW, height: screenH } = useWindowDimensions();
   const cardRef      = useRef(null);
   const diffTimerRef = useRef(null);
 
@@ -582,8 +583,13 @@ export default function HeroDetailScreen({ route, navigation }) {
   };
 
   // ── Derived data ──────────────────────────────────────────────────────────
-  const cardHAvail = H - topInset - bottomInset - BODY_PAD * 2;
-  const CARD_W = Math.floor(cardHAvail * (220 / 320));
+  // Cap card width both by screen height (portrait aspect ratio) and by 34% of
+  // screen width, so the card never crowds the right info panel on any screen size.
+  const cardHAvail = screenH - topInset - bottomInset - BODY_PAD * 2;
+  const CARD_W = Math.min(
+    Math.floor(cardHAvail * (220 / 320)),
+    Math.floor(screenW * 0.34),
+  );
 
   const hero    = HEROES.find(h => h.id === heroId);
   const faction = hero ? FACTIONS[hero.faction] : null;
@@ -716,8 +722,8 @@ export default function HeroDetailScreen({ route, navigation }) {
             <Animated.View ref={cardRef} collapsable={false} style={{ transform: [{ scale: fuseScale }] }}>
               <HeroCard hero={hero} width={CARD_W} effectiveRank={effectiveRankKey} />
             </Animated.View>
-            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>
-              <Ionicons name="chevron-back" size={18} color={C.TEXT} />
+            <TouchableOpacity style={styles.backBtn} onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} activeOpacity={0.8}>
+              <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
             </TouchableOpacity>
           </View>
 
@@ -794,6 +800,8 @@ export default function HeroDetailScreen({ route, navigation }) {
         <Animated.View style={[StyleSheet.absoluteFill, { opacity: fuseFlash, backgroundColor: forgeBadge.bg }]} />
         {[fuseRing1, fuseRing2, fuseRing3].map((ring, i) => (
           <Animated.View key={i} style={[styles.fuseBurst, {
+            top: screenH / 2 - 80,
+            left: screenW / 2 - 80,
             borderColor: forgeBadge.glow,
             opacity: ring.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 0.65, 0] }),
             transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [0.05, 2.4 + i * 0.55] }) }],
@@ -809,7 +817,7 @@ export default function HeroDetailScreen({ route, navigation }) {
             <LinearGradient colors={[forgeBadge.bg + '44', 'transparent']} style={StyleSheet.absoluteFill} />
             <Text style={styles.fuseBadgeLbl}>{forgeBadge.topLabel}</Text>
             <Text style={[styles.fuseBadgeRank, {
-              fontSize: (forgeBadge.mainLabel?.length ?? 0) <= 2 ? 64 : 36,
+              fontSize: (forgeBadge.mainLabel?.length ?? 0) <= 2 ? rf(64) : rf(36),
               color: forgeBadge.text, textShadowColor: forgeBadge.glow,
             }]}>{forgeBadge.mainLabel}</Text>
             <Text style={styles.fuseBadgeHero}>{hero.name.toUpperCase()}</Text>
@@ -844,50 +852,50 @@ function TagChip({ label, color }) {
 }
 
 const shared = StyleSheet.create({
-  sHead:   { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '900', letterSpacing: 2.5, marginBottom: 5 },
-  tagChip: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4, borderWidth: 1 },
-  tagTxt:  { fontSize: 8, fontWeight: '700', letterSpacing: 0.4 },
+  sHead:   { fontSize: rf(12), color: C.TEXT_SOFT, fontWeight: '900', letterSpacing: 2.5, marginBottom: rs(5) },
+  tagChip: { paddingHorizontal: rs(7), paddingVertical: rs(2), borderRadius: rs(4), borderWidth: 1 },
+  tagTxt:  { fontSize: rf(13), fontWeight: '700', letterSpacing: 0.4 },
 });
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.BG_DEEP },
   safe: { flex: 1 },
-  body: { flex: 1, flexDirection: 'row', padding: BODY_PAD, gap: 12 },
+  body: { flex: 1, flexDirection: 'row', padding: rs(BODY_PAD), gap: rs(12) },
 
   cardCol: { alignItems: 'center', justifyContent: 'center', position: 'relative' },
   backBtn: {
-    position: 'absolute', top: 8, left: 8,
-    width: 30, height: 30, borderRadius: 15,
+    position: 'absolute', top: rs(8), left: rs(8),
+    width: rs(30), height: rs(30), borderRadius: rs(15),
     backgroundColor: C.BG_CARD, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: C.BORDER, zIndex: 20,
   },
 
   infoCol: { flex: 1, flexDirection: 'column' },
 
-  nameRow:    { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 6 },
-  rankDot:    { width: 8, height: 8, borderRadius: 4 },
-  heroName:   { flex: 1, fontSize: 16, fontWeight: '900', letterSpacing: 2, color: C.TEXT },
-  rankBadge:  { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  rankTxt:    { fontSize: 11, fontWeight: '900' },
-  copiesBadge:{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: C.PRIMARY_GLOW, borderWidth: 1, borderColor: C.BORDER_STRONG },
-  copiesTxt:  { fontSize: 10, fontWeight: '900', color: C.PRIMARY_LIGHT },
+  nameRow:    { flexDirection: 'row', alignItems: 'center', gap: rs(7), marginBottom: rs(6) },
+  rankDot:    { width: rs(8), height: rs(8), borderRadius: rs(4) },
+  heroName:   { flex: 1, fontSize: rf(16), fontWeight: '900', letterSpacing: 2, color: C.TEXT },
+  rankBadge:  { paddingHorizontal: rs(8), paddingVertical: rs(2), borderRadius: rs(4) },
+  rankTxt:    { fontSize: rf(13), fontWeight: '900' },
+  copiesBadge:{ paddingHorizontal: rs(6), paddingVertical: rs(2), borderRadius: rs(4), backgroundColor: C.PRIMARY_GLOW, borderWidth: 1, borderColor: C.BORDER_STRONG },
+  copiesTxt:  { fontSize: rf(13), fontWeight: '900', color: C.PRIMARY_LIGHT },
 
-  divider: { height: 1, backgroundColor: C.BORDER_SUBTLE, marginBottom: 8 },
-  tagRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 8 },
+  divider: { height: 1, backgroundColor: C.BORDER_SUBTLE, marginBottom: rs(8) },
+  tagRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: rs(4), marginBottom: rs(8) },
 
   tabArea: {
-    flex: 1, borderRadius: 12, overflow: 'hidden',
+    flex: 1, borderRadius: rs(12), overflow: 'hidden',
     borderWidth: 1, borderColor: C.BORDER_SUBTLE,
-    backgroundColor: C.BG_BASE, padding: 10,
+    backgroundColor: C.BG_BASE, padding: rs(10),
   },
   tabAreaForge: { borderRadius: 0, borderWidth: 0, padding: 0, backgroundColor: 'transparent' },
 
-  tabContent:   { flex: 1, gap: 8 },
+  tabContent:   { flex: 1, gap: rs(8) },
   forgeTabFill: { position: 'relative', gap: 0 },
 
   card: {
     backgroundColor: C.BG_CARD,
-    borderRadius: 10,
+    borderRadius: rs(10),
     borderWidth: 1,
     borderColor: C.BORDER_SUBTLE,
     shadowColor: '#000',
@@ -898,141 +906,140 @@ const styles = StyleSheet.create({
   },
 
   // ── Profile ──────────────────────────────────────────────────────────────
-  aboutTxt:  { fontSize: 11, color: C.TEXT_SOFT, lineHeight: 16 },
-  statGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: 5, flex: 1 },
+  aboutTxt:  { fontSize: rf(13), color: C.TEXT_SOFT, lineHeight: rf(16) },
+  statGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: rs(5), flex: 1 },
   statCell: {
-    width: '48.5%', paddingHorizontal: 10, paddingVertical: 8,
+    width: '48.5%', paddingHorizontal: rs(10), paddingVertical: rs(8),
     justifyContent: 'space-between',
-    backgroundColor: C.BG_CARD, borderRadius: 8,
+    backgroundColor: C.BG_CARD, borderRadius: rs(8),
     borderWidth: 1, borderColor: C.BORDER_SUBTLE,
   },
-  statVal:     { fontSize: 20, fontWeight: '900', color: C.TEXT },
-  statKey:     { fontSize: 9, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 1.5, marginTop: -2 },
-  statBarWrap: { marginTop: 5 },
-  infoRow:     { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
-  infoPill:    { paddingHorizontal: 8, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  infoPillTxt: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5, color: C.TEXT_SOFT },
-  infoPillSub: { fontSize: 9, fontWeight: '900', color: C.TEXT },
-  chipRow:     { flexDirection: 'row', gap: 7, flexWrap: 'wrap', marginTop: 2 },
+  statVal:     { fontSize: rf(20), fontWeight: '900', color: C.TEXT },
+  statKey:     { fontSize: rf(12), fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 1.5, marginTop: -2 },
+  statBarWrap: { marginTop: rs(5) },
+  infoRow:     { flexDirection: 'row', gap: rs(5), flexWrap: 'wrap' },
+  infoPill:    { paddingHorizontal: rs(8), paddingVertical: rs(4), flexDirection: 'row', alignItems: 'center', gap: rs(4) },
+  infoPillTxt: { fontSize: rf(12), fontWeight: '900', letterSpacing: 0.5, color: C.TEXT_SOFT },
+  infoPillSub: { fontSize: rf(12), fontWeight: '900', color: C.TEXT },
+  chipRow:     { flexDirection: 'row', gap: rs(7), flexWrap: 'wrap', marginTop: rs(2) },
 
   // ── Skills ───────────────────────────────────────────────────────────────
   skillCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 9,
-    paddingHorizontal: 10, paddingVertical: 10,
-    backgroundColor: C.BG_CARD, borderRadius: 10,
+    flexDirection: 'row', alignItems: 'center', gap: rs(9),
+    paddingHorizontal: rs(10), paddingVertical: rs(10),
+    backgroundColor: C.BG_CARD, borderRadius: rs(10),
     borderWidth: 1, borderColor: C.BORDER_SUBTLE,
   },
   skillNumBadge: {
-    width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center',
+    width: rs(38), height: rs(38), borderRadius: rs(8), alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: C.PRIMARY + '40', backgroundColor: C.BG_STATS,
   },
-  skillNumTxt:  { fontSize: 14, fontWeight: '900', lineHeight: 16, color: C.PRIMARY_LIGHT },
-  skillNrgTxt:  { fontSize: 7, fontWeight: '800', letterSpacing: 0.3, marginTop: -2, color: C.TEXT_MUTED },
-  skillNameRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 },
-  skillTypePill:{ borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1 },
-  skillTypeTxt: { fontSize: 7, fontWeight: '900', letterSpacing: 0.5 },
+  skillNumTxt:  { fontSize: rf(14), fontWeight: '900', lineHeight: rf(16), color: C.PRIMARY_LIGHT },
+  skillNrgTxt:  { fontSize: rf(13), fontWeight: '800', letterSpacing: 0.3, marginTop: -2, color: C.TEXT_MUTED },
+  skillNameRow: { flexDirection: 'row', alignItems: 'center', gap: rs(5), marginBottom: rs(2) },
+  skillTypePill:{ borderRadius: rs(4), paddingHorizontal: rs(5), paddingVertical: 1, borderWidth: 1 },
+  skillTypeTxt: { fontSize: rf(13), fontWeight: '900', letterSpacing: 0.5 },
   skillBody:    { flex: 1 },
-  skillName:    { fontSize: 11, fontWeight: '800', color: C.TEXT },
-  skillDesc:    { fontSize: 10, color: C.TEXT_SOFT, lineHeight: 14 },
+  skillName:    { fontSize: rf(13), fontWeight: '800', color: C.TEXT },
+  skillDesc:    { fontSize: rf(13), color: C.TEXT_SOFT, lineHeight: rf(14) },
   skillDmg: {
-    borderRadius: 6, paddingHorizontal: 7, paddingVertical: 6,
-    alignItems: 'center', justifyContent: 'center', minWidth: 36,
+    borderRadius: rs(6), paddingHorizontal: rs(7), paddingVertical: rs(6),
+    alignItems: 'center', justifyContent: 'center', minWidth: rs(36),
     borderWidth: 1, borderColor: C.BORDER, backgroundColor: C.BG_STATS,
   },
-  skillDmgTxt: { fontSize: 11, fontWeight: '900', color: C.TEXT_SOFT },
+  skillDmgTxt: { fontSize: rf(13), fontWeight: '900', color: C.TEXT_SOFT },
 
   trumpCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 12, paddingVertical: 10, flex: 1,
-    backgroundColor: C.BG_CARD, borderRadius: 10,
+    flexDirection: 'row', alignItems: 'center', gap: rs(10),
+    paddingHorizontal: rs(12), paddingVertical: rs(10), flex: 1,
+    backgroundColor: C.BG_CARD, borderRadius: rs(10),
     borderWidth: 1, borderColor: C.GOLD + '40',
   },
   trumpIconWrap: {
-    width: 34, height: 34, borderRadius: 8,
+    width: rs(34), height: rs(34), borderRadius: rs(8),
     backgroundColor: C.GOLD + '22', alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: C.GOLD + '55',
   },
   trumpLeft:   { flex: 1 },
-  trumpLabel:  { fontSize: 8, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 2.5, marginBottom: 1 },
-  trumpName:   { fontSize: 12, fontWeight: '900', letterSpacing: 0.5, marginBottom: 2, color: C.GOLD },
-  trumpEffect: { fontSize: 9, fontWeight: '700', lineHeight: 13, color: C.TEXT_SOFT },
+  trumpLabel:  { fontSize: rf(13), fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 2.5, marginBottom: 1 },
+  trumpName:   { fontSize: rf(12), fontWeight: '900', letterSpacing: 0.5, marginBottom: rs(2), color: C.GOLD },
+  trumpEffect: { fontSize: rf(12), fontWeight: '700', lineHeight: rf(13), color: C.TEXT_SOFT },
   trumpDmgWrap:{ gap: 1 },
-  trumpDmgAll: { fontSize: 7, fontWeight: '900', color: C.GOLD, letterSpacing: 0.8, textAlign: 'center' },
+  trumpDmgAll: { fontSize: rf(13), fontWeight: '900', color: C.GOLD, letterSpacing: 0.8, textAlign: 'center' },
 
   // ── Level ────────────────────────────────────────────────────────────────
-  lvCard:    { padding: 12, gap: 8 },
-  lvTopRow:  { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  lvCaption: { fontSize: 8, fontWeight: '800', letterSpacing: 2.5, color: C.TEXT_MUTED },
-  lvNumWrap: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
-  lvNum:     { fontSize: 32, fontWeight: '900', lineHeight: 34, color: C.TEXT },
-  lvDenom:   { fontSize: 12, fontWeight: '700', color: C.TEXT_SOFT, marginBottom: 3 },
-  lvPctWrap: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: C.PRIMARY + '18', borderWidth: 1, borderColor: C.PRIMARY + '40' },
-  lvPct:     { fontSize: 10, fontWeight: '900', color: C.PRIMARY_LIGHT, letterSpacing: 0.4 },
+  lvCard:    { padding: rs(12), gap: rs(8) },
+  lvTopRow:  { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
+  lvCaption: { fontSize: rf(13), fontWeight: '800', letterSpacing: 2.5, color: C.TEXT_MUTED },
+  lvNumWrap: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', gap: rs(4) },
+  lvNum:     { fontSize: rf(32), fontWeight: '900', lineHeight: rf(34), color: C.TEXT },
+  lvDenom:   { fontSize: rf(12), fontWeight: '700', color: C.TEXT_SOFT, marginBottom: rs(3) },
+  lvPctWrap: { paddingHorizontal: rs(8), paddingVertical: rs(3), borderRadius: rs(6), backgroundColor: C.PRIMARY + '18', borderWidth: 1, borderColor: C.PRIMARY + '40' },
+  lvPct:     { fontSize: rf(13), fontWeight: '900', color: C.PRIMARY_LIGHT, letterSpacing: 0.4 },
   lvBarWrap: { width: '100%' },
   lvBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, borderWidth: 1, borderRadius: 8,
-    paddingVertical: 10, paddingHorizontal: 14, width: '100%',
+    gap: rs(7), borderWidth: 1, borderRadius: rs(8),
+    paddingVertical: rs(10), paddingHorizontal: rs(14), width: '100%',
   },
-  lvBtnTxt: { fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
+  lvBtnTxt: { fontSize: rf(13), fontWeight: '900', letterSpacing: 0.5 },
 
-  upgradeRow:   { flex: 1, flexDirection: 'row', gap: 8 },
-  upgradeCard2: { flex: 1, padding: 10, gap: 6 },
-  upgradeHead2: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  upgradeRow:   { flexDirection: 'row', gap: rs(8) },
+  upgradeCard2: { flex: 1, padding: rs(10), gap: rs(6) },
+  upgradeHead2: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
   upgradeIconBox: {
-    width: 32, height: 32, borderRadius: 8,
+    width: rs(32), height: rs(32), borderRadius: rs(8),
     alignItems: 'center', justifyContent: 'center',
   },
-  upgradeTitle2:  { fontSize: 10, fontWeight: '900', letterSpacing: 0.8, color: C.TEXT, marginBottom: 1 },
-  upgradeSub2:    { fontSize: 8, color: C.TEXT_MUTED, letterSpacing: 0.2 },
-  copyBadge:      { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
-  copyBadgeTxt:   { fontSize: 9, fontWeight: '900' },
+  upgradeTitle2:  { fontSize: rf(13), fontWeight: '900', letterSpacing: 0.8, color: C.TEXT, marginBottom: 1 },
+  upgradeSub2:    { fontSize: rf(13), color: C.TEXT_MUTED, letterSpacing: 0.2 },
+  copyBadge:      { paddingHorizontal: rs(7), paddingVertical: rs(3), borderRadius: rs(6) },
+  copyBadgeTxt:   { fontSize: rf(12), fontWeight: '900' },
   ascStarRow:     { flexDirection: 'row', gap: 1 },
-  ascStar2:       { fontSize: 12 },
+  ascStar2:       { fontSize: rf(12) },
   upgradeDivider: { height: 1, backgroundColor: C.BORDER_SUBTLE },
-  upgradeFoot2:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  upgradeCost2:   { fontSize: 10, fontWeight: '800' },
+  upgradeFoot2:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: rs(8) },
+  upgradeCost2:   { fontSize: rf(13), fontWeight: '800' },
   upgradeActionBtn: {
-    borderWidth: 1, borderRadius: 6,
-    paddingVertical: 6, paddingHorizontal: 10,
+    borderWidth: 1, borderRadius: rs(6),
+    paddingVertical: rs(6), paddingHorizontal: rs(10),
   },
-  upgradeActionTxt: { fontSize: 9, fontWeight: '900', letterSpacing: 0.4 },
-  upgradeNote2:     { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '700' },
-  upgradeErr2:      { fontSize: 9, fontWeight: '700', textAlign: 'center', color: C.TEXT_SOFT },
+  upgradeActionTxt: { fontSize: rf(12), fontWeight: '900', letterSpacing: 0.4 },
+  upgradeNote2:     { fontSize: rf(12), color: C.TEXT_MUTED, fontWeight: '700' },
+  upgradeErr2:      { fontSize: rf(12), fontWeight: '700', textAlign: 'center', color: C.TEXT_SOFT },
 
   fuseBadgeStats: {
-    flexDirection: 'row', gap: 10, marginTop: 14,
-    paddingTop: 12, borderTopWidth: 1, borderTopColor: C.BORDER_SUBTLE,
+    flexDirection: 'row', gap: rs(10), marginTop: rs(14),
+    paddingTop: rs(12), borderTopWidth: 1, borderTopColor: C.BORDER_SUBTLE,
   },
-  fuseBadgeStatCell:   { alignItems: 'center', gap: 2, minWidth: 48 },
-  fuseBadgeStatName:   { fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
-  fuseBadgeStatBefore: { fontSize: 9, color: C.TEXT_SOFT, fontWeight: '700' },
-  fuseBadgeStatAfter:  { fontSize: 10, fontWeight: '900', color: C.SUCCESS },
-  fuseBadgeStatNote:   { fontSize: 9, color: C.TEXT_SOFT, fontStyle: 'italic', marginTop: 10 },
+  fuseBadgeStatCell:   { alignItems: 'center', gap: rs(2), minWidth: rs(48) },
+  fuseBadgeStatName:   { fontSize: rf(12), fontWeight: '900', letterSpacing: 0.8 },
+  fuseBadgeStatBefore: { fontSize: rf(12), color: C.TEXT_SOFT, fontWeight: '700' },
+  fuseBadgeStatAfter:  { fontSize: rf(13), fontWeight: '900', color: C.SUCCESS },
+  fuseBadgeStatNote:   { fontSize: rf(12), color: C.TEXT_SOFT, fontStyle: 'italic', marginTop: rs(10) },
 
   // ── Forge ────────────────────────────────────────────────────────────────
-  galaxyBadge:    { position: 'absolute', top: 10, right: 10, alignItems: 'flex-end', gap: 4 },
-  rankChip:       { borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1 },
-  rankChipTxt:    { fontSize: 11, fontWeight: '900' },
-  fuseHint:       { fontSize: 9, fontWeight: '900', letterSpacing: 1 },
-  forgeOverlay:   { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 12, paddingTop: 28, paddingBottom: 10 },
-  forgeOverlayRow:{ flexDirection: 'row', gap: 10 },
-  forgeOverlayBtn:{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
-  forgeOverlayLabel: { fontSize: 10, fontWeight: '900', letterSpacing: 0.8, color: C.TEXT },
-  forgeOverlaySub:   { fontSize: 9, fontWeight: '600', color: C.TEXT_ON_DARK, marginTop: 1 },
-  forgeOverlayErr:   { fontSize: 9, color: C.GOLD, fontWeight: '700', textAlign: 'center', marginTop: 6 },
+  galaxyBadge:    { position: 'absolute', top: rs(10), right: rs(10), alignItems: 'flex-end', gap: rs(4) },
+  rankChip:       { borderRadius: rs(5), paddingHorizontal: rs(8), paddingVertical: rs(3), borderWidth: 1 },
+  rankChipTxt:    { fontSize: rf(13), fontWeight: '900' },
+  fuseHint:       { fontSize: rf(12), fontWeight: '900', letterSpacing: 1 },
+  forgeOverlay:   { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: rs(12), paddingTop: rs(28), paddingBottom: rs(10) },
+  forgeOverlayRow:{ flexDirection: 'row', gap: rs(10) },
+  forgeOverlayBtn:{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: rs(8), borderWidth: 1, borderRadius: rs(8), paddingHorizontal: rs(12), paddingVertical: rs(8) },
+  forgeOverlayLabel: { fontSize: rf(13), fontWeight: '900', letterSpacing: 0.8, color: C.TEXT },
+  forgeOverlaySub:   { fontSize: rf(12), fontWeight: '600', color: C.TEXT_ON_DARK, marginTop: 1 },
+  forgeOverlayErr:   { fontSize: rf(12), color: C.GOLD, fontWeight: '700', textAlign: 'center', marginTop: rs(6) },
 
   fuseBurst: {
-    position: 'absolute', width: 160, height: 160, borderRadius: 80, borderWidth: 2.5,
-    top: H / 2 - 80, left: W / 2 - 80,
+    position: 'absolute', width: rs(160), height: rs(160), borderRadius: rs(80), borderWidth: 2.5,
   },
   fuseBadgeWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   fuseBadgeCard: {
-    borderRadius: 18, overflow: 'hidden', paddingHorizontal: 48, paddingVertical: 24,
+    borderRadius: rs(18), overflow: 'hidden', paddingHorizontal: rs(48), paddingVertical: rs(24),
     alignItems: 'center', borderWidth: 2, backgroundColor: C.BG_DEEP,
     shadowOpacity: 0.95, shadowOffset: { width: 0, height: 0 }, shadowRadius: 36, elevation: 16,
   },
-  fuseBadgeLbl:  { fontSize: 10, fontWeight: '800', letterSpacing: 5, color: C.TEXT_SOFT, marginBottom: 6 },
+  fuseBadgeLbl:  { fontSize: rf(13), fontWeight: '800', letterSpacing: 5, color: C.TEXT_SOFT, marginBottom: rs(6) },
   fuseBadgeRank: { fontWeight: '900', letterSpacing: 8, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 22 },
-  fuseBadgeHero: { fontSize: 10, fontWeight: '700', color: C.TEXT_SOFT, letterSpacing: 1.5, marginTop: 8 },
+  fuseBadgeHero: { fontSize: rf(13), fontWeight: '700', color: C.TEXT_SOFT, letterSpacing: 1.5, marginTop: rs(8) },
 });

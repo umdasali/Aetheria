@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { C } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 import {
   signUp, signIn, resetPassword,
   resendVerification,
@@ -29,7 +30,7 @@ function InputField({
 }) {
   return (
     <View style={s.inputRow}>
-      <Ionicons name={icon} size={14} color={C.TEXT_MUTED} style={s.inputIcon} />
+      <Ionicons name={icon} size={rs(18)} color={C.TEXT_MUTED} style={s.inputIcon} />
       <TextInput
         style={s.input}
         placeholder={placeholder}
@@ -121,6 +122,13 @@ export default function CloudAuthScreen({ navigation }) {
   const timerRef          = useRef(null);
   // Preserves the password across the verify step (goToStep clears password state).
   const verifyPasswordRef = useRef('');
+  // Guards syncAndClose against running twice: a client-side auth timeout can
+  // fire while the real signIn() keeps resolving in the background (see
+  // handleLogin/handleCheckVerified/the AppState listener below), and the
+  // AppState foreground check can race a manual "I've Verified" tap. Without
+  // this, two concurrent syncAndClose calls could both download+merge+upload,
+  // corrupting the cloud save.
+  const syncStartedRef    = useRef(false);
 
   useEffect(() => {
     Animated.parallel([
@@ -149,10 +157,17 @@ export default function CloudAuthScreen({ navigation }) {
 
   // ── Cloud sync after verified sign-in ─────────────────────────────────────
   const syncAndClose = async (user) => {
+    // See syncStartedRef above — a second concurrent call (timeout-delayed
+    // background resolve, or a racing AppState/manual verify check) must be a
+    // pure no-op, not a second download+merge+upload cycle.
+    if (syncStartedRef.current) return;
+    syncStartedRef.current = true;
+
     const currentUid = user.id;
 
     // Auth succeeded — stop the button spinner and show the loading phase.
     setLoading(false);
+    setError('');
     setCloudSyncState('loading');
 
     // Snapshot the pre-login store state so we can decide how to handle conflicts.
@@ -170,11 +185,16 @@ export default function CloudAuthScreen({ navigation }) {
     // values, permanently destroying purchased currency when it re-uploads.
     const isUnclaimed = !existingLocal.localUserId;
 
-    if (isDifferentUser) {
-      await useGameStore.getState().resetStore();
-    }
-
+    // Everything below — including resetStore() — is inside this try/finally so a
+    // failure anywhere (e.g. AsyncStorage.removeItem throwing inside resetStore)
+    // can never leave cloudSyncState stuck on 'loading'. That state drives a
+    // non-dismissable full-screen modal (onRequestClose is a no-op), so previously
+    // an uncaught error here soft-locked the player with no way out but a force-quit.
     try {
+      if (isDifferentUser) {
+        await useGameStore.getState().resetStore();
+      }
+
       const downloadResult = await withTimeout(downloadSave(currentUid), SYNC_TIMEOUT_MS);
 
       if (!downloadResult.ok) {
@@ -219,18 +239,28 @@ export default function CloudAuthScreen({ navigation }) {
       // Network timeout or unhandled error — mark the user as signed in so they
       // can keep playing. Their cloud save will sync on the next connection.
       useGameStore.setState({ cloudAccountEmail: user.email, localUserId: currentUid });
+    } finally {
+      // Guaranteed to run even if resetStore() or anything above throws —
+      // transitions to the restart prompt so the modal never gets stuck.
+      setCloudSyncState('done');
     }
-
-    // Always reach here — transition to the restart prompt.
-    setCloudSyncState('done');
   };
 
   // ── Submit handlers ───────────────────────────────────────────────────────
   const handleLogin = async () => {
     if (!email.trim() || !password) return;
     setLoading(true); setError(''); setInfo('');
+    // withTimeout() can only abandon the CLIENT'S WAIT — it never cancels the
+    // underlying request. If the 15s timeout fires but Supabase's real signIn
+    // still succeeds a moment later, we must still reconcile (download+merge)
+    // instead of leaving localUserId unset — otherwise the next debounced
+    // background sync would upload this never-merged local state straight
+    // over the player's real cloud save. syncAndClose's own guard makes it
+    // safe to also await it below without double-running.
+    const attempt = signIn(email.trim().toLowerCase(), password);
+    attempt.then(user => { if (user) syncAndClose(user); }).catch(() => {});
     try {
-      const user = await withTimeout(signIn(email.trim().toLowerCase(), password));
+      const user = await withTimeout(attempt);
       await syncAndClose(user);
     } catch (e) {
       if (__DEV__) console.warn('[CloudAuth] login error:', JSON.stringify(e));
@@ -311,9 +341,13 @@ export default function CloudAuthScreen({ navigation }) {
     if (step !== 'verify') return;
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') {
-        withTimeout(signIn(verifyEmail, verifyPasswordRef.current))
-          .then(user => { if (user) syncAndClose(user); })
-          .catch(() => {});
+        // Attach to the raw promise, not the withTimeout-wrapped race — a
+        // timeout here only means "stop waiting," not "the request failed."
+        // Since this check is silent (no loading/error UI), a slow-but-real
+        // success must still reach syncAndClose or it's stranded the same way
+        // handleLogin's timeout race is guarded against above.
+        const attempt = signIn(verifyEmail, verifyPasswordRef.current);
+        attempt.then(user => { if (user) syncAndClose(user); }).catch(() => {});
       }
     });
     return () => sub.remove();
@@ -321,8 +355,13 @@ export default function CloudAuthScreen({ navigation }) {
 
   const handleCheckVerified = async () => {
     setLoading(true); setError('');
+    // Same reasoning as handleLogin: keep reconciling in the background even
+    // if the client-side timeout fires first, so a slow-but-successful check
+    // isn't stranded without ever calling syncAndClose.
+    const attempt = signIn(verifyEmail, verifyPasswordRef.current);
+    attempt.then(user => { if (user) syncAndClose(user); }).catch(() => {});
     try {
-      const user = await withTimeout(signIn(verifyEmail, verifyPasswordRef.current));
+      const user = await withTimeout(attempt);
       await syncAndClose(user);
     } catch (e) {
       if ((e?.message ?? '').includes('Email not confirmed')) {
@@ -337,7 +376,7 @@ export default function CloudAuthScreen({ navigation }) {
   // ── Shared UI pieces ──────────────────────────────────────────────────────
   const eyeToggle = (
     <TouchableOpacity onPress={() => setShowPass(p => !p)} style={s.eyeBtn} activeOpacity={0.7}>
-      <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={15} color={C.TEXT_MUTED} />
+      <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={rs(19)} color={C.TEXT_MUTED} />
     </TouchableOpacity>
   );
 
@@ -426,9 +465,9 @@ export default function CloudAuthScreen({ navigation }) {
       <>
         <View style={s.verifyIconRow}>
           <LinearGradient colors={[C.SUCCESS + 'CC', C.CYAN]} style={s.verifyIcon}>
-            <Ionicons name="mail-open-outline" size={22} color={C.TEXT} />
+            <Ionicons name="mail-open-outline" size={rs(22)} color={C.TEXT} />
           </LinearGradient>
-          <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={{ flex: 1, marginLeft: rs(10) }}>
             <Text style={s.formTitle}>Verify Your Email</Text>
             <Text style={s.verifyEmail}>{verifyEmail}</Text>
           </View>
@@ -471,7 +510,7 @@ export default function CloudAuthScreen({ navigation }) {
         {/* Header */}
         <LinearGradient colors={C.GRAD_HEADER} style={s.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={22} color={C.TEXT} />
+            <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
           </TouchableOpacity>
           <Text style={s.headerTitle}>CONNECT ACCOUNT</Text>
         </LinearGradient>
@@ -491,7 +530,7 @@ export default function CloudAuthScreen({ navigation }) {
               />
               <View style={s.brandIcon}>
                 <LinearGradient colors={[C.PRIMARY, C.SECONDARY]} style={s.brandIconGrad}>
-                  <Ionicons name="cloud-outline" size={24} color={C.TEXT} />
+                  <Ionicons name="cloud-outline" size={rs(24)} color={C.TEXT} />
                 </LinearGradient>
               </View>
               <Text style={s.brandTitle}>Cloud Save</Text>
@@ -527,20 +566,20 @@ export default function CloudAuthScreen({ navigation }) {
               <>
                 <View style={s.restartIconWrap}>
                   <LinearGradient colors={[C.PRIMARY, C.CYAN]} style={s.restartIconGrad}>
-                    <Ionicons name="cloud-download-outline" size={26} color={C.TEXT} />
+                    <Ionicons name="cloud-download-outline" size={rs(26)} color={C.TEXT} />
                   </LinearGradient>
                 </View>
                 <Text style={s.restartTitle}>LOADING SAVE</Text>
                 <Text style={s.restartMsg}>
                   Fetching your cloud data…{'\n'}Please wait a moment.
                 </Text>
-                <ActivityIndicator size="large" color={C.PRIMARY_LIGHT} style={{ marginTop: 4 }} />
+                <ActivityIndicator size="large" color={C.PRIMARY_LIGHT} style={{ marginTop: rs(4) }} />
               </>
             ) : (
               <>
                 <View style={s.restartIconWrap}>
                   <LinearGradient colors={[C.SUCCESS, C.CYAN]} style={s.restartIconGrad}>
-                    <Ionicons name="checkmark-done-outline" size={26} color={C.TEXT} />
+                    <Ionicons name="checkmark-done-outline" size={rs(26)} color={C.TEXT} />
                   </LinearGradient>
                 </View>
                 <Text style={s.restartTitle}>SIGNED IN</Text>
@@ -553,7 +592,7 @@ export default function CloudAuthScreen({ navigation }) {
                   activeOpacity={0.82}
                 >
                   <LinearGradient colors={C.GRAD_PINK} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.restartBtnGrad}>
-                    <Ionicons name="refresh-outline" size={15} color={C.TEXT} />
+                    <Ionicons name="refresh-outline" size={rs(19)} color={C.TEXT} />
                     <Text style={s.restartBtnTxt}>RESTART NOW</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -572,39 +611,39 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.BG_DEEP },
 
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 12, paddingVertical: 10,
+    flexDirection: 'row', alignItems: 'center', gap: rs(10),
+    paddingHorizontal: rs(12), paddingVertical: rs(10),
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)',
   },
-  backBtn:     { padding: 4 },
-  headerTitle: { fontSize: 15, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
+  backBtn:     { padding: rs(4) },
+  headerTitle: { fontSize: rf(15), fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
 
-  body: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+  body: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: rs(20) },
 
   card: {
     width: CARD_W, height: CARD_H,
-    borderRadius: 14, overflow: 'hidden',
+    borderRadius: rs(14), overflow: 'hidden',
     flexDirection: 'row', position: 'relative',
   },
-  cardBorder: { borderRadius: 14, borderWidth: 1, borderColor: C.BORDER, zIndex: 1 },
+  cardBorder: { borderRadius: rs(14), borderWidth: 1, borderColor: C.BORDER, zIndex: 1 },
 
   // Left branding
   leftPanel: {
     width: '34%', alignItems: 'center', justifyContent: 'center',
-    padding: 16, position: 'relative',
+    padding: rs(16), position: 'relative',
     borderRightWidth: 1, borderRightColor: C.BORDER_SUBTLE,
   },
-  brandIcon:     { marginBottom: 10 },
+  brandIcon:     { marginBottom: rs(10) },
   brandIconGrad: {
-    width: 50, height: 50, borderRadius: 25,
+    width: rs(50), height: rs(50), borderRadius: rs(25),
     alignItems: 'center', justifyContent: 'center',
   },
   brandTitle: {
-    fontSize: 14, fontWeight: '900', color: C.TEXT,
-    letterSpacing: 1, marginBottom: 6, textAlign: 'center',
+    fontSize: rf(14), fontWeight: '900', color: C.TEXT,
+    letterSpacing: 1, marginBottom: rs(6), textAlign: 'center',
   },
   brandSub: {
-    fontSize: 10, color: C.TEXT_MUTED, lineHeight: 15,
+    fontSize: rf(13), color: C.TEXT_MUTED, lineHeight: rf(15),
     textAlign: 'center', fontWeight: '500',
   },
 
@@ -612,48 +651,48 @@ const s = StyleSheet.create({
 
   // Right form
   rightPanel: {
-    flex: 1, padding: 18, justifyContent: 'center',
+    flex: 1, padding: rs(18), justifyContent: 'center',
   },
 
   formTitle: {
-    fontSize: 14, fontWeight: '900', color: C.TEXT,
-    letterSpacing: 0.5, marginBottom: 8,
+    fontSize: rf(14), fontWeight: '900', color: C.TEXT,
+    letterSpacing: 0.5, marginBottom: rs(8),
   },
   formSub: {
-    fontSize: 10, color: C.TEXT_MUTED, lineHeight: 14,
-    marginBottom: 8, fontWeight: '500',
+    fontSize: rf(13), color: C.TEXT_MUTED, lineHeight: rf(14),
+    marginBottom: rs(8), fontWeight: '500',
   },
 
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
-    borderRadius: 8, borderWidth: 1, borderColor: C.BORDER,
-    backgroundColor: C.BG_CARD, paddingHorizontal: 10,
-    height: 38, marginBottom: 6,
+    borderRadius: rs(8), borderWidth: 1, borderColor: C.BORDER,
+    backgroundColor: C.BG_CARD, paddingHorizontal: rs(10),
+    height: rs(38), marginBottom: rs(6),
   },
-  inputIcon: { marginRight: 7 },
-  input:     { flex: 1, fontSize: 12, color: C.TEXT, fontWeight: '600' },
-  eyeBtn:    { padding: 3 },
+  inputIcon: { marginRight: rs(7) },
+  input:     { flex: 1, fontSize: rf(12), color: C.TEXT, fontWeight: '600' },
+  eyeBtn:    { padding: rs(3) },
 
-  errorArea: { minHeight: 18, justifyContent: 'center', marginBottom: 4 },
-  errorTxt:  { fontSize: 10, color: C.DANGER,  fontWeight: '700' },
-  infoTxt:   { fontSize: 10, color: C.SUCCESS, fontWeight: '700' },
+  errorArea: { minHeight: rs(18), justifyContent: 'center', marginBottom: rs(4) },
+  errorTxt:  { fontSize: rf(13), color: C.DANGER,  fontWeight: '700' },
+  infoTxt:   { fontSize: rf(13), color: C.SUCCESS, fontWeight: '700' },
 
-  btn:         { borderRadius: 8, overflow: 'hidden', marginBottom: 8 },
+  btn:         { borderRadius: rs(8), overflow: 'hidden', marginBottom: rs(8) },
   btnDisabled: { opacity: 0.45 },
-  btnGrad:     { paddingVertical: 10, alignItems: 'center' },
-  btnTxt:      { fontSize: 11, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
+  btnGrad:     { paddingVertical: rs(10), alignItems: 'center' },
+  btnTxt:      { fontSize: rf(13), fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
 
-  linksRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  linkBtn:  { paddingVertical: 4 },
-  linkTxt:  { fontSize: 10, color: C.TEXT_MUTED, fontWeight: '600', textDecorationLine: 'underline' },
-  dot:      { color: C.TEXT_DISABLED, fontSize: 10 },
+  linksRow: { flexDirection: 'row', alignItems: 'center', gap: rs(6), flexWrap: 'wrap' },
+  linkBtn:  { paddingVertical: rs(4) },
+  linkTxt:  { fontSize: rf(13), color: C.TEXT_MUTED, fontWeight: '600', textDecorationLine: 'underline' },
+  dot:      { color: C.TEXT_DISABLED, fontSize: rf(13) },
 
-  verifyIconRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+  verifyIconRow: { flexDirection: 'row', alignItems: 'center', marginBottom: rs(6) },
   verifyIcon: {
-    width: 40, height: 40, borderRadius: 20,
+    width: rs(40), height: rs(40), borderRadius: rs(20),
     alignItems: 'center', justifyContent: 'center',
   },
-  verifyEmail: { fontSize: 11, fontWeight: '800', color: C.PRIMARY_LIGHT, marginTop: 2 },
+  verifyEmail: { fontSize: rf(13), fontWeight: '800', color: C.PRIMARY_LIGHT, marginTop: rs(2) },
 
   // Restart modal
   restartOverlay: {
@@ -661,27 +700,27 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   restartCard: {
-    width: 300, borderRadius: 16, overflow: 'hidden',
-    alignItems: 'center', padding: 28, position: 'relative',
+    width: rs(300), borderRadius: rs(16), overflow: 'hidden',
+    alignItems: 'center', padding: rs(28), position: 'relative',
   },
-  restartBorder: { borderRadius: 16, borderWidth: 1, borderColor: C.BORDER_STRONG },
-  restartIconWrap: { marginBottom: 14 },
+  restartBorder: { borderRadius: rs(16), borderWidth: 1, borderColor: C.BORDER_STRONG },
+  restartIconWrap: { marginBottom: rs(14) },
   restartIconGrad: {
-    width: 56, height: 56, borderRadius: 28,
+    width: rs(56), height: rs(56), borderRadius: rs(28),
     alignItems: 'center', justifyContent: 'center',
   },
   restartTitle: {
-    fontSize: 18, fontWeight: '900', color: C.TEXT,
-    letterSpacing: 3, marginBottom: 10, textAlign: 'center',
+    fontSize: rf(18), fontWeight: '900', color: C.TEXT,
+    letterSpacing: 3, marginBottom: rs(10), textAlign: 'center',
   },
   restartMsg: {
-    fontSize: 11, color: C.TEXT_MUTED, lineHeight: 17,
-    textAlign: 'center', fontWeight: '500', marginBottom: 22,
+    fontSize: rf(13), color: C.TEXT_MUTED, lineHeight: rf(17),
+    textAlign: 'center', fontWeight: '500', marginBottom: rs(22),
   },
-  restartBtn:     { borderRadius: 10, overflow: 'hidden', width: '100%' },
+  restartBtn:     { borderRadius: rs(10), overflow: 'hidden', width: '100%' },
   restartBtnGrad: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 12, gap: 7,
+    paddingVertical: rs(12), gap: rs(7),
   },
-  restartBtnTxt:  { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
+  restartBtnTxt:  { fontSize: rf(13), fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
 });

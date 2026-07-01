@@ -13,9 +13,12 @@ import {
 import { getShopPackById } from '../data/shopPacks';
 import { DAILY_DUNGEON_ATTEMPTS, DUNGEON_REFILL_COST, DUNGEON_REFILL_AMOUNT } from '../data/resourceDungeons';
 import { CURRENT_VERSION, migrate } from './migrations';
+import { DEFAULT_AVATAR_ID } from '../data/avatars';
 import { ACHIEVEMENT_DEFS } from '../data/achievements';
 import { sanitizeState } from './sanitizeState';
 import { initSyncQueue, triggerSync } from '../cloud/syncQueue';
+import { claimPlayerUid as registerPlayerUid } from '../cloud/uidService';
+import { claimName, renameName } from '../cloud/nameService';
 
 // Copies consumed per upgrade. Kept low so progression is reachable for F2P players via
 // recurring featured banners + pity, instead of requiring an unreachable pile of dupes of
@@ -38,6 +41,19 @@ function generatePlayerUID() {
   }
   // Format as XXX-XXX-XXX
   return `${id.slice(0, 3)}-${id.slice(3, 6)}-${id.slice(6)}`;
+}
+
+// Opaque ownership proof paired with playerUid — never shown to the player.
+// Lets claim_player_uid() tell "this device re-confirming its own uid" apart
+// from "a different device that collided with this uid" (see
+// supabase/migrations/0005_player_uid_registry.sql).
+function generatePlayerUidSecret() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let secret = '';
+  for (let i = 0; i < 24; i++) {
+    secret += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return secret;
 }
 
 // Droppable ascension items (excludes aetheria_core / SOVEREIGN — too rare to drop freely)
@@ -65,6 +81,10 @@ const INITIAL_STATE = {
   cloudAccountEmail:     null,
   localUserId:           null,   // Supabase user id that owns this local save; null = unclaimed
   playerUid:             null,   // Persistent display UID shown on profile; generated once
+  playerUidSecret:       null,   // Opaque ownership proof paired with playerUid; never shown
+  playerUidClaimed:      false,  // true once playerUid is confirmed globally-unique server-side
+  serverClaimedName:     null,   // last playerProfile.name value confirmed registered server-side
+  pendingNameClaim:      null,   // name awaiting server (re)registration after a networkError
   ownedHeroes:           ['hero_002', 'hero_004', 'hero_005', 'hero_016'],
   team:                  ['hero_002', 'hero_004', 'hero_005'],
   gems:                  150,
@@ -99,7 +119,7 @@ const INITIAL_STATE = {
   playerProfile: {
     name:            'Commander',
     signature:       '',
-    avatarHeroId:    null,
+    avatarId:        DEFAULT_AVATAR_ID,
     showcaseIds:     [null, null, null],
     favoriteFaction: null,
   },
@@ -391,6 +411,61 @@ const useGameStore = create(
       updateSettings: (patch) =>
         set(state => ({ settings: { ...state.settings, ...patch } })),
 
+      // Registers the local playerUid with the server so it's actually
+      // guaranteed globally unique (see
+      // supabase/migrations/0005_player_uid_registry.sql), not just
+      // "unlikely to collide" from Math.random() alone. That guarantee
+      // matters because playerUid also serves as the owner_uid trust token
+      // for the player_names rename/release RPCs — two installs sharing a
+      // UID could otherwise rename or release each other's claimed name.
+      // Safe to call on every app launch: the RPC is idempotent for an
+      // already-registered (uid, secret) pair, and best-effort offline
+      // (no-ops on failure).
+      claimPlayerUid: async () => {
+        const state = get();
+        const candidate = state.playerUid || generatePlayerUID();
+        const secret = state.playerUidSecret || generatePlayerUidSecret();
+        const { uid, secret: confirmedSecret, networkError } = await registerPlayerUid(candidate, secret);
+        if (networkError || !uid) return;
+        // Skip the wrapped set() (and its updatedAt: Date.now() stamp) when
+        // nothing actually changed — this runs on every launch, so calling
+        // set() unconditionally would reintroduce the same "cold start bumps
+        // updatedAt with no real edit" problem fixed in checkTowerWeekReset,
+        // corrupting resolveConflict()'s last-writer-wins merge signal.
+        if (uid === state.playerUid && confirmedSecret === state.playerUidSecret && state.playerUidClaimed) return;
+        set({ playerUid: uid, playerUidSecret: confirmedSecret, playerUidClaimed: true });
+      },
+
+      // Best-effort retry for a name claim/rename that previously failed with
+      // a networkError (see OnboardingScreen.js / EditProfileScreen.js). Those
+      // screens commit the chosen name to playerProfile.name locally right
+      // away (offline-friendly UX) but leave the server registration stuck on
+      // whatever serverClaimedName was last confirmed — without this retry,
+      // that gap never closes on its own. Safe to call on every app launch:
+      // no-ops when there's nothing pending, and best-effort offline.
+      retryPendingNameClaim: async () => {
+        const state = get();
+        const pending = state.pendingNameClaim;
+        if (!pending) return;
+        const uid = state.playerUid;
+
+        const res = state.serverClaimedName
+          ? await renameName(state.serverClaimedName, pending, uid)
+          : await claimName(pending, uid);
+
+        if (res.networkError) return; // still offline — leave pendingNameClaim set for next retry
+
+        if (res.claimed || res.renamed) {
+          set({ serverClaimedName: res.displayName || pending, pendingNameClaim: null });
+        } else {
+          // 'taken' or 'not_owner' — this exact retry will never succeed on its
+          // own (another player has since claimed it, or ownership can't be
+          // verified). Drop it instead of retrying forever; the player can
+          // pick a new name from EditProfileScreen if they still want to.
+          set({ pendingNameClaim: null });
+        }
+      },
+
       // ── Daily Quest actions ─────────────────────────────────────────────────
 
       trackQuestProgress: (questId, amount = 1) => {
@@ -478,14 +553,20 @@ const useGameStore = create(
 
       checkTowerWeekReset: () => {
         const weekKey = getCurrentWeekKey();
-        set(state => {
-          // Already up-to-date for this week — nothing to do
-          if (state.towerWeekResetDate === weekKey) return {};
+        const current = get().towerWeekResetDate;
+        // Already up-to-date for this week — bail out WITHOUT calling set(), which
+        // always stamps updatedAt: Date.now(). This runs on every app rehydration
+        // (onRehydrateStorage), so touching set() here on a no-op would bump
+        // updatedAt on every cold start and make local data spuriously "win"
+        // resolveConflict()'s last-writer-wins merge against genuinely newer cloud data.
+        if (current === weekKey) return;
+        set(
           // First-ever open (no stored key yet) — just stamp the week, don't wipe progress
-          if (!state.towerWeekResetDate) return { towerWeekResetDate: weekKey };
-          // Genuine new-week transition — reset current floor + weekly best, keep all-time record
-          return { towerCurrentFloor: 1, towerWeeklyBest: 0, towerWeekResetDate: weekKey };
-        });
+          !current
+            ? { towerWeekResetDate: weekKey }
+            // Genuine new-week transition — reset current floor + weekly best, keep all-time record
+            : { towerCurrentFloor: 1, towerWeeklyBest: 0, towerWeekResetDate: weekKey }
+        );
       },
 
       // ── Resource Dungeon actions ────────────────────────────────────────────

@@ -129,7 +129,12 @@
       "Bash(git push *)",
       "Skill(artifact-design)",
       "Skill(artifact-design:*)",
-      "Bash(python3 /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/477fb94f-06b0-4ae4-85a7-912190a2a627/scratchpad/gen_pdf.py)"
+      "Bash(python3 /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/477fb94f-06b0-4ae4-85a7-912190a2a627/scratchpad/gen_pdf.py)",
+      "Bash(npx playwright *)",
+      "Bash(EXPO_NO_DOCTOR=1 npx expo start --web --port 8081)",
+      "Bash(curl -s http://localhost:8081)",
+      "Bash(kill %1)",
+      "Bash(node --input-type=module --eval ' *)"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

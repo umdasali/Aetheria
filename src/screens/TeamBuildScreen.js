@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useRef, memo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Image, ScrollView, FlatList, Dimensions, Animated,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,6 +11,7 @@ import useGameStore from '../store/gameStore';
 import { HEROES, FACTIONS } from '../data/heroes';
 import AudioManager from '../utils/AudioManager';
 import { C, RANK } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 
 const { width: W } = Dimensions.get('window');
 
@@ -28,6 +30,8 @@ const PRESET_LABELS = ['Ⅰ', 'Ⅱ', 'Ⅲ'];
 const FACTION_KEYS = ['All', ...Object.keys(FACTIONS)];
 
 export default function TeamBuildScreen({ navigation }) {
+  const { width: W, height: H } = useWindowDimensions();
+
   const ownedHeroes      = useGameStore(s => s.ownedHeroes);
   const team             = useGameStore(s => s.team);
   const savedTeams       = useGameStore(s => s.savedTeams);
@@ -129,7 +133,7 @@ export default function TeamBuildScreen({ navigation }) {
 
   const ListEmpty = useMemo(() => (
     <View style={s.emptyState}>
-      <Ionicons name="people-outline" size={32} color={C.TEXT_DISABLED} />
+      <Ionicons name="people-outline" size={rs(32)} color={C.TEXT_DISABLED} />
       <Text style={s.emptyTitle}>No Heroes</Text>
       <Text style={s.emptyHint}>
         {filter === 'All'
@@ -151,7 +155,7 @@ export default function TeamBuildScreen({ navigation }) {
             onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }}
             style={s.backBtn}
           >
-            <Ionicons name="chevron-back" size={19} color={C.TEXT} />
+            <Ionicons name="chevron-back" size={rs(19)} color={C.TEXT} />
             <Text style={s.backTxt}>BACK</Text>
           </TouchableOpacity>
 
@@ -252,7 +256,7 @@ export default function TeamBuildScreen({ navigation }) {
                       )}
                       {deployed && (
                         <View style={s.tabActiveBadge}>
-                          <Ionicons name="flash" size={8} color={C.SUCCESS} />
+                          <Ionicons name="flash" size={rs(8)} color={C.SUCCESS} />
                         </View>
                       )}
                       {/* Clear button — visible only on the active tab when it has heroes */}
@@ -262,7 +266,7 @@ export default function TeamBuildScreen({ navigation }) {
                           onPress={handleClear}
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                          <Ionicons name="trash-outline" size={11} color={C.TEXT_ON_DARK_DIM} />
+                          <Ionicons name="trash-outline" size={rs(15)} color={C.TEXT_ON_DARK_DIM} />
                         </TouchableOpacity>
                       )}
                     </TouchableOpacity>
@@ -318,7 +322,7 @@ export default function TeamBuildScreen({ navigation }) {
                           onPress={() => handleToggle(hero.id)}
                           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
-                          <Ionicons name="close-circle" size={20} color={C.TEXT_ON_DARK} />
+                          <Ionicons name="close-circle" size={rs(20)} color={C.TEXT_ON_DARK} />
                         </TouchableOpacity>
                       </View>
                     );
@@ -358,13 +362,13 @@ export default function TeamBuildScreen({ navigation }) {
                 {isLive ? (
                   // Preset matches the live battle team exactly
                   <View style={s.statusRow}>
-                    <Ionicons name="checkmark-circle" size={13} color={C.SUCCESS} />
+                    <Ionicons name="checkmark-circle" size={rs(17)} color={C.SUCCESS} />
                     <Text style={[s.statusTxt, { color: C.SUCCESS }]}>ACTIVE</Text>
                   </View>
                 ) : isModified ? (
                   // Preset was deployed but has since been edited — prompt re-deploy
                   <TouchableOpacity style={s.modifiedRow} onPress={handleDeploy} activeOpacity={0.82}>
-                    <Ionicons name="warning" size={13} color={C.WARNING} />
+                    <Ionicons name="warning" size={rs(17)} color={C.WARNING} />
                     <Text style={[s.statusTxt, { color: C.WARNING }]}>MODIFIED</Text>
                     <Text style={s.modifiedHint}> · tap to re-deploy</Text>
                   </TouchableOpacity>
@@ -381,7 +385,7 @@ export default function TeamBuildScreen({ navigation }) {
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                       style={s.deployInner}
                     >
-                      <Ionicons name="flash" size={13} color={filledCount ? C.TEXT : C.TEXT_DISABLED} />
+                      <Ionicons name="flash" size={rs(17)} color={filledCount ? C.TEXT : C.TEXT_DISABLED} />
                       <Text style={[s.deployTxt, { color: filledCount ? C.TEXT : C.TEXT_DISABLED }]}>
                         DEPLOY {PRESET_LABELS[tab]}
                       </Text>
@@ -422,7 +426,7 @@ const SelectCard = memo(function SelectCard({ hero, heroId, inTeam, teamFull, ha
       <Text style={s.cardName} numberOfLines={1}>{hero.name}</Text>
       {inTeam && (
         <View style={s.checkBadge}>
-          <Ionicons name="checkmark-circle" size={17} color={C.SUCCESS} />
+          <Ionicons name="checkmark-circle" size={rs(21)} color={C.SUCCESS} />
         </View>
       )}
       {teamFull && !inTeam && (
@@ -442,15 +446,15 @@ const s = StyleSheet.create({
 
   header: {
     height: HEADER_H, flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 12, gap: 10,
+    paddingHorizontal: rs(12), gap: rs(10),
   },
-  backBtn:      { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  backTxt:      { fontSize: 12, fontWeight: '700', color: C.TEXT, letterSpacing: 0.5 },
+  backBtn:      { flexDirection: 'row', alignItems: 'center', gap: rs(3) },
+  backTxt:      { fontSize: rf(12), fontWeight: '700', color: C.TEXT, letterSpacing: 0.5 },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle:  { fontSize: 14, fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
-  headerSub:    { fontSize: 9, color: C.TEXT_ON_DARK_MUTED, marginTop: 1 },
-  countChip:    { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, borderWidth: 1 },
-  countTxt:     { fontSize: 13, fontWeight: '900' },
+  headerTitle:  { fontSize: rf(14), fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
+  headerSub:    { fontSize: rf(12), color: C.TEXT_ON_DARK_MUTED, marginTop: 1 },
+  countChip:    { paddingHorizontal: rs(12), paddingVertical: rs(5), borderRadius: rs(8), borderWidth: 1 },
+  countTxt:     { fontSize: rf(13), fontWeight: '900' },
 
   body: { flex: 1, flexDirection: 'row' },
 
@@ -462,34 +466,34 @@ const s = StyleSheet.create({
     backgroundColor: C.GLASS_1,
   },
   filterBar:     { height: FILTER_H, flexGrow: 0 },
-  filterContent: { paddingHorizontal: 8, paddingVertical: 6, gap: 6, alignItems: 'center' },
+  filterContent: { paddingHorizontal: rs(8), paddingVertical: rs(6), gap: rs(6), alignItems: 'center' },
   filterChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: 14, borderWidth: 1,
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    paddingHorizontal: rs(10), paddingVertical: rs(4),
+    borderRadius: rs(14), borderWidth: 1,
     borderColor: C.GLASS_7,
     backgroundColor: C.GLASS_4,
   },
-  filterIcon:  { width: 14, height: 14 },
-  filterLabel: { fontSize: 10, color: C.TEXT_MUTED, fontWeight: '700', letterSpacing: 0.3 },
-  grid:    { padding: GRID_PAD, paddingBottom: 20 },
+  filterIcon:  { width: rs(14), height: rs(14) },
+  filterLabel: { fontSize: rf(13), color: C.TEXT_MUTED, fontWeight: '700', letterSpacing: 0.3 },
+  grid:    { padding: GRID_PAD, paddingBottom: rs(20) },
   gridRow: { gap: GAP, marginBottom: GAP },
 
   // ── Empty state ─────────────────────────────────────────────────────────────
   emptyState: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 48, gap: 8,
+    paddingVertical: rs(48), gap: rs(8),
   },
-  emptyTitle: { fontSize: 14, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1 },
+  emptyTitle: { fontSize: rf(14), fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1 },
   emptyHint:  {
-    fontSize: 11, color: C.TEXT_DISABLED, textAlign: 'center',
-    paddingHorizontal: 24, lineHeight: 16,
+    fontSize: rf(13), color: C.TEXT_DISABLED, textAlign: 'center',
+    paddingHorizontal: rs(24), lineHeight: rf(16),
   },
 
   // ── Select card ─────────────────────────────────────────────────────────────
   card: {
     width: CARD_W, height: CARD_H,
-    borderRadius: 8, overflow: 'hidden',
+    borderRadius: rs(8), overflow: 'hidden',
     backgroundColor: C.BG_CARD,
     borderWidth: 1.5, borderColor: C.BORDER_SUBTLE,
   },
@@ -497,137 +501,137 @@ const s = StyleSheet.create({
     borderColor: C.SUCCESS,
     shadowColor: C.SUCCESS,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55, shadowRadius: 8, elevation: 6,
+    shadowOpacity: 0.55, shadowRadius: rs(8), elevation: 6,
   },
   cardArt:    { position: 'absolute', width: '100%', height: '100%' },
   cardGrad:   { position: 'absolute', bottom: 0, left: 0, right: 0, height: CARD_H * 0.55 },
   cardTopBar: { position: 'absolute', top: 0, left: 0, right: 0, height: 3 },
   cardRank: {
-    position: 'absolute', top: 5, right: 5,
-    paddingHorizontal: 5, paddingVertical: 2, borderRadius: 3,
+    position: 'absolute', top: rs(5), right: rs(5),
+    paddingHorizontal: rs(5), paddingVertical: rs(2), borderRadius: rs(3),
   },
-  cardRankTxt: { fontSize: 8, fontWeight: '900' },
+  cardRankTxt: { fontSize: rf(11), fontWeight: '900' },
   cardName: {
-    position: 'absolute', bottom: 5, left: 5, right: 5,
-    fontSize: 9, color: C.TEXT, fontWeight: '700', letterSpacing: 0.3,
+    position: 'absolute', bottom: rs(5), left: rs(5), right: rs(5),
+    fontSize: rf(12), color: C.TEXT, fontWeight: '700', letterSpacing: 0.3,
     textShadowColor: C.OVERLAY_4,
     textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
   checkBadge: {
-    position: 'absolute', top: 4, left: 4,
-    backgroundColor: C.OVERLAY_3, borderRadius: 10,
+    position: 'absolute', top: rs(4), left: rs(4),
+    backgroundColor: C.OVERLAY_3, borderRadius: rs(10),
   },
   fullOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: C.OVERLAY_4,
     alignItems: 'center', justifyContent: 'center',
   },
-  fullTxt: { fontSize: 9, color: C.TEXT_MUTED, fontWeight: '900', letterSpacing: 1.5 },
+  fullTxt: { fontSize: rf(12), color: C.TEXT_MUTED, fontWeight: '900', letterSpacing: 1.5 },
 
   // ── Right panel ─────────────────────────────────────────────────────────────
   rightPanel: { flex: 1, backgroundColor: C.OVERLAY_1 },
   rightInner: {
-    flex: 1, paddingHorizontal: SLOT_PAD, paddingTop: 10, paddingBottom: 10, gap: 8,
+    flex: 1, paddingHorizontal: rs(SLOT_PAD), paddingTop: rs(10), paddingBottom: rs(10), gap: rs(8),
   },
 
   // ── Preset tabs ─────────────────────────────────────────────────────────────
-  tabRow: { flexDirection: 'row', gap: 6 },
+  tabRow: { flexDirection: 'row', gap: rs(6) },
   tab: {
-    flex: 1, paddingVertical: 7, borderRadius: 8,
+    flex: 1, paddingVertical: rs(7), borderRadius: rs(8),
     backgroundColor: C.GLASS_3,
     borderWidth: 1, borderColor: C.GLASS_6,
-    alignItems: 'center', gap: 4, position: 'relative',
+    alignItems: 'center', gap: rs(4), position: 'relative',
   },
   tabActive:      { backgroundColor: C.PRIMARY_GLOW, borderColor: C.PRIMARY },
   tabDeployed:    { borderColor: C.SUCCESS + '70', backgroundColor: C.SUCCESS + '12' },
-  tabLbl:         { fontSize: 14, fontWeight: '900', color: C.TEXT_ON_DARK_MUTED },
+  tabLbl:         { fontSize: rf(14), fontWeight: '900', color: C.TEXT_ON_DARK_MUTED },
   tabLblActive:   { color: C.PRIMARY_LIGHT },
-  tabDots:        { flexDirection: 'row', gap: 3 },
-  tabDot:         { width: 5, height: 5, borderRadius: 3 },
+  tabDots:        { flexDirection: 'row', gap: rs(3) },
+  tabDot:         { width: rs(5), height: rs(5), borderRadius: rs(3) },
   tabActiveBadge: {
     position: 'absolute', top: -4, right: -4,
-    backgroundColor: C.SUCCESS, borderRadius: 8,
-    width: 14, height: 14,
+    backgroundColor: C.SUCCESS, borderRadius: rs(8),
+    width: rs(14), height: rs(14),
     alignItems: 'center', justifyContent: 'center',
   },
-  tabClear: { position: 'absolute', bottom: 5, right: 6 },
+  tabClear: { position: 'absolute', bottom: rs(5), right: rs(6) },
 
   // ── Slots ───────────────────────────────────────────────────────────────────
-  slotsCol: { flex: 1, gap: 7 },
+  slotsCol: { flex: 1, gap: rs(7) },
   slot: {
-    flex: 1, borderRadius: 10, overflow: 'hidden',
+    flex: 1, borderRadius: rs(10), overflow: 'hidden',
     borderWidth: 1.5, flexDirection: 'row',
     backgroundColor: C.OVERLAY_2,
   },
-  slotPortrait:    { width: 64, overflow: 'hidden', position: 'relative' },
+  slotPortrait:    { width: rs(64), overflow: 'hidden', position: 'relative' },
   slotPortraitArt: { position: 'absolute', width: '100%', height: '100%' },
   slotFactionBar:  { position: 'absolute', right: 0, top: 0, bottom: 0, width: 3 },
   slotInfoArea: {
-    flex: 1, paddingHorizontal: 10, paddingVertical: 8,
-    justifyContent: 'center', gap: 3,
+    flex: 1, paddingHorizontal: rs(10), paddingVertical: rs(8),
+    justifyContent: 'center', gap: rs(3),
   },
-  slotTopRow:       { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  slotRankBadge:    { paddingHorizontal: 5, paddingVertical: 2, borderRadius: 3 },
-  slotRankTxt:      { fontSize: 9, fontWeight: '900' },
-  slotFactionLabel: { fontSize: 7, fontWeight: '800', letterSpacing: 1, opacity: 0.85 },
-  slotSlotNum:      { marginLeft: 'auto', fontSize: 9, color: C.TEXT_ON_DARK_DIM, fontWeight: '800' },
+  slotTopRow:       { flexDirection: 'row', alignItems: 'center', gap: rs(5) },
+  slotRankBadge:    { paddingHorizontal: rs(5), paddingVertical: rs(2), borderRadius: rs(3) },
+  slotRankTxt:      { fontSize: rf(12), fontWeight: '900' },
+  slotFactionLabel: { fontSize: rf(10), fontWeight: '800', letterSpacing: 1, opacity: 0.85 },
+  slotSlotNum:      { marginLeft: 'auto', fontSize: rf(12), color: C.TEXT_ON_DARK_DIM, fontWeight: '800' },
   slotName: {
-    fontSize: 12, fontWeight: '800', color: C.TEXT, letterSpacing: 0.2,
+    fontSize: rf(12), fontWeight: '800', color: C.TEXT, letterSpacing: 0.2,
     textShadowColor: C.OVERLAY_4,
     textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
-  slotMeta:   { fontSize: 8, color: C.TEXT_ON_DARK_SOFT, fontWeight: '600' },
-  slotRemove: { position: 'absolute', top: 5, right: 7 },
+  slotMeta:   { fontSize: rf(11), color: C.TEXT_ON_DARK_SOFT, fontWeight: '600' },
+  slotRemove: { position: 'absolute', top: rs(5), right: rs(7) },
   slotEmpty: {
-    flex: 1, borderRadius: 10,
+    flex: 1, borderRadius: rs(10),
     borderWidth: 1.5, borderStyle: 'dashed',
     borderColor: C.PRIMARY_LIGHT + '40',
     backgroundColor: C.PRIMARY_GLOW,
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, gap: 12,
+    paddingHorizontal: rs(14), gap: rs(12),
   },
   slotEmptyNum: {
-    width: 32, height: 32, borderRadius: 16,
+    width: rs(32), height: rs(32), borderRadius: rs(16),
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5,
   },
-  slotEmptyNumTxt: { fontSize: 12, fontWeight: '900', color: C.PRIMARY_LIGHT + '80' },
-  slotEmptyLabel:  { fontSize: 10, color: C.TEXT_MUTED, fontWeight: '900', letterSpacing: 1.5, marginBottom: 2 },
-  slotEmptyHint:   { fontSize: 8, color: C.TEXT_DISABLED, fontStyle: 'italic' },
+  slotEmptyNumTxt: { fontSize: rf(12), fontWeight: '900', color: C.PRIMARY_LIGHT + '80' },
+  slotEmptyLabel:  { fontSize: rf(13), color: C.TEXT_MUTED, fontWeight: '900', letterSpacing: 1.5, marginBottom: rs(2) },
+  slotEmptyHint:   { fontSize: rf(11), color: C.TEXT_DISABLED, fontStyle: 'italic' },
 
   // ── Bottom bar ───────────────────────────────────────────────────────────────
   bottomBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: C.GLASS_2,
-    borderRadius: 8, borderWidth: 1, borderColor: C.GLASS_5,
-    paddingVertical: 6, paddingHorizontal: 10, gap: 8,
-    height: 44,
+    borderRadius: rs(8), borderWidth: 1, borderColor: C.GLASS_5,
+    paddingVertical: rs(6), paddingHorizontal: rs(10), gap: rs(8),
+    height: rs(44),
   },
-  powerStat:    { alignItems: 'center', paddingHorizontal: 2 },
-  powerLabel:   { fontSize: 7, color: C.TEXT_ON_DARK_DIM, fontWeight: '700', letterSpacing: 1.2, marginBottom: 1 },
-  powerValue:   { fontSize: 12, fontWeight: '900' },
-  powerDivider: { width: 1, height: 22, backgroundColor: C.GLASS_5 },
+  powerStat:    { alignItems: 'center', paddingHorizontal: rs(2) },
+  powerLabel:   { fontSize: rf(10), color: C.TEXT_ON_DARK_DIM, fontWeight: '700', letterSpacing: 1.2, marginBottom: 1 },
+  powerValue:   { fontSize: rf(12), fontWeight: '900' },
+  powerDivider: { width: 1, height: rs(22), backgroundColor: C.GLASS_5 },
 
   statusRow: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: C.SUCCESS + '18', borderRadius: 6,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: rs(6),
+    backgroundColor: C.SUCCESS + '18', borderRadius: rs(6),
     borderWidth: 1, borderColor: C.SUCCESS + '40',
     alignSelf: 'stretch',
   },
-  statusTxt: { fontSize: 11, fontWeight: '900', letterSpacing: 1.2 },
+  statusTxt: { fontSize: rf(13), fontWeight: '900', letterSpacing: 1.2 },
 
   modifiedRow: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
-    backgroundColor: C.WARNING + '15', borderRadius: 6,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: rs(4),
+    backgroundColor: C.WARNING + '15', borderRadius: rs(6),
     borderWidth: 1, borderColor: C.WARNING + '40',
     alignSelf: 'stretch',
   },
-  modifiedHint: { fontSize: 10, fontWeight: '600', color: C.WARNING + 'AA' },
+  modifiedHint: { fontSize: rf(13), fontWeight: '600', color: C.WARNING + 'AA' },
 
-  deployBtn:   { flex: 1, borderRadius: 6, overflow: 'hidden' },
+  deployBtn:   { flex: 1, borderRadius: rs(6), overflow: 'hidden' },
   deployInner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 9,
+    gap: rs(6), paddingVertical: rs(9),
   },
-  deployTxt: { fontSize: 11, fontWeight: '900', letterSpacing: 0.8 },
+  deployTxt: { fontSize: rf(13), fontWeight: '900', letterSpacing: 0.8 },
 });

@@ -6,9 +6,11 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import * as SplashScreen from 'expo-splash-screen';
 import { C } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 import useGameStore from '../store/gameStore';
 import { HEROES } from '../data/heroes';
 import { APP_INFO } from '../constants/appInfo';
+import AudioManager from '../utils/AudioManager';
 
 const TIPS = [
   'Assembling your war council…',
@@ -88,6 +90,15 @@ export default function LoadingScreen({ navigation }) {
     const tryNavigate = () => {
       if (navigated || !barDone || !hydrated) return;
       navigated = true;
+      AudioManager.prewarmSFX();
+      // Best-effort, fire-and-forget: registers this device's playerUid as
+      // globally-unique server-side (src/cloud/uidService.js). Never blocks
+      // navigation — safe to fail offline and is retried on the next cold
+      // start since the RPC is idempotent for an already-registered UID.
+      useGameStore.getState().claimPlayerUid();
+      // Best-effort, fire-and-forget: retries a name claim/rename that
+      // previously failed offline (see OnboardingScreen.js / EditProfileScreen.js).
+      useGameStore.getState().retryPendingNameClaim();
       const seen = useGameStore.getState().hasSeenOnboarding;
       navigation.replace(seen ? 'Home' : 'Onboarding');
     };
@@ -192,39 +203,39 @@ const styles = StyleSheet.create({
   preloadImg: { width: 1, height: 1 },
 
   titleArea: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 100,
-    alignItems: 'center', justifyContent: 'center', gap: 6,
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: rs(100),
+    alignItems: 'center', justifyContent: 'center', gap: rs(6),
   },
   titleMain: {
-    fontSize: 42, fontWeight: '900', color: C.TEXT, letterSpacing: 12,
+    fontSize: rf(42), fontWeight: '900', color: C.TEXT, letterSpacing: 12,
     textShadowColor: 'rgba(124,58,237,0.9)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 24,
   },
-  titleSub:    { fontSize: 13, fontWeight: '700', color: 'rgba(167,139,250,0.85)', letterSpacing: 7 },
-  titleStudio: { fontSize: 9,  fontWeight: '600', color: 'rgba(255,255,255,0.30)', letterSpacing: 2, marginTop: 4 },
+  titleSub:    { fontSize: rf(13), fontWeight: '700', color: 'rgba(167,139,250,0.85)', letterSpacing: 7 },
+  titleStudio: { fontSize: rf(12),  fontWeight: '600', color: 'rgba(255,255,255,0.30)', letterSpacing: 2, marginTop: rs(4) },
 
   loadingArea: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    alignItems: 'center', paddingBottom: 28, gap: 10,
+    alignItems: 'center', paddingBottom: rs(28), gap: rs(10),
   },
-  tip: { fontSize: 11, color: C.PRIMARY_LIGHT + 'C7', letterSpacing: 0.6, fontStyle: 'italic', marginBottom: 4 },
+  tip: { fontSize: rf(13), color: C.PRIMARY_LIGHT + 'C7', letterSpacing: 0.6, fontStyle: 'italic', marginBottom: rs(4) },
 
   barTrack: {
-    height: 6, borderRadius: 3,
+    height: rs(6), borderRadius: rs(3),
     backgroundColor: C.BORDER, overflow: 'hidden', position: 'relative',
   },
   barGlow: {
     position: 'absolute', top: -3, bottom: -3, left: 0,
-    borderRadius: 6, backgroundColor: 'rgba(124,58,237,0.35)',
+    borderRadius: rs(6), backgroundColor: 'rgba(124,58,237,0.35)',
   },
   barFill: {
     position: 'absolute', top: 0, bottom: 0, left: 0,
-    borderRadius: 3, overflow: 'hidden',
+    borderRadius: rs(3), overflow: 'hidden',
   },
   barShimmer: {
     position: 'absolute', top: 0, left: 0, right: 0, height: 1,
     backgroundColor: 'rgba(255,255,255,0.35)', borderRadius: 1,
   },
-  pctLabel: { fontSize: 9, color: 'rgba(255,255,255,0.35)', fontWeight: '700', letterSpacing: 2.5, marginTop: 2 },
+  pctLabel: { fontSize: rf(12), color: 'rgba(255,255,255,0.35)', fontWeight: '700', letterSpacing: 2.5, marginTop: rs(2) },
   pctNum:   { color: C.PRIMARY_LIGHT, fontWeight: '900' },
-  copy:     { fontSize: 8, color: 'rgba(255,255,255,0.18)', letterSpacing: 0.8, marginTop: 6 },
+  copy:     { fontSize: rf(11), color: 'rgba(255,255,255,0.18)', letterSpacing: 0.8, marginTop: rs(6) },
 });

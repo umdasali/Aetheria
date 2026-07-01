@@ -9,8 +9,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
 import { C } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 import { onAuthChanged, getUser, signOut, deleteAccount } from '../cloud/auth';
 import { syncNow, getLastSyncTime } from '../cloud/syncQueue';
+import { releaseName } from '../cloud/nameService';
 import { APP_INFO } from '../constants/appInfo';
 
 const { width: W } = Dimensions.get('window');
@@ -66,8 +68,14 @@ function VolumeSlider({ value, onChange, color, disabled }) {
       {/* Background rail */}
       <View
         style={[styles.trackRail]}
-        onLayout={(e) => {
-          e.target.measure((_, __, ___, ____, px) => { trackX.current = px; });
+        onLayout={() => {
+          const node = trackRef.current;
+          if (!node) return;
+          if (typeof node.measure === 'function') {
+            node.measure((_, __, ___, ____, px) => { trackX.current = px; });
+          } else if (typeof node.getBoundingClientRect === 'function') {
+            trackX.current = node.getBoundingClientRect().left;
+          }
         }}
       />
       {/* Fill */}
@@ -95,7 +103,7 @@ function SettingRow({ icon, label, hint, value, onChange, color, muted, onMuteTo
 
       {/* Icon + label */}
       <View style={[styles.rowIcon, { backgroundColor: color + '1A', borderColor: color + '40' }]}>
-        <Ionicons name={icon} size={18} color={color} />
+        <Ionicons name={icon} size={rs(22)} color={color} />
       </View>
       <View style={styles.rowLabel}>
         <Text style={styles.rowTitle}>{label}</Text>
@@ -118,7 +126,7 @@ function SettingRow({ icon, label, hint, value, onChange, color, muted, onMuteTo
           activeOpacity={0.75}
           disabled={muted}
         >
-          <Ionicons name="play" size={14} color={muted ? C.TEXT_DISABLED : color} />
+          <Ionicons name="play" size={rs(18)} color={muted ? C.TEXT_DISABLED : color} />
         </TouchableOpacity>
       )}
 
@@ -126,7 +134,7 @@ function SettingRow({ icon, label, hint, value, onChange, color, muted, onMuteTo
       <TouchableOpacity style={[styles.muteBtn, muted && { borderColor: C.DANGER }]} onPress={onMuteToggle} activeOpacity={0.75}>
         <Ionicons
           name={muted ? 'volume-mute' : 'volume-high-outline'}
-          size={16}
+          size={rs(20)}
           color={muted ? C.DANGER : C.TEXT_MUTED}
         />
       </TouchableOpacity>
@@ -163,10 +171,8 @@ export default function SettingsScreen({ navigation }) {
   // Keep auth state in sync; re-read on focus so returning from CloudAuth is instant
   useEffect(() => onAuthChanged(setAuthUser), []);
 
-  // Load last sync time once on mount — handleSyncNow updates it manually after that
-  useEffect(() => {
-    getLastSyncTime().then(setLastSync);
-  }, []);
+  // Last-sync time is loaded on mount + every focus (see useFocusEffect below) —
+  // handleSyncNow updates it manually in between.
 
   const handleSyncNow = useCallback(async () => {
     setSyncing(true);
@@ -191,10 +197,28 @@ export default function SettingsScreen({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             setSignOut(true);
-            await signOut();
-            await useGameStore.getState().resetStore();
-            setSignOut(false);
-            setRestartVisible(true);
+            try {
+              // Flush any progress made since the last debounced auto-sync (up to
+              // 30s, or minutes if a retry is backing off) BEFORE wiping local
+              // state — otherwise resetStore() below silently destroys it both
+              // on-device and in the cloud with no way to recover it.
+              const flush = await syncNow(() => useGameStore.getState());
+              if (!flush.ok) {
+                throw new Error('Could not save your latest progress to the cloud');
+              }
+              await signOut();
+              await useGameStore.getState().resetStore();
+              setRestartVisible(true);
+            } catch (e) {
+              Alert.alert(
+                'Disconnect Failed',
+                `${e?.message || 'Could not disconnect right now.'} Please check your connection and try again.`
+              );
+            } finally {
+              // Always clear the spinner, even if signOut()/resetStore() threw —
+              // otherwise the DISCONNECT button spins forever with no recovery.
+              setSignOut(false);
+            }
           },
         },
       ]
@@ -223,6 +247,20 @@ export default function SettingsScreen({ navigation }) {
                     setDeleting(true);
                     try {
                       await deleteAccount();
+                      // Read fresh from the store rather than the closed-over
+                      // playerProfile/playerUid — this callback is memoized once
+                      // (deps: [navigation]) and native-stack keeps SettingsScreen
+                      // mounted underneath other screens, so a rename via
+                      // EditProfileScreen since mount would otherwise release the
+                      // player's OLD name instead of their current one, orphaning
+                      // the real claimed name forever.
+                      const { playerProfile: freshProfile, playerUid: freshUid } = useGameStore.getState();
+                      // Best-effort: free this player's claimed name now that the
+                      // account is gone, so it can be reclaimed by someone else
+                      // instead of being permanently squatted (see
+                      // supabase/migrations/0003_player_names.sql). A failure here
+                      // shouldn't block the deletion the player already confirmed.
+                      try { await releaseName(freshProfile.name, freshUid); } catch (_) {}
                       await useGameStore.getState().resetStore();
                       useGameStore.setState({ cloudAccountEmail: null, localUserId: null });
                       setDeleting(false);
@@ -255,10 +293,13 @@ export default function SettingsScreen({ navigation }) {
   }, []);
 
   // Play home BGM while on this screen so the player can live-test music volume.
-  // Re-read auth state on every focus so returning from CloudAuth is instant.
+  // Re-read auth state AND last-sync time on every focus — otherwise switching
+  // accounts via CloudAuth and returning here shows the previous account's stale
+  // "Last Synced" timestamp under the newly connected account.
   useFocusEffect(
     useCallback(() => {
       setAuthUser(getUser());
+      getLastSyncTime().then(setLastSync);
       AudioManager.playHome();
       return () => AudioManager.pauseHome();
     }, [])
@@ -306,15 +347,15 @@ export default function SettingsScreen({ navigation }) {
       {/* Header */}
       <SafeAreaView edges={['top', 'left', 'right']}>
         <LinearGradient colors={C.GRAD_HEADER} style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={22} color={C.TEXT} />
+          <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} style={styles.backBtn} activeOpacity={0.8}>
+            <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>SETTINGS</Text>
             <Text style={styles.headerSub}>Audio · About</Text>
           </View>
           <View style={styles.headerIcon}>
-            <Ionicons name="settings" size={20} color="rgba(255,255,255,0.45)" />
+            <Ionicons name="settings" size={rs(20)} color="rgba(255,255,255,0.45)" />
           </View>
         </LinearGradient>
       </SafeAreaView>
@@ -346,7 +387,7 @@ export default function SettingsScreen({ navigation }) {
                 )}
                 <Ionicons
                   name={tab.icon}
-                  size={16}
+                  size={rs(20)}
                   color={active ? C.PRIMARY_LIGHT : C.TEXT_MUTED}
                 />
                 <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
@@ -399,7 +440,7 @@ export default function SettingsScreen({ navigation }) {
                 }]}>
                   <Ionicons
                     name={authUser ? 'cloud-done-outline' : 'cloud-offline-outline'}
-                    size={18}
+                    size={rs(22)}
                     color={authUser ? C.SUCCESS : C.PRIMARY_LIGHT}
                   />
                 </View>
@@ -468,7 +509,7 @@ export default function SettingsScreen({ navigation }) {
                   <View style={[styles.rowBorder, { borderColor: C.DANGER + '40' }]} />
                   <View style={styles.cloudRow}>
                     <View style={[styles.rowIcon, { backgroundColor: C.DANGER + '1A', borderColor: C.DANGER + '40' }]}>
-                      <Ionicons name="trash-outline" size={18} color={C.DANGER} />
+                      <Ionicons name="trash-outline" size={rs(22)} color={C.DANGER} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.rowTitle}>Delete Account</Text>
@@ -504,7 +545,7 @@ export default function SettingsScreen({ navigation }) {
               <View style={styles.infoBrand}>
                 <Text style={styles.gameTitle}>AETHERIA</Text>
                 <Text style={styles.gameSubtitle}>Legends Unbound</Text>
-                <View style={[styles.infoDivider, { marginVertical: 8 }]} />
+                <View style={[styles.infoDivider, { marginVertical: rs(8) }]} />
                 <Text style={styles.gameDesc} numberOfLines={5}>
                   {APP_INFO.factionCount} factions. {APP_INFO.heroCount} legends. One war to decide the fate of Aetheria.
                   Collect heroes, forge squads, and unleash Trump Cards across {APP_INFO.stageCount} story-driven battles.
@@ -542,7 +583,7 @@ export default function SettingsScreen({ navigation }) {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.infoLabel}>Privacy Policy</Text>
-                  <Ionicons name="open-outline" size={14} color={C.PRIMARY_LIGHT} />
+                  <Ionicons name="open-outline" size={rs(18)} color={C.PRIMARY_LIGHT} />
                 </TouchableOpacity>
                 <View style={styles.infoDivider} />
                 <TouchableOpacity
@@ -551,7 +592,7 @@ export default function SettingsScreen({ navigation }) {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.infoLabel}>Terms of Service</Text>
-                  <Ionicons name="open-outline" size={14} color={C.PRIMARY_LIGHT} />
+                  <Ionicons name="open-outline" size={rs(18)} color={C.PRIMARY_LIGHT} />
                 </TouchableOpacity>
                 <View style={styles.infoDivider} />
                 <TouchableOpacity
@@ -560,7 +601,7 @@ export default function SettingsScreen({ navigation }) {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.infoLabel}>Account Deletion</Text>
-                  <Ionicons name="open-outline" size={14} color={C.PRIMARY_LIGHT} />
+                  <Ionicons name="open-outline" size={rs(18)} color={C.PRIMARY_LIGHT} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -583,7 +624,7 @@ export default function SettingsScreen({ navigation }) {
             <View style={[StyleSheet.absoluteFill, styles.restartBorder]} pointerEvents="none" />
             <View style={styles.restartIconWrap}>
               <LinearGradient colors={[C.DANGER, C.PRIMARY]} style={styles.restartIconGrad}>
-                <Ionicons name="power-outline" size={26} color={C.TEXT} />
+                <Ionicons name="power-outline" size={rs(26)} color={C.TEXT} />
               </LinearGradient>
             </View>
             <Text style={styles.restartTitle}>SIGNED OUT</Text>
@@ -596,7 +637,7 @@ export default function SettingsScreen({ navigation }) {
               activeOpacity={0.82}
             >
               <LinearGradient colors={C.GRAD_PINK} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.restartBtnGrad}>
-                <Ionicons name="refresh-outline" size={15} color={C.TEXT} />
+                <Ionicons name="refresh-outline" size={rs(19)} color={C.TEXT} />
                 <Text style={styles.restartBtnTxt}>RESTART NOW</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -615,66 +656,66 @@ const styles = StyleSheet.create({
   // Header
   header: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 12, paddingVertical: 10, gap: 10,
+    paddingHorizontal: rs(12), paddingVertical: rs(10), gap: rs(10),
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)',
   },
   backBtn:     { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
-  headerSub:   { fontSize: 10, color: 'rgba(255,255,255,0.55)', marginTop: 1 },
-  headerIcon:  { padding: 6 },
+  headerTitle: { fontSize: rf(18), fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
+  headerSub:   { fontSize: rf(13), color: 'rgba(255,255,255,0.55)', marginTop: 1 },
+  headerIcon:  { padding: rs(6) },
 
   // Body
-  body: { flex: 1, paddingHorizontal: 20, paddingTop: 14, gap: 14 },
+  body: { flex: 1, paddingHorizontal: rs(20), paddingTop: rs(14), gap: rs(14) },
 
   // Tab bar
   tabBar: {
     flexDirection: 'row',
-    borderRadius: 12, overflow: 'hidden',
+    borderRadius: rs(12), overflow: 'hidden',
     position: 'relative',
     borderWidth: 1, borderColor: C.BORDER,
   },
-  tabBarBorder: { borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  tabBarBorder: { borderRadius: rs(12), borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   tabBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, paddingVertical: 11, position: 'relative', overflow: 'hidden',
+    gap: rs(7), paddingVertical: rs(11), position: 'relative', overflow: 'hidden',
   },
   tabLabel: {
-    fontSize: 11, fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1.5,
+    fontSize: rf(13), fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1.5,
   },
   tabLabelActive: { color: C.PRIMARY_LIGHT },
   tabUnderline: {
-    position: 'absolute', bottom: 0, left: 16, right: 16,
+    position: 'absolute', bottom: 0, left: rs(16), right: rs(16),
     height: 2, borderRadius: 1, backgroundColor: C.PRIMARY_LIGHT,
   },
 
   // Section (audio tab content wrapper)
-  section: { gap: 10 },
+  section: { gap: rs(10) },
 
   // Setting row
   row: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderRadius: 12, overflow: 'hidden',
-    paddingHorizontal: 14, paddingVertical: 14,
+    flexDirection: 'row', alignItems: 'center', gap: rs(12),
+    borderRadius: rs(12), overflow: 'hidden',
+    paddingHorizontal: rs(14), paddingVertical: rs(14),
     position: 'relative',
   },
   rowBorder: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    borderRadius: 12, borderWidth: 1,
+    borderRadius: rs(12), borderWidth: 1,
   },
   rowIcon: {
-    width: 38, height: 38, borderRadius: 10,
+    width: rs(38), height: rs(38), borderRadius: rs(10),
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1,
   },
-  rowLabel: { width: 160 },
-  rowTitle: { fontSize: 12, fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
-  rowHint:  { fontSize: 9,  fontWeight: '600', marginTop: 2 },
+  rowLabel: { width: rs(160) },
+  rowTitle: { fontSize: rf(12), fontWeight: '800', color: C.TEXT, letterSpacing: 0.3 },
+  rowHint:  { fontSize: rf(12),  fontWeight: '600', marginTop: 2 },
 
-  pct: { width: 48, fontSize: 11, fontWeight: '900', textAlign: 'right' },
+  pct: { width: rs(48), fontSize: rf(13), fontWeight: '900', textAlign: 'right' },
 
   // Slider track
   track: {
-    width: SLIDER_W, height: 28,
+    width: SLIDER_W, height: rs(28),
     justifyContent: 'center', position: 'relative',
   },
   trackRail: {
@@ -687,7 +728,7 @@ const styles = StyleSheet.create({
   },
   thumb: {
     position: 'absolute',
-    width: 16, height: 16, borderRadius: 8,
+    width: rs(16), height: rs(16), borderRadius: rs(8),
     backgroundColor: C.THUMB,
     borderWidth: 2,
     shadowColor: C.SHADOW, shadowOpacity: 0.35,
@@ -697,46 +738,46 @@ const styles = StyleSheet.create({
 
   // Mute button
   muteBtn: {
-    width: 36, height: 36, borderRadius: 9,
+    width: rs(36), height: rs(36), borderRadius: rs(9),
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1, borderColor: C.BORDER,
-    marginLeft: 4,
+    marginLeft: rs(4),
   },
 
   // Cloud tab
   cloudCard: {
-    borderRadius: 12, overflow: 'hidden',
-    paddingHorizontal: 14, paddingVertical: 14,
+    borderRadius: rs(12), overflow: 'hidden',
+    paddingHorizontal: rs(14), paddingVertical: rs(14),
     position: 'relative',
   },
   cloudRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
+    flexDirection: 'row', alignItems: 'center', gap: rs(12),
   },
   cloudBtn: {
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 8, borderWidth: 1,
+    paddingHorizontal: rs(12), paddingVertical: rs(8),
+    borderRadius: rs(8), borderWidth: 1,
     alignItems: 'center', justifyContent: 'center',
-    minWidth: 80,
+    minWidth: rs(80),
   },
   cloudBtnText: {
-    fontSize: 10, fontWeight: '800', letterSpacing: 0.8,
+    fontSize: rf(13), fontWeight: '800', letterSpacing: 0.8,
   },
   cloudError: {
-    fontSize: 10, color: C.DANGER, marginTop: 8,
+    fontSize: rf(13), color: C.DANGER, marginTop: rs(8),
     fontWeight: '600',
   },
 
   // Info card
   infoCard: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: rs(12),
     overflow: 'hidden',
     position: 'relative',
   },
   infoLayout: {
     flex: 1, flexDirection: 'row',
-    paddingHorizontal: 16, paddingVertical: 12, gap: 16,
+    paddingHorizontal: rs(16), paddingVertical: rs(12), gap: rs(16),
   },
   infoBrand: {
     flex: 1, justifyContent: 'center',
@@ -748,24 +789,24 @@ const styles = StyleSheet.create({
     flex: 1.4, justifyContent: 'center',
   },
   gameTitle: {
-    fontSize: 18, fontWeight: '900', color: C.GOLD,
+    fontSize: rf(18), fontWeight: '900', color: C.GOLD,
     letterSpacing: 5,
   },
   gameSubtitle: {
-    fontSize: 11, fontWeight: '700', color: C.TEXT_MUTED,
+    fontSize: rf(13), fontWeight: '700', color: C.TEXT_MUTED,
     letterSpacing: 1.5,
   },
   gameDesc: {
-    fontSize: 11, color: C.TEXT_SOFT, lineHeight: 17,
+    fontSize: rf(13), color: C.TEXT_SOFT, lineHeight: rf(17),
     fontWeight: '500',
   },
   infoRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 7,
+    paddingVertical: rs(7),
   },
   infoDivider: { height: 1, backgroundColor: C.BORDER_SUBTLE },
-  infoLabel: { fontSize: 12, fontWeight: '700', color: C.TEXT_SOFT },
-  infoVal:   { fontSize: 12, fontWeight: '800', color: C.TEXT_MUTED },
+  infoLabel: { fontSize: rf(12), fontWeight: '700', color: C.TEXT_SOFT },
+  infoVal:   { fontSize: rf(12), fontWeight: '800', color: C.TEXT_MUTED },
 
   // Restart modal
   restartOverlay: {
@@ -773,27 +814,27 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   restartCard: {
-    width: 300, borderRadius: 16, overflow: 'hidden',
-    alignItems: 'center', padding: 28, position: 'relative',
+    width: rs(300), borderRadius: rs(16), overflow: 'hidden',
+    alignItems: 'center', padding: rs(28), position: 'relative',
   },
-  restartBorder: { borderRadius: 16, borderWidth: 1, borderColor: C.BORDER_STRONG },
-  restartIconWrap: { marginBottom: 14 },
+  restartBorder: { borderRadius: rs(16), borderWidth: 1, borderColor: C.BORDER_STRONG },
+  restartIconWrap: { marginBottom: rs(14) },
   restartIconGrad: {
-    width: 56, height: 56, borderRadius: 28,
+    width: rs(56), height: rs(56), borderRadius: rs(28),
     alignItems: 'center', justifyContent: 'center',
   },
   restartTitle: {
-    fontSize: 18, fontWeight: '900', color: C.TEXT,
-    letterSpacing: 3, marginBottom: 10, textAlign: 'center',
+    fontSize: rf(18), fontWeight: '900', color: C.TEXT,
+    letterSpacing: 3, marginBottom: rs(10), textAlign: 'center',
   },
   restartMsg: {
-    fontSize: 11, color: C.TEXT_MUTED, lineHeight: 17,
-    textAlign: 'center', fontWeight: '500', marginBottom: 22,
+    fontSize: rf(13), color: C.TEXT_MUTED, lineHeight: rf(17),
+    textAlign: 'center', fontWeight: '500', marginBottom: rs(22),
   },
-  restartBtn:     { borderRadius: 10, overflow: 'hidden', width: '100%' },
+  restartBtn:     { borderRadius: rs(10), overflow: 'hidden', width: '100%' },
   restartBtnGrad: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 12, gap: 7,
+    paddingVertical: rs(12), gap: rs(7),
   },
-  restartBtnTxt: { fontSize: 13, fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
+  restartBtnTxt: { fontSize: rf(13), fontWeight: '900', color: C.TEXT, letterSpacing: 1.5 },
 });

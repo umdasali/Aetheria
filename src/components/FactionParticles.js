@@ -1,8 +1,6 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
-import { View, Text, Animated, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Animated, StyleSheet, useWindowDimensions } from 'react-native';
 import { FACTION_MATRIX } from '../theme/colors';
-
-const { width: W, height: H } = Dimensions.get('window');
 const CHAR_H   = 13;
 const TRAIL    = 9;
 
@@ -110,6 +108,7 @@ function MatrixColumn({ x, chars, head, trail, duration, containerH }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function FactionParticles({ faction }) {
+  const { width: W, height: H } = useWindowDimensions();
   const cfg     = FACTION_CFG[faction];
   const colors  = FACTION_MATRIX[faction];
   const charSet = CHAR_SETS[faction];

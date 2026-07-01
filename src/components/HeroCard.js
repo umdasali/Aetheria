@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FACTIONS } from '../data/heroes';
 import { C, RANK_COLORS } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 
 const CLASS_ICONS = {
   Attacker: '⚔️',
@@ -334,7 +335,7 @@ function StatItem({ icon, label, value, color, scale }) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 10,
+    borderRadius: rs(10),
     overflow: 'hidden',
     backgroundColor: C.BG_DEEP,
     position: 'relative',
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
   borderGlow: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
-    borderRadius: 10,
+    borderRadius: rs(10),
     borderWidth: 1.5,
     zIndex: 10,
   },
@@ -389,22 +390,22 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     textShadowColor: 'rgba(0,0,0,0.9)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    textShadowRadius: rf(4),
   },
   frameLabel: {
     letterSpacing: 0.5,
     marginTop: 1,
   },
   rankBadge: {
-    borderRadius: 4,
+    borderRadius: rs(4),
     alignItems: 'center',
     justifyContent: 'center',
     shadowOpacity: 0.9,
     shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 8,
+    shadowRadius: rs(8),
     elevation: 4,
   },
-  rankText:  { fontWeight: '900', lineHeight: 20 },
+  rankText:  { fontWeight: '900', lineHeight: rf(20) },
   rankLabel: { fontWeight: '700', letterSpacing: 1 },
 
   // ── Left element / effect tags ───────────────────────────────────────────────
@@ -412,11 +413,11 @@ const styles = StyleSheet.create({
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 5,
-    paddingVertical: 3,
-    borderRadius: 4,
+    paddingHorizontal: rs(5),
+    paddingVertical: rs(3),
+    borderRadius: rs(4),
     borderWidth: 1,
-    gap: 4,
+    gap: rs(4),
   },
   tagIcon:  {},
   tagLabel: { color: C.TEXT_MUTED, letterSpacing: 0.5 },
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 6,
     backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius: 4,
+    borderRadius: rs(4),
   },
   factionIcon: {},
 
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
   },
   sovereignBannerGrad: {
     width: '100%',
-    paddingVertical: 3,
+    paddingVertical: rs(3),
     alignItems: 'center',
   },
   sovereignLabel: {
@@ -450,7 +451,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2.5,
     textShadowColor: C.SOVEREIGN_GLOW,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
+    textShadowRadius: rf(6),
   },
 
   // ── Stats row ────────────────────────────────────────────────────────────────
@@ -460,8 +461,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    paddingHorizontal: rs(8),
+    paddingVertical: rs(5),
     backgroundColor: 'rgba(0,0,0,0.78)',
     zIndex: 6,
   },
@@ -475,18 +476,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0, right: 0,
     flexDirection: 'row',
-    paddingHorizontal: 8,
-    paddingTop: 4,
+    paddingHorizontal: rs(8),
+    paddingTop: rs(4),
     zIndex: 6,
-    gap: 6,
+    gap: rs(6),
   },
-  classSection: { flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 60 },
+  classSection: { flexDirection: 'row', alignItems: 'center', gap: rs(4), minWidth: rs(60) },
   classIcon:    {},
   classLabel:   { color: C.TEXT_MUTED, letterSpacing: 0.5 },
   classValue:   { fontWeight: '800', letterSpacing: 0.5 },
   aboutSection: { flex: 1 },
   aboutLabel:   { color: C.GOLD, fontWeight: '700', letterSpacing: 1, marginBottom: 2 },
-  aboutText:    { color: C.PRIMARY_LIGHT, lineHeight: 10 },
+  aboutText:    { color: C.PRIMARY_LIGHT, lineHeight: rf(10) },
 
   // ── Footer ───────────────────────────────────────────────────────────────────
   cardFooter: { position: 'absolute', zIndex: 6 },

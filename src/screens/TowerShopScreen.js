@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Image, Animated, Dimensions,
+  Image, Animated, Dimensions, useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import useGameStore from '../store/gameStore';
 import { ASCENSION_ITEMS } from '../data/ascensionItems';
 import AudioManager from '../utils/AudioManager';
 import { C, RANK } from '../theme/colors';
+import { rs, rf } from '../theme/scale';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -142,9 +143,9 @@ function AscCard({ item, coins, ownedCount, onBuy }) {
 
 const ac = StyleSheet.create({
   card: {
-    borderRadius: 12, overflow: 'hidden', borderWidth: 1.5,
+    borderRadius: rs(12), overflow: 'hidden', borderWidth: 1.5,
     backgroundColor: C.BG_CARD,
-    shadowColor: C.SHADOW, shadowRadius: 10, shadowOpacity: 0.45,
+    shadowColor: C.SHADOW, shadowRadius: rs(10), shadowOpacity: 0.45,
     shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   imgWrap: {
@@ -155,46 +156,46 @@ const ac = StyleSheet.create({
 
   rankBadge: {
     position: 'absolute', top: 5, right: 5,
-    borderRadius: 5, paddingHorizontal: 5, paddingVertical: 2.5, borderWidth: 1,
-    shadowColor: C.SHADOW, shadowRadius: 3, shadowOpacity: 0.5,
+    borderRadius: rs(5), paddingHorizontal: rs(5), paddingVertical: 2.5, borderWidth: 1,
+    shadowColor: C.SHADOW, shadowRadius: rs(3), shadowOpacity: 0.5,
     shadowOffset: { width: 0, height: 1 }, elevation: 2,
   },
-  rankTxt: { fontSize: 7, fontWeight: '900', letterSpacing: 0.5 },
+  rankTxt: { fontSize: rf(10), fontWeight: '900', letterSpacing: 0.5 },
 
   ownedBadge: {
     position: 'absolute', top: 5, left: 5,
-    borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2,
+    borderRadius: rs(4), paddingHorizontal: rs(5), paddingVertical: 2,
     backgroundColor: C.OVERLAY_3, borderWidth: 1, borderColor: C.BORDER_SUBTLE,
   },
-  ownedTxt: { fontSize: 9, fontWeight: '900', color: C.SUCCESS },
+  ownedTxt: { fontSize: rf(12), fontWeight: '900', color: C.SUCCESS },
 
-  info:      { flex: 1, padding: 8, gap: 5, justifyContent: 'space-between' },
-  name:      { fontSize: 10, fontWeight: '800', color: C.TEXT, lineHeight: 14 },
+  info:      { flex: 1, padding: rs(8), gap: rs(5), justifyContent: 'space-between' },
+  name:      { fontSize: rf(13), fontWeight: '800', color: C.TEXT, lineHeight: rf(14) },
 
   forRankTag: {
-    alignSelf: 'flex-start', borderRadius: 4,
-    paddingHorizontal: 5, paddingVertical: 2, borderWidth: 1,
+    alignSelf: 'flex-start', borderRadius: rs(4),
+    paddingHorizontal: rs(5), paddingVertical: 2, borderWidth: 1,
   },
-  forRankTxt: { fontSize: 7, fontWeight: '800', letterSpacing: 0.4 },
+  forRankTxt: { fontSize: rf(10), fontWeight: '800', letterSpacing: 0.4 },
 
-  priceRow:   { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  coinIcon:   { width: 12, height: 12 },
-  priceVal:   { fontSize: 12, fontWeight: '900', color: C.PRIMARY_LIGHT },
-  priceEa:    { fontSize: 8, color: C.TEXT_MUTED, fontWeight: '700' },
+  priceRow:   { flexDirection: 'row', alignItems: 'center', gap: rs(4) },
+  coinIcon:   { width: rs(12), height: rs(12) },
+  priceVal:   { fontSize: rf(12), fontWeight: '900', color: C.PRIMARY_LIGHT },
+  priceEa:    { fontSize: rf(11), color: C.TEXT_MUTED, fontWeight: '700' },
 
-  qtyRow:     { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  qtyRow:     { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
   qtyBtn: {
-    width: 22, height: 22, borderRadius: 6,
+    width: rs(22), height: rs(22), borderRadius: rs(6),
     borderWidth: 1, borderColor: C.BORDER,
     backgroundColor: C.BG_MID, alignItems: 'center', justifyContent: 'center',
   },
-  qtyBtnTxt:  { fontSize: 14, fontWeight: '900', color: C.TEXT_SOFT, lineHeight: 16 },
-  qtyNum:     { fontSize: 13, fontWeight: '900', color: C.TEXT, minWidth: 20, textAlign: 'center' },
+  qtyBtnTxt:  { fontSize: rf(14), fontWeight: '900', color: C.TEXT_SOFT, lineHeight: rf(16) },
+  qtyNum:     { fontSize: rf(13), fontWeight: '900', color: C.TEXT, minWidth: rs(20), textAlign: 'center' },
 
-  buyBtn:     { borderRadius: 7, overflow: 'hidden' },
-  buyInner:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, gap: 5 },
-  buyCoinIcon:{ width: 10, height: 10 },
-  buyTxt:     { fontSize: 10, fontWeight: '900', color: C.TEXT, letterSpacing: 0.3 },
+  buyBtn:     { borderRadius: rs(7), overflow: 'hidden' },
+  buyInner:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: rs(8), gap: rs(5) },
+  buyCoinIcon:{ width: rs(10), height: rs(10) },
+  buyTxt:     { fontSize: rf(13), fontWeight: '900', color: C.TEXT, letterSpacing: 0.3 },
 });
 
 // ─── Bundle Card ──────────────────────────────────────────────────────────────
@@ -266,33 +267,34 @@ function BundleCard({ bundle, coins, onBuy }) {
 
 const bc = StyleSheet.create({
   card: {
-    borderRadius: 12, overflow: 'hidden', borderWidth: 1.5,
+    borderRadius: rs(12), overflow: 'hidden', borderWidth: 1.5,
     backgroundColor: C.BG_CARD,
-    alignItems: 'center', paddingVertical: 12, paddingHorizontal: 8,
-    gap: 8, position: 'relative',
-    shadowColor: C.SHADOW, shadowRadius: 10, shadowOpacity: 0.45,
+    alignItems: 'center', paddingVertical: rs(12), paddingHorizontal: rs(8),
+    gap: rs(8), position: 'relative',
+    shadowColor: C.SHADOW, shadowRadius: rs(10), shadowOpacity: 0.45,
     shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   tag: {
     position: 'absolute', top: 6, right: 6,
-    borderRadius: 5, paddingHorizontal: 6, paddingVertical: 2.5, borderWidth: 1,
+    borderRadius: rs(5), paddingHorizontal: rs(6), paddingVertical: 2.5, borderWidth: 1,
   },
-  tagTxt:   { fontSize: 7, fontWeight: '900', letterSpacing: 0.8 },
+  tagTxt:   { fontSize: rf(10), fontWeight: '900', letterSpacing: 0.8 },
   imgArea:  { alignItems: 'center', justifyContent: 'center', position: 'relative' },
   glowRing: { position: 'absolute', borderWidth: 1 },
-  amtLabel: { fontSize: 13, fontWeight: '900', textAlign: 'center' },
-  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  coinIcon: { width: 13, height: 13 },
-  priceVal: { fontSize: 14, fontWeight: '900' },
-  priceUnit:{ fontSize: 9, color: C.TEXT_MUTED, fontWeight: '700' },
+  amtLabel: { fontSize: rf(13), fontWeight: '900', textAlign: 'center' },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: rs(4) },
+  coinIcon: { width: rs(13), height: rs(13) },
+  priceVal: { fontSize: rf(14), fontWeight: '900' },
+  priceUnit:{ fontSize: rf(12), color: C.TEXT_MUTED, fontWeight: '700' },
   divider:  { width: '80%', height: 1, borderRadius: 1 },
-  buyBtn:   { borderRadius: 8, overflow: 'hidden', width: '88%' },
-  buyInner: { paddingVertical: 8, alignItems: 'center' },
-  buyTxt:   { fontSize: 11, fontWeight: '900', color: C.TEXT, letterSpacing: 0.5 },
+  buyBtn:   { borderRadius: rs(8), overflow: 'hidden', width: '88%' },
+  buyInner: { paddingVertical: rs(8), alignItems: 'center' },
+  buyTxt:   { fontSize: rf(13), fontWeight: '900', color: C.TEXT, letterSpacing: 0.5 },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function TowerShopScreen({ navigation }) {
+  useWindowDimensions(); // keeps layout-dependent values live on resize
   const towerCoins            = useGameStore(s => s.towerCoins);
   const ascensionInventory    = useGameStore(s => s.ascensionInventory);
   const purchaseAscensionItem = useGameStore(s => s.purchaseAscensionItem);
@@ -357,7 +359,7 @@ export default function TowerShopScreen({ navigation }) {
             onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }}
             activeOpacity={0.8}
           >
-            <Ionicons name="chevron-back" size={20} color={C.TEXT} />
+            <Ionicons name="chevron-back" size={rs(20)} color={C.TEXT} />
           </TouchableOpacity>
 
           <View style={s.headerMid}>
@@ -413,7 +415,7 @@ export default function TowerShopScreen({ navigation }) {
                     {active && <View style={s.tabAccent} />}
                     <Ionicons
                       name={tab.icon}
-                      size={13}
+                      size={rs(17)}
                       color={active ? C.PRIMARY_LIGHT : C.TEXT_MUTED}
                     />
                     <Text style={[s.tabTxt, active && { color: C.PRIMARY_LIGHT }]}>
@@ -479,7 +481,7 @@ export default function TowerShopScreen({ navigation }) {
           }]}
         >
           <View style={[s.toastInner, { borderColor: toastColor + '55' }]}>
-            <Ionicons name={toastIsOk ? 'checkmark-circle' : 'close-circle'} size={14} color={toastColor} />
+            <Ionicons name={toastIsOk ? 'checkmark-circle' : 'close-circle'} size={rs(18)} color={toastColor} />
             <Text style={s.toastTxt}>{toastMsg}</Text>
           </View>
         </Animated.View>
@@ -498,27 +500,27 @@ const s = StyleSheet.create({
   header: {
     height: HEADER_H,
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, gap: 12,
+    paddingHorizontal: rs(14), gap: rs(12),
     borderBottomWidth: 1, borderBottomColor: C.BORDER_SUBTLE,
   },
   back: {
-    width: 34, height: 34, borderRadius: 8,
+    width: rs(34), height: rs(34), borderRadius: rs(8),
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: C.GLASS_3, borderWidth: 1, borderColor: C.GLASS_6,
   },
   headerMid: { flex: 1 },
-  hTitle:    { fontSize: 15, fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
-  hSub:      { fontSize: 8, color: C.TEXT_ON_DARK_MUTED, marginTop: 1 },
+  hTitle:    { fontSize: rf(15), fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
+  hSub:      { fontSize: rf(11), color: C.TEXT_ON_DARK_MUTED, marginTop: 1 },
 
   coinPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    borderRadius: rs(20), paddingHorizontal: rs(12), paddingVertical: rs(6),
     borderWidth: 1, borderColor: C.PRIMARY_LIGHT + '44',
     backgroundColor: C.PRIMARY_GLOW,
   },
-  coinPillIcon: { width: 14, height: 14 },
-  coinTxt:      { fontSize: 14, fontWeight: '900', color: C.PRIMARY_LIGHT },
-  coinLbl:      { fontSize: 8, color: C.TEXT_MUTED, fontWeight: '700' },
+  coinPillIcon: { width: rs(14), height: rs(14) },
+  coinTxt:      { fontSize: rf(14), fontWeight: '900', color: C.PRIMARY_LIGHT },
+  coinLbl:      { fontSize: rf(11), color: C.TEXT_MUTED, fontWeight: '700' },
 
   // ── Body
   body: { flex: 1, flexDirection: 'row' },
@@ -527,26 +529,26 @@ const s = StyleSheet.create({
   sidebar: {
     width: SIDEBAR_W,
     borderRightWidth: 1, borderRightColor: C.BORDER_SUBTLE,
-    padding: PAD, gap: 10,
+    padding: rs(PAD), gap: rs(10),
   },
   balCard: {
-    borderRadius: 10, overflow: 'hidden', borderWidth: 1,
+    borderRadius: rs(10), overflow: 'hidden', borderWidth: 1,
     borderColor: C.PRIMARY_LIGHT + '30',
     backgroundColor: C.BG_CARD,
-    padding: 10, gap: 3,
+    padding: rs(10), gap: rs(3),
   },
-  balLabel: { fontSize: 7, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 2.5 },
-  balRow:   { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  balIcon:  { width: 19, height: 19 },
-  balAmt:   { fontSize: 21, fontWeight: '900', color: C.PRIMARY_LIGHT },
-  balHint:  { fontSize: 8, color: C.TEXT_DISABLED, fontWeight: '600' },
+  balLabel: { fontSize: rf(10), fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 2.5 },
+  balRow:   { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
+  balIcon:  { width: rs(19), height: rs(19) },
+  balAmt:   { fontSize: rf(21), fontWeight: '900', color: C.PRIMARY_LIGHT },
+  balHint:  { fontSize: rf(11), color: C.TEXT_DISABLED, fontWeight: '600' },
 
-  tabGroup: { gap: 4 },
+  tabGroup: { gap: rs(4) },
   tabBtn: {
-    borderRadius: 8, overflow: 'hidden',
+    borderRadius: rs(8), overflow: 'hidden',
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 10, paddingVertical: 10,
-    gap: 7, borderWidth: 1, borderColor: 'transparent',
+    paddingHorizontal: rs(10), paddingVertical: rs(10),
+    gap: rs(7), borderWidth: 1, borderColor: 'transparent',
     position: 'relative',
   },
   tabBtnActive: { borderColor: C.PRIMARY + '40' },
@@ -554,32 +556,32 @@ const s = StyleSheet.create({
     position: 'absolute', left: 0, top: 6, bottom: 6,
     width: 2.5, borderRadius: 2, backgroundColor: C.PRIMARY_LIGHT,
   },
-  tabTxt: { fontSize: 8, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 1 },
+  tabTxt: { fontSize: rf(11), fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 1 },
 
-  sideHint:    { flex: 1, justifyContent: 'flex-end', paddingBottom: 4, gap: 7 },
+  sideHint:    { flex: 1, justifyContent: 'flex-end', paddingBottom: rs(4), gap: rs(7) },
   sideHintLine:{ height: 1, backgroundColor: C.BORDER_SUBTLE },
-  sideHintTxt: { fontSize: 8, color: C.TEXT_DISABLED, fontWeight: '500', lineHeight: 13, fontStyle: 'italic' },
+  sideHintTxt: { fontSize: rf(11), color: C.TEXT_DISABLED, fontWeight: '500', lineHeight: rf(13), fontStyle: 'italic' },
 
   // ── Content
-  content: { flex: 1, padding: PAD, gap: GAP },
+  content: { flex: 1, padding: rs(PAD), gap: rs(GAP) },
 
-  secStrip: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 18 },
-  secDot:   { width: 4, height: 4, borderRadius: 2, backgroundColor: C.PRIMARY_LIGHT },
-  secTitle: { fontSize: 8, fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 2.5 },
+  secStrip: { flexDirection: 'row', alignItems: 'center', gap: rs(8), height: rs(18) },
+  secDot:   { width: rs(4), height: rs(4), borderRadius: rs(2), backgroundColor: C.PRIMARY_LIGHT },
+  secTitle: { fontSize: rf(11), fontWeight: '900', color: C.TEXT_MUTED, letterSpacing: 2.5 },
   secLine:  { flex: 1, height: 1, backgroundColor: C.BORDER_SUBTLE },
 
-  cardsRow: { flex: 1, flexDirection: 'row', gap: GAP },
+  cardsRow: { flex: 1, flexDirection: 'row', gap: rs(GAP) },
 
   // ── Toast
   toast: {
-    position: 'absolute', bottom: 18, left: 0, right: 0, alignItems: 'center',
+    position: 'absolute', bottom: rs(18), left: 0, right: 0, alignItems: 'center',
   },
   toastInner: {
-    flexDirection: 'row', alignItems: 'center', gap: 7,
-    backgroundColor: C.BG_RAISED, borderWidth: 1, borderRadius: 20,
-    paddingHorizontal: 16, paddingVertical: 8,
-    shadowColor: C.SHADOW, shadowRadius: 6, shadowOpacity: 0.35,
+    flexDirection: 'row', alignItems: 'center', gap: rs(7),
+    backgroundColor: C.BG_RAISED, borderWidth: 1, borderRadius: rs(20),
+    paddingHorizontal: rs(16), paddingVertical: rs(8),
+    shadowColor: C.SHADOW, shadowRadius: rs(6), shadowOpacity: 0.35,
     shadowOffset: { width: 0, height: 2 }, elevation: 5,
   },
-  toastTxt: { fontSize: 11, fontWeight: '800', color: C.TEXT },
+  toastTxt: { fontSize: rf(13), fontWeight: '800', color: C.TEXT },
 });
