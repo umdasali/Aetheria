@@ -134,7 +134,9 @@
       "Bash(EXPO_NO_DOCTOR=1 npx expo start --web --port 8081)",
       "Bash(curl -s http://localhost:8081)",
       "Bash(kill %1)",
-      "Bash(node --input-type=module --eval ' *)"
+      "Bash(node --input-type=module --eval ' *)",
+      "Bash(node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/53b4872d-5030-4b54-9742-213ccb045158/scratchpad/verify-profile.js)",
+      "Bash(sips -g pixelWidth -g pixelHeight avatar-01.webp)"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

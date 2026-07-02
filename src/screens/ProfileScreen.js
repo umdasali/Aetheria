@@ -87,43 +87,39 @@ export default function ProfileScreen({ navigation }) {
 
   // ── Character portrait panel (full-height left column) ────────────────────
 
+  const goToEdit = () => { AudioManager.playButtonSFX(); navigation.navigate('EditProfile'); };
+
   const renderCharPanel = () => (
     <View style={[s.charPanel, { width: dynamicLeftW }]}>
       {activeFaction && <FactionParticles faction={activeFaction} />}
 
-      <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
-        <Image
-          source={avatarImage}
-          style={{ width: dynamicLeftW, height: dynamicLeftW * 1.7 }}
-          resizeMode="cover"
-        />
-      </View>
-
-      <LinearGradient
-        colors={['rgba(10,4,26,0.62)', 'transparent']}
-        style={[StyleSheet.absoluteFill, { bottom: '62%' }]}
-      />
-      <LinearGradient
-        colors={['transparent', 'rgba(8,3,20,0.97)']}
-        style={[StyleSheet.absoluteFill, { top: '34%' }]}
-      />
-
-      {/* UID pill — top right */}
-      <View style={s.uidPill}>
-        <Text style={s.uidTxt}>UID · {playerUid || '---'}</Text>
+      {/* Plaque — replaces the old stretched-avatar background. Holds the UID;
+          the small circular avatar straddles its bottom edge. */}
+      <View style={s.plaqueZone}>
+        <View style={[s.plaque, { borderColor: factionColor + '55' }]}>
+          <Text style={s.uidTxt}>UID · {playerUid || '---'}</Text>
+          <View style={s.avatarBadgeAnchor}>
+            <TouchableOpacity onPress={goToEdit} activeOpacity={0.85} accessibilityLabel="Edit profile" accessibilityRole="button">
+              <View style={[s.avatarBadgeWrap, { borderColor: factionColor }]}>
+                <Image source={avatarImage} style={s.avatarBadgeImg} resizeMode="cover" />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       <View style={s.charInfo}>
-        <View style={[s.factionBar, { backgroundColor: factionColor }]} />
-
-        <View style={s.charMeta}>
-          <View style={s.lvlBubble}>
-            <Text style={s.lvlLabel}>LV</Text>
-            <Text style={s.lvlNum}>{level}</Text>
+        <View style={s.nameRow}>
+          <Text style={s.charName} numberOfLines={1}>{playerProfile.name}</Text>
+          <View style={[s.lvlPill, { backgroundColor: factionColor }]}>
+            <Text style={s.lvlPillTxt}>Lv. {level}</Text>
           </View>
+        </View>
+
+        {/* <View style={s.charMeta}>
           {factionData && (
             <TouchableOpacity
-              onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('EditProfile'); }}
+              onPress={goToEdit}
               activeOpacity={0.78}
               accessibilityLabel="Edit profile"
               accessibilityRole="button"
@@ -140,27 +136,21 @@ export default function ProfileScreen({ navigation }) {
           <View style={{ flex: 1 }} />
           <Image source={GEM_IMG} style={s.miniGem} />
           <Text style={s.miniGems}>{gems.toLocaleString()}</Text>
-        </View>
-
-        <Text style={s.charName} numberOfLines={1}>{playerProfile.name}</Text>
+        </View> */}
 
         {playerProfile.signature
           ? <Text style={s.charSig} numberOfLines={2}>"{playerProfile.signature}"</Text>
           : <Text style={s.charSigEmpty}>tap edit to set a signature</Text>
         }
 
-        <View style={s.xpRow}>
-          <View style={s.xpTrack}>
-            <LinearGradient
-              colors={[factionColor, factionColor + 'AA']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={[s.xpFill, { width: `${Math.round(progress * 100)}%` }]}
-            />
-          </View>
-          <Text style={[s.xpLabel, { color: factionColor }]}>
-            {currentXP} / {nextLevelXP} XP
-          </Text>
+        <View style={s.xpTrack}>
+          <LinearGradient
+            colors={[factionColor, factionColor + 'AA']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={[s.xpFill, { width: `${Math.round(progress * 100)}%` }]}
+          />
         </View>
+        <Text style={s.xpLabel}>{currentXP} / {nextLevelXP} XP</Text>
 
         {/* Stats strip — 4 items */}
         <View style={s.statBar}>
@@ -180,13 +170,12 @@ export default function ProfileScreen({ navigation }) {
           ))}
         </View>
 
-        <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('EditProfile'); }} activeOpacity={0.82} style={s.editBtn} accessibilityLabel="Edit profile" accessibilityRole="button">
+        <TouchableOpacity onPress={goToEdit} activeOpacity={0.82} style={s.editBtn} accessibilityLabel="Edit profile" accessibilityRole="button">
           <LinearGradient
             colors={[factionColor + 'DD', factionColor + '88']}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={s.editGrad}
           >
-            <Ionicons name="create-outline" size={rs(12)} color={C.TEXT} />
             <Text style={s.editTxt}>EDIT PROFILE</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -305,39 +294,55 @@ const s = StyleSheet.create({
   charPanel: {
     overflow: 'hidden',
     backgroundColor: C.BG_MID,
+    flexDirection: 'column',
   },
 
-  uidPill: {
-    position: 'absolute', top: rs(10), right: rs(10),
-    backgroundColor: 'rgba(0,0,0,0.32)',
-    borderRadius: rs(20), paddingHorizontal: rs(8), paddingVertical: rs(3),
+  // Plaque — dark HUD surface holding the UID; the avatar straddles its bottom edge.
+  plaqueZone: { alignItems: 'center', paddingTop: rs(-10), paddingBottom: rs(0) },
+  plaque: {
+    width: '50%', minHeight: rs(180),
+    backgroundColor: C.BG_CARD,
+    borderWidth: 1.5,
+    borderTopLeftRadius: rs(0), borderTopRightRadius: rs(0),
+    borderBottomLeftRadius: rs(100), borderBottomRightRadius: rs(100),
+    alignItems: 'center', paddingTop: rs(10),
   },
-  uidTxt: { color: 'rgba(255,255,255,0.48)', fontSize: rf(13), fontWeight: '700', letterSpacing: 0.5 },
+  uidTxt: { color: 'rgba(255,255,255,0.48)', fontSize: rf(13), fontWeight: '400', letterSpacing: 0.5 },
+
+  avatarBadgeAnchor: {
+    position: 'absolute', bottom: rs(30), left: 0, right: 0,
+    alignItems: 'center', zIndex: 6,
+  },
+  avatarBadgeWrap: {
+    width: rs(60), height: rs(60), borderRadius: rs(30),
+    borderWidth: 3, overflow: 'hidden', backgroundColor: C.BG_DEEP,
+  },
+  avatarBadgeImg: { width: '100%', height: '100%' },
 
   charInfo: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
+    flex: 1,
     paddingHorizontal: rs(14), paddingBottom: rs(14),
   },
-  factionBar: { width: rs(28), height: 3, borderRadius: 2, marginBottom: rs(10) },
+
+  nameRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: rs(8),
+  },
+  charName: {
+    flex: 1, fontSize: rf(20), fontWeight: '900', color: C.TEXT, letterSpacing: 0.5,
+  },
+  lvlPill: {
+    borderRadius: rs(14), paddingHorizontal: rs(10), paddingVertical: rs(4), marginLeft: rs(8),
+  },
+  lvlPillTxt: { color: C.TEXT, fontSize: rf(13), fontWeight: '900' },
 
   charMeta: { flexDirection: 'row', alignItems: 'center', gap: rs(6), marginBottom: rs(7) },
-  xpRow: {
-    flexDirection: 'row', alignItems: 'center', gap: rs(8), marginTop: rs(6), marginBottom: 2,
-  },
   xpTrack: {
-    flex: 1, height: 4, borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden',
+    height: 4, borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden', marginTop: rs(4),
   },
   xpFill: { height: 4, borderRadius: 2 },
-  xpLabel: { fontSize: rf(13), fontWeight: '800', letterSpacing: 0.5, minWidth: rs(70), textAlign: 'right' },
-
-  lvlBubble: {
-    flexDirection: 'row', alignItems: 'baseline', gap: 2,
-    backgroundColor: 'rgba(0,0,0,0.52)',
-    borderRadius: rs(6), paddingHorizontal: rs(8), paddingVertical: rs(4),
-  },
-  lvlLabel: { color: 'rgba(255,255,255,0.48)', fontSize: rf(13), fontWeight: '700', letterSpacing: 0.5 },
-  lvlNum:   { color: C.TEXT, fontSize: rf(16), fontWeight: '900' },
+  xpLabel: { fontSize: rf(13), fontWeight: '700', letterSpacing: 0.3, color: C.TEXT_MUTED, marginTop: rs(4), marginBottom: rs(2) },
 
   factionChip: {
     flexDirection: 'row', alignItems: 'center', gap: rs(5),
@@ -350,12 +355,6 @@ const s = StyleSheet.create({
   miniGem:  { width: rs(12), height: rs(12), resizeMode: 'contain' },
   miniGems: { color: C.GOLD, fontSize: rf(13), fontWeight: '700' },
 
-  charName: {
-    fontSize: rf(20), fontWeight: '900', color: C.TEXT,
-    letterSpacing: 0.5, marginBottom: rs(3),
-    textShadowColor: 'rgba(0,0,0,0.85)',
-    textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6,
-  },
   charSig: {
     fontSize: rf(12), color: 'rgba(255,255,255,0.58)', fontStyle: 'italic',
     lineHeight: rf(14), marginBottom: rs(10),
@@ -367,7 +366,7 @@ const s = StyleSheet.create({
   statBar: {
     flexDirection: 'row',
     backgroundColor: 'rgba(0,0,0,0.4)',
-    borderRadius: rs(8), marginBottom: rs(10),
+    borderRadius: rs(8), marginTop: rs(8), marginBottom: rs(10),
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
   },
   statBlock: { flex: 1, paddingVertical: rs(6), alignItems: 'center' },
@@ -375,10 +374,10 @@ const s = StyleSheet.create({
   statVal:   { color: C.TEXT, fontSize: rf(15), fontWeight: '900' },
   statLbl:   { color: 'rgba(255,255,255,0.42)', fontSize: rf(13), fontWeight: '700', letterSpacing: 0.8, marginTop: 2 },
 
-  editBtn:  { borderRadius: rs(8), overflow: 'hidden' },
+  editBtn:  { borderRadius: rs(24), overflow: 'hidden', marginTop: 'auto' },
   editGrad: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: rs(6), paddingVertical: rs(9),
+    gap: rs(6), paddingVertical: rs(11),
   },
   editTxt: { color: C.TEXT, fontSize: rf(13), fontWeight: '800', letterSpacing: 1.5 },
 
