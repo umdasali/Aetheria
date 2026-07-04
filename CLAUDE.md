@@ -72,7 +72,7 @@ src/
     ProfileScreen.js           Player profile: name, avatar, showcase, level/XP, stats
     SettingsScreen.js          Music/SFX volume sliders + mute toggles
     WorldMapScreen.js          Faction world map: lore, rulers, heroes by faction
-    TowerScreen.js             Endless Tower (200 floors, boss every 10, weekly reset)
+    TowerScreen.js             Endless Tower (300 floors, boss every 10, weekly reset)
     CloudAuthScreen.js         Firebase authentication — cloud save sync (accessible from Settings)
     TowerShopScreen.js         Tower coin shop — buy ascension items and bundles (accessible from Tower)
   components/
@@ -344,12 +344,12 @@ Unlock rule: stages unlock sequentially — stage N requires stage N-1 completed
 ### Tower (src/data/towerData.js)
 
 ```js
-TOWER_MAX_FLOOR = 200
+TOWER_MAX_FLOOR = 300
 TOWER_BOSS_INTERVAL = 10      // boss every 10th floor
-STAT_SCALE_PER_FLOOR = 0.10   // enemy stats +10% per floor
+STAT_SCALE_PER_FLOOR = 0.30   // sqrt-scaling coefficient: mult = 1 + sqrt(floor-1) * 0.30
 
 isBossFloor(floor)             // floor % 10 === 0
-isMilestoneFloor(floor)        // floor % 50 === 0
+isMilestoneFloor(floor)        // true for floors in FLOOR_MILESTONES (10/50/100/150/200/250/300)
 getTowerEnemyGroup(floor)      // scaled enemy group for this floor
 getTowerFloorReward(floor)     // { coins, gems, gold }
 ```
@@ -628,10 +628,10 @@ Faction world map — 5 factions displayed with:
 
 ### TowerScreen
 
-Endless Tower (200 floors):
+Endless Tower (300 floors):
 - Floor progress display with current/highest floor
 - Boss floors (every 10th) highlighted
-- Milestone markers (every 50th)
+- Milestone markers (10/50/100/150/200/250/300)
 - Weekly reset countdown
 - Reward preview per floor (coins/gems/gold)
 - "Enter Floor" starts battle via Tower → Battle flow

@@ -136,7 +136,17 @@
       "Bash(kill %1)",
       "Bash(node --input-type=module --eval ' *)",
       "Bash(node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/53b4872d-5030-4b54-9742-213ccb045158/scratchpad/verify-profile.js)",
-      "Bash(sips -g pixelWidth -g pixelHeight avatar-01.webp)"
+      "Bash(sips -g pixelWidth -g pixelHeight avatar-01.webp)",
+      "Bash(node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/8cb4da22-80bc-44e6-938c-8b11d06156fe/scratchpad/audit.js)",
+      "Bash(node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/8cb4da22-80bc-44e6-938c-8b11d06156fe/scratchpad/audit2.js)",
+      "Bash(node -e *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d.get\\('expo',{}\\).get\\('version'\\)\\); print\\(d.get\\('expo',{}\\).get\\('android',{}\\).get\\('versionCode'\\)\\)\")",
+      "Bash(sqlite3 --version)",
+      "Bash(grep -E \"id: 'hero|hp:|damage: 0,$|trumpCard|damage: [0-9.]+,$|effect: 'Heal\")",
+      "Bash(node --experimental-vm-modules -e ' *)",
+      "Bash(node -e \"const {HEROES, FACTIONS} = require\\('/tmp/heroes_check.js'\\); console.log\\('Total heroes:', HEROES.length\\); console.log\\('Last 11:', HEROES.slice\\(-11\\).map\\(h=>h.id+' '+h.name\\).join\\('\\\\n'\\)\\);\")",
+      "Bash(node -e \"const {HEROES} = require\\('/tmp/heroes_check.js'\\); const names = HEROES.map\\(h=>h.name\\); const dups = names.filter\\(\\(n,i\\)=>names.indexOf\\(n\\)!==i\\); console.log\\('Duplicate hero names:', dups.length ? dups : 'none'\\);\")",
+      "Bash(npx --no-install babel src/screens/WorldMapScreen.js --presets=babel-preset-expo -o /dev/null)"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

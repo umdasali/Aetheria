@@ -1,11 +1,11 @@
 import { ENEMY_GROUPS } from './enemies';
 
 // ─── Tower constants ──────────────────────────────────────────────────────────
-export const TOWER_MAX_FLOOR     = 200;
+export const TOWER_MAX_FLOOR     = 300;
 export const TOWER_BOSS_INTERVAL = 10;   // boss every 10 floors
 
 // Square-root scaling: mult = 1 + sqrt(floor-1) * 0.30
-// Floor 10 → ~1.9×  |  Floor 50 → ~3.1×  |  Floor 100 → ~4.0×  |  Floor 200 → ~5.2×
+// Floor 10 → ~1.9×  |  Floor 50 → ~3.1×  |  Floor 100 → ~4.0×  |  Floor 200 → ~5.2×  |  Floor 300 → ~6.2×
 export const STAT_SCALE_PER_FLOOR = 0.30; // coefficient for sqrt formula (not linear %)
 
 // ─── Milestone descriptions ───────────────────────────────────────────────────
@@ -17,6 +17,8 @@ export const FLOOR_MILESTONES = [
   { floor: 100, label: '👑 Floor 100',  title: 'Tower Sovereign'      },
   { floor: 150, label: '💫 Floor 150',  title: 'Celestial Ascendant'  },
   { floor: 200, label: '⭐ Floor 200',  title: 'Tower Master'         },
+  { floor: 250, label: '🌌 Floor 250',  title: 'Void Ascendant'       },
+  { floor: 300, label: '👑 Floor 300',  title: 'Eternal Sovereign'    },
 ];
 const MILESTONE_FLOORS = new Set(FLOOR_MILESTONES.map(m => m.floor));
 
@@ -101,10 +103,12 @@ export function getCurrentWeekKey() {
 
 // ─── Difficulty label ─────────────────────────────────────────────────────────
 export function getFloorDifficulty(floor) {
-  if (floor >= 150) return { label: 'MYTHIC',    color: '#FFD700' };
-  if (floor >= 100) return { label: 'LEGENDARY', color: '#F72585' };
-  if (floor >=  75) return { label: 'EPIC',      color: '#9B59B6' };
-  if (floor >=  50) return { label: 'HARD',      color: '#E11D48' };
-  if (floor >=  25) return { label: 'NORMAL',    color: '#0891B2' };
-  return                    { label: 'EASY',     color: '#059669' };
+  if (floor >= 250) return { label: 'TRANSCENDENT', color: '#FFFFFF' };
+  if (floor >= 200) return { label: 'MYTHIC',      color: '#FFD700' };
+  if (floor >= 150) return { label: 'ASCENDANT',   color: '#38BDF8' };
+  if (floor >= 100) return { label: 'LEGENDARY',   color: '#F72585' };
+  if (floor >=  75) return { label: 'EPIC',        color: '#9B59B6' };
+  if (floor >=  50) return { label: 'HARD',        color: '#E11D48' };
+  if (floor >=  25) return { label: 'NORMAL',      color: '#0891B2' };
+  return                    { label: 'EASY',       color: '#059669' };
 }

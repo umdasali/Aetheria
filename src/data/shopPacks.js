@@ -41,13 +41,13 @@ export const BUNDLES = [
 
 export const HERO_PACKS = [
   {
-    id: 'sovereign_nefara',
+    id: 'sovereign_shahrzad',
     currency: 'gems',
     cost: 2400,
     repeatable: true,
     heroId: 'hero_054',
     grant: { gems: 500, gold: 50000, cores: 3 },
-    label: 'Nefara Khonsu',
+    label: 'Shahrzad Al-Nur',
     sublabel: 'Shop-Exclusive Sovereign',
     tag: 'EXCLUSIVE',
     color: C.SOVEREIGN_GOLD,

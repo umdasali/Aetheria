@@ -16,9 +16,9 @@ export function sanitizeState(raw) {
     ownedHeroes: (raw.ownedHeroes || []).filter(id => VALID_HERO_IDS.has(id)),
     team:        (raw.team        || []).filter(id => VALID_HERO_IDS.has(id)).slice(0, 3),
 
-    towerHighestFloor: Math.min(Math.max(0, raw.towerHighestFloor || 0), 200),
-    towerWeeklyBest:   Math.min(Math.max(0, raw.towerWeeklyBest   || 0), 200),
-    towerCurrentFloor: Math.min(Math.max(1, raw.towerCurrentFloor || 1), 201),
+    towerHighestFloor: Math.min(Math.max(0, raw.towerHighestFloor || 0), 300),
+    towerWeeklyBest:   Math.min(Math.max(0, raw.towerWeeklyBest   || 0), 300),
+    towerCurrentFloor: Math.min(Math.max(1, raw.towerCurrentFloor || 1), 301),
 
     heroCollection: Object.fromEntries(
       Object.entries(raw.heroCollection || {})

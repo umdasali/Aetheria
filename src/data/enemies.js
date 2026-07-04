@@ -82,6 +82,16 @@ export const ENEMY_IMAGES = {
   boss_023: require('../../assets/enemy/boss_023.webp'),
   boss_024: require('../../assets/enemy/boss_024.webp'),
   boss_025: require('../../assets/enemy/boss_025.webp'),
+  'mini-boss_024': require('../../assets/enemy/mini-boss_024.webp'),
+  'mini-boss_025': require('../../assets/enemy/mini-boss_025.webp'),
+  'mini-boss_026': require('../../assets/enemy/mini-boss_026.webp'),
+  'mini-boss_027': require('../../assets/enemy/mini-boss_027.webp'),
+  'mini-boss_028': require('../../assets/enemy/mini-boss_028.webp'),
+  boss_026: require('../../assets/enemy/boss_026.webp'),
+  boss_027: require('../../assets/enemy/boss_027.webp'),
+  boss_028: require('../../assets/enemy/boss_028.webp'),
+  boss_029: require('../../assets/enemy/boss_029.webp'),
+  boss_030: require('../../assets/enemy/boss_030.webp'),
 };
 
 export const ENEMY_GROUPS = [
@@ -883,6 +893,166 @@ export const ENEMY_GROUPS = [
       { id: 'e_2503_1', name: 'Dark Crowmancer', tier: 'mob',       imageKey: 'mob_032',       hp: 22000, maxHp: 22000, atk: 1145, def: 835, skills: [{ name: 'Dark Feather',      damage: 2.8 }, { name: 'Crow Curse',         damage: 3.8 }] },
       { id: 'e_2503_2', name: 'Briar the Elder', tier: 'mini-boss', imageKey: 'mini-boss_023', hp: 36500, maxHp: 36500, atk: 1445, def: 968, effect: 'TOXIN', skills: [{ name: 'Nature Ambush',    damage: 3.1 }, { name: 'Elder Poison',       damage: 4.3 }] },
       { id: 'e_2503_3', name: 'The Origin',      tier: 'boss',      imageKey: 'boss_025',      hp: 50000, maxHp: 50000, atk: 1655, def: 1075, effect: 'VOID_CURSE', skills: [{ name: 'Primordial Crush', damage: 4.8 }, { name: 'First Darkness',     damage: 6.4 }] },
+    ],
+  },
+
+  // ── CH 26: VOID ETERNAL — The Void Eternal ───────────────────────────────────
+  {
+    id: 2601, chapter: 26, part: 1,
+    name: 'Eternal Echoes',
+    description: 'Fragments of every defeated foe reform as echo legions, pulled from the fabric of forgotten timelines.',
+    enemies: [
+      { id: 'e_2601_1', name: 'Shadow Feline', tier: 'mob', imageKey: 'mob_027', hp: 22200, maxHp: 22200, atk: 1145, def: 832, skills: [{ name: 'Shadow Pounce', damage: 2.6 }, { name: 'Dark Claw Strike', damage: 3.5 }] },
+      { id: 'e_2601_2', name: 'Crystal Drake',  tier: 'mob', imageKey: 'mob_030', hp: 22800, maxHp: 22800, atk: 1160, def: 848, skills: [{ name: 'Crystal Bite',  damage: 2.7 }, { name: 'Gem Shard Blast', damage: 3.5 }] },
+      { id: 'e_2601_3', name: 'Abyss Spider',   tier: 'mob', imageKey: 'mob_031', hp: 23400, maxHp: 23400, atk: 1178, def: 865, skills: [{ name: 'Web Ensnare',  damage: 2.7 }, { name: 'Venom Bite',      damage: 3.6 }] },
+    ],
+  },
+  {
+    id: 2602, chapter: 26, part: 2,
+    name: 'Chronomancer Eternal',
+    description: 'A being who has looped through every timeline the heroes have ever touched stands as the warden of the eternal void.',
+    enemies: [
+      { id: 'e_2602_1', name: 'Crystal Drake',           tier: 'mob',       imageKey: 'mob_030',       hp: 23000, maxHp: 23000, atk: 1163, def: 850, skills: [{ name: 'Crystal Bite',  damage: 2.7 }, { name: 'Gem Shard Blast', damage: 3.6 }] },
+      { id: 'e_2602_2', name: 'Abyss Spider',            tier: 'mob',       imageKey: 'mob_031',       hp: 23600, maxHp: 23600, atk: 1180, def: 866, skills: [{ name: 'Web Ensnare',   damage: 2.7 }, { name: 'Venom Bite',      damage: 3.6 }] },
+      { id: 'e_2602_3', name: 'Chronomancer Eternal',    tier: 'mini-boss', imageKey: 'mini-boss_024', hp: 38500, maxHp: 38500, atk: 1478, def: 985, effect: 'PARALYSIS', skills: [{ name: 'Temporal Rupture', damage: 2.9 }, { name: 'Loop Collapse',   damage: 4.1 }] },
+    ],
+  },
+  {
+    id: 2603, chapter: 26, part: 3,
+    name: "The Void Eternal's Silence",
+    description: 'The Void Eternal awakens as the living absence that remains when all stories end, seeking to erase even the memory of resistance.',
+    enemies: [
+      { id: 'e_2603_1', name: 'Abyss Spider',         tier: 'mob',       imageKey: 'mob_031',       hp: 24000, maxHp: 24000, atk: 1198, def: 882, skills: [{ name: 'Web Ensnare',   damage: 2.8 }, { name: 'Venom Bite',      damage: 3.7 }] },
+      { id: 'e_2603_2', name: 'Chronomancer Eternal', tier: 'mini-boss', imageKey: 'mini-boss_024', hp: 39500, maxHp: 39500, atk: 1502, def: 1002, effect: 'PARALYSIS', skills: [{ name: 'Temporal Rupture', damage: 3.0 }, { name: 'Loop Collapse',   damage: 4.2 }] },
+      { id: 'e_2603_3', name: 'The Void Eternal',     tier: 'boss',      imageKey: 'boss_026',      hp: 53500, maxHp: 53500, atk: 1698, def: 1102, effect: 'VOID_CURSE', skills: [{ name: 'Erasure Wave',  damage: 4.9 }, { name: 'Final Silence',   damage: 6.5 }] },
+    ],
+  },
+
+  // ── CH 27: CELESTIAL RECKONING — The Grand Reckoning ─────────────────────────
+  {
+    id: 2701, chapter: 27, part: 1,
+    name: 'Judgment Hosts',
+    description: 'Celestial enforcers from realms untouched by the previous wars descend to pass final judgment on Aetheria.',
+    enemies: [
+      { id: 'e_2701_1', name: 'Void Viper',      tier: 'mob', imageKey: 'mob_028', hp: 24600, maxHp: 24600, atk: 1218, def: 900, skills: [{ name: 'Venom Lunge',  damage: 2.8 }, { name: 'Void Fang',    damage: 3.7 }] },
+      { id: 'e_2701_2', name: 'Bone Harpy',      tier: 'mob', imageKey: 'mob_029', hp: 25200, maxHp: 25200, atk: 1235, def: 915, skills: [{ name: 'Bone Dive',    damage: 2.8 }, { name: 'Death Shriek', damage: 3.7 }] },
+      { id: 'e_2701_3', name: 'Dark Crowmancer', tier: 'mob', imageKey: 'mob_032', hp: 25800, maxHp: 25800, atk: 1252, def: 932, skills: [{ name: 'Dark Feather', damage: 2.9 }, { name: 'Crow Curse',   damage: 3.8 }] },
+    ],
+  },
+  {
+    id: 2702, chapter: 27, part: 2,
+    name: 'Seraph of the Scales',
+    description: 'The supreme arbiter who weighs the fate of entire realities stands ready to tip the scales against existence itself.',
+    enemies: [
+      { id: 'e_2702_1', name: 'Bone Harpy',           tier: 'mob',       imageKey: 'mob_029',       hp: 25400, maxHp: 25400, atk: 1240, def: 918, skills: [{ name: 'Bone Dive',     damage: 2.8 }, { name: 'Death Shriek',   damage: 3.8 }] },
+      { id: 'e_2702_2', name: 'Dark Crowmancer',      tier: 'mob',       imageKey: 'mob_032',       hp: 26000, maxHp: 26000, atk: 1258, def: 935, skills: [{ name: 'Dark Feather', damage: 2.9 }, { name: 'Crow Curse',     damage: 3.8 }] },
+      { id: 'e_2702_3', name: 'Seraph of the Scales', tier: 'mini-boss', imageKey: 'mini-boss_025', hp: 41500, maxHp: 41500, atk: 1560, def: 1040, effect: 'SMITE', skills: [{ name: 'Judgment Beam', damage: 3.0 }, { name: 'Scale Overload', damage: 4.2 }] },
+    ],
+  },
+  {
+    id: 2703, chapter: 27, part: 3,
+    name: 'The Grand Reckoning',
+    description: 'The supreme celestial authority descends to enforce the final verdict upon all of creation.',
+    enemies: [
+      { id: 'e_2703_1', name: 'Dark Crowmancer',      tier: 'mob',       imageKey: 'mob_032',       hp: 26400, maxHp: 26400, atk: 1272, def: 948, skills: [{ name: 'Dark Feather',     damage: 2.9 }, { name: 'Crow Curse',      damage: 3.9 }] },
+      { id: 'e_2703_2', name: 'Seraph of the Scales', tier: 'mini-boss', imageKey: 'mini-boss_025', hp: 42500, maxHp: 42500, atk: 1585, def: 1058, effect: 'SMITE', skills: [{ name: 'Judgment Beam',  damage: 3.1 }, { name: 'Scale Overload',  damage: 4.3 }] },
+      { id: 'e_2703_3', name: 'The Grand Reckoning',  tier: 'boss',      imageKey: 'boss_027',      hp: 57000, maxHp: 57000, atk: 1785, def: 1155, effect: 'SMITE', skills: [{ name: 'Cosmic Verdict', damage: 5.0 }, { name: 'Absolute Law',    damage: 6.6 }] },
+    ],
+  },
+
+  // ── CH 28: FRACTURED OMNIVERSE — The Omniverse Devourer ──────────────────────
+  {
+    id: 2801, chapter: 28, part: 1,
+    name: 'Riftborn Horrors',
+    description: 'Creatures from shattered parallel realities bleed into Aetheria as the boundaries between all possible worlds collapse.',
+    enemies: [
+      { id: 'e_2801_1', name: 'Shadow Feline', tier: 'mob', imageKey: 'mob_027', hp: 26800, maxHp: 26800, atk: 1290, def: 962, skills: [{ name: 'Shadow Pounce', damage: 2.9 }, { name: 'Dark Claw Strike', damage: 3.9 }] },
+      { id: 'e_2801_2', name: 'Crystal Drake',  tier: 'mob', imageKey: 'mob_030', hp: 27400, maxHp: 27400, atk: 1308, def: 978, skills: [{ name: 'Crystal Bite',  damage: 2.9 }, { name: 'Gem Shard Blast', damage: 4.0 }] },
+      { id: 'e_2801_3', name: 'Abyss Spider',   tier: 'mob', imageKey: 'mob_031', hp: 28000, maxHp: 28000, atk: 1325, def: 995, skills: [{ name: 'Web Ensnare',   damage: 3.0 }, { name: 'Venom Bite',      damage: 4.0 }] },
+    ],
+  },
+  {
+    id: 2802, chapter: 28, part: 2,
+    name: 'The Mirror Sovereign',
+    description: 'A tyrannical reflection of Kira Voltz herself rules the fractured omniverse with absolute dominance.',
+    enemies: [
+      { id: 'e_2802_1', name: 'Crystal Drake',        tier: 'mob',       imageKey: 'mob_030',       hp: 27600, maxHp: 27600, atk: 1312, def: 980, skills: [{ name: 'Crystal Bite',  damage: 2.9 }, { name: 'Gem Shard Blast', damage: 4.0 }] },
+      { id: 'e_2802_2', name: 'Abyss Spider',         tier: 'mob',       imageKey: 'mob_031',       hp: 28200, maxHp: 28200, atk: 1330, def: 996, skills: [{ name: 'Web Ensnare',   damage: 3.0 }, { name: 'Venom Bite',      damage: 4.1 }] },
+      { id: 'e_2802_3', name: 'The Mirror Sovereign', tier: 'mini-boss', imageKey: 'mini-boss_026', hp: 44500, maxHp: 44500, atk: 1668, def: 1098, effect: 'LIFEDRAIN', skills: [{ name: 'Mirrored Strike', damage: 3.1 }, { name: 'Reflected Fury', damage: 4.3 }] },
+    ],
+  },
+  {
+    id: 2803, chapter: 28, part: 3,
+    name: 'The Omniverse Devourer',
+    description: 'The entity that consumes failing realities approaches to feast on the final intact universe.',
+    enemies: [
+      { id: 'e_2803_1', name: 'Abyss Spider',           tier: 'mob',       imageKey: 'mob_031',       hp: 28600, maxHp: 28600, atk: 1345, def: 1012, skills: [{ name: 'Web Ensnare',    damage: 3.0 }, { name: 'Venom Bite',      damage: 4.1 }] },
+      { id: 'e_2803_2', name: 'The Mirror Sovereign',   tier: 'mini-boss', imageKey: 'mini-boss_026', hp: 45500, maxHp: 45500, atk: 1692, def: 1115, effect: 'LIFEDRAIN', skills: [{ name: 'Mirrored Strike', damage: 3.2 }, { name: 'Reflected Fury', damage: 4.4 }] },
+      { id: 'e_2803_3', name: 'The Omniverse Devourer', tier: 'boss',      imageKey: 'boss_028',      hp: 61000, maxHp: 61000, atk: 1895, def: 1215, effect: 'TOXIN', skills: [{ name: 'Reality Bite',    damage: 5.1 }, { name: 'Infinite Hunger', damage: 6.7 }] },
+    ],
+  },
+
+  // ── CH 29: THE LAST STORY — The Unwritten Ending ─────────────────────────────
+  {
+    id: 2901, chapter: 29, part: 1,
+    name: 'Narrative Wraiths',
+    description: 'Manifestations of unwritten endings and broken plotlines swarm to force a tragic conclusion.',
+    enemies: [
+      { id: 'e_2901_1', name: 'Void Viper',      tier: 'mob', imageKey: 'mob_028', hp: 29000, maxHp: 29000, atk: 1362, def: 1028, skills: [{ name: 'Venom Lunge',  damage: 3.0 }, { name: 'Void Fang',    damage: 4.1 }] },
+      { id: 'e_2901_2', name: 'Bone Harpy',      tier: 'mob', imageKey: 'mob_029', hp: 29600, maxHp: 29600, atk: 1380, def: 1045, skills: [{ name: 'Bone Dive',    damage: 3.1 }, { name: 'Death Shriek', damage: 4.2 }] },
+      { id: 'e_2901_3', name: 'Dark Crowmancer', tier: 'mob', imageKey: 'mob_032', hp: 30200, maxHp: 30200, atk: 1398, def: 1062, skills: [{ name: 'Dark Feather', damage: 3.1 }, { name: 'Crow Curse',   damage: 4.2 }] },
+    ],
+  },
+  {
+    id: 2902, chapter: 29, part: 2,
+    name: "The Author's Hand",
+    description: 'A meta-entity that claims to have written every event of the war appears to close the book.',
+    enemies: [
+      { id: 'e_2902_1', name: 'Bone Harpy',         tier: 'mob',       imageKey: 'mob_029',       hp: 29800, maxHp: 29800, atk: 1385, def: 1048, skills: [{ name: 'Bone Dive',     damage: 3.1 }, { name: 'Death Shriek',   damage: 4.2 }] },
+      { id: 'e_2902_2', name: 'Dark Crowmancer',    tier: 'mob',       imageKey: 'mob_032',       hp: 30400, maxHp: 30400, atk: 1402, def: 1065, skills: [{ name: 'Dark Feather', damage: 3.1 }, { name: 'Crow Curse',     damage: 4.3 }] },
+      { id: 'e_2902_3', name: "The Author's Hand",  tier: 'mini-boss', imageKey: 'mini-boss_027', hp: 47500, maxHp: 47500, atk: 1775, def: 1155, effect: 'SHATTER', skills: [{ name: 'Inked Verdict', damage: 3.2 }, { name: 'Rewritten Fate', damage: 4.4 }] },
+    ],
+  },
+  {
+    id: 2903, chapter: 29, part: 3,
+    name: 'The Unwritten Ending',
+    description: 'The final arbiter of all narratives attempts to force the ultimate tragic close to existence.',
+    enemies: [
+      { id: 'e_2903_1', name: 'Dark Crowmancer',     tier: 'mob',       imageKey: 'mob_032',       hp: 30800, maxHp: 30800, atk: 1418, def: 1082, skills: [{ name: 'Dark Feather',    damage: 3.2 }, { name: 'Crow Curse',      damage: 4.3 }] },
+      { id: 'e_2903_2', name: "The Author's Hand",   tier: 'mini-boss', imageKey: 'mini-boss_027', hp: 48500, maxHp: 48500, atk: 1800, def: 1172, effect: 'SHATTER', skills: [{ name: 'Inked Verdict',  damage: 3.3 }, { name: 'Rewritten Fate',  damage: 4.5 }] },
+      { id: 'e_2903_3', name: 'The Unwritten Ending', tier: 'boss',     imageKey: 'boss_029',      hp: 65000, maxHp: 65000, atk: 2005, def: 1275, effect: 'VOID_CURSE', skills: [{ name: 'Final Chapter', damage: 5.2 }, { name: 'Tragic Rewrite',  damage: 6.8 }] },
+    ],
+  },
+
+  // ── CH 30: BEYOND CREATION — The Eternal Flame ───────────────────────────────
+  {
+    id: 3001, chapter: 30, part: 1,
+    name: 'The Final Threshold',
+    description: 'The last guardians — beings born at the exact moment of creation — defend the edge of all that is and ever will be.',
+    enemies: [
+      { id: 'e_3001_1', name: 'Shadow Feline', tier: 'mob', imageKey: 'mob_027', hp: 31200, maxHp: 31200, atk: 1435, def: 1098, skills: [{ name: 'Shadow Pounce', damage: 3.2 }, { name: 'Dark Claw Strike', damage: 4.3 }] },
+      { id: 'e_3001_2', name: 'Void Viper',    tier: 'mob', imageKey: 'mob_028', hp: 31800, maxHp: 31800, atk: 1452, def: 1115, skills: [{ name: 'Venom Lunge',    damage: 3.3 }, { name: 'Void Fang',        damage: 4.4 }] },
+      { id: 'e_3001_3', name: 'Crystal Drake', tier: 'mob', imageKey: 'mob_030', hp: 32400, maxHp: 32400, atk: 1470, def: 1132, skills: [{ name: 'Crystal Bite',   damage: 3.3 }, { name: 'Gem Shard Blast',  damage: 4.4 }] },
+    ],
+  },
+  {
+    id: 3002, chapter: 30, part: 2,
+    name: "The Creator's Echo",
+    description: 'A pale reflection of the force that first spoke existence into being bars the final path.',
+    enemies: [
+      { id: 'e_3002_1', name: 'Void Viper',         tier: 'mob',       imageKey: 'mob_028',       hp: 32000, maxHp: 32000, atk: 1458, def: 1118, skills: [{ name: 'Venom Lunge',   damage: 3.3 }, { name: 'Void Fang',      damage: 4.4 }] },
+      { id: 'e_3002_2', name: 'Crystal Drake',      tier: 'mob',       imageKey: 'mob_030',       hp: 32600, maxHp: 32600, atk: 1475, def: 1135, skills: [{ name: 'Crystal Bite',  damage: 3.4 }, { name: 'Gem Shard Blast', damage: 4.5 }] },
+      { id: 'e_3002_3', name: "The Creator's Echo", tier: 'mini-boss', imageKey: 'mini-boss_028', hp: 50500, maxHp: 50500, atk: 1885, def: 1235, effect: 'BLESSING', skills: [{ name: 'Primordial Pulse', damage: 3.4 }, { name: 'First Light Echo', damage: 4.6 }] },
+    ],
+  },
+  {
+    id: 3003, chapter: 30, part: 3,
+    name: 'The Eternal Flame',
+    description: 'The final being — the undying spark that began everything — awakens to decide whether existence itself deserves to continue.',
+    enemies: [
+      { id: 'e_3003_1', name: 'Crystal Drake',       tier: 'mob',       imageKey: 'mob_030',       hp: 33000, maxHp: 33000, atk: 1492, def: 1152, skills: [{ name: 'Crystal Bite',      damage: 3.4 }, { name: 'Gem Shard Blast',   damage: 4.6 }] },
+      { id: 'e_3003_2', name: "The Creator's Echo",  tier: 'mini-boss', imageKey: 'mini-boss_028', hp: 51500, maxHp: 51500, atk: 1910, def: 1252, effect: 'BLESSING', skills: [{ name: 'Primordial Pulse', damage: 3.5 }, { name: 'First Light Echo', damage: 4.7 }] },
+      { id: 'e_3003_3', name: 'The Eternal Flame',   tier: 'boss',      imageKey: 'boss_030',      hp: 72000, maxHp: 72000, atk: 2185, def: 1385, effect: 'BURN', skills: [{ name: 'Genesis Blaze', damage: 5.3 }, { name: 'The First Light',   damage: 7.0 }] },
     ],
   },
 ];
