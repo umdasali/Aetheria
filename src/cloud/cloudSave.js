@@ -17,9 +17,9 @@ const SAVE_FIELDS = [
   'eventPity', 'eventGuarantee',
   'playerProfile', 'settings',
   'hasSeenOnboarding', 'hasSeenBattleTutorial',
-  'practiceBonusClaimed', 'pendingMilestoneReward',
+  'practiceBonusClaimed', 'pendingMilestoneRewards',
   // Synced so re-auth can't reset an IAP entitlement cap or refill daily dungeon attempts.
-  'shopPurchases', 'dungeonAttemptsUsed', 'dungeonResetDate',
+  'shopPurchases', 'dungeonAttemptsUsed', 'dungeonResetDate', 'processedIapTransactionIds',
 ];
 
 function pickSaveFields(state) {
@@ -210,6 +210,9 @@ export function resolveConflict(local, cloud) {
     ownedHeroes:       [...new Set([...(local.ownedHeroes || []), ...(cloud.ownedHeroes || [])])],
     completedChapters: [...new Set([...(local.completedChapters || []), ...(cloud.completedChapters || [])])],
     milestonesClaimed: [...new Set([...(local.milestonesClaimed || []), ...(cloud.milestonesClaimed || [])])],
+    // Never drop a processed transaction ID on merge — losing one would let the
+    // CustomerInfo listener re-grant an already-granted real-money purchase.
+    processedIapTransactionIds: [...new Set([...(local.processedIapTransactionIds || []), ...(cloud.processedIapTransactionIds || [])])],
 
     heroCollection:     mergeHeroCollection(local.heroCollection, cloud.heroCollection),
     ascensionInventory: mergeAscensionInventory(local.ascensionInventory, cloud.ascensionInventory),

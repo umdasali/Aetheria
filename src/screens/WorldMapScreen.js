@@ -92,10 +92,10 @@ const FACTION_META = {
     climate: 'Endless Dunes & Silver Nights',
     element: '🏜️ Sand  🌙 Moon',
     specialties: ['Lunar Judgment', 'Dynastic Rule', 'Sand & Dust', 'Moonlit Magic'],
-    lore: 'A vast desert dominion of obelisks, sunken tombs, and dunes that swallow whole armies — a realm of scorching days and cold silver nights where the moon is worshipped and the dead are honored as gods. Khemara does not appear on any map a traveler can buy; its borders open only to those who already know the way. At its heart sits Shahrzad Al-Nur, goddess and pharaoh in one, crowned by the full desert moon during a ceremony no outsider has ever witnessed. Her court measures time in dynasties, not years, and her judgment falls as silently as moonlight on sand. Those who seek Khemara do not find it. It decides whether to find them.',
+    lore: 'A vast desert dominion of obelisks, sunken tombs, and dunes that swallow whole armies — a realm of scorching days and cold silver nights where the moon is worshipped and the dead are honored as gods. Khemara does not appear on any map a traveler can buy; its borders open only to those who already know the way. At its heart sits Nefertari Shahrzad, goddess and pharaoh in one, crowned by the full desert moon during a ceremony no outsider has ever witnessed. Her court measures time in dynasties, not years, and her judgment falls as silently as moonlight on sand. Those who seek Khemara do not find it. It decides whether to find them.',
     ruler: {
       heroId: 'hero_054',
-      name: 'Shahrzad Al-Nur',
+      name: 'Nefertari Shahrzad',
       title: 'The Moon-Queen of Khemara',
       status: 'RULER',
       roleLore: 'Goddess and pharaoh of the sand realm, crowned by the full desert moon itself. She cannot be summoned or won — she descends only for those who seek her court directly, and weighs all who stand before her in the dark.',
@@ -170,7 +170,7 @@ const FactionHeroCard = React.memo(function FactionHeroCard({ hero, owned, color
 
         {/* Bottom name gradient */}
         <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.75)']}
+          colors={['transparent', C.SHADOW + 'BF']}
           style={S.heroCardGrad}
         />
         <Text style={[S.heroCardNameOverlay, { fontSize: rf(rsLocal(8)) }]} numberOfLines={1}>
@@ -302,7 +302,7 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
               }]}>
                 <Image source={rulerHero.image} style={S.rulerPortrait} />
                 <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.75)']}
+                  colors={['transparent', C.SHADOW + 'BF']}
                   style={[S.rulerPortraitGrad, { height: '40%' }]}
                 />
               </View>
@@ -457,7 +457,7 @@ export default function WorldMapScreen({ navigation }) {
 
       {/* Cinematic vignette */}
       <LinearGradient
-        colors={['rgba(6,3,15,0.55)', 'transparent', 'rgba(6,3,15,0.70)']}
+        colors={[C.BG_SCREEN + '8C', 'transparent', C.BG_SCREEN + 'B2']}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
@@ -631,7 +631,7 @@ const S = StyleSheet.create({
     position: 'absolute',
     bottom: rs(14),
     alignSelf: 'center',
-    backgroundColor: 'rgba(6,3,15,0.75)',
+    backgroundColor: C.BG_SCREEN + 'BF',
     borderRadius: rs(5),
     paddingHorizontal: rs(14),
     paddingVertical: rs(5),
@@ -698,7 +698,7 @@ const S = StyleSheet.create({
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: C.GLASS_4,
   },
   fsAccentLine: {
     height: 2,
@@ -875,7 +875,7 @@ const S = StyleSheet.create({
   lockOverlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: C.OVERLAY_3,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -883,7 +883,7 @@ const S = StyleSheet.create({
     width: rs(28),
     height: rs(28),
     borderRadius: rs(14),
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: C.OVERLAY_MID,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -924,7 +924,7 @@ const S = StyleSheet.create({
     fontSize: rf(11),
     fontWeight: '800',
     color: C.TEXT,
-    textShadowColor: 'rgba(0,0,0,0.9)',
+    textShadowColor: C.TEXT_SHADOW,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },

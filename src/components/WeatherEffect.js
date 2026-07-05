@@ -39,10 +39,10 @@ const TWINKLE_DATA  = Array.from({ length: TWINKLE_COUNT }, () => ({
   del:  Math.random() * 2400,
   // mostly white; 30 % warm-gold, 20 % cool-blue for variety
   color: Math.random() > 0.7
-    ? 'rgba(255,240,160,0.9)'
+    ? C.FLASH_WARM
     : Math.random() > 0.5
-    ? 'rgba(180,220,255,0.9)'
-    : 'rgba(255,255,255,0.9)',
+    ? C.FLASH_COOL
+    : C.FLASH_NEUTRAL,
 }));
 
 // ── Shooting-star paths — 3 independent streaks ────────────────────────────────
@@ -155,7 +155,7 @@ function ShootingStars() {
         >
           {/* Gradient streak: transparent → bright white → cool-blue tail */}
           <LinearGradient
-            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.95)', 'rgba(180,225,255,0.35)']}
+            colors={['transparent', C.FLASH_WHITE + 'F2', C.RAIN_STREAK]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
             style={{
@@ -308,7 +308,7 @@ export default function WeatherEffect({ type }) {
               top: -80,
               width: 1.5,
               height: d.length,
-              backgroundColor: 'rgba(180,210,255,0.75)',
+              backgroundColor: C.RAIN_DROP,
               opacity: d.opacity,
               transform: [{ translateY: yAnims[i] }, { rotate: '-12deg' }],
             }}
@@ -333,7 +333,7 @@ export default function WeatherEffect({ type }) {
               top: d.y,
               width: d.windW,
               height: 1,
-              backgroundColor: 'rgba(210,225,255,0.38)',
+              backgroundColor: C.SNOW_FLAKE,
               opacity: d.opacity,
               transform: [{ translateX: xAnims[i] }, { rotate: '-6deg' }],
             }}

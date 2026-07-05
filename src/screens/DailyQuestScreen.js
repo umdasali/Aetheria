@@ -225,7 +225,7 @@ const s = StyleSheet.create({
   },
   backBtn:     { padding: 4 },
   headerTitle: { fontSize: rf(18), fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
-  headerSub:   { fontSize: rf(13), color: 'rgba(255,255,255,0.6)', marginTop: 1 },
+  headerSub:   { fontSize: rf(13), color: C.ICON_MUTED, marginTop: 1 },
   allDoneBadge: {
     flexDirection: 'row', alignItems: 'center', gap: rs(4),
     backgroundColor: C.SUCCESS + '22', borderRadius: rs(8),

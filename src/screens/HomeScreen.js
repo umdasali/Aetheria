@@ -60,7 +60,7 @@ export default function HomeScreen({ navigation }) {
   const isChapterCompleted        = useGameStore(s => s.isChapterCompleted);
   const towerCurrentFloor         = useGameStore(s => s.towerCurrentFloor);
   const towerHighestFloor         = useGameStore(s => s.towerHighestFloor);
-  const pendingMilestoneReward    = useGameStore(s => s.pendingMilestoneReward);
+  const pendingMilestoneRewards   = useGameStore(s => s.pendingMilestoneRewards);
   const clearMilestoneReward      = useGameStore(s => s.clearMilestoneReward);
   const getDailyQuestProgress     = useGameStore(s => s.getDailyQuestProgress);
   const achievements              = useGameStore(s => s.achievements);
@@ -68,6 +68,9 @@ export default function HomeScreen({ navigation }) {
   const clearAchievementUnlocks   = useGameStore(s => s.clearAchievementUnlocks);
 
   const [milestoneVisible, setMilestoneVisible] = useState(false);
+  // Show the head of the queue — clearMilestoneReward shifts it off, revealing
+  // the next one (if any) rather than ever overwriting/losing an unclaimed reward.
+  const pendingMilestoneReward = pendingMilestoneRewards?.[0] ?? null;
   const milestoneHero = pendingMilestoneReward?.hero ?? null;
 
   const [achieveVisible, setAchieveVisible] = useState(false);
@@ -193,10 +196,12 @@ export default function HomeScreen({ navigation }) {
     return () => AudioManager.pauseHome();
   }, []));
 
-  // Show milestone modal whenever a pending reward is detected on focus
-  useFocusEffect(useCallback(() => {
+  // Show milestone modal whenever the queue has an unclaimed reward — a plain
+  // effect (not useFocusEffect) so collecting one while already on Home
+  // immediately reveals the next queued reward instead of waiting for a refocus.
+  useEffect(() => {
     if (pendingMilestoneReward) setMilestoneVisible(true);
-  }, [pendingMilestoneReward]));
+  }, [pendingMilestoneReward]);
 
   // Show achievement unlock toast whenever new achievements are queued
   useFocusEffect(useCallback(() => {
@@ -218,20 +223,20 @@ export default function HomeScreen({ navigation }) {
 
       {/* ── Cinematic vignettes ── */}
       <LinearGradient
-        colors={['rgba(0,0,0,0.82)', 'rgba(0,0,0,0.2)', 'transparent']}
+        colors={[C.OVERLAY_MODAL, C.OVERLAY_1, 'transparent']}
         style={styles.vigTop}
       />
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.9)']}
+        colors={['transparent', C.OVERLAY_MID, C.TEXT_SHADOW]}
         style={styles.vigBottom}
       />
       <LinearGradient
-        colors={['rgba(0,0,0,0.72)', 'rgba(0,0,0,0.18)', 'transparent']}
+        colors={[C.OVERLAY_STRONG, C.SHADOW + '2E', 'transparent']}
         start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
         style={styles.vigLeft}
       />
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.28)', 'rgba(0,0,0,0.65)']}
+        colors={['transparent', C.OVERLAY_1, C.SHADOW + 'A6']}
         start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
         style={styles.vigRight}
       />
@@ -250,7 +255,7 @@ export default function HomeScreen({ navigation }) {
               <View style={[styles.avatarFrame, { borderColor: factionColor }]}>
                 <Image source={avatarImage} style={styles.avatarImg} />
                 <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.55)']}
+                  colors={['transparent', C.OVERLAY_3]}
                   style={styles.avatarOverlay}
                 />
               </View>
@@ -302,17 +307,17 @@ export default function HomeScreen({ navigation }) {
             {/* Icon buttons */}
             <View style={styles.topIcons}>
               {/* <TouchableOpacity style={styles.topIconBtn}>
-                <Ionicons name="notifications-outline" size={rs(17)} color="rgba(255,255,255,0.8)" />
+                <Ionicons name="notifications-outline" size={rs(17)} color={C.ICON_ON_DARK} />
                 <View style={styles.notifDot} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.topIconBtn}>
-                <Ionicons name="mail-outline" size={rs(17)} color="rgba(255,255,255,0.8)" />
+                <Ionicons name="mail-outline" size={rs(17)} color={C.ICON_ON_DARK} />
               </TouchableOpacity> */}
               <TouchableOpacity style={styles.topIconBtn} onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Shop'); }} accessibilityLabel="Open Shop" accessibilityRole="button">
                 <Ionicons name="storefront" size={rs(17)} color={C.GOLD} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.topIconBtn} onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Settings'); }} accessibilityLabel="Open Settings" accessibilityRole="button">
-                <Ionicons name="settings-outline" size={rs(17)} color="rgba(255,255,255,0.8)" />
+                <Ionicons name="settings-outline" size={rs(17)} color={C.ICON_ON_DARK} />
               </TouchableOpacity>
             </View>
           </View>
@@ -324,7 +329,7 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.leftSidebar}>
               <View style={styles.sidePanel}>
                 {/* <LinearGradient
-                  colors={['rgba(8, 3, 22, 0.03)', 'rgba(255, 255, 255, 0.19)']}
+                  colors={[C.BG_SCREEN + '08', C.GLASS_EDGE]}
                   style={StyleSheet.absoluteFill}
                 /> */}
                 {/* <View style={[StyleSheet.absoluteFill, styles.sidePanelBorder]} /> */}
@@ -586,7 +591,7 @@ const SideItem = memo(function SideItem({ icon, image, label, a11yLabel, badge, 
       {/* Card face — vertical compact */}
       <View style={[styles.sideFace, { borderColor: accent + '45' }]}>
         <LinearGradient
-          colors={['rgba(6,2,18,0.92)', 'rgba(10,4,24,0.84)']}
+          colors={[C.BG_SCREEN + 'EB', C.BG_DARK + 'D6']}
           style={StyleSheet.absoluteFill}
         />
         {/* Top accent line */}
@@ -628,7 +633,7 @@ function ActionPanel({ tag, accent, title, sub, thumb, progressRatio, badge, onP
     <TouchableOpacity style={styles.panel} onPress={onPress} activeOpacity={0.82} accessibilityLabel={a11yLabel} accessibilityRole="button">
       {/* Dark glass fill */}
       <LinearGradient
-        colors={['rgba(2,0,16,0.92)', 'rgba(6,3,22,0.82)']}
+        colors={[C.BG_VOID + 'EB', C.BG_SCREEN + 'D1']}
         style={styles.panelBg}
       />
       {/* Glowing border overlay */}
@@ -670,7 +675,7 @@ function ActionPanel({ tag, accent, title, sub, thumb, progressRatio, badge, onP
         <View style={styles.panelThumbWrap}>
           <Image source={thumb} style={styles.panelThumb} resizeMode="cover" />
           <LinearGradient
-            colors={['rgba(2,0,16,0.85)', 'transparent']}
+            colors={[C.BG_VOID + 'D9', 'transparent']}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
           />
@@ -707,7 +712,7 @@ const styles = StyleSheet.create({
     width: rs(46), height: rs(46), borderRadius: rs(8),
     borderWidth: 2, overflow: 'hidden',
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(40,18,80,0.9)',
+    backgroundColor: C.BG_MID,
   },
   avatarImg:     { width: '100%', height: '100%', resizeMode: 'cover' },
   avatarOverlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
@@ -719,15 +724,15 @@ const styles = StyleSheet.create({
 
   xpOuter: {
     width: rs(88), height: rs(3),
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: C.GLASS_6,
     borderRadius: 2, overflow: 'hidden',
   },
   xpFill:  { height: rs(3), borderRadius: 2 },
-  xpLabel: { fontSize: rf(10), color: 'rgba(255,255,255,0.38)', marginTop: rs(2), letterSpacing: 0.3 },
+  xpLabel: { fontSize: rf(10), color: C.TEXT_ON_DARK_WEAK, marginTop: rs(2), letterSpacing: 0.3 },
 
   hudDivider: {
     width: 1, height: rs(28),
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: C.GLASS_6,
     marginHorizontal: rs(2),
   },
 
@@ -737,18 +742,18 @@ const styles = StyleSheet.create({
   currVal:  { fontSize: rf(15), fontWeight: '800', minWidth: rs(26) },
   currAdd: {
     width: rs(15), height: rs(15), borderRadius: rs(8),
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: C.GLASS_5,
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1,
   },
-  currSep: { width: 1, height: rs(18), backgroundColor: 'rgba(255,255,255,0.1)' },
+  currSep: { width: 1, height: rs(18), backgroundColor: C.GLASS_6 },
 
   topIcons: { flexDirection: 'row', gap: rs(5) },
   topIconBtn: {
     width: rs(30), height: rs(30), borderRadius: rs(7),
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: C.GLASS_4,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1, borderColor: C.GLASS_6,
     position: 'relative',
   },
   notifDot: {
@@ -780,7 +785,7 @@ const styles = StyleSheet.create({
   sidePanelBorder: {
     borderRadius: rs(14),
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
+    borderColor: C.GLASS_6,
   },
 
   // 2-column grid cell — width fills exactly half minus gap
@@ -886,11 +891,11 @@ const styles = StyleSheet.create({
   panelNewText:  { fontSize: rf(11), color: C.TEXT, fontWeight: '900', letterSpacing: 1 },
   panelTitle: {
     fontSize: rf(14), color: C.TEXT, fontWeight: '800', letterSpacing: 0.3,
-    textShadowColor: 'rgba(0,0,0,0.7)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
+    textShadowColor: C.OVERLAY_STRONG, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
-  panelSub:    { fontSize: rf(11), color: 'rgba(255,255,255,0.5)', marginTop: rs(2) },
+  panelSub:    { fontSize: rf(11), color: C.TEXT_ON_DARK_SOFT, marginTop: rs(2) },
   panelProgBg: {
-    height: 2, backgroundColor: 'rgba(255,255,255,0.12)',
+    height: 2, backgroundColor: C.GLASS_7,
     borderRadius: 1, marginTop: rs(5), overflow: 'hidden', width: '82%',
   },
   panelProgFill: { height: 2, borderRadius: 1 },
@@ -901,7 +906,7 @@ const styles = StyleSheet.create({
   ticker: {
     flexDirection: 'row', alignItems: 'center', gap: rs(8),
     paddingHorizontal: rs(10), paddingVertical: rs(4),
-    backgroundColor: 'rgba(0,0,0,0.82)',
+    backgroundColor: C.OVERLAY_MODAL,
     borderTopWidth: 1, borderTopColor: C.PRIMARY_GLOW,
   },
   tickerTag: {
@@ -909,12 +914,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(6), paddingVertical: rs(2),
   },
   tickerTagText: { fontSize: rf(10), color: C.TEXT, fontWeight: '900', letterSpacing: 1.5 },
-  tickerText:    { fontSize: rf(9), color: 'rgba(255,255,255,0.42)', flex: 1, letterSpacing: 0.3 },
+  tickerText:    { fontSize: rf(9), color: C.TEXT_ON_DARK_MUTED, flex: 1, letterSpacing: 0.3 },
 
   // ── Milestone modal ───────────────────────────────────────────────────────
   msOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: C.SHADOW + 'BF',
     alignItems: 'center',
     justifyContent: 'center',
   },

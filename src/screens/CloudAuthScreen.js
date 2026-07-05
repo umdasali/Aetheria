@@ -613,7 +613,7 @@ const s = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', gap: rs(10),
     paddingHorizontal: rs(12), paddingVertical: rs(10),
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)',
+    borderBottomWidth: 1, borderBottomColor: C.GLASS_7,
   },
   backBtn:     { padding: rs(4) },
   headerTitle: { fontSize: rf(15), fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
@@ -696,7 +696,7 @@ const s = StyleSheet.create({
 
   // Restart modal
   restartOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.82)',
+    flex: 1, backgroundColor: C.OVERLAY_MODAL,
     alignItems: 'center', justifyContent: 'center',
   },
   restartCard: {

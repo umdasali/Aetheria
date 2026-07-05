@@ -6,6 +6,7 @@ const ANDROID_KEY = Constants.expoConfig?.extra?.revenueCatAndroidKey ?? '';
 const IOS_KEY     = Constants.expoConfig?.extra?.revenueCatIosKey ?? '';
 
 let _ready = false;
+let _customerInfoListener = null;
 
 // Call once at app startup (App.js useEffect). Pass the Supabase userId if
 // already signed in, otherwise pass null and call setUserId() after sign-in.
@@ -66,6 +67,55 @@ export async function purchase(productId) {
     if (e.userCancelled) return { ok: false, reason: 'cancelled' };
     if (__DEV__) console.warn('[RevenueCat] purchase failed:', e.message);
     return { ok: false, reason: 'iap_failed' };
+  }
+}
+
+// Subscribes to CustomerInfo updates so a purchase that's charged but never
+// reaches our success handler (app killed mid-transaction, network drop right
+// after the charge, etc) still gets granted once RevenueCat replays it — the
+// SDK re-delivers pending transactions on every relaunch/customerInfo refresh,
+// but only to a listener, never by re-resolving the original purchase() promise.
+// onCustomerInfo receives the raw CustomerInfo object; the caller is
+// responsible for diffing customerInfo.nonSubscriptionTransactions against
+// what it's already granted (see gameStore.grantIapTransaction).
+export function startTransactionListener(onCustomerInfo) {
+  if (!_ready) return () => {};
+  stopTransactionListener();
+  _customerInfoListener = (customerInfo) => {
+    try { onCustomerInfo(customerInfo); } catch (e) {
+      if (__DEV__) console.warn('[RevenueCat] transaction listener handler failed:', e.message);
+    }
+  };
+  Purchases.addCustomerInfoUpdateListener(_customerInfoListener);
+  return stopTransactionListener;
+}
+
+export function stopTransactionListener() {
+  if (_customerInfoListener) {
+    Purchases.removeCustomerInfoUpdateListener(_customerInfoListener);
+    _customerInfoListener = null;
+  }
+}
+
+// Returns { [productId]: localizedPriceString } from the store's live offerings
+// (e.g. "$1.99"). Shop UI should prefer this over any hardcoded priceLabel —
+// a price baked into shopPacks.js can silently drift from what the platform
+// actually charges (currency, regional pricing, a price change in the store).
+// Falls back to {} (caller keeps its hardcoded label) if not configured/offline.
+export async function getLivePrices() {
+  if (!_ready) return {};
+  try {
+    const offerings = await Purchases.getOfferings();
+    const prices = {};
+    for (const offering of Object.values(offerings.all)) {
+      for (const p of offering.availablePackages) {
+        prices[p.product.identifier] = p.product.priceString;
+      }
+    }
+    return prices;
+  } catch (e) {
+    if (__DEV__) console.warn('[RevenueCat] getLivePrices failed:', e.message);
+    return {};
   }
 }
 

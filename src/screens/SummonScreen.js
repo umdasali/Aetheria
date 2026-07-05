@@ -89,6 +89,11 @@ const performSummon = (
   const results   = [];
   let pity        = currentPity;
   let guaranteed  = isGuaranteed;
+  // Mutable copy — the caller's ownedSet is a pre-pull snapshot, but a sovereign
+  // pulled at iteration i must count as "owned" for iteration i+1 within the SAME
+  // ×10 batch (addHero() for the batch doesn't run until after this returns), or
+  // the "one uncollected Sovereign at a time" gate can be rolled past twice.
+  const localOwnedSet = new Set(ownedSet);
 
   // Off-banner S pool (event banners only): standard-banner featured S heroes,
   // excluding the current rate-up heroes so the player never loses the 50/50
@@ -134,7 +139,7 @@ const performSummon = (
       } else {
         // ── Standard banner: sovereign proc system ──────────────────────────
         // shopExclusive sovereigns (e.g. hero_054) must never appear in gacha.
-        const sovereignPool = HEROES.filter(h => h.rank === 'S' && h.sovereign && !h.shopExclusive && !ownedSet.has(h.id));
+        const sovereignPool = HEROES.filter(h => h.rank === 'S' && h.sovereign && !h.shopExclusive && !localOwnedSet.has(h.id));
         const regularPool   = HEROES.filter(h => h.rank === 'S' && !h.sovereign && !h.shopExclusive);
 
         if (sovereignPool.length > 0 && Math.random() < 0.20) {
@@ -157,6 +162,7 @@ const performSummon = (
     }
 
     const hero = pool[Math.floor(Math.random() * pool.length)];
+    localOwnedSet.add(hero.id);
     results.push({ hero, isPity, isFeatured });
   }
 
@@ -284,13 +290,13 @@ const OrnateWishBtn = ({ onPress, disabled, borderCol, gradColors, label, sub, c
           <LinearGradient colors={gradColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
           {/* Diagonal top-left inner highlight */}
           <LinearGradient
-            colors={['rgba(255,255,255,0.26)', 'rgba(255,255,255,0.06)', 'transparent']}
+            colors={[C.GLASS_8, C.GLASS_4, 'transparent']}
             start={{ x: 0, y: 0 }} end={{ x: 0.65, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
           {/* Bottom depth shadow */}
           <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.32)']}
+            colors={['transparent', C.OVERLAY_2]}
             start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: rs(22) }}
           />
@@ -350,7 +356,7 @@ const SmallCardFront = ({ hero, isNew, isFeatured, width }) => {
     <View style={{ width, height, borderRadius: rs(8), overflow: 'hidden' }}>
       <Image source={hero.image} style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} resizeMode="cover" />
       <LinearGradient
-        colors={['transparent', 'transparent', 'rgba(0,0,0,0.88)']}
+        colors={['transparent', 'transparent', C.OVERLAY_DEEP]}
         style={StyleSheet.absoluteFill}
       />
       {/* FEATURED star badge — top-left, only for rate-up S pulls */}
@@ -440,6 +446,12 @@ export default function SummonScreen({ navigation, route }) {
   const sfxTimers       = useRef([]);
   const videoCardTimers = useRef([]);
   const videoEndedNaturally = useRef(false);
+  // Synchronous double-tap guard — isAnimating is React state, so two taps
+  // landing before the setIsAnimating(true) re-render commits both pass the
+  // `isAnimating` check below and both run a full pull, silently overwriting
+  // the first pull's in-flight reveal with the second's.
+  const pullLockRef = useRef(false);
+  useEffect(() => { if (!isAnimating) pullLockRef.current = false; }, [isAnimating]);
 
   const starYAnims = useRef(
     STARS.map(star => new Animated.Value(star.initPct * H))
@@ -707,9 +719,11 @@ export default function SummonScreen({ navigation, route }) {
 
   // ── Pull trigger ──────────────────────────────────────────────────────────
   const doPull = useCallback((count) => {
+    if (pullLockRef.current) return;
     const cost = count === 1 ? SINGLE_COST : MULTI_COST;
     if (gems < cost || isAnimating) return;
     if (!spendGems(cost)) return;
+    pullLockRef.current = true;
     setIsAnimating(true);
     AudioManager.playButtonSFX();
 
@@ -1326,7 +1340,7 @@ export default function SummonScreen({ navigation, route }) {
             accessibilityRole="button"
             accessibilityLabel="View summon rates and odds"
           >
-            <Ionicons name="information-circle-outline" size={rs(22)} color="rgba(255,255,255,0.85)" />
+            <Ionicons name="information-circle-outline" size={rs(22)} color={C.ICON_ON_DARK} />
           </TouchableOpacity>
         )}
         {pullPhase === 'banner' && (
@@ -1335,7 +1349,7 @@ export default function SummonScreen({ navigation, route }) {
             style={s.historyBtn}
             activeOpacity={0.75}
           >
-            <Ionicons name="time-outline" size={rs(20)} color="rgba(255,255,255,0.85)" />
+            <Ionicons name="time-outline" size={rs(20)} color={C.ICON_ON_DARK} />
           </TouchableOpacity>
         )}
       </LinearGradient>
@@ -1423,7 +1437,7 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: C.GLASS_8,
   },
   videoSkipTxt: {
-    color: 'rgba(255,255,255,0.85)', fontSize: rf(13),
+    color: C.ICON_ON_DARK, fontSize: rf(13),
     fontWeight: '700', letterSpacing: 1.5,
   },
 
@@ -1435,7 +1449,7 @@ const s = StyleSheet.create({
   },
   headerBack:  { padding: rs(4), marginRight: rs(6) },
   headerTitle: { fontSize: rf(18), fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
-  headerSub:   { fontSize: rf(13), color: 'rgba(255,255,255,0.65)', marginTop: 1 },
+  headerSub:   { fontSize: rf(13), color: C.ICON_MUTED, marginTop: 1 },
   gemsChip: {
     flexDirection: 'row', alignItems: 'center', gap: rs(5),
     backgroundColor: C.GLASS_7, borderRadius: rs(14),
@@ -1484,7 +1498,7 @@ const s = StyleSheet.create({
   btnColHeader: { alignItems: 'center', paddingBottom: rs(4) },
   btnColBannerName: {
     fontSize: rf(16), fontWeight: '900', letterSpacing: 3, textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.7)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
+    textShadowColor: C.OVERLAY_STRONG, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
   bannerLimitedRow: { flexDirection: 'row', alignItems: 'center', gap: rs(7), marginTop: rs(4) },
   bannerLimitedTxt: { fontSize: rf(13), color: C.GOLD, fontWeight: '700', letterSpacing: 3 },
@@ -1518,7 +1532,7 @@ const s = StyleSheet.create({
 
   pityHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: rs(6) },
   pityCount:  { fontSize: rf(13), color: C.PRIMARY_LIGHT, fontWeight: '700' },
-  pityBg:     { height: rs(5), backgroundColor: 'rgba(255,255,255,0.10)', borderRadius: rs(3), overflow: 'hidden' },
+  pityBg:     { height: rs(5), backgroundColor: C.GLASS_6, borderRadius: rs(3), overflow: 'hidden' },
   pityFill:   { height: '100%', borderRadius: rs(3) },
   pityHint:     { fontSize: rf(13), color: C.TEXT_MUTED, marginTop: rs(5), fontStyle: 'italic' },
   pityWarnBadge:{ borderRadius: rs(4), paddingHorizontal: rs(5), paddingVertical: 1, borderWidth: 1 },
@@ -1537,7 +1551,7 @@ const s = StyleSheet.create({
   ornateContent: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: rs(16), gap: rs(12) },
   ornateLabel: {
     fontSize: rf(14), fontWeight: '900', color: C.TEXT, letterSpacing: 2,
-    textShadowColor: 'rgba(0,0,0,0.7)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
+    textShadowColor: C.OVERLAY_STRONG, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
   ornateSub:     { fontSize: rf(13), color: C.SUCCESS, fontWeight: '800', letterSpacing: 1, marginTop: 2 },
   ornateCostRow: { flexDirection: 'row', alignItems: 'center', gap: rs(4) },
@@ -1576,13 +1590,13 @@ const s = StyleSheet.create({
   revealBarCenter: {
     alignItems: 'center', justifyContent: 'center',
   },
-  tapHint: { fontSize: rf(12), color: 'rgba(255,255,255,0.85)', fontWeight: '700', letterSpacing: 3 },
+  tapHint: { fontSize: rf(12), color: C.ICON_ON_DARK, fontWeight: '700', letterSpacing: 3 },
 
   closeBtn: {
     width: rs(44), height: rs(44), borderRadius: rs(22),
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: C.GLASS_7,
+    borderWidth: 1, borderColor: C.TEXT_ON_DARK_DIM,
   },
 
   summaryRow: {
@@ -1593,7 +1607,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: rs(6),
     borderRadius: rs(8), borderWidth: 1.5,
     paddingHorizontal: rs(10), paddingVertical: rs(5),
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: C.GLASS_3,
   },
   sumDot: { width: rs(22), height: rs(22), borderRadius: rs(5), alignItems: 'center', justifyContent: 'center' },
   sumDotTxt: { fontSize: rf(13), fontWeight: '900' },
@@ -1615,12 +1629,12 @@ const s = StyleSheet.create({
   scName: {
     position: 'absolute', bottom: rs(16), left: rs(4), right: rs(4),
     fontSize: rf(13), color: C.TEXT, fontWeight: '700', textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
+    textShadowColor: C.TEXT_SHADOW, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
   scNew:    { position: 'absolute', bottom: rs(4), left: rs(4), right: rs(4), alignItems: 'center' },
   scNewTxt: {
     fontSize: rf(13), color: C.SUCCESS, fontWeight: '900', letterSpacing: 0.5,
-    textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
+    textShadowColor: C.OVERLAY_MODAL, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
   scFeatured: {
     position: 'absolute', top: rs(4), left: rs(4),
@@ -1659,7 +1673,7 @@ const s = StyleSheet.create({
   // ── History button (header) ────────────────────────────────────────────────
   historyBtn: {
     marginLeft: rs(8), padding: rs(6),
-    borderRadius: rs(8), backgroundColor: 'rgba(255,255,255,0.10)',
+    borderRadius: rs(8), backgroundColor: C.GLASS_6,
   },
 
   // ── Banner tabs ────────────────────────────────────────────────────────────

@@ -3,7 +3,8 @@ import 'react-native-gesture-handler';
 // AsyncStorage before the user opens CloudAuthScreen.
 import './src/cloud/supabaseConfig';
 import React, { useEffect, useRef, useState } from 'react';
-import { configure as rcConfigure, setUserId as rcSetUserId, logOut as rcLogOut } from './src/utils/RevenueCatManager';
+import { configure as rcConfigure, setUserId as rcSetUserId, logOut as rcLogOut, startTransactionListener as rcStartTransactionListener } from './src/utils/RevenueCatManager';
+import useGameStore from './src/store/gameStore';
 import { onAuthChanged } from './src/cloud/auth';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, BackHandler, Modal, View, Text, TouchableOpacity } from 'react-native';
@@ -59,14 +60,22 @@ export default function App() {
   // Initialize RevenueCat once on startup, then keep its userId in sync with
   // Supabase auth so purchases are always tied to the correct account.
   useEffect(() => {
-    const { getUser } = require('./src/cloud/auth');
-    const initialUser = getUser();
-    rcConfigure(initialUser?.id ?? null);
-    const unsub = onAuthChanged(user => {
+    let stopListener = () => {};
+    (async () => {
+      const { getUser } = require('./src/cloud/auth');
+      const initialUser = getUser();
+      await rcConfigure(initialUser?.id ?? null);
+      // Recovers any purchase that was charged but never granted (app killed
+      // mid-transaction, etc) — RevenueCat replays it here on every relaunch.
+      stopListener = rcStartTransactionListener((customerInfo) => {
+        useGameStore.getState().grantIapTransaction(customerInfo);
+      });
+    })();
+    const unsubAuth = onAuthChanged(user => {
       if (user) rcSetUserId(user.id);
       else rcLogOut();
     });
-    return unsub;
+    return () => { stopListener(); unsubAuth(); };
   }, []);
 
   useEffect(() => {

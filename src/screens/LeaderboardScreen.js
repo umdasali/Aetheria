@@ -170,7 +170,7 @@ function RightPanelSkeleton({ unit }) {
             <SkeletonBox shimX={shimX} w={22} h={10} radius={3} />
           </View>
           <SkeletonBox shimX={shimX} w={26} h={26} radius={13} />
-          <SkeletonBox shimX={shimX} h={11} radius={4} style={{ flex: 1, marginRight: 4 }} />
+          <SkeletonBox shimX={shimX} h={11} radius={4} style={rr.nameSkeleton} />
           <SkeletonBox shimX={shimX} w={50} h={11} radius={4} />
         </View>
       ))}
@@ -510,6 +510,7 @@ const rr = StyleSheet.create({
 
   nameTxt:   { flex: 1, fontSize: 11, fontWeight: '700', color: C.TEXT },
   scoreTxt:  { width: 60, fontSize: 12, fontWeight: '800', color: C.TEXT_SOFT, textAlign: 'right' },
+  nameSkeleton: { flex: 1, marginRight: 4 },
 });
 
 // ── Main screen ───────────────────────────────────────────────────────────────

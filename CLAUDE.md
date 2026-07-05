@@ -4,7 +4,7 @@
 
 # Aetheria: Legends Unbound — Full Codebase Reference
 
-Landscape-only React Native RPG built with Expo 56. Card-battling with story progression, hero collection (53 heroes, 5 factions, 5 ranks), gacha summoning, endless tower, daily quests, and turn-based battle with status effects.
+Landscape-only React Native RPG built with Expo 56. Card-battling with story progression, hero collection (89 heroes, 6 factions incl. KHEMARA, 6 ranks incl. SOVEREIGN), gacha summoning, endless tower, daily quests, limited-time events, real-money IAP via RevenueCat, and turn-based battle with status effects.
 
 ---
 
@@ -42,24 +42,44 @@ src/
   theme/
     colors.js                  C.* tokens + RANK badge colors — single source of truth
   data/
-    heroes.js                  53 hero definitions + FACTIONS map + helpers
+    heroes.js                  89 hero definitions + FACTIONS map + helpers
     enemies.js                 Enemy groups for story stages + ENEMY_IMAGES map
-    story.js                   25 chapters × 3 parts = 75 stages + STAGE_ORDER + CHAPTER_DEFS
+    story.js                   30 chapters × 3 parts = 90 stages + STAGE_ORDER + CHAPTER_DEFS
+    events.js                  BANNER_POOL (limited-time gacha events) + STANDARD_BANNER + date helpers
+    shopPacks.js               GEM_PACKS/BUNDLES (real-money IAP) + HERO_PACKS (gem-priced exclusives)
+    achievements.js            ACHIEVEMENT_DEFS — tracked progress + claim rewards
+    ascensionItems.js          ASCENSION_ITEMS — hero ascension materials by rank
+    avatars.js                 Selectable profile avatar images
+    resourceDungeons.js        Ascension-material farming dungeons + MATERIAL_EXCHANGE_RECIPES
     backgrounds.js             WEATHER_BACKGROUNDS + BACKGROUNDS arrays
     dailyQuests.js             QUEST_DEFS (5 quests) + TOTAL_DAILY_GEMS/GOLD
     dailyRewards.js            DAILY_REWARDS (7-day login cycle)
     towerData.js               Tower constants + getTowerEnemyGroup + getTowerFloorReward
   store/
     gameStore.js               Zustand store — full game state + all actions
+    migrations.js              Versioned persisted-state migrations (CURRENT_VERSION)
+    sanitizeState.js           Defensive fixups applied to hydrated/restored state
+  shop/
+    purchaseHandler.js         Single seam between Shop UI and payment logic (gems vs IAP)
+  cloud/
+    supabaseConfig.js          Supabase client init
+    auth.js                    Supabase auth (sign in/out, account deletion)
+    cloudSave.js               Cloud save upload/restore + resolveConflict (LWW + additive merges)
+    syncQueue.js                Debounced/queued cloud sync trigger
+    leaderboardService.js      Server-authoritative score submission (submit_score RPC)
+    nameService.js             Display-name reservation/lookup
+    uidService.js               Player UID generation/lookup
   utils/
     battleEngine.js            Damage formula, status effects, Trump Card logic, AI decisions
     AudioManager.js            BGM/SFX management via expo-audio
-    playerLevel.js             XP system + level calculation (99 cap)
+    playerLevel.js             XP system + level calculation
+    RevenueCatManager.js       RevenueCat SDK wrapper — configure/purchase/restore/transaction listener
+    profanityFilter.js         Display-name/signature filter (leetspeak-normalised blocklist)
   screens/
     LoadingScreen.js           Splash → asset preload → animated progress bar → Home/Onboarding
     OnboardingScreen.js        4-step tutorial (one-time, skip flag stored)
     HomeScreen.js              Main hub (sidebar, featured hero, quick stats, daily rewards)
-    StoryScreen.js             25-chapter × 3-part stage selector
+    StoryScreen.js             30-chapter × 3-part stage selector
     NarrationScreen.js         Pre-battle typewriter dialogue with boss preview
     BattleScreen.js            Turn-based battle (energy, skills, Trump Card, status effects)
     VictoryScreen.js           Post-win rewards (gems, gold, hero drops, XP, level-up)
@@ -67,19 +87,27 @@ src/
     DailyQuestScreen.js        5 daily quests with progress bars + claim
     CollectionScreen.js        Hero gallery (faction filter, sort, 5-col grid)
     TeamBuildScreen.js         3-hero team builder with 3 saved presets
-    SummonScreen.js            Gacha (×1 / ×10, pity at 90, card flip reveal)
+    SummonScreen.js            Gacha (×1 / ×10, pity, card flip reveal)
     HeroDetailScreen.js        Hero profile: level up, fusion (rank up), transcendence, share
     ProfileScreen.js           Player profile: name, avatar, showcase, level/XP, stats
+    EditProfileScreen.js       Edit display name/signature (profanity-filtered)
     SettingsScreen.js          Music/SFX volume sliders + mute toggles
     WorldMapScreen.js          Faction world map: lore, rulers, heroes by faction
     TowerScreen.js             Endless Tower (300 floors, boss every 10, weekly reset)
-    CloudAuthScreen.js         Firebase authentication — cloud save sync (accessible from Settings)
     TowerShopScreen.js         Tower coin shop — buy ascension items and bundles (accessible from Tower)
+    ResourceDungeonScreen.js   Ascension-material farming dungeons (daily attempts + refills)
+    ShopScreen.js              Real-money IAP storefront (gems/bundles) + gem-priced exclusive packs
+    EventScreen.js             Limited-time banner events (active/upcoming/ended)
+    PullHistoryScreen.js       Gacha pull log (rank/pity/featured filters)
+    AchievementScreen.js       Achievement list with progress + claim
+    LeaderboardScreen.js       Tower/story/dungeon leaderboards (server-authoritative)
+    CloudAuthScreen.js         Supabase authentication — cloud save sync (accessible from Settings)
   components/
     HeroCard.js                Reusable hero card (portrait, stats bar, rank badge)
     WeatherEffect.js           Animated rain/wind/fog/thunder overlay
     FactionParticles.js        Faction-specific ambient particles (fire/snow/stars/leaves/void)
     ErrorBoundary.js           React error boundary — wraps entire app
+    ui/                        Shared HUD-styled primitives (GlassPanel, GlowButton, HudFrame, HudScreen, HudTitle, CornerBrackets, ForgeViz, NeuralNetworkViz)
 ```
 
 ---
@@ -95,12 +123,17 @@ Loading ────────────────────────
 Home ──► Story ──► Narration ──► Battle ──► Victory ──► Home
      ├──► Collection ──► HeroDetail ──► Collection
      ├──► TeamBuild
-     ├──► Summon
+     ├──► Summon ──► PullHistory
      ├──► DailyReward
      ├──► DailyQuests
-     ├──► Profile
+     ├──► Profile ──► EditProfile
      ├──► Settings ──► CloudAuth
      ├──► WorldMap
+     ├──► Events ──► Summon
+     ├──► Shop
+     ├──► Achievements
+     ├──► Leaderboard
+     ├──► ResourceDungeon ──► Battle ──► Victory ──► ResourceDungeon
      └──► Tower ──► Battle ──► Victory ──► Tower
           └──► TowerShop
 ```
@@ -190,8 +223,8 @@ Persisted to AsyncStorage under key `trump-card-game-storage`.
 | `completeChapter` | `(stageId, gems, heroId?)` | Marks complete + grants rewards + checks milestones |
 | `isChapterCompleted` | `(stageId) → boolean` | |
 | `levelUpHero` | `(heroId)` | Costs gold, respects max level |
-| `fuseHero` | `(heroId)` | Rank up (C→B→A→S), S is the fusion cap — SOVEREIGN is not obtainable via fusion, requires 3 copies + gold |
-| `transcendHero` | `(heroId)` | Extend level cap (up to L30 max), requires 5 copies + gold |
+| `fuseHero` | `(heroId)` | Rank up (C→B→A→S), S is the fusion cap — SOVEREIGN is not obtainable via fusion, requires `FUSION_COPIES` (2) copies + gold |
+| `transcendHero` | `(heroId)` | Extend level cap (up to L30 max), requires `TRANSCEND_COPIES` (3) copies + gold |
 | `getHeroData` | `(heroId) → {level, copies, effectiveRank, transcendence}` | |
 | `claimQuestReward` | `(questId, gems, gold)` | |
 | `completeTowerFloor` | `(floor, rewards)` | Updates towerHighestFloor if new record |
@@ -219,10 +252,10 @@ Persisted to AsyncStorage under key `trump-card-game-storage`.
   cardId: 'EMB-01-KIRA',
   image: require(...),
   about: '...',
-  hp: number,   // 2800–8000
-  atk: number,  // 260–840
-  def: number,  // 150–640
-  crit: number, // 170–700
+  hp: number,   // 2800–8000 (the 6 SOVEREIGN-tier heroes intentionally exceed this)
+  atk: number,  // 260–840  (same SOVEREIGN exception)
+  def: number,  // 150–640  (same SOVEREIGN exception)
+  crit: number, // 170–700  (same SOVEREIGN exception)
   skills: [
     { name, cost, description, damage },  // cost × 20 = energy cost
     { name, cost, description, damage },
@@ -257,6 +290,7 @@ Persisted to AsyncStorage under key `trump-card-game-storage`.
 | SUNSPIRE | #FFD700 | Holy |
 | VERDANIA | #2ECC71 | Nature |
 | VOIDMARK | #9B59B6 | Void |
+| KHEMARA | (see FACTIONS map) | Sand / Moon — desert dominion, shop-exclusive Sovereign (hero_054) |
 
 > Faction colors come from `FACTIONS[hero.faction].color` — the only raw-hex exception.
 
@@ -287,10 +321,10 @@ HP ranges by tier: mob 1200–5000, mini-boss 2400–9000, boss 6000–11000.
 
 ### Story (src/data/story.js)
 
-Structure: **25 chapters × 3 parts = 75 stages**. Stage IDs: 101–103, 201–203, …, 2501–2503.
+Structure: **30 chapters × 3 parts = 90 stages**. Stage IDs: 101–103, 201–203, …, 3001–3003.
 
 ```js
-// STAGE_ORDER — ordered array of all 75 stageIds
+// STAGE_ORDER — ordered array of all 90 stageIds
 export const STAGE_ORDER = [101, 102, 103, 201, 202, 203, ...];
 
 // CHAPTER_DEFS — chapter metadata
@@ -309,11 +343,11 @@ export const STAGE_ORDER = [101, 102, 103, 201, 202, 203, ...];
   part: 1,
   dialogues: [{ speaker, text }, ...],
   enemyGroupId: 101,
-  rewards: { gems: 50, gold: 50, heroId: null }
+  rewards: { gems: 50, heroId: null }   // gold is NOT stored here — see below
 }
 ```
 
-Stage gold rewards by part: part 1 → 50g, part 2 → 150g, part 3 → 400g.
+Stage gold is computed dynamically via `stageGoldReward(part)` in story.js (not a static `rewards.gold` field) — current values: part 1 → 360g, part 2 → 660g, part 3 → 1440g.
 
 Unlock rule: stages unlock sequentially — stage N requires stage N-1 completed.
 
@@ -365,7 +399,8 @@ Weekly reset on Sunday. Progress tracked in store (`towerHighestFloor`, `towerCu
 ```
 base      = attacker.atk × skillMultiplier
 defFactor = 1 + (defender.def / (defender.def + 500)) × 1.5   // asymptotic, caps near 1.5
-isCrit    = Math.random() < (attacker.crit / 1000)
+critChance = Math.min(0.85, (attacker.crit || 50) / 1000)   // capped 85%; enemies (no crit stat) get a 5% floor
+isCrit    = Math.random() < critChance
 critMult  = attacker has SMITE ? 2.0 : 1.75
 variance  = 0.9 + Math.random() × 0.2
 damage    = Math.max(1, Math.floor((base / defFactor) × (isCrit ? critMult : 1) × variance))
@@ -578,8 +613,8 @@ CARD_W = floor((H - BODY_PAD × 2) × (220 / 320))
 
 Hero progression:
 - **Level up**: costs gold, max level 10 (base), extended to 30 via transcendence
-- **Fusion**: 3 copies + gold → rank up (C→B→A→S). S is the hard cap. SOVEREIGN is a pre-defined rarity (1 per faction, 5 total) identified by `hero.sovereign = true` — it cannot be reached through fusion.
-- **Transcendence**: 5 copies + gold → +5 level cap per transcendence (up to L30, 4 transcendences max)
+- **Fusion**: `FUSION_COPIES` (2) copies + gold → rank up (C→B→A→S). S is the hard cap. SOVEREIGN is a pre-defined rarity (1 per faction, 6 total incl. KHEMARA's shop-exclusive) identified by `hero.sovereign = true` — it cannot be reached through fusion.
+- **Transcendence**: `TRANSCEND_COPIES` (3) copies + gold → +5 level cap per transcendence (up to L30, 4 transcendences max)
 - **Share**: captures HeroCard via react-native-view-shot + expo-sharing
 
 ### SummonScreen
@@ -597,7 +632,7 @@ Results modal: 4-column grid, rank badge + faction border per card, summary coun
 
 ### StoryScreen
 
-Scrollable grid of chapter cards (25 chapters). Each chapter expands to show 3 part stages. Unlock rule enforced visually (lock icon + 50% opacity). Tapping unlocked part → NarrationScreen.
+Scrollable grid of chapter cards (30 chapters). Each chapter expands to show 3 part stages. Unlock rule enforced visually (lock icon + 50% opacity). Tapping unlocked part → NarrationScreen.
 
 ### NarrationScreen
 
@@ -620,7 +655,7 @@ Volume persisted to `store.settings`.
 
 ### WorldMapScreen
 
-Faction world map — 5 factions displayed with:
+Faction world map — 6 factions displayed with:
 - Faction banner art + lore text
 - Ruler/champion info
 - Climate & element tags

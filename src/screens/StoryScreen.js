@@ -46,7 +46,7 @@ const ChapterTab = memo(function ChapterTab({ ch, accessible, done, active, onSe
         <Text style={[styles.chTabTitle, active && { color: C.TEXT }]} numberOfLines={1}>
           {ch.title}
         </Text>
-        <Text style={[styles.chTabSub, active && { color: 'rgba(255,255,255,0.65)' }]} numberOfLines={2}>
+        <Text style={[styles.chTabSub, active && { color: C.ICON_MUTED }]} numberOfLines={2}>
           {ch.subtitle}
         </Text>
         {active && <View style={[styles.chTabAccent, { backgroundColor: tabColor }]} />}
@@ -133,7 +133,7 @@ export default function StoryScreen({ navigation }) {
         key={stage.id}
         style={[
           styles.partCard,
-          { borderColor: isBoss ? 'rgba(220,38,38,0.35)' : chColor + '30' },
+          { borderColor: isBoss ? C.DANGER + '59' : chColor + '30' },
           completed && styles.partCardDone,
           !unlocked && styles.partCardLocked,
         ]}
@@ -142,8 +142,8 @@ export default function StoryScreen({ navigation }) {
       >
         <LinearGradient
           colors={
-            completed ? ['rgba(5,150,105,0.12)', C.BG_BASE]
-            : isBoss  ? ['rgba(220,38,38,0.08)', C.BG_BASE]
+            completed ? [C.SUCCESS + '1F', C.BG_BASE]
+            : isBoss  ? [C.DANGER + '14', C.BG_BASE]
             :           [chColor + '10', C.BG_BASE]
           }
           style={styles.partCardGrad}
@@ -279,8 +279,8 @@ const styles = StyleSheet.create({
   header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: rs(12), paddingTop: rs(8), paddingBottom: rs(10), gap: rs(10), borderBottomWidth: 1, borderBottomColor: C.BORDER },
   hdrBack:      { padding: 4 },
   hdrTitle:     { fontSize: rf(18), fontWeight: '900', color: C.TEXT, letterSpacing: 3 },
-  hdrSub:       { fontSize: rf(13), color: 'rgba(255,255,255,0.65)', marginTop: 1 },
-  progressPill: { flexDirection: 'row', alignItems: 'center', gap: rs(5), backgroundColor: 'rgba(217,119,6,0.15)', borderRadius: rs(8), paddingHorizontal: rs(10), paddingVertical: rs(5), borderWidth: 1, borderColor: C.GOLD },
+  hdrSub:       { fontSize: rf(13), color: C.ICON_MUTED, marginTop: 1 },
+  progressPill: { flexDirection: 'row', alignItems: 'center', gap: rs(5), backgroundColor: C.GOLD + '26', borderRadius: rs(8), paddingHorizontal: rs(10), paddingVertical: rs(5), borderWidth: 1, borderColor: C.GOLD },
   progressTxt:  { fontSize: rf(13), color: C.GOLD, fontWeight: '800' },
 
   body:    { flex: 1, flexDirection: 'row' },
@@ -303,20 +303,20 @@ const styles = StyleSheet.create({
   chStripNum:   { fontSize: rf(12), fontWeight: '900', letterSpacing: 2, marginBottom: 2 },
   chStripTitle: { fontSize: rf(17), fontWeight: '900', color: C.TEXT, letterSpacing: 0.5 },
   chStripSub:   { fontSize: rf(13), color: C.TEXT_SOFT, marginTop: 2 },
-  chDoneBadge:  { flexDirection: 'row', alignItems: 'center', gap: rs(5), backgroundColor: 'rgba(217,119,6,0.12)', borderRadius: rs(8), paddingHorizontal: rs(10), paddingVertical: rs(5), borderWidth: 1, borderColor: C.GOLD },
+  chDoneBadge:  { flexDirection: 'row', alignItems: 'center', gap: rs(5), backgroundColor: C.GOLD + '1F', borderRadius: rs(8), paddingHorizontal: rs(10), paddingVertical: rs(5), borderWidth: 1, borderColor: C.GOLD },
   chDoneTxt:    { fontSize: rf(13), color: C.GOLD, fontWeight: '700' },
 
   partsRow: { flex: 1, flexDirection: 'row', gap: rs(10) },
 
   partCard:       { flex: 1, borderRadius: rs(12), overflow: 'hidden', borderWidth: 1 },
-  partCardDone:   { borderColor: 'rgba(5,150,105,0.4)' },
+  partCardDone:   { borderColor: C.SUCCESS + '66' },
   partCardLocked: { opacity: 0.48 },
   partCardGrad:   { flex: 1, padding: rs(12) },
 
   partTop:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: rs(8) },
   partBadge:    { flexDirection: 'row', alignItems: 'center', gap: rs(4), borderRadius: rs(5), paddingHorizontal: rs(7), paddingVertical: rs(3), borderWidth: 1 },
   partBadgeTxt: { fontSize: rf(12), fontWeight: '800', letterSpacing: 0.5 },
-  bossTag:      { backgroundColor: 'rgba(220,38,38,0.15)', borderRadius: rs(4), paddingHorizontal: rs(6), paddingVertical: 2, borderWidth: 1, borderColor: C.DANGER },
+  bossTag:      { backgroundColor: C.DANGER + '26', borderRadius: rs(4), paddingHorizontal: rs(6), paddingVertical: 2, borderWidth: 1, borderColor: C.DANGER },
   bossTagTxt:   { fontSize: rf(11), color: C.DANGER, fontWeight: '900', letterSpacing: 1 },
 
   stageTitle: { fontSize: rf(14), fontWeight: '800', color: C.TEXT, marginBottom: rs(4), letterSpacing: 0.2 },

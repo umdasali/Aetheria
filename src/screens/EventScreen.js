@@ -111,11 +111,17 @@ function EventCard({ event, onEnter, isGuaranteed }) {
             <View style={s.rateUpRow}>
               <Text style={s.rateUpLabel}>RATE UP</Text>
               {rateUpHeroes.map(hero => {
-                const r = RANK[hero.effectiveRank ?? hero.rank];
+                // hero here is raw HEROES data (no effectiveRank field exists on
+                // it — that's a per-player heroCollection concept), so this always
+                // fell through to hero.rank, showing a plain pink "S" chip next to
+                // a gold "SOVEREIGN" HeroCard on Sovereign banners. Match HeroCard's
+                // own isSovereign check instead.
+                const isSovereign = !!hero.sovereign;
+                const r = isSovereign ? RANK.SOVEREIGN : RANK[hero.rank];
                 return (
                   <View key={hero.id} style={[s.rateUpChip, { borderColor: r.glow + '88' }]}>
                     <View style={[s.rateUpDot, { backgroundColor: r.bg }]}>
-                      <Text style={[s.rateUpRank, { color: r.text }]}>{hero.rank}</Text>
+                      <Text style={[s.rateUpRank, { color: r.text }]}>{isSovereign ? 'SOV' : hero.rank}</Text>
                     </View>
                     <Text style={s.rateUpName} numberOfLines={1}>{hero.name}</Text>
                   </View>

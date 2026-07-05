@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Image, FlatList, Dimensions, useWindowDimensions,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -80,7 +81,7 @@ export default function ProfileScreen({ navigation }) {
     [playerProfile.avatarId]
   );
 
-  const dynamicLeftW = Math.floor(W * 0.33);
+  const dynamicLeftW = Math.max(210, Math.min(300, Math.floor(W * 0.33)));
   const dynamicRightW = W - dynamicLeftW - 1;
   const dynamicHeroCardW = Math.floor((dynamicRightW - HERO_PAD * 2 - HERO_GAP * (HERO_COLS - 1)) / HERO_COLS);
   const dynamicHeroCardH = Math.floor(dynamicHeroCardW * 320 / 220);
@@ -89,15 +90,22 @@ export default function ProfileScreen({ navigation }) {
 
   const goToEdit = () => { AudioManager.playButtonSFX(); navigation.navigate('EditProfile'); };
 
+  const [uidCopied, setUidCopied] = useState(false);
+  const handleCopyUid = async () => {
+    AudioManager.playButtonSFX();
+    await Clipboard.setStringAsync(playerUid || '');
+    setUidCopied(true);
+    setTimeout(() => setUidCopied(false), 1500);
+  };
+
   const renderCharPanel = () => (
     <View style={[s.charPanel, { width: dynamicLeftW }]}>
       {activeFaction && <FactionParticles faction={activeFaction} />}
 
-      {/* Plaque — replaces the old stretched-avatar background. Holds the UID;
-          the small circular avatar straddles its bottom edge. */}
+      {/* Plaque — replaces the old stretched-avatar background; the small
+          circular avatar straddles its bottom edge. UID now lives in the header. */}
       <View style={s.plaqueZone}>
         <View style={[s.plaque, { borderColor: factionColor + '55' }]}>
-          <Text style={s.uidTxt}>UID · {playerUid || '---'}</Text>
           <View style={s.avatarBadgeAnchor}>
             <TouchableOpacity onPress={goToEdit} activeOpacity={0.85} accessibilityLabel="Edit profile" accessibilityRole="button">
               <View style={[s.avatarBadgeWrap, { borderColor: factionColor }]}>
@@ -163,8 +171,8 @@ export default function ProfileScreen({ navigation }) {
             <React.Fragment key={i}>
               {i > 0 && <View style={s.statSep} />}
               <View style={s.statBlock}>
-                <Text style={s.statVal}>{st.val}</Text>
-                <Text style={s.statLbl}>{st.lbl}</Text>
+                <Text style={s.statVal} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{st.val}</Text>
+                <Text style={s.statLbl} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{st.lbl}</Text>
               </View>
             </React.Fragment>
           ))}
@@ -219,7 +227,7 @@ export default function ProfileScreen({ navigation }) {
                   resizeMode="cover"
                 />
                 <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.76)']}
+                  colors={['transparent', C.SHADOW + 'C2']}
                   style={StyleSheet.absoluteFill}
                 />
                 <View style={[s.heroRankBadge, { backgroundColor: r.bg }]}>
@@ -248,6 +256,22 @@ export default function ProfileScreen({ navigation }) {
           <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
         </TouchableOpacity>
         <Text style={s.headerTitle}>COMMANDER PROFILE</Text>
+        <TouchableOpacity
+          onPress={handleCopyUid}
+          activeOpacity={0.75}
+          style={s.uidChip}
+          accessibilityLabel="Copy UID to clipboard"
+          accessibilityRole="button"
+        >
+          <Text style={s.uidChipTxt} numberOfLines={1} ellipsizeMode="tail">
+            UID · {playerUid || '---'}
+          </Text>
+          <Ionicons
+            name={uidCopied ? 'checkmark' : 'copy-outline'}
+            size={rs(12)}
+            color={uidCopied ? C.SUCCESS : C.TEXT_ON_DARK_MUTED}
+          />
+        </TouchableOpacity>
         <View style={{ flex: 1 }} />
         <View style={s.gemsChip}>
           <Image source={GEM_IMG} style={s.gemImg} />
@@ -282,9 +306,19 @@ const s = StyleSheet.create({
   },
   backBtn:     { padding: 4 },
   headerTitle: { fontSize: rf(12), fontWeight: '900', color: C.TEXT, letterSpacing: 2.5 },
+  uidChip: {
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    flexShrink: 1, minWidth: 0,
+    backgroundColor: C.GLASS_7,
+    borderRadius: rs(20), paddingHorizontal: rs(10), paddingVertical: rs(4),
+    marginLeft: rs(10),
+  },
+  uidChipTxt: {
+    flexShrink: 1, color: C.TEXT_ON_DARK, fontSize: rf(11), fontWeight: '700', letterSpacing: 0.3,
+  },
   gemsChip: {
     flexDirection: 'row', alignItems: 'center', gap: rs(5),
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: C.GLASS_7,
     borderRadius: rs(20), paddingHorizontal: rs(10), paddingVertical: rs(4),
   },
   gemImg:  { width: rs(14), height: rs(14), resizeMode: 'contain' },
@@ -297,17 +331,16 @@ const s = StyleSheet.create({
     flexDirection: 'column',
   },
 
-  // Plaque — dark HUD surface holding the UID; the avatar straddles its bottom edge.
+  // Plaque — dark HUD surface behind the avatar, which straddles its bottom edge.
   plaqueZone: { alignItems: 'center', paddingTop: rs(-10), paddingBottom: rs(0) },
   plaque: {
-    width: '50%', minHeight: rs(180),
+    width: '50%', minHeight: rs(130),
     backgroundColor: C.BG_CARD,
     borderWidth: 1.5,
     borderTopLeftRadius: rs(0), borderTopRightRadius: rs(0),
     borderBottomLeftRadius: rs(100), borderBottomRightRadius: rs(100),
-    alignItems: 'center', paddingTop: rs(10),
+    alignItems: 'center',
   },
-  uidTxt: { color: 'rgba(255,255,255,0.48)', fontSize: rf(13), fontWeight: '400', letterSpacing: 0.5 },
 
   avatarBadgeAnchor: {
     position: 'absolute', bottom: rs(30), left: 0, right: 0,
@@ -339,7 +372,7 @@ const s = StyleSheet.create({
   charMeta: { flexDirection: 'row', alignItems: 'center', gap: rs(6), marginBottom: rs(7) },
   xpTrack: {
     height: 4, borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden', marginTop: rs(4),
+    backgroundColor: C.GLASS_6, overflow: 'hidden', marginTop: rs(4),
   },
   xpFill: { height: 4, borderRadius: 2 },
   xpLabel: { fontSize: rf(13), fontWeight: '700', letterSpacing: 0.3, color: C.TEXT_MUTED, marginTop: rs(4), marginBottom: rs(2) },
@@ -356,23 +389,23 @@ const s = StyleSheet.create({
   miniGems: { color: C.GOLD, fontSize: rf(13), fontWeight: '700' },
 
   charSig: {
-    fontSize: rf(12), color: 'rgba(255,255,255,0.58)', fontStyle: 'italic',
+    fontSize: rf(12), color: C.TEXT_ON_DARK_SOFT, fontStyle: 'italic',
     lineHeight: rf(14), marginBottom: rs(10),
   },
   charSigEmpty: {
-    fontSize: rf(13), color: 'rgba(255,255,255,0.20)', fontStyle: 'italic', marginBottom: rs(10),
+    fontSize: rf(13), color: C.GLASS_EDGE, fontStyle: 'italic', marginBottom: rs(10),
   },
 
   statBar: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: C.OVERLAY_MID,
     borderRadius: rs(8), marginTop: rs(8), marginBottom: rs(10),
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 1, borderColor: C.BORDER_SUBTLE,
   },
-  statBlock: { flex: 1, paddingVertical: rs(6), alignItems: 'center' },
-  statSep:   { width: 1, backgroundColor: 'rgba(255,255,255,0.10)', marginVertical: rs(6) },
-  statVal:   { color: C.TEXT, fontSize: rf(15), fontWeight: '900' },
-  statLbl:   { color: 'rgba(255,255,255,0.42)', fontSize: rf(13), fontWeight: '700', letterSpacing: 0.8, marginTop: 2 },
+  statBlock: { flex: 1, minWidth: 0, paddingVertical: rs(6), paddingHorizontal: rs(2), alignItems: 'center' },
+  statSep:   { width: 1, backgroundColor: C.GLASS_6, marginVertical: rs(6) },
+  statVal:   { width: '100%', color: C.TEXT, fontSize: rf(15), fontWeight: '900', textAlign: 'center' },
+  statLbl:   { width: '100%', color: C.TEXT_ON_DARK_MUTED, fontSize: rf(13), fontWeight: '700', letterSpacing: 0.8, marginTop: 2, textAlign: 'center' },
 
   editBtn:  { borderRadius: rs(24), overflow: 'hidden', marginTop: 'auto' },
   editGrad: {
@@ -411,7 +444,7 @@ const s = StyleSheet.create({
   heroNameTxt: {
     position: 'absolute', bottom: 4, left: 4, right: 4,
     fontSize: rf(13), fontWeight: '700', color: C.TEXT,
-    textShadowColor: 'rgba(0,0,0,0.9)',
+    textShadowColor: C.TEXT_SHADOW,
     textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
 

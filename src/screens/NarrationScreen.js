@@ -261,7 +261,7 @@ export default function NarrationScreen({ navigation, route }) {
         onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }}
         activeOpacity={0.75}
       >
-        <Ionicons name="chevron-back" size={rs(20)} color="rgba(255,255,255,0.7)" />
+        <Ionicons name="chevron-back" size={rs(20)} color={C.TEXT_ON_DARK} />
       </TouchableOpacity>
 
       <View style={[S.body, { marginTop: LBOX + topInset, marginBottom: LBOX + bottomInset, marginLeft: leftInset, marginRight: rightInset }]}>
@@ -290,7 +290,7 @@ export default function NarrationScreen({ navigation, route }) {
           </Animated.View>
 
           {/* Enemy name badge */}
-          <View style={[S.enemyLabel, { borderColor: chColor + '60', backgroundColor: 'rgba(0,0,0,0.55)' }]}>
+          <View style={[S.enemyLabel, { borderColor: chColor + '60', backgroundColor: C.OVERLAY_3 }]}>
             <Text style={[S.enemyLabelTxt, { color: chAccent }]} numberOfLines={1}>
               {mainEnemy.name.toUpperCase()}
             </Text>
@@ -326,7 +326,7 @@ export default function NarrationScreen({ navigation, route }) {
           {/* Dialogue box — tap to skip typewriter */}
           <TouchableOpacity activeOpacity={1} onPress={skipTyping} style={[S.dlgBox, { borderColor: chColor + '28' }]}>
             <LinearGradient
-              colors={['rgba(0,0,10,0.65)', 'rgba(0,0,10,0.38)']}
+              colors={[C.SHADOW + 'A6', C.SHADOW + '61']}
               style={StyleSheet.absoluteFill}
             />
 
@@ -364,7 +364,7 @@ export default function NarrationScreen({ navigation, route }) {
           <View style={S.controls}>
             {dlgIdx > 0 ? (
               <TouchableOpacity style={S.prevBtn} onPress={handlePrev}>
-                <Ionicons name="chevron-back" size={rs(22)} color="rgba(255,255,255,0.38)" />
+                <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT_ON_DARK_WEAK} />
                 <Text style={S.prevTxt}>Prev</Text>
               </TouchableOpacity>
             ) : (
@@ -406,7 +406,7 @@ const S = StyleSheet.create({
   root:     { flex: 1, backgroundColor: C.BG_VOID },
   lbTop:    { position: 'absolute', top: 0, left: 0, right: 0, height: LBOX, backgroundColor: C.BG_VOID, zIndex: 10 },
   lbBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: LBOX, backgroundColor: C.BG_VOID, zIndex: 10 },
-  backBtn:  { position: 'absolute', zIndex: 20, padding: rs(8), borderRadius: rs(20), backgroundColor: 'rgba(0,0,0,0.35)' },
+  backBtn:  { position: 'absolute', zIndex: 20, padding: rs(8), borderRadius: rs(20), backgroundColor: C.OVERLAY_2 },
   body:     { flex: 1, flexDirection: 'row' },
 
   // Left
@@ -434,16 +434,16 @@ const S = StyleSheet.create({
   spkRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: rs(9) },
   spkBadge:{ borderRadius: rs(5), borderWidth: 1, paddingHorizontal: rs(9), paddingVertical: rs(3) },
   spkTxt:  { fontSize: rf(13), fontWeight: '900', letterSpacing: 1.8 },
-  dlgCount:{ fontSize: rf(12), color: 'rgba(255,255,255,0.3)', fontWeight: '600' },
-  dlgTxt:  { fontSize: rf(13), color: 'rgba(255,255,255,0.88)', lineHeight: rf(20), fontWeight: '500' },
-  tapHint: { fontSize: rf(12), color: 'rgba(255,255,255,0.25)', marginTop: rs(7), fontStyle: 'italic' },
+  dlgCount:{ fontSize: rf(12), color: C.TEXT_ON_DARK_DIM, fontWeight: '600' },
+  dlgTxt:  { fontSize: rf(13), color: C.FLASH_WHITE + 'E0', lineHeight: rf(20), fontWeight: '500' },
+  tapHint: { fontSize: rf(12), color: C.GLASS_8, marginTop: rs(7), fontStyle: 'italic' },
 
   dotsRow: { flexDirection: 'row', alignItems: 'center', gap: rs(5) },
   dot:     { height: rs(6), borderRadius: rs(3) },
 
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   prevBtn:  { flexDirection: 'row', alignItems: 'center', gap: rs(3), paddingVertical: rs(9), paddingHorizontal: rs(10), flex: 1 },
-  prevTxt:  { fontSize: rf(12), color: 'rgba(255,255,255,0.38)', fontWeight: '600' },
+  prevTxt:  { fontSize: rf(12), color: C.TEXT_ON_DARK_WEAK, fontWeight: '600' },
   nextBtn:  { flexDirection: 'row', alignItems: 'center', gap: rs(4), borderWidth: 1, borderRadius: rs(8), paddingHorizontal: rs(16), paddingVertical: rs(9) },
   nextTxt:  { fontSize: rf(13), fontWeight: '700' },
   battleBtn:   { flexDirection: 'row', alignItems: 'center', gap: rs(8), borderRadius: rs(10), paddingHorizontal: rs(22), paddingVertical: rs(12) },

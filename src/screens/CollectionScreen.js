@@ -216,8 +216,15 @@ const HeroGridCard = memo(function HeroGridCard({ hero, owned, onTeam, effective
   const [imgErr, setImgErr] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const faction   = FACTIONS[hero.faction];
-  const rank      = RANK_COLORS[effectiveRank] || RANK_COLORS[hero.rank] || RANK_COLORS.C;
-  const rankLabel = effectiveRank;
+  // Sovereign heroes are stored as rank 'S' + sovereign:true — fusion caps at S,
+  // so effectiveRank (heroCollection data) never becomes 'SOVEREIGN'. Without
+  // this, the grid badge showed a plain pink "S" for Sovereign heroes.
+  const rankKey   = hero.sovereign ? 'SOVEREIGN' : effectiveRank;
+  const rank      = RANK_COLORS[rankKey] || RANK_COLORS[hero.rank] || RANK_COLORS.C;
+  // Badge is a compact auto-width pill sized for a single letter (no numberOfLines/
+  // ellipsis) — abbreviate to "SOV" like HeroCard.js does, rather than overflowing
+  // the grid card with the full "SOVEREIGN" string.
+  const rankLabel = hero.sovereign ? 'SOV' : rankKey;
 
   const handleLoad = useCallback(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }).start();

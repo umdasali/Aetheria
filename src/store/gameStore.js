@@ -10,7 +10,7 @@ import { getCurrentWeekKey, isBossFloor, TOWER_MAX_FLOOR } from '../data/towerDa
 import {
   ASCENSION_ITEMS, ASCENSION_MAX, RANK_TO_ASCENSION_ITEM_ID,
 } from '../data/ascensionItems';
-import { getShopPackById } from '../data/shopPacks';
+import { getShopPackById, getShopPackByProductId } from '../data/shopPacks';
 import { DAILY_DUNGEON_ATTEMPTS, DUNGEON_REFILL_COST, DUNGEON_REFILL_AMOUNT } from '../data/resourceDungeons';
 import { CURRENT_VERSION, migrate } from './migrations';
 import { DEFAULT_AVATAR_ID } from '../data/avatars';
@@ -74,6 +74,13 @@ function pickAscensionDrop(maxQty) {
   return { itemId, qty };
 }
 
+// Single source of truth for "how many chapters are fully cleared (all 3 parts)"
+// — used by both the milestone-hero-reward check and achievement tracking, which
+// previously recomputed this independently and could silently desync.
+function countFullChapters(completedList) {
+  return CHAPTER_DEFS.filter(ch => [1, 2, 3].every(p => completedList.includes(ch.id * 100 + p))).length;
+}
+
 // Canonical initial state — used both to seed the store and to reset it on account switch.
 const INITIAL_STATE = {
   schemaVersion:         CURRENT_VERSION,
@@ -94,7 +101,10 @@ const INITIAL_STATE = {
   dailyStreak:           0,
   completedChapters:     [],
   milestonesClaimed:     [],
-  pendingMilestoneReward: null,
+  // Queue, not a single slot — chaining "Next Stage" across two milestone
+  // boundaries without ever returning to Home used to overwrite an unclaimed
+  // reward with the next one, silently losing it.
+  pendingMilestoneRewards: [],
   hasSeenOnboarding:     false,
   hasSeenBattleTutorial: false,
   practiceBonusClaimed:  false,
@@ -116,6 +126,9 @@ const INITIAL_STATE = {
   },
   // Shop purchase counts, keyed by pack id (repeatable packs increment).
   shopPurchases: {},
+  // RevenueCat transaction IDs already granted — prevents double-granting when
+  // the CustomerInfo listener replays the same non-subscription transaction.
+  processedIapTransactionIds: [],
   playerProfile: {
     name:            'Commander',
     signature:       '',
@@ -289,15 +302,20 @@ const useGameStore = create(
           let actualHeroId = rewardHeroId || null;
           if (actualHeroId) {
             const heroData = HEROES.find(h => h.id === actualHeroId);
-            if (heroData?.rank === 'S') actualHeroId = null;
+            if (heroData?.rank === 'S') {
+              // Story stage hero rewards should never be S-rank (S heroes are
+              // gacha/fusion-gated) — void it, but compensate so the advertised
+              // reward isn't silently smaller than promised.
+              actualHeroId = null;
+              get().addGems(50);
+              get().addGold(500);
+            }
           }
           if (actualHeroId) get().addHero(actualHeroId);
 
           // Every 5 fully completed chapters → bonus A/B/C hero
           if (part === 3) {
-            const fullChapterCount = CHAPTER_DEFS
-              .filter(ch => [1, 2, 3].every(p => newCompleted.includes(ch.id * 100 + p)))
-              .length;
+            const fullChapterCount = countFullChapters(newCompleted);
             const milestones = Array.from(
               { length: Math.floor(CHAPTER_DEFS.length / 5) },
               (_, i) => (i + 1) * 5,
@@ -315,11 +333,14 @@ const useGameStore = create(
                 const pick = pool[Math.floor(Math.random() * pool.length)];
                 const { itemId, qty } = pickAscensionDrop(3);
                 const currentInv = get().ascensionInventory || {};
-                set({
+                set(s => ({
                   milestonesClaimed: [...claimed, newMilestone],
-                  pendingMilestoneReward: { hero: pick, milestone: newMilestone, ascensionDrop: { itemId, qty } },
+                  pendingMilestoneRewards: [
+                    ...(s.pendingMilestoneRewards || []),
+                    { hero: pick, milestone: newMilestone, ascensionDrop: { itemId, qty } },
+                  ],
                   ascensionInventory: { ...currentInv, [itemId]: (currentInv[itemId] || 0) + qty },
-                });
+                }));
                 get().addHero(pick.id);
               }
             }
@@ -332,9 +353,7 @@ const useGameStore = create(
           get().trackAchievementProgress('stagesCleared', 1);
           // Chapter milestone achievements (fire on part 3 completion)
           if (part === 3) {
-            const fullChapterCount = CHAPTER_DEFS
-              .filter(ch => [1, 2, 3].every(p => newCompleted.includes(ch.id * 100 + p)))
-              .length;
+            const fullChapterCount = countFullChapters(newCompleted);
             for (const milestone of [5, 10, 15, 20, 25]) {
               if (fullChapterCount >= milestone) {
                 get().trackAchievementProgress(`chaptersCleared_${milestone}`, 1);
@@ -378,7 +397,9 @@ const useGameStore = create(
 
       setPity: (n) => set({ pity: n }),
 
-      clearMilestoneReward:   () => set({ pendingMilestoneReward: null }),
+      // Shifts only the head of the queue so a still-unclaimed later reward
+      // (from chaining "Next Stage" across two milestones) is never dropped.
+      clearMilestoneReward:   () => set(s => ({ pendingMilestoneRewards: (s.pendingMilestoneRewards || []).slice(1) })),
       completeOnboarding:     () => set({ hasSeenOnboarding: true }),
       seenBattleTutorial:     () => set({ hasSeenBattleTutorial: true }),
       claimPracticeBonus:     () => set({ practiceBonusClaimed: true }),
@@ -515,10 +536,11 @@ const useGameStore = create(
       // ── Tower actions ───────────────────────────────────────────────────────
 
       completeTowerFloor: (floor, rewards) => {
-        // Reject invalid floors: beyond the cap, or replaying a floor below the
-        // current one (e.g. re-entering floor 200 after the tower is conquered).
-        // Without this, floor 200 is an infinite gem/gold/coin farm.
-        if (floor > TOWER_MAX_FLOOR || floor < get().towerCurrentFloor) {
+        // Reject anything but the exact floor the player is currently on: beyond
+        // the cap, replaying a floor already cleared (e.g. re-entering floor 200
+        // after the tower is conquered — an infinite gem/gold/coin farm), or a
+        // stale/forged floor ahead of towerCurrentFloor that would skip floors.
+        if (floor > TOWER_MAX_FLOOR || floor !== get().towerCurrentFloor) {
           return { ascensionDrop: null };
         }
         let ascensionDrop = null;
@@ -795,6 +817,31 @@ const useGameStore = create(
         return { ok: true, count: counts[packId] };
       },
 
+      // Recovers a real-money purchase that was charged but never granted —
+      // e.g. the app was killed between RevenueCat confirming the charge and
+      // ShopScreen calling grantShopPack(). RevenueCat replays every
+      // non-subscription transaction on the CustomerInfo listener on every
+      // relaunch, so this only needs to grant transactions it hasn't seen yet.
+      grantIapTransaction: (customerInfo) => {
+        const txns = customerInfo?.nonSubscriptionTransactions || [];
+        if (!txns.length) return;
+        const processed = new Set(get().processedIapTransactionIds || []);
+        const newlyProcessed = [];
+        for (const txn of txns) {
+          const txnId = txn.transactionIdentifier || txn.transactionId;
+          if (!txnId || processed.has(txnId)) continue;
+          const pack = getShopPackByProductId(txn.productIdentifier || txn.productId);
+          if (!pack) continue;
+          get().grantShopPack(pack.id);
+          processed.add(txnId);
+          newlyProcessed.push(txnId);
+        }
+        if (newlyProcessed.length > 0) {
+          set(s => ({ processedIapTransactionIds: [...(s.processedIapTransactionIds || []), ...newlyProcessed] }));
+          triggerSync();
+        }
+      },
+
       getEffectiveRank: (heroId) => {
         const data = get().heroCollection[heroId];
         if (!data?.effectiveRank) {
@@ -815,6 +862,7 @@ const useGameStore = create(
             heroName:   e.heroName,
             rank:       e.rank,
             isPity:     e.isPity || false,
+            isFeatured: e.isFeatured || false,
             bannerType: e.bannerType || 'standard',
             pulledAt,
           }));
@@ -934,7 +982,11 @@ const useGameStore = create(
           const current = state.heroCollection[heroId];
           const hero    = HEROES.find(h => h.id === heroId);
           if (!current || current.copies < count || count <= 0) return state;
-          const rank    = current.effectiveRank || hero?.rank || 'C';
+          // Sovereign heroes are stored as rank 'S' + sovereign:true — fusion caps
+          // at S, so effectiveRank never becomes 'SOVEREIGN'. Without this check
+          // every sovereign copy silently converted at the S rate (80) instead of
+          // the SOVEREIGN rate (200), a 60% shortfall. Same override as ascendHero.
+          const rank    = hero?.sovereign ? 'SOVEREIGN' : (current.effectiveRank || hero?.rank || 'C');
           const rate    = COINS_PER_COPY[rank] ?? COINS_PER_COPY.C;
           return {
             ...state,

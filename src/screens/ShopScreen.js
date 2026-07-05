@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Image, Animated, Dimensions,
@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { GEM_PACKS, BUNDLES, HERO_PACKS, IAP_ENABLED } from '../data/shopPacks';
 import { resolvePurchase } from '../shop/purchaseHandler';
-import { restorePurchases } from '../utils/RevenueCatManager';
+import { restorePurchases, getLivePrices } from '../utils/RevenueCatManager';
 import { getHeroById } from '../data/heroes';
 import { getAscensionItemById } from '../data/ascensionItems';
 import HeroCard from '../components/HeroCard';
@@ -33,7 +33,7 @@ const CARD_W    = Math.floor((CONTENT_W - PAD * 2 - GAP * 3) / 4);
 const CARD_H    = BODY_H - PAD * 2 - 18 - GAP;   // minus section strip + gap
 
 // ─── Currency pack card (gems / bundles — real-money, IAP) ─────────────────────
-function PackCard({ pack, onBuy, purchasing }) {
+function PackCard({ pack, onBuy, purchasing, livePriceLabel }) {
   const accent = pack.color || C.PRIMARY;
   const imgH   = Math.round(CARD_H * 0.30);
 
@@ -76,7 +76,10 @@ function PackCard({ pack, onBuy, purchasing }) {
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
           style={pc.buyInner}
         >
-          <Text style={pc.buyTxt}>{pack.priceLabel}</Text>
+          {/* Prefer the store's own live, localized price over the hardcoded
+              fallback — a baked-in priceLabel can drift from what's actually
+              charged (currency, region, a price change made in the store). */}
+          <Text style={pc.buyTxt}>{livePriceLabel ?? pack.priceLabel}</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>
@@ -233,6 +236,12 @@ export default function ShopScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState(IAP_ENABLED ? 'gems' : 'exclusive');
   const purchasingRef = useRef(false);
   const [purchasing, setPurchasing] = useState(false);
+  const [livePrices, setLivePrices] = useState({});
+
+  useEffect(() => {
+    if (!IAP_ENABLED) return;
+    getLivePrices().then(setLivePrices);
+  }, []);
 
   const toastAnim = useRef(new Animated.Value(0)).current;
   const [toastMsg,  setToastMsg]  = useState('');
@@ -421,7 +430,13 @@ export default function ShopScreen({ navigation }) {
             ) : (
               <View style={s.cardsRow}>
                 {(activeTab === 'gems' ? GEM_PACKS : BUNDLES).map(pack => (
-                  <PackCard key={pack.id} pack={pack} onBuy={handleBuy} purchasing={purchasing} />
+                  <PackCard
+                    key={pack.id}
+                    pack={pack}
+                    onBuy={handleBuy}
+                    purchasing={purchasing}
+                    livePriceLabel={livePrices[pack.productId]}
+                  />
                 ))}
               </View>
             )}

@@ -98,7 +98,7 @@ function SettingRow({ icon, label, hint, value, onChange, color, muted, onMuteTo
 
   return (
     <View style={styles.row}>
-      <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={[C.GLASS_3, C.GLASS_1]} style={StyleSheet.absoluteFill} />
       <View style={[styles.rowBorder, { borderColor: color + '30' }]} />
 
       {/* Icon + label */}
@@ -355,7 +355,7 @@ export default function SettingsScreen({ navigation }) {
             <Text style={styles.headerSub}>Audio · About</Text>
           </View>
           <View style={styles.headerIcon}>
-            <Ionicons name="settings" size={rs(20)} color="rgba(255,255,255,0.45)" />
+            <Ionicons name="settings" size={rs(20)} color={C.TEXT_ON_DARK_MUTED} />
           </View>
         </LinearGradient>
       </SafeAreaView>
@@ -365,7 +365,7 @@ export default function SettingsScreen({ navigation }) {
         {/* ── Tab bar ── */}
         <View style={styles.tabBar}>
           <LinearGradient
-            colors={['rgba(6,2,18,0.88)', 'rgba(10,4,24,0.80)']}
+            colors={[C.BG_SCREEN + 'E0', C.BG_DARK + 'CC']}
             style={StyleSheet.absoluteFill}
           />
           <View style={[StyleSheet.absoluteFill, styles.tabBarBorder]} />
@@ -537,7 +537,7 @@ export default function SettingsScreen({ navigation }) {
         ) : (
 
           <View style={styles.infoCard}>
-            <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']} style={StyleSheet.absoluteFill} />
+            <LinearGradient colors={[C.GLASS_3, C.GLASS_1]} style={StyleSheet.absoluteFill} />
             <View style={[styles.rowBorder, { borderColor: C.BORDER }]} />
 
             <View style={styles.infoLayout}>
@@ -657,11 +657,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: rs(12), paddingVertical: rs(10), gap: rs(10),
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)',
+    borderBottomWidth: 1, borderBottomColor: C.GLASS_7,
   },
   backBtn:     { padding: 4 },
   headerTitle: { fontSize: rf(18), fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
-  headerSub:   { fontSize: rf(13), color: 'rgba(255,255,255,0.55)', marginTop: 1 },
+  headerSub:   { fontSize: rf(13), color: C.TEXT_ON_DARK_SOFT, marginTop: 1 },
   headerIcon:  { padding: rs(6) },
 
   // Body
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderWidth: 1, borderColor: C.BORDER,
   },
-  tabBarBorder: { borderRadius: rs(12), borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  tabBarBorder: { borderRadius: rs(12), borderWidth: 1, borderColor: C.GLASS_5 },
   tabBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: rs(7), paddingVertical: rs(11), position: 'relative', overflow: 'hidden',
@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
   muteBtn: {
     width: rs(36), height: rs(36), borderRadius: rs(9),
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: C.GLASS_4,
     borderWidth: 1, borderColor: C.BORDER,
     marginLeft: rs(4),
   },
@@ -810,7 +810,7 @@ const styles = StyleSheet.create({
 
   // Restart modal
   restartOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.82)',
+    flex: 1, backgroundColor: C.OVERLAY_MODAL,
     alignItems: 'center', justifyContent: 'center',
   },
   restartCard: {

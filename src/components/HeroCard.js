@@ -117,7 +117,7 @@ function HeroCard({ hero, width = CARD_W, compact = false, effectiveRank }) {
       {/* ── Sovereign: warm gold background wash (below gradients) ──────────── */}
       {isSovereign && (
         <LinearGradient
-          colors={['rgba(255,165,0,0.09)', 'transparent', 'rgba(255,215,0,0.05)']}
+          colors={[C.SOVEREIGN_AMBER + '17', 'transparent', C.SOVEREIGN_GOLD + '0D']}
           style={[StyleSheet.absoluteFill, { zIndex: 1 }]}
           pointerEvents="none"
         />
@@ -137,13 +137,13 @@ function HeroCard({ hero, width = CARD_W, compact = false, effectiveRank }) {
 
       {/* ── Top dark fade ───────────────────────────────────────────────────── */}
       <LinearGradient
-        colors={['rgba(0,0,0,0.7)', 'transparent']}
+        colors={[C.OVERLAY_STRONG, 'transparent']}
         style={styles.topGradient}
       />
 
       {/* ── Bottom faction/sovereign gradient ───────────────────────────────── */}
       <LinearGradient
-        colors={['transparent', bottomTint + '18', 'rgba(0,0,0,0.94)']}
+        colors={['transparent', bottomTint + '18', C.SHADOW + 'F0']}
         style={styles.bottomGradient}
       />
 
@@ -219,7 +219,7 @@ function HeroCard({ hero, width = CARD_W, compact = false, effectiveRank }) {
       {/* ── Left column: element + effect tags ──────────────────────────────── */}
       {!compact && (
         <View style={[styles.leftTags, { left: sc.tagLeft }]}>
-          <View style={[styles.tag, { backgroundColor: 'rgba(0,0,0,0.65)', borderColor: tagBorder }]}>
+          <View style={[styles.tag, { backgroundColor: C.SHADOW + 'A6', borderColor: tagBorder }]}>
             <Text style={[styles.tagIcon, { fontSize: 10 * scale }]}>
               {ELEMENT_ICONS[hero.element] || '🔮'}
             </Text>
@@ -228,7 +228,7 @@ function HeroCard({ hero, width = CARD_W, compact = false, effectiveRank }) {
               <Text style={[styles.tagValue, { fontSize: 8 * scale }]}>{hero.element.toUpperCase()}</Text>
             </View>
           </View>
-          <View style={[styles.tag, { backgroundColor: 'rgba(0,0,0,0.65)', borderColor: tagBorder, marginTop: 4 }]}>
+          <View style={[styles.tag, { backgroundColor: C.SHADOW + 'A6', borderColor: tagBorder, marginTop: 4 }]}>
             <Text style={[styles.tagIcon, { fontSize: 10 * scale }]}>✦</Text>
             <View>
               <Text style={[styles.tagLabel, { fontSize: 6 * scale }]}>EFFECT</Text>
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: C.TEXT,
     letterSpacing: 1.5,
-    textShadowColor: 'rgba(0,0,0,0.9)',
+    textShadowColor: C.TEXT_SHADOW,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: rf(4),
   },
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   factionBadge: {
     position: 'absolute',
     zIndex: 6,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: C.OVERLAY_3,
     borderRadius: rs(4),
   },
   factionIcon: {},
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingHorizontal: rs(8),
     paddingVertical: rs(5),
-    backgroundColor: 'rgba(0,0,0,0.78)',
+    backgroundColor: C.SHADOW + 'C7',
     zIndex: 6,
   },
   statItem:    { alignItems: 'center', flex: 1 },

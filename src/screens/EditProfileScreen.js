@@ -401,7 +401,7 @@ const s = StyleSheet.create({
   heroName: {
     position: 'absolute', bottom: rs(4), left: rs(4), right: rs(4),
     fontSize: rf(12), fontWeight: '700', color: C.TEXT,
-    textShadowColor: 'rgba(0,0,0,0.9)',
+    textShadowColor: C.TEXT_SHADOW,
     textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
   selectedIcon: {

@@ -65,7 +65,7 @@ function StatBar({ value, max, color, height = 7 }) {
     >
       <Animated.View style={[sb.fill, { width: fillAnim, backgroundColor: color, borderRadius: height / 2 }]}>
         <LinearGradient
-          colors={['rgba(255,255,255,0.22)', 'transparent']}
+          colors={[C.GLASS_EDGE, 'transparent']}
           start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
@@ -412,7 +412,10 @@ function ForgeTab({
 }) {
   const rankKey = hero.sovereign ? 'SOVEREIGN' : effectiveRankKey;
   const rank    = RANK_COLORS[effectiveRankKey] || RANK_COLORS[hero.rank];
-  const rate    = COINS_PER_COPY[effectiveRankKey] ?? COINS_PER_COPY.C;
+  // Was keyed on effectiveRankKey directly, skipping the sovereign override right
+  // above — the preview showed the 80-coin S rate instead of the 200-coin
+  // SOVEREIGN rate for the exact copies convertExcessCopies now correctly pays out.
+  const rate    = COINS_PER_COPY[rankKey] ?? COINS_PER_COPY.C;
   const maxConv = heroData?.copies ?? 0;
   const accent  = canFuse ? (RANK[fusionRankNext]?.bg ?? C.PRIMARY) : C.PRIMARY;
 
@@ -437,7 +440,7 @@ function ForgeTab({
       </View>
 
       <View style={styles.forgeOverlay} pointerEvents="box-none">
-        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.82)']} style={StyleSheet.absoluteFill} pointerEvents="none" />
+        <LinearGradient colors={['transparent', C.OVERLAY_MODAL]} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <View style={styles.forgeOverlayRow}>
           {owned && (
             <TouchableOpacity
@@ -607,11 +610,15 @@ export default function HeroDetailScreen({ route, navigation }) {
   const maxLevel      = 10 + transcendence * 5;
 
   const effectiveRankKey = owned ? getEffectiveRank(hero.id) : hero.rank;
-  const rank             = RANK_COLORS[effectiveRankKey] || RANK_COLORS[hero.rank];
+  // Sovereign heroes are stored as rank 'S' + sovereign:true — fusion caps at S,
+  // so effectiveRankKey never becomes 'SOVEREIGN'. Use rankKey (not
+  // effectiveRankKey) anywhere this is DISPLAYED so the badge doesn't show a
+  // plain pink "S" next to a gold-styled Sovereign HeroCard.
+  const rankKey = hero.sovereign ? 'SOVEREIGN' : effectiveRankKey;
+  const rank    = RANK_COLORS[rankKey] || RANK_COLORS[hero.rank];
 
   const levelMult = 1 + (level - 1) * 0.08;
   const ascMult   = ASCENSION_STAT_MULT[ascension] ?? 1;
-  const rankKey   = hero.sovereign ? 'SOVEREIGN' : effectiveRankKey;
   const rankMult  = RANK_STAT_MULT[rankKey] ?? 1.0;
   const totalMult = levelMult * rankMult * ascMult;
 
@@ -733,7 +740,9 @@ export default function HeroDetailScreen({ route, navigation }) {
               <View style={[styles.rankDot, { backgroundColor: rank.bg }]} />
               <Text style={styles.heroName} numberOfLines={1}>{hero.name.toUpperCase()}</Text>
               <View style={[styles.rankBadge, { backgroundColor: rank.bg }]}>
-                <Text style={[styles.rankTxt, { color: rank.text }]}>{effectiveRankKey}</Text>
+                {/* "SOV" abbreviation matches HeroCard's own compact rank badge —
+                    the full "SOVEREIGN" string is reserved for its crown banner. */}
+                <Text style={[styles.rankTxt, { color: rank.text }]}>{hero.sovereign ? 'SOV' : rankKey}</Text>
               </View>
               {copies > 1 && (
                 <View style={styles.copiesBadge}>
@@ -898,7 +907,7 @@ const styles = StyleSheet.create({
     borderRadius: rs(10),
     borderWidth: 1,
     borderColor: C.BORDER_SUBTLE,
-    shadowColor: '#000',
+    shadowColor: C.SHADOW,
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },

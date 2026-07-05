@@ -455,7 +455,7 @@ export default function TowerScreen({ navigation }) {
             {/* Rewards — always visible; not inside flex:1 so never pushed off screen */}
             <SHead text="FLOOR REWARDS" scale={scale} />
             <View style={s.rewardCard}>
-              <LinearGradient colors={['rgba(255,255,255,0.03)', 'transparent']} style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={[C.GLASS_1, 'transparent']} style={StyleSheet.absoluteFill} />
               <RewardChip img={GOLD_IMG} color={C.GOLD}         value={`+${reward.gold.toLocaleString()}`} label="Gold"  scale={scale} />
               <View style={s.chipSep} />
               <RewardChip img={COIN_IMG} color={C.GOLD}         value={`+${reward.coins}`}                label="Coins" scale={scale} />

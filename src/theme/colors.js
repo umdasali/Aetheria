@@ -27,16 +27,21 @@ export const C = {
   GLASS_7: 'rgba(255,255,255,0.14)',   // inactive chip border
 
   // ── Dark compositing overlays ──────────────────────────────────────────────
-  OVERLAY_1: 'rgba(0,0,0,0.28)',  // panel bg tint
-  OVERLAY_2: 'rgba(0,0,0,0.35)',  // slot / card base
-  OVERLAY_3: 'rgba(0,0,0,0.55)',  // badge bg
-  OVERLAY_4: 'rgba(0,0,0,0.60)',  // full-coverage dimmer
+  OVERLAY_1:     'rgba(0,0,0,0.28)',  // panel bg tint
+  OVERLAY_2:     'rgba(0,0,0,0.35)',  // slot / card base
+  OVERLAY_3:     'rgba(0,0,0,0.55)',  // badge bg
+  OVERLAY_4:     'rgba(0,0,0,0.60)',  // full-coverage dimmer
+  OVERLAY_STRONG:'rgba(0,0,0,0.70)',  // heavier full-coverage dimmer
+  OVERLAY_MODAL: 'rgba(0,0,0,0.82)',  // full-screen modal backdrop
 
   // ── White-on-dark text (cinematic / dark screens) ──────────────────────────
   TEXT_ON_DARK_DIM:  'rgba(255,255,255,0.30)',  // de-emphasised labels
+  TEXT_ON_DARK_WEAK: 'rgba(255,255,255,0.38)',  // faint text, between DIM and MUTED
   TEXT_ON_DARK_MUTED:'rgba(255,255,255,0.45)',  // secondary text / subtitles
   TEXT_ON_DARK_SOFT: 'rgba(255,255,255,0.52)',  // medium-visibility text
   TEXT_ON_DARK:      'rgba(255,255,255,0.70)',  // standard visible text
+  ICON_MUTED:        'rgba(255,255,255,0.65)',  // muted icon on dark bg
+  ICON_ON_DARK:      'rgba(255,255,255,0.80)',  // prominent/active icon on dark bg
 
   // ── Primary – Purple ───────────────────────────────────────────────────────
   PRIMARY:       '#7C3AED',
@@ -92,6 +97,12 @@ export const C = {
   FLASH_PURPLE: 'rgba(192,132,252,0.45)',           // A-rank reveal flash
   SHIMMER:      'rgba(255,255,255,0.40)',           // Shimmer sweep highlight
   FLASH_LIGHT:  '#C8D8FF',                         // Lightning flash overlay (WeatherEffect)
+  FLASH_WARM:      'rgba(255,240,160,0.9)',   // Warm lightning flash overlay (WeatherEffect)
+  FLASH_COOL:      'rgba(180,220,255,0.9)',   // Cool lightning flash overlay (WeatherEffect)
+  FLASH_NEUTRAL:   'rgba(255,255,255,0.9)',   // Neutral lightning flash overlay (WeatherEffect)
+  RAIN_STREAK:     'rgba(180,225,255,0.35)',  // Rain streak gradient tail (WeatherEffect)
+  RAIN_DROP:       'rgba(180,210,255,0.75)',  // Rain drop tint (WeatherEffect)
+  SNOW_FLAKE:      'rgba(210,225,255,0.38)',  // Snowflake tint (WeatherEffect)
   FLASH_WHITE:  '#FFFFFF',                          // Crit / Trump impact screen flash (animated opacity)
 
   // ── Slider / control surface ──────────────────────────────────────────────

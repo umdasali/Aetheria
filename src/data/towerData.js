@@ -39,8 +39,13 @@ const _regularGroups = ENEMY_GROUPS.filter(g => !g.enemies.some(e => e.tier === 
 export function getTowerEnemyGroup(floor) {
   const isBoss = isBossFloor(floor);
   const pool   = isBoss ? _bossGroups : _regularGroups;
-  // Cycle through the pool so higher floors reuse enemies at greater power
-  const base   = pool[(floor - 1) % pool.length];
+  // Cycle through the pool so higher floors reuse enemies at greater power.
+  // Boss floors only land every TOWER_BOSS_INTERVAL floors, so index by boss
+  // number (not raw floor) — indexing by raw floor here would only ever hit
+  // gcd(TOWER_BOSS_INTERVAL, pool.length) distinct residues, hiding most bosses.
+  const base   = isBoss
+    ? pool[Math.floor((floor - 1) / TOWER_BOSS_INTERVAL) % pool.length]
+    : pool[(floor - 1) % pool.length];
   const mult   = 1 + Math.sqrt(Math.max(0, floor - 1)) * STAT_SCALE_PER_FLOOR;
 
   return {
@@ -67,18 +72,19 @@ export function getTowerEnemyGroup(floor) {
 // ─── Reward calculator ────────────────────────────────────────────────────────
 /**
  * Returns { gold, gems, coins } earned for clearing a floor.
- * Gems are only awarded every 10 floors.
- * Tower coins scale with floor depth.
+ * Gold and coins scale on the SAME sqrt curve as enemy stats (STAT_SCALE_PER_FLOOR)
+ * so reward growth tracks difficulty growth instead of outrunning it.
+ * Gems are only awarded every 10 floors (boss floors) — untouched by the rescale
+ * below since that pool is sized against quest/boss income, not the coin shop.
  */
 export function getTowerFloorReward(floor) {
+  const mult = 1 + Math.sqrt(Math.max(0, floor - 1)) * STAT_SCALE_PER_FLOOR;
   return {
-    gold:  200  + floor * 80,
+    gold:  Math.round(100 * mult),
     gems:  isBossFloor(floor) ? 30 + Math.floor(floor / 10) * 5 : 0,
-    // Non-boss: 3 base + 1 per 3 floors. Boss: extra +5 per milestone.
-    // Floor 1 → 3 coins | Floor 30 → 13 coins | Floor 100 → 36 coins
-    coins: isBossFloor(floor)
-      ? Math.floor(floor / 3) + 5
-      : 3 + Math.floor(floor / 3),
+    // A full 1→300 climb now totals ~5,495 coins (was ~15,910) — back in line
+    // with the tower shop's own "~2,000 gems/week via the coin shop" target.
+    coins: Math.round(4 * mult) + (isBossFloor(floor) ? 5 : 0),
   };
 }
 

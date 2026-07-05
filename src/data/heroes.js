@@ -495,16 +495,16 @@ export const HEROES = [
   
   {
     id: 'hero_018',
-    name: 'Yasmin Sahar',
+    name: 'Nefret Sahar',
     frame: 'MOONFANG',
     faction: 'KHEMARA',
     rank: 'A',
     element: 'Moon',
     effect: 'SMITE',
     class: 'Attacker',
-    cardId: 'KHE-01-YASMIN',
+    cardId: 'KHE-01-NEFRET',
     image: require('../../assets/heroes/hero_018.webp'),
-    about: 'A moonlit huntress of KHEMARA who stalks the dunes after dark, running down corrupted things with twin blades that drink the night sky. Yasmin strikes with blinding speed and is gone before her quarry can register the attack — only a settling of cold sand where she stood remains.',
+    about: 'A moonlit huntress of KHEMARA who stalks the dunes after dark, running down corrupted things with twin blades that drink the night sky. Nefret strikes with blinding speed and is gone before her quarry can register the attack — only a settling of cold sand where she stood remains.',
     hp: 3500, atk: 530, def: 200, crit: 480,
     skills: [
       { name: 'Moon Fang',      cost: 1, description: 'A swift moon-edged strike that bites deeper than the dark it came from.', damage: 1.5 },
@@ -1469,16 +1469,16 @@ export const HEROES = [
   // NOTE: hero_054.webp is currently a placeholder copy — swap in the real art.
   {
     id: 'hero_054',
-    name: 'Shahrzad Al-Nur',
+    name: 'Nefertari Shahrzad',
     frame: 'MOONTHRONE',
     faction: 'KHEMARA',
     rank: 'S',
     element: 'Moon',
     effect: 'MOONLIGHT',
     class: 'Mage',
-    cardId: 'KHE-EX-SHAHRZAD',
+    cardId: 'KHE-EX-NEFERTARI',
     image: require('../../assets/heroes/hero_054.webp'),
-    about: 'The living moon-queen of KHEMARA — a sand dominion of obelisks, shifting dunes, and silver nights that bows to no other sovereign. Crowned not by daylight but by the full desert moon, Shahrzad rules as goddess and pharaoh in one, her word law from the cooling sands to the deepest dunes. She cannot be summoned or won in battle; she descends only for those who seek her court directly, trailing a veil of moonlit dust that turns the night air to silver. To stand before her is to be weighed in the dark.',
+    about: 'The living moon-queen of KHEMARA — a sand dominion of obelisks, shifting dunes, and silver nights that bows to no other sovereign. Crowned not by daylight but by the full desert moon, Nefertari rules as goddess and pharaoh in one, her word law from the cooling sands to the deepest dunes. She cannot be summoned or won in battle; she descends only for those who seek her court directly, trailing a veil of moonlit dust that turns the night air to silver. To stand before her is to be weighed in the dark.',
     hp: 4300, atk: 800, def: 240, crit: 740, sovereign: true, shopExclusive: true,
     skills: [
       { name: 'Lunar Verdict', cost: 2, description: 'Brands a single enemy under the cold light of the moon — silver judgment that pierces every resistance.', damage: 2.7 },
@@ -1486,7 +1486,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Dominion of the Moon',
-      description: 'Shahrzad draws the full desert moon down over the battlefield — a tide of silver light and singing sand that buries every enemy while its glow mends her court.',
+      description: 'Nefertari draws the full desert moon down over the battlefield — a tide of silver light and singing sand that buries every enemy while its glow mends her court.',
       damage: 6.3,
       effect: 'Stuns all enemies 2 turns; heals all allies 30% HP',
     },
@@ -1495,14 +1495,14 @@ export const HEROES = [
   // ── hero_055 · KHEMARA · C · Male · Mage ───────────────────────────────────
   {
     id: 'hero_055',
-    name: 'Farid Nasser',
+    name: 'Karim Hosni',
     frame: 'DUNECONJURER',
     faction: 'KHEMARA',
     rank: 'C',
     element: 'Sand',
     effect: 'SANDFLAY',
     class: 'Mage',
-    cardId: 'KHE-02-FARID',
+    cardId: 'KHE-02-KARIM',
     image: require('../../assets/heroes/hero_055.webp'),
     about: 'A street-born sand conjurer who taught himself the old desert magic from half-buried scrolls salvaged out of collapsed tombs. Raw, untrained, and reckless — but the dunes answer him all the same, and KHEMARA has learned not to mock the boy who can turn an entire street into a swallowing pit of sand.',
     hp: 2850, atk: 500, def: 150, crit: 470,
@@ -1521,16 +1521,16 @@ export const HEROES = [
   // ── hero_056 · KHEMARA · A · Female · Mage · Richest woman of Khemara ───────
   {
     id: 'hero_056',
-    name: 'Rania Farouk',
+    name: 'Zubaida Farouk',
     frame: 'GILDEDMATRON',
     faction: 'KHEMARA',
     rank: 'A',
     element: 'Moon',
     effect: 'LIFEDRAIN',
     class: 'Mage',
-    cardId: 'KHE-03-RANIA',
+    cardId: 'KHE-03-ZUBAIDA',
     image: require('../../assets/heroes/hero_056.webp'),
-    about: 'The richest woman in KHEMARA — her vaults outshine the royal treasury and her gilded sigils turn an enemy\'s own vitality into tribute. Wealth, to Rania, is simply life that has not yet been collected. She funds the throne, owns half the delta, and has never once been told no.',
+    about: 'The richest woman in KHEMARA — her vaults outshine the royal treasury and her gilded sigils turn an enemy\'s own vitality into tribute. Wealth, to Zubaida, is simply life that has not yet been collected. She funds the throne, owns half the delta, and has never once been told no.',
     hp: 3050, atk: 600, def: 165, crit: 560,
     skills: [
       { name: 'Gilded Siphon', cost: 2, description: 'Brands a target with a gold sigil that bleeds its life away to the caster.', damage: 1.9 },
@@ -1547,14 +1547,14 @@ export const HEROES = [
   // ── hero_057 · KHEMARA · B · Female · Mage · Profound dancer ───────────────
   {
     id: 'hero_057',
-    name: 'Dalia Amara',
+    name: 'Hathor Amara',
     frame: 'MIRAGEDANCER',
     faction: 'KHEMARA',
     rank: 'B',
     element: 'Sand',
     effect: 'PARALYSIS',
     class: 'Mage',
-    cardId: 'KHE-04-DALIA',
+    cardId: 'KHE-04-HATHOR',
     image: require('../../assets/heroes/hero_057.webp'),
     about: 'A temple dancer whose movements are a language older than KHEMARA itself. Those who watch her dance too long forget how to move at all — and by then the sand has already coiled around their ankles. The court calls her art devotion. Her enemies call it the last thing they saw.',
     hp: 2950, atk: 545, def: 158, crit: 510,
@@ -1573,16 +1573,16 @@ export const HEROES = [
   // ── hero_058 · KHEMARA · A · Male · Defender · Sovereign advisor ───────────
   {
     id: 'hero_058',
-    name: 'Rashid Aziz',
+    name: 'Imhotep Rashid',
     frame: 'THRONEWARDEN',
     faction: 'KHEMARA',
     rank: 'A',
     element: 'Sand',
     effect: 'SOVEREIGNTY',
     class: 'Defender',
-    cardId: 'KHE-05-RASHID',
+    cardId: 'KHE-05-IMHOTEP',
     image: require('../../assets/heroes/hero_058.webp'),
-    about: 'First advisor and living shield of the moon-throne. Rashid has counseled three regents and outlived two, and he places himself between KHEMARA\'s ruler and all harm as a matter of plain arithmetic: the realm needs her, and she needs time. He has never raised his voice. He has never had to.',
+    about: 'First advisor and living shield of the moon-throne. Imhotep has counseled three regents and outlived two, and he places himself between KHEMARA\'s ruler and all harm as a matter of plain arithmetic: the realm needs her, and she needs time. He has never raised his voice. He has never had to.',
     hp: 7000, atk: 320, def: 575, crit: 180,
     skills: [
       { name: 'Aegis Decree', cost: 1, description: 'Raises a hardened sandstone ward that absorbs the next blow aimed at the line.', damage: 0 },
@@ -1599,16 +1599,16 @@ export const HEROES = [
   // ── hero_059 · KHEMARA · A · Female · Attacker · Assassin ──────────────────
   {
     id: 'hero_059',
-    name: 'Zahra Sabbagh',
+    name: 'Nitocris Sabbagh',
     frame: 'DUNESHADE',
     faction: 'KHEMARA',
     rank: 'A',
     element: 'Moon',
     effect: 'PHANTOMSTRIKE',
     class: 'Attacker',
-    cardId: 'KHE-06-ZAHRA',
+    cardId: 'KHE-06-NITOCRIS',
     image: require('../../assets/heroes/hero_059.webp'),
-    about: 'KHEMARA\'s quietest law — the blade the throne never admits to owning. Zahra moves through the dunes like a rumor and leaves only a settling of sand where a target used to breathe. The court does not speak of her. That is precisely how she prefers it.',
+    about: 'KHEMARA\'s quietest law — the blade the throne never admits to owning. Nitocris moves through the dunes like a rumor and leaves only a settling of sand where a target used to breathe. The court does not speak of her. That is precisely how she prefers it.',
     hp: 3400, atk: 560, def: 195, crit: 600,
     skills: [
       { name: 'Scorpion\'s Kiss',  cost: 1, description: 'A lightning-fast khopesh slash that lands before it can be seen.', damage: 1.6 },
@@ -1625,16 +1625,16 @@ export const HEROES = [
   // ── hero_060 · KHEMARA · B · Male · Mage · Lawmaker ────────────────────────
   {
     id: 'hero_060',
-    name: 'Idris Haddad',
+    name: 'Thoth Haddad',
     frame: 'EDICTBEARER',
     faction: 'KHEMARA',
     rank: 'B',
     element: 'Moon',
     effect: 'SHATTER',
     class: 'Mage',
-    cardId: 'KHE-07-IDRIS',
+    cardId: 'KHE-07-THOTH',
     image: require('../../assets/heroes/hero_060.webp'),
-    about: 'KHEMARA\'s lawgiver — keeper of the great scales and the edicts carved into obelisk-stone, sworn to the moon under which all verdicts are weighed. When Idris reads a judgment aloud, the guilty feel their defenses crack like moon-bleached clay long before the sentence ever lands. The law, he insists, is not cruelty. It is simply weight, applied evenly.',
+    about: 'KHEMARA\'s lawgiver — keeper of the great scales and the edicts carved into obelisk-stone, sworn to the moon under which all verdicts are weighed. When Thoth reads a judgment aloud, the guilty feel their defenses crack like moon-bleached clay long before the sentence ever lands. The law, he insists, is not cruelty. It is simply weight, applied evenly.',
     hp: 3000, atk: 555, def: 162, crit: 515,
     skills: [
       { name: 'Edict of Ruin',      cost: 2, description: 'Pronounces a verdict that fractures a single enemy\'s defenses with a sentence of cold moonlight.', damage: 1.8 },
@@ -1807,16 +1807,16 @@ export const HEROES = [
   // ── hero_067 · KHEMARA · A · Female · Attacker · Cat-goddess huntress ───────
   {
     id: 'hero_067',
-    name: 'Salma Bakr',
+    name: 'Bastet Nour',
     frame: 'PANTHERVEIL',
     faction: 'KHEMARA',
     rank: 'A',
     element: 'Moon',
     effect: 'SHADOW',
     class: 'Attacker',
-    cardId: 'KHE-08-SALMA',
+    cardId: 'KHE-08-BASTET',
     image: require('../../assets/heroes/hero_067.webp'),
-    about: 'Salma moves through KHEMARA\'s moonlit alleys like a shadow given claws — silent, sure-footed, and never quite where you last looked. She keeps no court and answers to no throne, only the hunt.',
+    about: 'Bastet moves through KHEMARA\'s moonlit alleys like a shadow given claws — silent, sure-footed, and never quite where you last looked. She keeps no court and answers to no throne, only the hunt.',
     hp: 3450, atk: 575, def: 205, crit: 590,
     skills: [
       { name: 'Claw Rake',      cost: 1, description: 'A blur of raking claws across a single target.', damage: 1.5 },
@@ -1859,16 +1859,16 @@ export const HEROES = [
   // ── hero_069 · KHEMARA · A · Male · Attacker · Frontier war-god's heir ──────
   {
     id: 'hero_069',
-    name: 'Malik Anwar',
+    name: 'Montu Anwar',
     frame: 'WARBRAND',
     faction: 'KHEMARA',
     rank: 'A',
     element: 'Sand',
     effect: 'SHATTER',
     class: 'Attacker',
-    cardId: 'KHE-09-MALIK',
+    cardId: 'KHE-09-MONTU',
     image: require('../../assets/heroes/hero_069.webp'),
-    about: 'Malik carries a sand-forged khopesh said to have broken more shields than any weapon in KHEMARA\'s armory. He was a border soldier before the throne ever noticed him, and he still fights like the border is all that matters.',
+    about: 'Montu carries a sand-forged khopesh said to have broken more shields than any weapon in KHEMARA\'s armory. He was a border soldier before the throne ever noticed him, and he still fights like the border is all that matters.',
     hp: 4300, atk: 555, def: 255, crit: 470,
     skills: [
       { name: 'Sandforged Cleave', cost: 1, description: 'A heavy khopesh cleave backed by grinding sand.', damage: 1.6 },
@@ -1885,16 +1885,16 @@ export const HEROES = [
   // ── hero_070 · KHEMARA · A · Female · Mage · Assassin mage ──────────────────
   {
     id: 'hero_070',
-    name: 'Farah Ashkar',
+    name: 'Serqet Ashkar',
     frame: 'SHADOWSCARAB',
     faction: 'KHEMARA',
     rank: 'A',
     element: 'Moon',
     effect: 'LIFEDRAIN',
     class: 'Mage',
-    cardId: 'KHE-10-FARAH',
+    cardId: 'KHE-10-SERQET',
     image: require('../../assets/heroes/hero_070.webp'),
-    about: 'Trained in KHEMARA\'s hidden scarab cults, Farah kills with a whispered verse rather than a blade — a curse that drinks a target\'s strength before they even register the wound. The throne has used her twice. Both times, no one else was told.',
+    about: 'Trained in KHEMARA\'s hidden scarab cults, Serqet kills with a whispered verse rather than a blade — a curse that drinks a target\'s strength before they even register the wound. The throne has used her twice. Both times, no one else was told.',
     hp: 3050, atk: 570, def: 175, crit: 540,
     skills: [
       { name: 'Scarab\'s Whisper', cost: 2, description: 'A murmured curse that siphons vitality from a single enemy.', damage: 1.8 },
@@ -2093,16 +2093,16 @@ export const HEROES = [
   // ── hero_078 · KHEMARA · A · Female · Mage · Sand-and-time chronomancer ─────
   {
     id: 'hero_078',
-    name: 'Suha Karam',
+    name: 'Sopdet Karam',
     frame: 'HOURGLASSTHRONE',
     faction: 'KHEMARA',
     rank: 'A',
     element: 'Sand',
     effect: 'SHATTER',
     class: 'Mage',
-    cardId: 'KHE-11-SUHA',
+    cardId: 'KHE-11-SOPDET',
     image: require('../../assets/heroes/hero_078.webp'),
-    about: 'Named for the faint star her grandmother taught her to find in the dark, Suha commands sand the way others command clocks — pouring it forward, backward, or simply still, until an enemy\'s defenses erode like a shore under an unseen tide.',
+    about: 'Named for the faint star her grandmother taught her to find in the dark, Sopdet commands sand the way others command clocks — pouring it forward, backward, or simply still, until an enemy\'s defenses erode like a shore under an unseen tide.',
     hp: 3150, atk: 560, def: 178, crit: 530,
     skills: [
       { name: 'Hourglass Fracture', cost: 2, description: 'Reverses a moment of time around a single enemy, cracking their guard.', damage: 1.8 },
@@ -2249,16 +2249,16 @@ export const HEROES = [
   // ── hero_084 · KHEMARA · S · Male · Mage · Chronomancer ─────────────────────
   {
     id: 'hero_084',
-    name: 'Ali Noor',
+    name: 'Thutmose Noor',
     frame: 'CHRONOVEIL',
     faction: 'KHEMARA',
     rank: 'S',
     element: 'Time',
     effect: 'TIMEDILATION',
     class: 'Mage',
-    cardId: 'KHE-12-ALI',
+    cardId: 'KHE-12-THUTMOSE',
     image: require('../../assets/heroes/hero_084.webp'),
-    about: 'Ali Noor reads KHEMARA\'s history the way others read a clock face, and has learned to bend the space between one second and the next just enough to win a fight before it starts. He insists he isn\'t rewinding time — he\'s simply refusing to let it catch up.',
+    about: 'Thutmose reads KHEMARA\'s history the way others read a clock face, and has learned to bend the space between one second and the next just enough to win a fight before it starts. He insists he isn\'t rewinding time — he\'s simply refusing to let it catch up.',
     hp: 3500, atk: 670, def: 200, crit: 605,
     skills: [
       { name: 'Fractured Second',   cost: 2, description: 'Splits a single moment in two, striking before the enemy\'s reaction ever arrives.', damage: 1.8 },
@@ -2275,16 +2275,16 @@ export const HEROES = [
   // ── hero_085 · KHEMARA · A · Female · Attacker · Sand dancer ────────────────
   {
     id: 'hero_085',
-    name: 'Nahida Al-Zahir',
+    name: 'Meret Al-Zahir',
     frame: 'DUNEWALTZ',
     faction: 'KHEMARA',
     rank: 'A',
     element: 'Sand',
     effect: 'SANDVEIL',
     class: 'Attacker',
-    cardId: 'KHE-13-NAHIDA',
+    cardId: 'KHE-13-MERET',
     image: require('../../assets/heroes/hero_085.webp'),
-    about: 'Nahida moves across KHEMARA\'s dunes like the sand itself is dancing with her, each spin kicking up a blade-edge of grit sharp enough to part armor. She has never lost a duel fought on open sand.',
+    about: 'Meret moves across KHEMARA\'s dunes like the sand itself is dancing with her, each spin kicking up a blade-edge of grit sharp enough to part armor. She has never lost a duel fought on open sand.',
     hp: 2950, atk: 595, def: 165, crit: 565,
     skills: [
       { name: 'Whirling Dune Step', cost: 1, description: 'A spinning strike that kicks up a blade-edge of sand against a single enemy.', damage: 1.5 },
@@ -2301,16 +2301,16 @@ export const HEROES = [
   // ── hero_086 · KHEMARA · B · Female · Support · Fortune teller ──────────────
   {
     id: 'hero_086',
-    name: 'Warda Najm',
+    name: 'Seshat Najm',
     frame: 'FATEWEAVER',
     faction: 'KHEMARA',
     rank: 'B',
     element: 'Moon',
     effect: 'FATEBIND',
     class: 'Support',
-    cardId: 'KHE-14-WARDA',
+    cardId: 'KHE-14-SESHAT',
     image: require('../../assets/heroes/hero_086.webp'),
-    about: 'Warda reads a person\'s fate in the shift of moonlight across scattered bones, and has never once told a client the whole truth of what she saw. KHEMARA\'s court fears her prophecies more than its enemies\' armies.',
+    about: 'Seshat reads a person\'s fate in the shift of moonlight across scattered bones, and has never once told a client the whole truth of what she saw. KHEMARA\'s court fears her prophecies more than its enemies\' armies.',
     hp: 3850, atk: 300, def: 280, crit: 250,
     skills: [
       { name: 'Bone Reading',  cost: 1, description: 'Scatters moonlit bones to read a single enemy\'s fate, and nudges it toward misfortune.', damage: 1.1 },

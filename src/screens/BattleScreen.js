@@ -138,12 +138,12 @@ const mkUnit = (raw) => ({
 // Status effect display config (colors use C tokens)
 // overlayTint: absoluteFill card tint while active. pulseMin/Max/Ms: anim range + half-period.
 const STATUS_DISPLAY = {
-  burn:    { label: 'BRN',  icon: '🔥', color: C.WARNING,  overlayTint: 'rgba(217,119,6,0.22)',   pulseMin: 0.15, pulseMax: 0.55, pulseMs: 550  },
-  poison:  { label: 'PSN',  icon: '☠',  color: C.SUCCESS,  overlayTint: 'rgba(5,150,105,0.18)',   pulseMin: 0.12, pulseMax: 0.38, pulseMs: 800  },
-  chill:   { label: 'CHI',  icon: '❄',  color: C.CYAN,     overlayTint: 'rgba(8,145,178,0.16)',   pulseMin: 0.10, pulseMax: 0.30, pulseMs: 1100 },
-  shatter: { label: 'DEF-', icon: '💢', color: C.DANGER,   overlayTint: 'rgba(220,38,38,0.14)',   pulseMin: 0.10, pulseMax: 0.28, pulseMs: 900  },
-  weaken:  { label: 'ATK-', icon: '⬇',  color: C.PRIMARY,  overlayTint: 'rgba(124,58,237,0.16)',  pulseMin: 0.10, pulseMax: 0.28, pulseMs: 950  },
-  stun:    { label: 'STN',  icon: '⚡', color: C.GOLD,     overlayTint: 'rgba(217,119,6,0.26)',   pulseMin: 0.25, pulseMax: 0.65, pulseMs: 380  },
+  burn:    { label: 'BRN',  icon: '🔥', color: C.WARNING,  overlayTint: C.WARNING + '38',   pulseMin: 0.15, pulseMax: 0.55, pulseMs: 550  },
+  poison:  { label: 'PSN',  icon: '☠',  color: C.SUCCESS,  overlayTint: C.SUCCESS + '2E',   pulseMin: 0.12, pulseMax: 0.38, pulseMs: 800  },
+  chill:   { label: 'CHI',  icon: '❄',  color: C.CYAN,     overlayTint: C.CYAN + '29',      pulseMin: 0.10, pulseMax: 0.30, pulseMs: 1100 },
+  shatter: { label: 'DEF-', icon: '💢', color: C.DANGER,   overlayTint: C.DANGER + '24',    pulseMin: 0.10, pulseMax: 0.28, pulseMs: 900  },
+  weaken:  { label: 'ATK-', icon: '⬇',  color: C.PRIMARY,  overlayTint: C.PRIMARY + '29',   pulseMin: 0.10, pulseMax: 0.28, pulseMs: 950  },
+  stun:    { label: 'STN',  icon: '⚡', color: C.GOLD,     overlayTint: C.GOLD + '42',      pulseMin: 0.25, pulseMax: 0.65, pulseMs: 380  },
 };
 
 const mkAnims = () =>
@@ -410,6 +410,12 @@ export default function BattleScreen({ navigation, route }) {
   }, [navigation, chapterId, chapterRewards, chapterEnemies, fromStory, practiceMode]);
 
   const checkEnd = useCallback((players, enemies) => {
+    // Player wipe is checked first: both teams' DOTs tick in the same phase
+    // before this runs, so a simultaneous wipe must not resolve as a win.
+    if (allDefeated(players)) {
+      showResult('lose', { wasReplay: false, xpGained: 0, towerMode, towerFloor, towerRewards, dungeonMode, dungeonRewards });
+      return true;
+    }
     if (allDefeated(enemies)) {
       const wasReplay = !!(chapterId && completedChapters.includes(chapterId));
 
@@ -467,12 +473,6 @@ export default function BattleScreen({ navigation, route }) {
       showResult('win', { wasReplay, practiceGotBonus, xpGained });
       return true;
     }
-    if (allDefeated(players)) {
-      // Pass mode flags so VictoryScreen routes Retry / Back correctly
-      // (a tower/dungeon defeat must not dump the player into Story Mode).
-      showResult('lose', { wasReplay: false, xpGained: 0, towerMode, towerFloor, towerRewards, dungeonMode, dungeonRewards });
-      return true;
-    }
     return false;
   }, [showResult, chapterId, chapterRewards, completeChapter, completedChapters,
       practiceMode, practiceBonusClaimed, claimPracticeBonus, addGems, addGold,
@@ -523,7 +523,11 @@ export default function BattleScreen({ navigation, route }) {
       // ── Phase start: enemy DOTs/expiry, enrage, player regen (once) ─────────
       const dotMsgs = [];
       curEnemies = curEnemies.map((e, i) => {
-        if (e.currentHp <= 0 || !(e.statusEffects || []).length) return e;
+        // Must tick even with an empty statusEffects list — regen (BLESSING and
+        // friends) is driven by e.effect directly inside processStatusEffects,
+        // not by an active debuff, so gating on statusEffects.length silently
+        // starved every regen-passive enemy of its heal.
+        if (e.currentHp <= 0) return e;
         const dotType = (e.statusEffects || []).find(fx => fx.type === 'burn') ? 'burn'
                       : (e.statusEffects || []).find(fx => fx.type === 'poison') ? 'poison'
                       : null;
@@ -557,8 +561,12 @@ export default function BattleScreen({ navigation, route }) {
         setPlayerTeam(players);
         if (message) setStatusMsg(message);
         if (!checkEnd(players, ticked)) {
-          setCurrentTurnIdx(nextPlayerIdx(players, currentTurnIdx));
-          setEnergy((p) => Math.min(MAX_ENERGY, p + ENERGY_PER_TURN));
+          const nextIdx = nextPlayerIdx(players, currentTurnIdx);
+          setCurrentTurnIdx(nextIdx);
+          // Chill halves this round's energy gain — symmetric with the enemy-side
+          // rule (chill previously only ever slowed the acting enemy's own energy).
+          const nextChilled = (players[nextIdx]?.statusEffects || []).some((fx) => fx.type === 'chill');
+          setEnergy((p) => Math.min(MAX_ENERGY, p + (nextChilled ? Math.floor(ENERGY_PER_TURN * 0.5) : ENERGY_PER_TURN)));
           setTurnNumber((t) => t + 1);
           setIsEnemyTurn(false);
         }
@@ -635,6 +643,10 @@ export default function BattleScreen({ navigation, route }) {
           // Enemy effects (burn/poison/chill/shatter/weaken/stun) now actually proc on
           // the player — basic attack = 25% chance via applyOnHitDebuff.
           curPlayers[targetIdx] = applyOnHitDebuff(actor, curPlayers[targetIdx], false);
+          if (EFFECT_MECHANICS[actor.effect] === 'lifedrain') {
+            const drain = Math.floor(damage * 0.15);
+            curEnemies[actorIdx] = { ...curEnemies[actorIdx], currentHp: Math.min(curEnemies[actorIdx].maxHp, curEnemies[actorIdx].currentHp + drain) };
+          }
           lastDmg = damage;
           msg = `${actor.name} attacks${isCrit ? ' — CRITICAL!' : ''}`;
           setTimeout(() => triggerHit(playerAnims, targetIdx), 80);
@@ -665,6 +677,10 @@ export default function BattleScreen({ navigation, route }) {
             };
             // Enemy skills proc their effect at 50% (matches the player skill rate).
             curPlayers[targetIdx] = applyOnHitDebuff(actor, curPlayers[targetIdx], true);
+            if (EFFECT_MECHANICS[actor.effect] === 'lifedrain') {
+              const drain = Math.floor(damage * 0.15);
+              curEnemies[actorIdx] = { ...curEnemies[actorIdx], currentHp: Math.min(curEnemies[actorIdx].maxHp, curEnemies[actorIdx].currentHp + drain) };
+            }
             lastDmg = damage;
             msg = `${actor.name}: ${skill.name}${isCrit ? ' — CRIT!' : ''}`;
             setTimeout(() => triggerHit(playerAnims, targetIdx), 80);
@@ -1568,7 +1584,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           pointerEvents="none"
           style={[
             StyleSheet.absoluteFill,
-            { borderRadius: 10, backgroundColor: 'rgba(16,185,129,0.60)', opacity: healFlash },
+            { borderRadius: 10, backgroundColor: C.SUCCESS + '99', opacity: healFlash },
           ]}
         />
 
@@ -1804,7 +1820,7 @@ function HealParticle({ char, xOff, bottomBase, dur, delay, size, imgH, trigger 
         fontSize:    rf(size),
         fontWeight:  '900',
         color:       C.SUCCESS,
-        textShadowColor:  'rgba(0,0,0,0.6)',
+        textShadowColor:  C.OVERLAY_4,
         textShadowOffset: { width: 0, height: 1 },
         textShadowRadius: 3,
         opacity:   opAnim,
@@ -2310,7 +2326,7 @@ const S = StyleSheet.create({
     fontWeight: '900',
     color: C.GOLD,
     letterSpacing: 1,
-    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowColor: C.OVERLAY_MODAL,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
@@ -2320,7 +2336,7 @@ const S = StyleSheet.create({
     bottom: rs(8),
     alignSelf: 'center',
     fontWeight: '900',
-    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowColor: C.OVERLAY_STRONG,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
     zIndex: 20,
@@ -2332,7 +2348,7 @@ const S = StyleSheet.create({
     fontSize: rf(14),
     fontWeight: '900',
     color: C.SUCCESS,
-    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowColor: C.OVERLAY_STRONG,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
     zIndex: 21,
@@ -2343,7 +2359,7 @@ const S = StyleSheet.create({
     alignSelf: 'center',
     fontSize: rf(12),
     fontWeight: '800',
-    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowColor: C.OVERLAY_MODAL,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
     zIndex: 21,
@@ -2398,7 +2414,7 @@ const S = StyleSheet.create({
   cutInHeroName: {
     fontSize: rf(16), fontWeight: '800', letterSpacing: 1,
     marginBottom: rs(6),
-    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowColor: C.OVERLAY_MODAL,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
@@ -2406,7 +2422,7 @@ const S = StyleSheet.create({
     fontSize: Math.min(34, Math.floor(SH * 0.095)),
     fontWeight: '900', letterSpacing: 0.5,
     color: C.TEXT,
-    textShadowColor: 'rgba(0,0,0,0.85)',
+    textShadowColor: C.OVERLAY_MODAL,
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
   },

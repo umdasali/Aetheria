@@ -1,4 +1,4 @@
-export const CURRENT_VERSION = 4;
+export const CURRENT_VERSION = 6;
 
 export function migrate(persistedState, fromVersion) {
   let state = { ...persistedState };
@@ -51,6 +51,27 @@ export function migrate(persistedState, fromVersion) {
         ...restProfile,
         avatarId: state.playerProfile?.avatarId ?? 'avatar-01',
       },
+    };
+  }
+
+  // v4 → v5: pendingMilestoneReward (single slot) → pendingMilestoneRewards (queue).
+  // The old slot silently overwrote an unclaimed reward when a second milestone
+  // fired before the first was collected — carry any unclaimed one forward.
+  if (fromVersion < 5) {
+    const { pendingMilestoneReward, ...rest } = state;
+    state = {
+      ...rest,
+      schemaVersion: 5,
+      pendingMilestoneRewards: state.pendingMilestoneRewards ?? (pendingMilestoneReward ? [pendingMilestoneReward] : []),
+    };
+  }
+
+  // v5 → v6: add processedIapTransactionIds (RevenueCat transaction-recovery dedupe).
+  if (fromVersion < 6) {
+    state = {
+      ...state,
+      schemaVersion: 6,
+      processedIapTransactionIds: state.processedIapTransactionIds ?? [],
     };
   }
 

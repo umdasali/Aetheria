@@ -31,10 +31,12 @@ const ASC_IMG_H = Math.round(CARD_H * 0.37);
 const BDL_IMG_H = Math.round(CARD_H * 0.28);
 
 // ─── Currency bundles ─────────────────────────────────────────────────────────
-// Gem pricing: a full weekly 1→200 climb yields ~5,425 coins. At ~2.5-3 coins
-// per gem that caps shop gems at ~2,000/week — in line with quest/boss income.
+// Gem pricing: a full weekly 1→300 climb yields ~5,495 coins (rescaled 2026-07 to
+// track the same sqrt difficulty curve as enemy stats, after TOWER_MAX_FLOOR was
+// raised 200→300 without re-tuning coin totals). At ~2.5-3 coins per gem that
+// caps shop gems at ~2,000/week — in line with quest/boss income.
 // (The old 0.3 coins/gem rate made the tower worth ~17k gems/week and broke
-// the gacha economy.)
+// the gacha economy; the pre-rescale linear coin/gold formulas later did too.)
 const BUNDLES = [
   { id: 'gems_30',   type: 'gems', amount: 30,   cost: 90,  label: '30 Gems',    img: GEM_IMG,  color: C.PRIMARY_LIGHT },
   { id: 'gems_80',   type: 'gems', amount: 80,   cost: 200, label: '80 Gems',    img: GEM_IMG,  color: C.PRIMARY,       tag: 'VALUE' },

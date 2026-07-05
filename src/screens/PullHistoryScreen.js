@@ -65,6 +65,13 @@ export default function PullHistoryScreen({ navigation }) {
           </View>
         )}
 
+        {/* Featured (won the rate-up 50/50) badge */}
+        {item.isFeatured && (
+          <View style={s.featuredBadge}>
+            <Text style={s.featuredBadgeTxt}>FEATURED</Text>
+          </View>
+        )}
+
         {/* Date */}
         <Text style={s.dateTxt}>{formatDate(item.pulledAt)}</Text>
       </View>
@@ -234,6 +241,12 @@ const s = StyleSheet.create({
     backgroundColor: C.GOLD + '22', borderWidth: 1, borderColor: C.GOLD + '66',
   },
   pityBadgeTxt: { fontSize: 7, fontWeight: '900', color: C.GOLD, letterSpacing: 1 },
+
+  featuredBadge: {
+    width: 64, borderRadius: 4, paddingVertical: 2, alignItems: 'center',
+    backgroundColor: C.PRIMARY_LIGHT + '22', borderWidth: 1, borderColor: C.PRIMARY_LIGHT + '66',
+  },
+  featuredBadgeTxt: { fontSize: 7, fontWeight: '900', color: C.PRIMARY_LIGHT, letterSpacing: 1 },
 
   dateTxt: { width: 130, fontSize: 9, color: C.TEXT_MUTED, fontWeight: '500' },
 

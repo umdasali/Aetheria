@@ -230,7 +230,7 @@ export const applyOnHitDebuff = (hero, target, isSkill) => {
       return { ...target, stunned: Math.min(2, (target.stunned || 0) + 1) };
     case 'burn':
       return addOrRefreshEffect(target, {
-        type: 'burn', duration: 3,
+        type: 'burn', duration: 2,
         value: Math.floor((hero.atk || 0) * 0.08),
       });
     case 'poison':

@@ -148,8 +148,8 @@ export default function LoadingScreen({ navigation }) {
 
       <Image source={SPLASH_IMG} style={[StyleSheet.absoluteFill, { width: "100%", height: H }]} resizeMode="cover" />
 
-      <LinearGradient colors={['rgba(6,3,15,0.45)', 'transparent']} style={styles.vigTop} />
-      <LinearGradient colors={['transparent', 'rgba(6,3,15,0.72)', 'rgba(6,3,15,0.97)']} style={styles.vigBottom} />
+      <LinearGradient colors={[C.BG_SCREEN + '73', 'transparent']} style={styles.vigTop} />
+      <LinearGradient colors={['transparent', C.BG_SCREEN + 'B8', C.BG_SCREEN + 'F7']} style={styles.vigBottom} />
 
       {/* Off-screen image pre-decoder — 0×0, hidden behind the splash */}
       <View style={styles.preloadContainer} pointerEvents="none">
@@ -208,10 +208,10 @@ const styles = StyleSheet.create({
   },
   titleMain: {
     fontSize: rf(42), fontWeight: '900', color: C.TEXT, letterSpacing: 12,
-    textShadowColor: 'rgba(124,58,237,0.9)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 24,
+    textShadowColor: C.PRIMARY + 'E6', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 24,
   },
-  titleSub:    { fontSize: rf(13), fontWeight: '700', color: 'rgba(167,139,250,0.85)', letterSpacing: 7 },
-  titleStudio: { fontSize: rf(12),  fontWeight: '600', color: 'rgba(255,255,255,0.30)', letterSpacing: 2, marginTop: rs(4) },
+  titleSub:    { fontSize: rf(13), fontWeight: '700', color: C.PRIMARY_LIGHT + 'D9', letterSpacing: 7 },
+  titleStudio: { fontSize: rf(12),  fontWeight: '600', color: C.TEXT_ON_DARK_DIM, letterSpacing: 2, marginTop: rs(4) },
 
   loadingArea: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   },
   barGlow: {
     position: 'absolute', top: -3, bottom: -3, left: 0,
-    borderRadius: rs(6), backgroundColor: 'rgba(124,58,237,0.35)',
+    borderRadius: rs(6), backgroundColor: C.PRIMARY + '59',
   },
   barFill: {
     position: 'absolute', top: 0, bottom: 0, left: 0,
@@ -233,9 +233,9 @@ const styles = StyleSheet.create({
   },
   barShimmer: {
     position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-    backgroundColor: 'rgba(255,255,255,0.35)', borderRadius: 1,
+    backgroundColor: C.SHIMMER, borderRadius: 1,
   },
-  pctLabel: { fontSize: rf(12), color: 'rgba(255,255,255,0.35)', fontWeight: '700', letterSpacing: 2.5, marginTop: rs(2) },
+  pctLabel: { fontSize: rf(12), color: C.SHIMMER, fontWeight: '700', letterSpacing: 2.5, marginTop: rs(2) },
   pctNum:   { color: C.PRIMARY_LIGHT, fontWeight: '900' },
-  copy:     { fontSize: rf(11), color: 'rgba(255,255,255,0.18)', letterSpacing: 0.8, marginTop: rs(6) },
+  copy:     { fontSize: rf(11), color: C.GLASS_7, letterSpacing: 0.8, marginTop: rs(6) },
 });

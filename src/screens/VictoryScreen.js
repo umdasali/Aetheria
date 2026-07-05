@@ -398,7 +398,7 @@ export default function VictoryScreen({ navigation, route }) {
                         {/* Portrait */}
                         <View style={[S.heroPortraitWrap, { borderColor: r.glow + '80' }]}>
                           <Image source={hero.image} style={S.heroPortrait} resizeMode="cover" />
-                          <LinearGradient colors={['transparent', 'rgba(0,0,0,0.55)']} style={StyleSheet.absoluteFill} />
+                          <LinearGradient colors={['transparent', C.OVERLAY_3]} style={StyleSheet.absoluteFill} />
                         </View>
                         {/* Info */}
                         <View style={S.heroInfo}>
@@ -504,11 +504,11 @@ export default function VictoryScreen({ navigation, route }) {
                     <LinearGradient colors={[C.PRIMARY_DARK, C.PRIMARY]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
                       <Ionicons name="flash" size={rs(18)} color={C.TEXT} />
                       <Text style={S.primaryBtnTxt}>Keep Farming</Text>
-                      <Ionicons name="chevron-forward" size={rs(18)} color="rgba(255,255,255,0.8)" />
+                      <Ionicons name="chevron-forward" size={rs(18)} color={C.ICON_ON_DARK} />
                     </LinearGradient>
                   </TouchableOpacity>
                   <TouchableOpacity style={S.secondaryBtn} onPress={handleHome} activeOpacity={0.85}>
-                    <Ionicons name="home-outline" size={rs(18)} color="rgba(255,255,255,0.65)" />
+                    <Ionicons name="home-outline" size={rs(18)} color={C.ICON_MUTED} />
                     <Text style={S.secondaryBtnTxt}>Home</Text>
                   </TouchableOpacity>
                 </>
@@ -521,7 +521,7 @@ export default function VictoryScreen({ navigation, route }) {
                     </LinearGradient>
                   </TouchableOpacity>
                   <TouchableOpacity style={S.secondaryBtn} onPress={handleHome} activeOpacity={0.85}>
-                    <Ionicons name="home-outline" size={rs(18)} color="rgba(255,255,255,0.65)" />
+                    <Ionicons name="home-outline" size={rs(18)} color={C.ICON_MUTED} />
                     <Text style={S.secondaryBtnTxt}>Home</Text>
                   </TouchableOpacity>
                 </>
@@ -535,12 +535,12 @@ export default function VictoryScreen({ navigation, route }) {
                     <LinearGradient colors={[C.GOLD_DARK, C.GOLD]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
                       <Ionicons name="layers" size={rs(18)} color={C.TEXT} />
                       <Text style={S.primaryBtnTxt}>{towerFloor >= TOWER_MAX_FLOOR ? 'Back to Tower' : 'Next Floor'}</Text>
-                      <Ionicons name="chevron-forward" size={rs(18)} color="rgba(255,255,255,0.8)" />
+                      <Ionicons name="chevron-forward" size={rs(18)} color={C.ICON_ON_DARK} />
                     </LinearGradient>
                   </TouchableOpacity>
                   {/* Secondary: Home */}
                   <TouchableOpacity style={S.secondaryBtn} onPress={handleHome} activeOpacity={0.85}>
-                    <Ionicons name="home-outline" size={rs(18)} color="rgba(255,255,255,0.65)" />
+                    <Ionicons name="home-outline" size={rs(18)} color={C.ICON_MUTED} />
                     <Text style={S.secondaryBtnTxt}>Home</Text>
                   </TouchableOpacity>
                 </>
@@ -554,7 +554,7 @@ export default function VictoryScreen({ navigation, route }) {
                     </LinearGradient>
                   </TouchableOpacity>
                   <TouchableOpacity style={S.secondaryBtn} onPress={handleHome} activeOpacity={0.85}>
-                    <Ionicons name="home-outline" size={rs(18)} color="rgba(255,255,255,0.65)" />
+                    <Ionicons name="home-outline" size={rs(18)} color={C.ICON_MUTED} />
                     <Text style={S.secondaryBtnTxt}>Home</Text>
                   </TouchableOpacity>
                 </>
@@ -567,12 +567,12 @@ export default function VictoryScreen({ navigation, route }) {
                     <LinearGradient colors={C.GRAD_PINK} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.btnInner}>
                       <Ionicons name="flash" size={rs(18)} color={C.TEXT} />
                       <Text style={S.primaryBtnTxt}>Next Stage</Text>
-                      <Ionicons name="chevron-forward" size={rs(18)} color="rgba(255,255,255,0.8)" />
+                      <Ionicons name="chevron-forward" size={rs(18)} color={C.ICON_ON_DARK} />
                     </LinearGradient>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity style={S.secondaryBtn} onPress={fromStory ? handleStoryMode : handleHome} activeOpacity={0.85}>
-                  <Ionicons name={fromStory ? 'book-outline' : 'home-outline'} size={rs(18)} color="rgba(255,255,255,0.65)" />
+                  <Ionicons name={fromStory ? 'book-outline' : 'home-outline'} size={rs(18)} color={C.ICON_MUTED} />
                   <Text style={S.secondaryBtnTxt}>{fromStory ? 'Story Mode' : 'Home'}</Text>
                 </TouchableOpacity>
               </>
@@ -586,7 +586,7 @@ export default function VictoryScreen({ navigation, route }) {
                   </LinearGradient>
                 </TouchableOpacity>
                 <TouchableOpacity style={S.secondaryBtn} onPress={fromStory ? handleStoryMode : handleHome} activeOpacity={0.85}>
-                  <Ionicons name={fromStory ? 'book-outline' : 'home-outline'} size={rs(18)} color="rgba(255,255,255,0.65)" />
+                  <Ionicons name={fromStory ? 'book-outline' : 'home-outline'} size={rs(18)} color={C.ICON_MUTED} />
                   <Text style={S.secondaryBtnTxt}>{fromStory ? 'Story Mode' : 'Home'}</Text>
                 </TouchableOpacity>
               </>
@@ -608,8 +608,8 @@ const S = StyleSheet.create({
   leftPanel: { width: '40%', justifyContent: 'center', alignItems: 'center', gap: rs(12), overflow: 'hidden' },
   iconGlow:  { position: 'absolute', width: rs(180), height: rs(180), borderRadius: rs(90), shadowRadius: 55, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, elevation: 40 },
   resultIcon:  { fontSize: rf(64) },
-  resultTitle: { fontSize: rf(26), fontWeight: '900', letterSpacing: 4, textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 8 },
-  resultSub:   { fontSize: rf(13), color: 'rgba(255,255,255,0.5)', marginTop: rs(4), letterSpacing: 0.5, textAlign: 'center' },
+  resultTitle: { fontSize: rf(26), fontWeight: '900', letterSpacing: 4, textAlign: 'center', textShadowColor: C.OVERLAY_MODAL, textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 8 },
+  resultSub:   { fontSize: rf(13), color: C.TEXT_ON_DARK_SOFT, marginTop: rs(4), letterSpacing: 0.5, textAlign: 'center' },
   stagePill:   { flexDirection: 'row', alignItems: 'center', gap: rs(5), borderWidth: 1, borderRadius: rs(6), paddingHorizontal: rs(9), paddingVertical: rs(3), marginTop: rs(8) },
   stagePillTxt:{ fontSize: rf(12), fontWeight: '700', letterSpacing: 1 },
 
@@ -654,7 +654,7 @@ const S = StyleSheet.create({
   rankTxt:   { fontSize: rf(12), fontWeight: '900' },
   heroName:  { fontSize: rf(12), fontWeight: '800', color: C.TEXT, flex: 1 },
   heroFaction:{ fontSize: rf(12), fontWeight: '700', letterSpacing: 0.3 },
-  heroClass:  { fontSize: rf(11), color: 'rgba(255,255,255,0.38)', fontWeight: '600' },
+  heroClass:  { fontSize: rf(11), color: C.TEXT_ON_DARK_WEAK, fontWeight: '600' },
   unlockBadge: {
     flexDirection: 'row', alignItems: 'center', gap: rs(3),
     borderWidth: 1, borderRadius: rs(5), paddingHorizontal: rs(6), paddingVertical: rs(3),
@@ -704,16 +704,16 @@ const S = StyleSheet.create({
   lvBubble: {
     width: rs(32), height: rs(32), borderRadius: rs(8),
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(124,58,237,0.22)',
+    backgroundColor: C.PRIMARY + '38',
     borderWidth: 1, borderColor: C.PRIMARY + '55',
   },
-  lvLabel: { fontSize: rf(6), fontWeight: '700', color: 'rgba(255,255,255,0.40)', letterSpacing: 0.5 },
+  lvLabel: { fontSize: rf(6), fontWeight: '700', color: C.SHIMMER, letterSpacing: 0.5 },
   lvNum:   { fontSize: rf(12), fontWeight: '900', color: C.TEXT },
-  xpNums:  { fontSize: rf(12), color: 'rgba(255,255,255,0.35)', fontWeight: '600', letterSpacing: 0.3 },
+  xpNums:  { fontSize: rf(12), color: C.TEXT_ON_DARK_DIM, fontWeight: '600', letterSpacing: 0.3 },
 
   // Defeat
   defeatSection: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: rs(14) },
-  defeatMsg:     { fontSize: rf(12), color: 'rgba(255,255,255,0.55)', lineHeight: rf(19), textAlign: 'center' },
+  defeatMsg:     { fontSize: rf(12), color: C.TEXT_ON_DARK_SOFT, lineHeight: rf(19), textAlign: 'center' },
 
   // Tower pill
   towerPill: {

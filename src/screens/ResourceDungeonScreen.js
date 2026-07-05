@@ -313,7 +313,7 @@ function DungeonDetail({ dungeon, onEnter }) {
       )}
       {/* Dark gradient overlay — keeps text readable over any image */}
       <LinearGradient
-        colors={['rgba(0,0,0,0.08)', 'rgba(0,0,0,0.62)', 'rgba(0,0,0,0.94)']}
+        colors={[C.SHADOW + '14', C.SHADOW + '9E', C.SHADOW + 'F0']}
         locations={[0, 0.45, 1]}
         start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFill}
