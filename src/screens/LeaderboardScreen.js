@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { fetchTopN, fetchOwnRank, submitScore, getCurrentUserId, CATEGORIES } from '../cloud/leaderboardService';
+import { getUser, onAuthChanged } from '../cloud/auth';
 import { C } from '../theme/colors';
 import { rs, rf } from '../theme/scale';
 import AudioManager from '../utils/AudioManager';
@@ -369,7 +370,7 @@ const rc = StyleSheet.create({
 });
 
 // ── Your rank badge (pinned bottom of left panel) ─────────────────────────────
-function YourRankCard({ rank, score, name, unit }) {
+function YourRankCard({ rank, score, name, unit, signedIn, onRegister }) {
   const pulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     const anim = Animated.loop(Animated.sequence([
@@ -380,6 +381,11 @@ function YourRankCard({ rank, score, name, unit }) {
     return () => anim.stop();
   }, []);
 
+  // Guests never submit a score (submitScore no-ops for them), so tapping
+  // this card while unranked routes to registration instead of showing a
+  // permanently empty rank with no explanation.
+  const unregistered = !signedIn;
+
   return (
     <Animated.View style={[yr.card, { transform: [{ scale: pulse }] }]}>
       <LinearGradient
@@ -389,7 +395,12 @@ function YourRankCard({ rank, score, name, unit }) {
       />
       <View style={yr.topLine} />
 
-      <View style={yr.row}>
+      <TouchableOpacity
+        style={yr.row}
+        activeOpacity={unregistered ? 0.7 : 1}
+        disabled={!unregistered}
+        onPress={onRegister}
+      >
         <Avatar name={name} size={32} color={C.PRIMARY_LIGHT} />
 
         <View style={yr.info}>
@@ -399,7 +410,9 @@ function YourRankCard({ rank, score, name, unit }) {
             </View>
             <Text style={yr.name} numberOfLines={1}>{name ?? 'Aetherian'}</Text>
           </View>
-          {score !== null && (
+          {unregistered ? (
+            <Text style={yr.registerHint}>Tap to connect account & rank</Text>
+          ) : score !== null && (
             <Text style={yr.score}>{score?.toLocaleString()} <Text style={yr.unit}>{unit}</Text></Text>
           )}
         </View>
@@ -413,7 +426,7 @@ function YourRankCard({ rank, score, name, unit }) {
             : <Text style={yr.unranked}>—</Text>
           }
         </View>
-      </View>
+      </TouchableOpacity>
     </Animated.View>
   );
 }
@@ -439,6 +452,10 @@ const yr = StyleSheet.create({
   name:     { fontSize: 10, fontWeight: '700', color: C.TEXT },
   score:    { fontSize: 10, fontWeight: '800', color: C.PRIMARY_LIGHT },
   unit:     { fontSize: 7, fontWeight: '700', color: C.TEXT_MUTED },
+  registerHint: {
+    fontSize: 9, fontWeight: '700', color: C.PRIMARY_LIGHT,
+    textDecorationLine: 'underline',
+  },
 
   rankBox:  { alignItems: 'center', justifyContent: 'center', gap: 0 },
   rankHash: { fontSize: 9, fontWeight: '900', color: C.PRIMARY_LIGHT, lineHeight: 10 },
@@ -529,6 +546,11 @@ export default function LeaderboardScreen({ navigation }) {
   const [ownUserId, setOwnUserId] = useState(null);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
+  // Score submission is a no-op for guests (submitScore returns 'not_signed_in'
+  // instead of failing loudly) — track this separately so YourRankCard can
+  // route them to registration instead of silently showing an empty rank.
+  const [signedIn,  setSignedIn]  = useState(!!getUser());
+  useEffect(() => onAuthChanged(user => setSignedIn(!!user)), []);
 
   // Monotonic request id — only the most recent load is allowed to commit state,
   // so a slow response for a tab the user already left can't overwrite the view.
@@ -708,7 +730,10 @@ export default function LeaderboardScreen({ navigation }) {
                 <Text style={s.dividerTxt}>YOUR RANKING</Text>
                 <View style={s.dividerLine} />
               </View>
-              <YourRankCard rank={ownRank} score={ownScore} name={playerProfile?.name} unit={unit} />
+              <YourRankCard
+                rank={ownRank} score={ownScore} name={playerProfile?.name} unit={unit}
+                signedIn={signedIn} onRegister={() => navigation.navigate('CloudAuth')}
+              />
             </View>
 
             {/* Vertical separator */}

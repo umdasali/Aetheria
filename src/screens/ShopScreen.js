@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { GEM_PACKS, BUNDLES, HERO_PACKS, IAP_ENABLED } from '../data/shopPacks';
 import { resolvePurchase } from '../shop/purchaseHandler';
+import { isSignedIn } from '../cloud/auth';
 import { restorePurchases, getLivePrices } from '../utils/RevenueCatManager';
 import { getHeroById } from '../data/heroes';
 import { getAscensionItemById } from '../data/ascensionItems';
@@ -282,6 +283,14 @@ export default function ShopScreen({ navigation }) {
 
   const handleBuy = async (pack) => {
     if (purchasingRef.current) return;
+    // Real-money purchases require a registered account — a guest's uid/name
+    // is never claimed server-side, so there's no identity to attach a
+    // receipt/refund history to. Gem-cost packs (exclusive/hero packs) spend
+    // in-game currency, not real money, so guests can still buy those.
+    if (pack.currency === 'iap' && !isSignedIn()) {
+      navigation.navigate('CloudAuth');
+      return;
+    }
     purchasingRef.current = true;
     setPurchasing(true);
     try {

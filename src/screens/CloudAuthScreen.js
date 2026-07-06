@@ -16,6 +16,19 @@ import { downloadSave, uploadSave, resolveConflict } from '../cloud/cloudSave';
 import { migrate } from '../store/migrations';
 import { sanitizeState } from '../store/sanitizeState';
 import useGameStore from '../store/gameStore';
+import { checkNameAvailable, claimName, NAME_PATTERN } from '../cloud/nameService';
+
+// Name key rules mirror supabase/migrations/0003_player_names.sql exactly:
+// 3-16 chars, letters/digits/spaces/underscore/hyphen only.
+const NAME_HINT = '3-16 characters — letters, numbers, spaces, - or _';
+
+const NAME_STATUS = [
+  { key: 'idle',      text: NAME_HINT,                    color: C.TEXT_MUTED },
+  { key: 'invalid',   text: NAME_HINT,                    color: C.DANGER },
+  { key: 'checking',  text: 'Checking availability…',     color: C.TEXT_MUTED },
+  { key: 'available', text: 'Name is available',          color: C.SUCCESS },
+  { key: 'taken',     text: 'That name is already taken', color: C.DANGER },
+];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // InputField MUST be defined at module level — never inside the component.
@@ -27,9 +40,10 @@ function InputField({
   icon, placeholder, value, onChangeText,
   secureTextEntry, keyboardType, returnKeyType,
   onSubmitEditing, autoCapitalize = 'none', rightElement,
+  maxLength, editable = true,
 }) {
   return (
-    <View style={s.inputRow}>
+    <View style={[s.inputRow, !editable && s.inputRowDisabled]}>
       <Ionicons name={icon} size={rs(18)} color={C.TEXT_MUTED} style={s.inputIcon} />
       <TextInput
         style={s.input}
@@ -43,6 +57,8 @@ function InputField({
         autoCorrect={false}
         returnKeyType={returnKeyType || 'next'}
         onSubmitEditing={onSubmitEditing}
+        maxLength={maxLength}
+        editable={editable}
       />
       {rightElement ?? null}
     </View>
@@ -117,6 +133,63 @@ export default function CloudAuthScreen({ navigation }) {
   // null → hidden | 'loading' → syncing phase | 'done' → restart prompt
   const [cloudSyncState, setCloudSyncState] = useState(null);
 
+  // ── Commander name (claimed together with the account at sign-up) ──────────
+  const [name,       setName]       = useState('');
+  const [nameStatus, setNameStatus] = useState('idle'); // idle|invalid|checking|available|taken
+  // Set once signUp() has created the auth account but claiming the chosen name
+  // failed (race: someone else claimed it a moment earlier) — the account
+  // already exists, so retrying here must only re-attempt the name claim, not
+  // signUp() again (which would fail with "already registered").
+  const [pendingAccountUser, setPendingAccountUser] = useState(null);
+  // Guards against an older in-flight checkNameAvailable() call resolving after
+  // a newer one (out-of-order network responses) and overwriting nameStatus
+  // with a stale result for a name the player has since changed.
+  const checkIdRef = useRef(0);
+
+  useEffect(() => {
+    if (step !== 'signup') return;
+    const trimmed = name.trim();
+    if (!NAME_PATTERN.test(trimmed)) {
+      checkIdRef.current += 1; // invalidate any check still in flight
+      setNameStatus(trimmed.length === 0 ? 'idle' : 'invalid');
+      return;
+    }
+    setNameStatus('checking');
+    const myCheckId = ++checkIdRef.current;
+    const t = setTimeout(async () => {
+      const res = await checkNameAvailable(trimmed);
+      if (checkIdRef.current !== myCheckId) return; // superseded by a newer edit
+      // Can't verify while offline/unreachable — don't block the player over it.
+      setNameStatus(res.networkError ? 'idle' : (res.available ? 'available' : 'taken'));
+    }, 450);
+    return () => clearTimeout(t);
+  }, [name, step]);
+
+  // Claims the uid (guaranteeing it's globally unique before it's used as a
+  // trust token — see uidService.js) then the chosen name. Used both right
+  // after a fresh signUp() and as the retry when a first attempt hit 'taken'.
+  const claimIdentity = async (trimmedName) => {
+    await useGameStore.getState().claimPlayerUid();
+    const uid = useGameStore.getState().playerUid;
+    const res = await claimName(trimmedName, uid);
+
+    if (res.claimed) {
+      useGameStore.getState().updateProfile({ name: res.displayName || trimmedName });
+      useGameStore.setState({ serverClaimedName: res.displayName || trimmedName, pendingNameClaim: null });
+      return { ok: true };
+    }
+    if (res.networkError) {
+      // Offline-friendly: commit the name locally and retry the server claim
+      // later (see retryPendingNameClaim() in gameStore.js) instead of
+      // blocking account creation on connectivity.
+      useGameStore.getState().updateProfile({ name: trimmedName });
+      useGameStore.setState({ pendingNameClaim: trimmedName });
+      return { ok: true };
+    }
+    if (res.reason === 'taken') return { ok: false, reason: 'taken' };
+    return { ok: false, reason: 'invalid' };
+  };
+
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const timerRef          = useRef(null);
@@ -152,6 +225,9 @@ export default function CloudAuthScreen({ navigation }) {
 
   const goToStep = (s) => {
     setError(''); setInfo(''); setPassword(''); setConfirm('');
+    // Leaving signup (e.g. back to Sign In) abandons any in-progress
+    // account-created-but-name-not-claimed retry state.
+    if (s !== 'signup') { setPendingAccountUser(null); setName(''); setNameStatus('idle'); }
     setStep(s);
   };
 
@@ -278,6 +354,30 @@ export default function CloudAuthScreen({ navigation }) {
   };
 
   const handleSignUp = async () => {
+    const trimmedName = name.trim();
+    if (!NAME_PATTERN.test(trimmedName) || nameStatus === 'taken' || loading) return;
+
+    // Retry path: a previous attempt already created the account and only the
+    // name claim failed (someone else took it a moment earlier). Don't call
+    // signUp() again — Supabase would reject it as "already registered".
+    if (pendingAccountUser) {
+      setLoading(true); setError('');
+      const claimRes = await claimIdentity(trimmedName);
+      setLoading(false);
+      if (!claimRes.ok) {
+        setNameStatus('taken');
+        setError('That name is already taken — try another.');
+        return;
+      }
+      const user = pendingAccountUser;
+      setPendingAccountUser(null);
+      verifyPasswordRef.current = password;
+      setVerifyEmail(user.email);
+      startCooldown();
+      goToStep('verify');
+      return;
+    }
+
     if (!email.trim() || !password || !confirm) return;
     if (password !== confirm)   { setError('Passwords do not match.');               return; }
     if (password.length < 6)    { setError('Password must be at least 6 characters.'); return; }
@@ -297,6 +397,22 @@ export default function CloudAuthScreen({ navigation }) {
       // syncAndClose treats the current local data as belonging to this user
       // and uploads it rather than treating it as a foreign account's data.
       useGameStore.setState({ localUserId: user.id });
+
+      // Claim the Commander name (and, transitively, the uid it rides on)
+      // together with the account — see claimIdentity above. Identity is
+      // only ever reserved server-side at this registration step, never at
+      // app launch, so an install that never signs up never burns a
+      // uid/name row.
+      const claimRes = await claimIdentity(trimmedName);
+      if (!claimRes.ok) {
+        // Account exists, but the name we checked a moment ago was just
+        // claimed by someone else. Keep the player here to pick a new one.
+        setLoading(false);
+        setPendingAccountUser(user);
+        setNameStatus('taken');
+        setError('That name was just taken — pick another to finish setting up your account.');
+        return;
+      }
 
       verifyPasswordRef.current = password;
       setVerifyEmail(user.email);
@@ -412,33 +528,63 @@ export default function CloudAuthScreen({ navigation }) {
       </>
     );
 
-    if (step === 'signup') return (
-      <>
-        <Text style={s.formTitle}>Create Account</Text>
-        <InputField
-          icon="mail-outline" placeholder="Email" value={email}
-          onChangeText={setEmail} keyboardType="email-address"
-        />
-        <InputField
-          icon="lock-closed-outline" placeholder="Password (min 6 chars)" value={password}
-          onChangeText={setPassword} secureTextEntry={!showPass}
-          rightElement={eyeToggle}
-        />
-        <InputField
-          icon="lock-closed-outline" placeholder="Confirm Password" value={confirm}
-          onChangeText={setConfirm} secureTextEntry={!showPass}
-          returnKeyType="done" onSubmitEditing={handleSignUp}
-        />
-        <View style={s.errorArea}>
-          {error ? <Text style={s.errorTxt}>{error}</Text> : null}
-        </View>
-        <PrimaryBtn label="CREATE ACCOUNT" onPress={handleSignUp} loading={loading}
-          disabled={!email.trim() || !password || !confirm} />
-        <TouchableOpacity onPress={() => goToStep('login')} style={s.linkBtn}>
-          <Text style={s.linkTxt}>Back to Sign In</Text>
-        </TouchableOpacity>
-      </>
-    );
+    if (step === 'signup') {
+      const nameInfo = NAME_STATUS.find(st => st.key === nameStatus) ?? NAME_STATUS[0];
+      // Set once a previous attempt already created the account and only the
+      // name claim needs to be retried — the account fields are locked so the
+      // player can't accidentally trigger a second signUp() for the same email.
+      const accountLocked = !!pendingAccountUser;
+      const nameOk = NAME_PATTERN.test(name.trim()) && nameStatus !== 'taken' && nameStatus !== 'checking';
+      const canSubmit = nameOk && (accountLocked || (email.trim() && password && confirm));
+
+      return (
+        <>
+          <Text style={s.formTitle}>Create Account</Text>
+          <InputField
+            icon="person-outline" placeholder="Commander Name" value={name}
+            onChangeText={setName} maxLength={16} autoCapitalize="words"
+            editable={!accountLocked}
+          />
+          <View style={s.nameStatusRow}>
+            {nameStatus === 'checking' && (
+              <Ionicons name="ellipsis-horizontal" size={rf(11)} color={nameInfo.color} />
+            )}
+            {nameStatus === 'available' && (
+              <Ionicons name="checkmark-circle" size={rf(11)} color={nameInfo.color} />
+            )}
+            {(nameStatus === 'taken' || nameStatus === 'invalid') && (
+              <Ionicons name="alert-circle" size={rf(11)} color={nameInfo.color} />
+            )}
+            <Text style={[s.nameStatusText, { color: nameInfo.color }]}>{nameInfo.text}</Text>
+          </View>
+          <InputField
+            icon="mail-outline" placeholder="Email" value={email}
+            onChangeText={setEmail} keyboardType="email-address"
+            editable={!accountLocked}
+          />
+          <InputField
+            icon="lock-closed-outline" placeholder="Password (min 6 chars)" value={password}
+            onChangeText={setPassword} secureTextEntry={!showPass}
+            rightElement={eyeToggle} editable={!accountLocked}
+          />
+          <InputField
+            icon="lock-closed-outline" placeholder="Confirm Password" value={confirm}
+            onChangeText={setConfirm} secureTextEntry={!showPass}
+            returnKeyType="done" onSubmitEditing={handleSignUp} editable={!accountLocked}
+          />
+          <View style={s.errorArea}>
+            {error ? <Text style={s.errorTxt}>{error}</Text> : null}
+          </View>
+          <PrimaryBtn
+            label={accountLocked ? 'CLAIM NAME & CONTINUE' : 'CREATE ACCOUNT'}
+            onPress={handleSignUp} loading={loading} disabled={!canSubmit}
+          />
+          <TouchableOpacity onPress={() => goToStep('login')} style={s.linkBtn}>
+            <Text style={s.linkTxt}>Back to Sign In</Text>
+          </TouchableOpacity>
+        </>
+      );
+    }
 
     if (step === 'forgot') return (
       <>
@@ -669,9 +815,16 @@ const s = StyleSheet.create({
     backgroundColor: C.BG_CARD, paddingHorizontal: rs(10),
     height: rs(38), marginBottom: rs(6),
   },
+  inputRowDisabled: { opacity: 0.45 },
   inputIcon: { marginRight: rs(7) },
   input:     { flex: 1, fontSize: rf(12), color: C.TEXT, fontWeight: '600' },
   eyeBtn:    { padding: rs(3) },
+
+  nameStatusRow: {
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    marginBottom: rs(6),
+  },
+  nameStatusText: { fontSize: rf(11), fontWeight: '600' },
 
   errorArea: { minHeight: rs(18), justifyContent: 'center', marginBottom: rs(4) },
   errorTxt:  { fontSize: rf(13), color: C.DANGER,  fontWeight: '700' },

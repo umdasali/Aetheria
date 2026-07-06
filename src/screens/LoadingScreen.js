@@ -91,13 +91,13 @@ export default function LoadingScreen({ navigation }) {
       if (navigated || !barDone || !hydrated) return;
       navigated = true;
       AudioManager.prewarmSFX();
-      // Best-effort, fire-and-forget: registers this device's playerUid as
-      // globally-unique server-side (src/cloud/uidService.js). Never blocks
-      // navigation — safe to fail offline and is retried on the next cold
-      // start since the RPC is idempotent for an already-registered UID.
-      useGameStore.getState().claimPlayerUid();
-      // Best-effort, fire-and-forget: retries a name claim/rename that
-      // previously failed offline (see OnboardingScreen.js / EditProfileScreen.js).
+      // Best-effort, fire-and-forget: retries a uid/name claim that previously
+      // failed offline mid-registration (see CloudAuthScreen.js /
+      // EditProfileScreen.js). Guests who never registered have nothing
+      // pending here, so this is a no-op for them — claimPlayerUid/claimName
+      // now only fire from CloudAuthScreen's sign-up flow, not unconditionally
+      // on every launch, so an install that never registers never reserves a
+      // uid/name row server-side.
       useGameStore.getState().retryPendingNameClaim();
       const seen = useGameStore.getState().hasSeenOnboarding;
       navigation.replace(seen ? 'Home' : 'Onboarding');

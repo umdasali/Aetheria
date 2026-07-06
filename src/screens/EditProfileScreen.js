@@ -12,6 +12,7 @@ import { C } from '../theme/colors';
 import { rs, rf } from '../theme/scale';
 import AudioManager from '../utils/AudioManager';
 import { NAME_PATTERN, checkNameAvailable, claimName, renameName } from '../cloud/nameService';
+import { getUser, onAuthChanged } from '../cloud/auth';
 
 const { width: W } = Dimensions.get('window');
 
@@ -37,6 +38,12 @@ export default function EditProfileScreen({ navigation }) {
   const playerProfile  = useGameStore(s => s.playerProfile);
   const updateProfile  = useGameStore(s => s.updateProfile);
   const playerUid      = useGameStore(s => s.playerUid);
+
+  // The Commander name is a globally-unique, server-claimed identity — only
+  // available to registered (signed-in) players, claimed together with their
+  // account at CloudAuthScreen sign-up. Guests keep the local default name.
+  const [registered, setRegistered] = useState(!!getUser());
+  useEffect(() => onAuthChanged(user => setRegistered(!!user)), []);
 
   const [editName,      setEditName]      = useState(playerProfile.name            || '');
   const [editSig,       setEditSig]       = useState(playerProfile.signature       || '');
@@ -189,7 +196,7 @@ export default function EditProfileScreen({ navigation }) {
           >
             <Text style={s.fieldLbl}>DISPLAY NAME</Text>
             <TextInput
-              style={s.input}
+              style={[s.input, !registered && s.inputDisabled]}
               value={editName}
               onChangeText={setEditName}
               maxLength={16}
@@ -198,21 +205,35 @@ export default function EditProfileScreen({ navigation }) {
               placeholder="Commander"
               placeholderTextColor={C.TEXT_DISABLED}
               selectionColor={C.PRIMARY}
+              editable={registered}
             />
-            <View style={s.nameStatusRow}>
-              {(() => {
-                const info = NAME_STATUS.find(st => st.key === nameStatus) ?? NAME_STATUS[0];
-                return (
-                  <>
-                    {nameStatus === 'checking'  && <Ionicons name="ellipsis-horizontal" size={rf(11)} color={info.color} />}
-                    {nameStatus === 'available' && <Ionicons name="checkmark-circle"    size={rf(11)} color={info.color} />}
-                    {(nameStatus === 'taken' || nameStatus === 'invalid') && <Ionicons name="alert-circle" size={rf(11)} color={info.color} />}
-                    <Text style={[s.nameStatusText, { color: info.color }]}>{info.text}</Text>
-                  </>
-                );
-              })()}
-            </View>
-            {saveError ? <Text style={[s.nameStatusText, { color: C.DANGER }]}>{saveError}</Text> : null}
+            {registered ? (
+              <>
+                <View style={s.nameStatusRow}>
+                  {(() => {
+                    const info = NAME_STATUS.find(st => st.key === nameStatus) ?? NAME_STATUS[0];
+                    return (
+                      <>
+                        {nameStatus === 'checking'  && <Ionicons name="ellipsis-horizontal" size={rf(11)} color={info.color} />}
+                        {nameStatus === 'available' && <Ionicons name="checkmark-circle"    size={rf(11)} color={info.color} />}
+                        {(nameStatus === 'taken' || nameStatus === 'invalid') && <Ionicons name="alert-circle" size={rf(11)} color={info.color} />}
+                        <Text style={[s.nameStatusText, { color: info.color }]}>{info.text}</Text>
+                      </>
+                    );
+                  })()}
+                </View>
+                {saveError ? <Text style={[s.nameStatusText, { color: C.DANGER }]}>{saveError}</Text> : null}
+              </>
+            ) : (
+              <TouchableOpacity
+                style={s.registerCta}
+                onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('CloudAuth'); }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="lock-closed-outline" size={rf(11)} color={C.PRIMARY_LIGHT} />
+                <Text style={s.registerCtaTxt}>Register your account to set a name</Text>
+              </TouchableOpacity>
+            )}
 
             <Text style={s.fieldLbl}>SIGNATURE</Text>
             <TextInput
@@ -350,12 +371,21 @@ const s = StyleSheet.create({
     fontSize: rf(13), color: C.TEXT, marginBottom: rs(6),
   },
   inputMulti: { height: rs(60), textAlignVertical: 'top', paddingTop: rs(9) },
+  inputDisabled: { opacity: 0.45 },
 
   nameStatusRow: {
     flexDirection: 'row', alignItems: 'center', gap: rs(5),
     marginBottom: rs(12),
   },
   nameStatusText: { fontSize: rf(11), fontWeight: '600' },
+  registerCta: {
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    marginBottom: rs(12),
+  },
+  registerCtaTxt: {
+    fontSize: rf(11), fontWeight: '600', color: C.PRIMARY_LIGHT,
+    textDecorationLine: 'underline',
+  },
 
   factionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(6) },
   factionBtn: {
