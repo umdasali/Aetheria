@@ -38,5 +38,9 @@ export function sanitizeState(raw) {
         Math.min(Math.max(0, (raw.ascensionInventory?.[id]) || 0), 9999),
       ])
     ),
+
+    // Added after several schema versions shipped without a migration entry —
+    // older saves can hydrate with this field missing entirely.
+    pendingCodexUnlocks: Array.isArray(raw.pendingCodexUnlocks) ? raw.pendingCodexUnlocks : [],
   };
 }

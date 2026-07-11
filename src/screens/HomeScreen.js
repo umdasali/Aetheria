@@ -20,27 +20,33 @@ import WeatherEffect from '../components/WeatherEffect';
 import { C, RANK } from '../theme/colors';
 import { calcPlayerLevel } from '../utils/playerLevel';
 import HeroCard from '../components/HeroCard';
+import CornerBrackets from '../components/ui/CornerBrackets';
 import { rs, rf } from '../theme/scale';
 
 const { width: W, height: H } = Dimensions.get('window');
 
-// ── Sidebar grid constants ────────────────────────────────────────────────────
-// 2-column grid: CELL_W = (SIDEBAR_W − PANEL_PAD×2 − GAP) / 2
-const SIDEBAR_W  = 164;
-const PANEL_PAD  = 12;
+// ── Left menu list constants ──────────────────────────────────────────────────
+const SIDEBAR_W  = 176;
+const SIDE_GAP   = 8;
 
 const SUMMON_THUMB = require('../../assets/heroes/hero_002.webp');
 
-
+// Secondary hub actions — vertical list on the left. Heroes/Team/World/Codex
+// live in the bottom tab bar instead, and Daily Reward is a top-HUD icon.
 const SIDE_MENU = [
-  { key: 'heroes',  image: require('../../assets/currency/heroes.webp'),   label: 'Heroes', a11yLabel: 'Heroes',             badge: false, accent: C.GOLD,          screen: 'Collection'  },
-  { key: 'daily',   image: require('../../assets/currency/packs.png'),    label: 'Daily',  a11yLabel: 'Claim Daily Reward', badge: false, accent: C.CYAN,          screen: 'DailyReward' },
-  { key: 'quests',  image: require('../../assets/home/quest.png'),        label: 'Quests', a11yLabel: 'Daily Quests',       badge: false, accent: C.SUCCESS,       screen: 'DailyQuests' },
-  { key: 'team',    image: require('../../assets/home/team.png'),         label: 'Team',   a11yLabel: 'Build Team',         badge: false, accent: C.PRIMARY_LIGHT, screen: 'TeamBuild'   },
-  { key: 'world',        image: require('../../assets/home/world-map.png'),  label: 'World',    a11yLabel: 'World Map',        badge: false, accent: C.SECONDARY,     screen: 'WorldMap'     },
-  { key: 'events',       image: require('../../assets/home/events.png'),       label: 'Events',   a11yLabel: 'Limited Events',   badge: false, accent: C.GOLD,          screen: 'Events'       },
-  { key: 'achievements', image: require('../../assets/home/achieve.png'),      label: 'Achieve',  a11yLabel: 'Achievements',     badge: false, accent: C.PRIMARY_LIGHT, screen: 'Achievements' },
-  { key: 'rankings',     image: require('../../assets/home/ranking.png'),      label: 'Rankings', a11yLabel: 'Leaderboards',     badge: false, accent: C.CYAN,          screen: 'Leaderboard'  },
+  { key: 'events',       image: require('../../assets/home/events.png'),  label: 'Events',   sub: 'New rewards!',  a11yLabel: 'Limited Events',   badge: false, accent: C.GOLD,          screen: 'Events'       },
+  { key: 'quests',       image: require('../../assets/home/quest.png'),   label: 'Quests',   sub: 'Daily tasks',   a11yLabel: 'Daily Quests',      badge: false, accent: C.SUCCESS,       screen: 'DailyQuests'  },
+  { key: 'achievements', image: require('../../assets/home/achieve.png'), label: 'Achieve',  sub: 'Claim rewards', a11yLabel: 'Achievements',      badge: false, accent: C.PRIMARY_LIGHT, screen: 'Achievements' },
+  { key: 'rankings',     image: require('../../assets/home/ranking.png'), label: 'Rankings', sub: 'Top players',   a11yLabel: 'Leaderboards',      badge: false, accent: C.CYAN,          screen: 'Leaderboard'  },
+];
+
+// Persistent-look bottom bar — pushes into the existing Stack (not a real
+// react-navigation tab bar), so there's no cross-screen "active tab" state.
+const BOTTOM_TABS = [
+  { key: 'heroes', image: require('../../assets/home/heroes.png'),    label: 'Heroes', screen: 'Collection' },
+  { key: 'team',   image: require('../../assets/home/team.png'),      label: 'Team',   screen: 'TeamBuild'  },
+  { key: 'world',  image: require('../../assets/home/world-map.png'), label: 'World',  screen: 'WorldMap'   },
+  { key: 'codex',  image: require('../../assets/home/codex.png'),     label: 'Codex',  screen: 'Codex', badgeKey: 'codex' },
 ];
 
 export default function HomeScreen({ navigation }) {
@@ -66,6 +72,7 @@ export default function HomeScreen({ navigation }) {
   const achievements              = useGameStore(s => s.achievements);
   const pendingAchievementUnlocks = useGameStore(s => s.pendingAchievementUnlocks);
   const clearAchievementUnlocks   = useGameStore(s => s.clearAchievementUnlocks);
+  const pendingCodexUnlocks       = useGameStore(s => s.pendingCodexUnlocks);
 
   const [milestoneVisible, setMilestoneVisible] = useState(false);
   // Show the head of the queue — clearMilestoneReward shifts it off, revealing
@@ -80,6 +87,10 @@ export default function HomeScreen({ navigation }) {
       .filter(Boolean),
     [pendingAchievementUnlocks],
   );
+
+  // Codex unlocks are surfaced only as a badge on the bottom tab (see BOTTOM_TABS
+  // below) — cleared when the player actually opens the Codex screen — rather
+  // than an interrupting modal.
 
   const { level: playerLevel, currentXP, nextLevelXP, progress } = useMemo(
     () => calcPlayerLevel({ completedChapters, ownedHeroes, heroCollection, dailyStreak }),
@@ -258,6 +269,9 @@ export default function HomeScreen({ navigation }) {
                   colors={['transparent', C.OVERLAY_3]}
                   style={styles.avatarOverlay}
                 />
+                <View style={[styles.avatarLvBadge, { backgroundColor: factionColor }]}>
+                  <Text style={styles.avatarLvBadgeText}>{playerLevel}</Text>
+                </View>
               </View>
               <View>
                 <View style={styles.nameRow}>
@@ -287,32 +301,22 @@ export default function HomeScreen({ navigation }) {
                 tint={C.PRIMARY_LIGHT}
                 onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Shop'); }}
               />
-              <View style={styles.currSep} />
               <CurrencyChip
                 icon={require('../../assets/currency/gold.png')}
                 value={gold}
                 tint={C.GOLD}
                 onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Shop'); }}
               />
-              {/* <View style={styles.currSep} /> */}
-              {/* <CurrencyChip
-                icon={require('../../assets/currency/pack.png')}
-                value={ownedHeroes.length}
-                tint={C.SUCCESS}
-              /> */}
             </View>
 
             <View style={{ flex: 1 }} />
 
             {/* Icon buttons */}
             <View style={styles.topIcons}>
-              {/* <TouchableOpacity style={styles.topIconBtn}>
-                <Ionicons name="notifications-outline" size={rs(17)} color={C.ICON_ON_DARK} />
-                <View style={styles.notifDot} />
+              <TouchableOpacity style={styles.topIconBtn} onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('DailyReward'); }} accessibilityLabel="Open Daily Rewards" accessibilityRole="button">
+                <Ionicons name="calendar" size={rs(17)} color={C.ICON_ON_DARK} />
+                {canClaim && <View style={styles.notifDot} />}
               </TouchableOpacity>
-              <TouchableOpacity style={styles.topIconBtn}>
-                <Ionicons name="mail-outline" size={rs(17)} color={C.ICON_ON_DARK} />
-              </TouchableOpacity> */}
               <TouchableOpacity style={styles.topIconBtn} onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Shop'); }} accessibilityLabel="Open Shop" accessibilityRole="button">
                 <Ionicons name="storefront" size={rs(17)} color={C.GOLD} />
               </TouchableOpacity>
@@ -328,16 +332,11 @@ export default function HomeScreen({ navigation }) {
             {/* ── Left sidebar ── */}
             <View style={styles.leftSidebar}>
               <View style={styles.sidePanel}>
-                {/* <LinearGradient
-                  colors={[C.BG_SCREEN + '08', C.GLASS_EDGE]}
-                  style={StyleSheet.absoluteFill}
-                /> */}
-                {/* <View style={[StyleSheet.absoluteFill, styles.sidePanelBorder]} /> */}
                 {SIDE_MENU.map(({ key: k, screen, ...item }) => (
                   <SideItem
                     key={k}
                     {...item}
-                    badge={k === 'daily' ? canClaim : k === 'quests' ? hasClaimableQuests : k === 'achievements' ? hasClaimableAchievements : item.badge}
+                    badge={k === 'quests' ? hasClaimableQuests : k === 'achievements' ? hasClaimableAchievements : item.badge}
                     screen={screen}
                     onNavigate={handleSideNavigate}
                   />
@@ -345,10 +344,10 @@ export default function HomeScreen({ navigation }) {
               </View>
             </View>
 
-            {/* small spacer between sidebar and the tile grid */}
+            {/* small spacer between sidebar and the card stack */}
             <View style={styles.centerGap} />
 
-            {/* ── Right action panels — 2-column tile grid (no scroll) ── */}
+            {/* ── Right action panels — single-column cinematic card stack ── */}
             <View style={[styles.rightPanels, { width: (screenW - SIDEBAR_W - 16) / 2 }]}>
               {panelData.map(({ key: k, ...p }) => (
                 <ActionPanel key={k} {...p} />
@@ -357,14 +356,23 @@ export default function HomeScreen({ navigation }) {
 
           </View>
 
-          {/* ── News ticker — inside SafeAreaView so home indicator doesn't overlap ── */}
-          <View style={styles.ticker}>
-            <View style={styles.tickerTag}>
-              <Text style={styles.tickerTagText}>NEWS</Text>
-            </View>
-            <Text style={styles.tickerText} numberOfLines={1}>
-              v1.0 Launch — Welcome to Aetheria: Legends Unbound! Complete story chapters to unlock heroes and earn rare rewards.
-            </Text>
+          {/* ── Bottom tab bar — pushes into the existing Stack, not a real tab navigator.
+              No tab is drawn "active": Home isn't literally any of these 4 screens. ── */}
+          <View style={styles.bottomBar}>
+            <LinearGradient
+              colors={[C.BG_DARK + 'CC', C.BG_VOID + 'CC']}
+              style={StyleSheet.absoluteFill}
+            />
+            <CornerBrackets color={C.SOVEREIGN_GOLD} size={rs(12)} thickness={1.5} inset={-1} opacity={0.55} />
+            {BOTTOM_TABS.flatMap(({ key: k, ...t }, i) => [
+              <BottomTab
+                key={k}
+                {...t}
+                badge={t.badgeKey === 'codex' ? pendingCodexUnlocks.length > 0 : false}
+                onNavigate={handleSideNavigate}
+              />,
+              i < BOTTOM_TABS.length - 1 && <View key={`div-${k}`} style={styles.bottomTabDivider} />,
+            ]).filter(Boolean)}
           </View>
 
         </Animated.View>
@@ -565,7 +573,7 @@ function CurrencyChip({ icon, value, tint, onPress }) {
   );
 }
 
-const SideItem = memo(function SideItem({ icon, image, label, a11yLabel, badge, accent, screen, onNavigate }) {
+const SideItem = memo(function SideItem({ icon, image, label, sub, a11yLabel, badge, accent, screen, onNavigate }) {
   const onPress = screen ? () => onNavigate(screen) : undefined;
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
@@ -588,14 +596,14 @@ const SideItem = memo(function SideItem({ icon, image, label, a11yLabel, badge, 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.72} style={styles.sideItem} accessibilityLabel={a11yLabel || label} accessibilityRole="button">
 
-      {/* Card face — vertical compact */}
+      {/* Card face — horizontal row */}
       <View style={[styles.sideFace, { borderColor: accent + '45' }]}>
         <LinearGradient
           colors={[C.BG_SCREEN + 'EB', C.BG_DARK + 'D6']}
           style={StyleSheet.absoluteFill}
         />
-        {/* Top accent line */}
-        <View style={[styles.sideTopLine, { backgroundColor: accent }]} />
+        {/* Left accent strip */}
+        <View style={[styles.sideStrip, { backgroundColor: accent }]} />
 
         {/* Icon box */}
         <View style={[styles.sideIconWrap, { backgroundColor: accent + '20' }]}>
@@ -607,23 +615,110 @@ const SideItem = memo(function SideItem({ icon, image, label, a11yLabel, badge, 
           )}
           {image
             ? <Image source={image} style={styles.sideIcon} resizeMode="contain" />
-            : <Ionicons name={icon} size={rs(22)} color={accent} />
+            : <Ionicons name={icon} size={rs(18)} color={accent} />
           }
         </View>
 
-        {/* Label */}
-        <Text style={[styles.sideLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
-      </View>
-
-      {/* Badge dot + pulsing ring */}
-      {badge && (
-        <View style={styles.sideBadgeWrap}>
-          <Animated.View
-            style={[styles.sideBadgeRing, { borderColor: C.SECONDARY, transform: [{ scale: ringScale }], opacity: ringOp }]}
-          />
-          <View style={[styles.sideBadgeDot, { backgroundColor: C.SECONDARY }]} />
+        {/* Label + subtitle */}
+        <View style={styles.sideTextCol}>
+          <Text style={[styles.sideLabel, { color: accent }]} numberOfLines={1}>{label}</Text>
+          {!!sub && <Text style={styles.sideSub} numberOfLines={1}>{sub}</Text>}
         </View>
-      )}
+
+        {/* Badge dot + pulsing ring */}
+        {badge && (
+          <View style={styles.sideBadgeWrap}>
+            <Animated.View
+              style={[styles.sideBadgeRing, { borderColor: C.SECONDARY, transform: [{ scale: ringScale }], opacity: ringOp }]}
+            />
+            <View style={[styles.sideBadgeDot, { backgroundColor: C.SECONDARY }]} />
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+});
+
+// Simple floating particle effect for the tab bar — small dots rise and fade,
+// looping forever, spread across the whole tab.
+const TAB_PARTICLES = [
+  { delay: 0,    left: '20%', duration: 2200 },
+  { delay: 500,  left: '50%', duration: 1900 },
+  { delay: 1000, left: '80%', duration: 2400 },
+];
+
+function TabParticle({ delay, left, duration }) {
+  const t = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(t, { toValue: 1, duration, useNativeDriver: true }),
+        Animated.timing(t, { toValue: 0, duration: 0, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => { loop.stop(); t.stopAnimation(); };
+  }, []);
+
+  const translateY = t.interpolate({ inputRange: [0, 1], outputRange: [0, -rs(36)] });
+  const opacity     = t.interpolate({ inputRange: [0, 0.15, 0.8, 1], outputRange: [0, 1, 0.7, 0] });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.tabParticle, { left, opacity, transform: [{ translateY }] }]}
+    />
+  );
+}
+
+// Soft pulsing purple illumination rendered behind the tab icon.
+function TabIconGlow() {
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 1500, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => { loop.stop(); pulse.stopAnimation(); };
+  }, []);
+
+  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.75] });
+  const scale   = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.15] });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.tabIconGlow, { opacity, transform: [{ scale }] }]}
+    />
+  );
+}
+
+const BottomTab = memo(function BottomTab({ image, label, badge, screen, onNavigate }) {
+  return (
+    <TouchableOpacity
+      onPress={() => onNavigate(screen)}
+      activeOpacity={0.6}
+      style={styles.bottomTab}
+      accessibilityLabel={label}
+      accessibilityRole="button"
+    >
+      {TAB_PARTICLES.map((p, i) => <TabParticle key={i} {...p} />)}
+      <View style={styles.bottomTabIconWrap}>
+        <TabIconGlow />
+        <Image source={image} style={styles.bottomTabIcon} resizeMode="contain" />
+        {badge && (
+          <View style={styles.bottomTabBadge}>
+            <Text style={styles.bottomTabBadgeText}>!</Text>
+          </View>
+        )}
+      </View>
+      <Text style={styles.bottomTabLabel} numberOfLines={1}>{label}</Text>
     </TouchableOpacity>
   );
 });
@@ -664,10 +759,6 @@ function ActionPanel({ tag, accent, title, sub, thumb, progressRatio, badge, onP
             />
           </View>
         )}
-        {/* <View style={styles.panelEnterRow}>
-          <Text style={[styles.panelEnterText, { color: accent }]}>ENTER</Text>
-          <Ionicons name="chevron-forward" size={rs(9)} color={accent} />
-        </View> */}
       </View>
 
       {/* Thumbnail — normal flex child, no overlap */}
@@ -689,8 +780,8 @@ function ActionPanel({ tag, accent, title, sub, thumb, progressRatio, badge, onP
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.BG_SCREEN },
-  safe: { flex: 1 },
-  shell: { flex: 1 },
+  safe: { flex: 1,  },
+  shell: { flex: 1, paddingHorizontal: rs(20), gap: rs(4) },
 
   // Vignettes
   vigTop:    { position: 'absolute', top: 0,    left: 0, right: 0, height: H * 0.3  },
@@ -703,19 +794,25 @@ const styles = StyleSheet.create({
     height: rs(62),
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: rs(20), gap: rs(10),
-    // backgroundColor: 'rgba(0,0,0,0.55)',
-    // borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.07)',
   },
 
   playerBlock: { flexDirection: 'row', alignItems: 'center', gap: rs(18) },
   avatarFrame: {
-    width: rs(46), height: rs(46), borderRadius: rs(8),
-    borderWidth: 2, overflow: 'hidden',
+    width: rs(50), height: rs(50), borderRadius: rs(25),
+    borderWidth: 2, overflow: 'visible',
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: C.BG_MID,
   },
-  avatarImg:     { width: '100%', height: '100%', resizeMode: 'cover' },
-  avatarOverlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
+  avatarImg:     { width: '100%', height: '100%', borderRadius: rs(23), resizeMode: 'cover' },
+  avatarOverlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, borderRadius: rs(23) },
+  avatarLvBadge: {
+    position: 'absolute', bottom: -rs(3), right: -rs(3),
+    minWidth: rs(18), height: rs(18), borderRadius: rs(9),
+    paddingHorizontal: rs(3),
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: C.BG_SCREEN,
+  },
+  avatarLvBadgeText: { fontSize: rf(9), color: C.TEXT, fontWeight: '900' },
 
   nameRow:    { flexDirection: 'row', alignItems: 'center', gap: rs(5), marginBottom: rs(3) },
   playerName: { fontSize: rf(13), fontWeight: '800', color: C.TEXT, letterSpacing: 0.8 },
@@ -736,8 +833,12 @@ const styles = StyleSheet.create({
     marginHorizontal: rs(2),
   },
 
-  currRow: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
-  currChip: { flexDirection: 'row', alignItems: 'center', gap: rs(5), minHeight: rs(30), paddingVertical: rs(5) },
+  currRow: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
+  currChip: {
+    flexDirection: 'row', alignItems: 'center', gap: rs(5),
+    height: rs(30), paddingLeft: rs(6), paddingRight: rs(6), borderRadius: rs(15),
+    backgroundColor: C.GLASS_4, borderWidth: 1, borderColor: C.GLASS_6,
+  },
   currIcon: { width: rs(20), height: rs(20) },
   currVal:  { fontSize: rf(15), fontWeight: '800', minWidth: rs(26) },
   currAdd: {
@@ -746,7 +847,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1,
   },
-  currSep: { width: 1, height: rs(18), backgroundColor: C.GLASS_6 },
 
   topIcons: { flexDirection: 'row', gap: rs(5) },
   topIconBtn: {
@@ -765,48 +865,33 @@ const styles = StyleSheet.create({
   // ── Main row ──────────────────────────────────
   mainRow: { flex: 1, flexDirection: 'row' },
 
-  // ── Left sidebar ──────────────────────────────────
+  // ── Left sidebar — vertical action list ────────────
   leftSidebar: {
     width: SIDEBAR_W,
     justifyContent: 'center',
     paddingVertical: rs(8),
   },
 
-  // Glass panel — 2-column compact grid
   sidePanel: {
-    borderRadius: rs(14),
-    overflow: 'hidden',
-    padding: rs(PANEL_PAD),
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: rs(7),
-    position: 'relative',
-  },
-  sidePanelBorder: {
-    borderRadius: rs(14),
-    borderWidth: 1,
-    borderColor: C.GLASS_6,
+    flexDirection: 'column',
+    gap: rs(SIDE_GAP),
   },
 
-  // 2-column grid cell — width fills exactly half minus gap
   sideItem: {
-    width: (SIDEBAR_W - PANEL_PAD * 2 - 6) / 2,
-    height: rs(65),
-    position: 'relative',
+    width: '100%',
+    height: rs(56),
   },
 
-  // Card face — vertical compact
+  // Card face — horizontal row: [strip][icon][label+sub][badge]
   sideFace: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
+    flex: 1,
     borderRadius: rs(10),
     overflow: 'hidden',
     borderWidth: 1,
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: rs(4),
-    paddingVertical: rs(6),
+    gap: rs(9),
+    paddingHorizontal: rs(10),
     shadowColor: C.SHADOW,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.40,
@@ -814,35 +899,35 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
-  // Top accent line (replaces left stripe)
-  sideTopLine: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 2, borderTopLeftRadius: rs(10), borderTopRightRadius: rs(10),
-  },
+  // Left accent strip
+  sideStrip: { width: 3, alignSelf: 'stretch', borderRadius: 2 },
 
   // Icon container
   sideIconWrap: {
     width: rs(34), height: rs(34),
-    borderRadius: rs(9),
+    borderRadius: rs(8),
     alignItems: 'center', justifyContent: 'center',
     overflow: 'hidden',
     position: 'relative',
   },
-  sideIcon: { width: rs(22), height: rs(22) },
+  sideIcon: { width: rs(26), height: rs(26) },
 
-  // Label
+  sideTextCol: { flex: 1 },
   sideLabel: {
-    fontSize: rf(11),
+    fontSize: rf(12),
     fontWeight: '800',
-    letterSpacing: 0.5,
-    textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+  sideSub: {
+    fontSize: rf(9),
+    fontWeight: '500',
+    color: C.TEXT_ON_DARK_MUTED,
+    marginTop: 1,
   },
 
-  // Badge — floats outside top-right corner
+  // Badge — sits at the row's right edge
   sideBadgeWrap: {
-    position: 'absolute',
-    top: -4, right: -4,
+    width: rs(13), height: rs(13),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -877,11 +962,11 @@ const styles = StyleSheet.create({
     borderRadius: rs(10), borderWidth: 1,
   },
   panelStrip: { width: 4, alignSelf: 'stretch' },
-  panelThumbWrap: { width: rs(100), position: 'relative', overflow: 'hidden' },
+  panelThumbWrap: { width: rs(116), position: 'relative', overflow: 'hidden' },
   panelThumb: { width: '100%', height: '100%', },
 
-  panelContent: { flex: 1, paddingVertical: rs(6), paddingLeft: rs(8), paddingRight: rs(6) },
-  panelTagRow:  { flexDirection: 'row', alignItems: 'center', gap: rs(5), marginBottom: rs(4) },
+  panelContent: { flex: 1, justifyContent: 'center', paddingVertical: rs(5), paddingLeft: rs(8), paddingRight: rs(6) },
+  panelTagRow:  { flexDirection: 'row', alignItems: 'center', gap: rs(5), marginBottom: rs(3) },
   panelTag:     { borderRadius: 3, paddingHorizontal: rs(6), paddingVertical: rs(2) },
   panelTagText: { fontSize: rf(11), color: C.TEXT, fontWeight: '900', letterSpacing: 1.5 },
   panelNewBadge: {
@@ -893,28 +978,64 @@ const styles = StyleSheet.create({
     fontSize: rf(14), color: C.TEXT, fontWeight: '800', letterSpacing: 0.3,
     textShadowColor: C.OVERLAY_STRONG, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
-  panelSub:    { fontSize: rf(11), color: C.TEXT_ON_DARK_SOFT, marginTop: rs(2) },
+  panelSub:    { fontSize: rf(11), color: C.TEXT_ON_DARK_SOFT, marginTop: rs(1) },
   panelProgBg: {
     height: 2, backgroundColor: C.GLASS_7,
-    borderRadius: 1, marginTop: rs(5), overflow: 'hidden', width: '82%',
+    borderRadius: 1, marginTop: rs(4), overflow: 'hidden', width: '82%',
   },
   panelProgFill: { height: 2, borderRadius: 1 },
-  panelEnterRow: { flexDirection: 'row', alignItems: 'center', gap: rs(2), marginTop: rs(4) },
-  panelEnterText:{ fontSize: rf(10), fontWeight: '900', letterSpacing: 1.2 },
 
-  // ── News ticker ──────────────────────────────
-  ticker: {
-    flexDirection: 'row', alignItems: 'center', gap: rs(8),
-    paddingHorizontal: rs(10), paddingVertical: rs(4),
-    backgroundColor: C.OVERLAY_MODAL,
-    borderTopWidth: 1, borderTopColor: C.PRIMARY_GLOW,
+  // ── Bottom tab bar — flat tactical panel, plain icons, gold hairline frame ──
+  bottomBar: {
+    flexDirection: 'row',
+    paddingVertical: rs(8),
+    position: 'relative',
+    borderWidth: 1, borderColor: C.SOVEREIGN_GOLD + '40',
+    borderRadius: rs(4),
+    marginHorizontal: rs(1),
   },
-  tickerTag: {
-    backgroundColor: C.PRIMARY, borderRadius: 3,
-    paddingHorizontal: rs(6), paddingVertical: rs(2),
+  bottomTab: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: rs(6),
+    paddingVertical: rs(2),
   },
-  tickerTagText: { fontSize: rf(10), color: C.TEXT, fontWeight: '900', letterSpacing: 1.5 },
-  tickerText:    { fontSize: rf(9), color: C.TEXT_ON_DARK_MUTED, flex: 1, letterSpacing: 0.3 },
+  bottomTabDivider: {
+    width: 1, height: rs(22), alignSelf: 'center',
+    backgroundColor: C.BORDER_STRONG,
+    transform: [{ rotate: '18deg' }],
+  },
+  bottomTabIconWrap: { position: 'relative' },
+  bottomTabIcon: { width: rs(46), height: rs(40) },
+  tabIconGlow: {
+    position: 'absolute',
+    top: '50%', left: '50%',
+    width: rs(50), height: rs(50), borderRadius: rs(25),
+    marginTop: -rs(25), marginLeft: -rs(25),
+    backgroundColor: C.PRIMARY_GLOW,
+    shadowColor: C.PRIMARY_LIGHT,
+    shadowOpacity: 0.9,
+    shadowRadius: rs(14),
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 8,
+  },
+  tabParticle: {
+    position: 'absolute',
+    bottom: 0,
+    width: rs(3), height: rs(3), borderRadius: rs(2),
+    marginLeft: -rs(2),
+    backgroundColor: C.SOVEREIGN_GOLD,
+  },
+  bottomTabBadge: {
+    position: 'absolute', top: -rs(6), right: -rs(8),
+    minWidth: rs(13), height: rs(13), borderRadius: rs(7),
+    paddingHorizontal: rs(1),
+    backgroundColor: C.DANGER, borderWidth: 1, borderColor: C.BG_SCREEN,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  bottomTabBadgeText: { fontSize: rf(9), color: C.TEXT, fontWeight: '900', lineHeight: rf(11) },
+  bottomTabLabel: {
+    fontSize: rf(10), fontWeight: '700', color: C.TEXT_ON_DARK_MUTED, letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
 
   // ── Milestone modal ───────────────────────────────────────────────────────
   msOverlay: {

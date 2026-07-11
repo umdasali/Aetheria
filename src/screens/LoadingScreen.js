@@ -11,6 +11,7 @@ import useGameStore from '../store/gameStore';
 import { HEROES } from '../data/heroes';
 import { APP_INFO } from '../constants/appInfo';
 import AudioManager from '../utils/AudioManager';
+import { checkForceUpdate } from '../cloud/versionCheck';
 
 const TIPS = [
   'Assembling your war council…',
@@ -83,13 +84,21 @@ export default function LoadingScreen({ navigation }) {
       setPercent(Math.round(value * 100))
     );
 
-    let navigated = false;
-    let barDone   = false;
-    let hydrated  = useGameStore.persist.hasHydrated();
+    let navigated      = false;
+    let barDone        = false;
+    let hydrated       = useGameStore.persist.hasHydrated();
+    let versionChecked  = false;
+    let updateInfo      = null;
 
     const tryNavigate = () => {
-      if (navigated || !barDone || !hydrated) return;
+      if (navigated || !barDone || !hydrated || !versionChecked) return;
       navigated = true;
+      // A forced update always wins over onboarding/home — an out-of-date
+      // client shouldn't touch save data or the store until it updates.
+      if (updateInfo?.required) {
+        navigation.replace('ForceUpdate', { storeUrl: updateInfo.storeUrl, message: updateInfo.message });
+        return;
+      }
       AudioManager.prewarmSFX();
       // Best-effort, fire-and-forget: retries a uid/name claim that previously
       // failed offline mid-registration (see CloudAuthScreen.js /
@@ -108,6 +117,14 @@ export default function LoadingScreen({ navigation }) {
     const unsub = useGameStore.persist.onFinishHydration(() => { hydrated = true; tryNavigate(); });
     // Safety net: never hang on the splash if hydration somehow stalls.
     const hydrationFallback = setTimeout(() => { hydrated = true; tryNavigate(); }, 5000);
+
+    // checkForceUpdate() always resolves (fails open on any network/timeout
+    // issue), so this never adds a hang risk on top of the above.
+    checkForceUpdate().then(info => {
+      updateInfo = info;
+      versionChecked = true;
+      tryNavigate();
+    });
 
     Animated.timing(progressAnim, {
       toValue:  1,

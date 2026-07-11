@@ -18,6 +18,7 @@ import { NavigationBar } from 'expo-navigation-bar';
 
 import ErrorBoundary     from './src/components/ErrorBoundary';
 import LoadingScreen     from './src/screens/LoadingScreen';
+import ForceUpdateScreen from './src/screens/ForceUpdateScreen';
 import OnboardingScreen  from './src/screens/OnboardingScreen';
 import HomeScreen        from './src/screens/HomeScreen';
 import StoryScreen       from './src/screens/StoryScreen';
@@ -43,6 +44,8 @@ import PullHistoryScreen  from './src/screens/PullHistoryScreen';
 import AchievementScreen  from './src/screens/AchievementScreen';
 import LeaderboardScreen  from './src/screens/LeaderboardScreen';
 import EventScreen        from './src/screens/EventScreen';
+import CodexScreen        from './src/screens/CodexScreen';
+import CodexDetailScreen  from './src/screens/CodexDetailScreen';
 
 // Hold the native splash until LoadingScreen signals it's ready
 SplashScreen.preventAutoHideAsync();
@@ -109,6 +112,7 @@ export default function App() {
             }}
           >
             <Stack.Screen name="Loading"      component={LoadingScreen}         options={{ animation: 'none' }} />
+            <Stack.Screen name="ForceUpdate"  component={ForceUpdateScreen}     options={{ gestureEnabled: false }} />
             <Stack.Screen name="Onboarding"   component={OnboardingScreen}      />
             <Stack.Screen name="Home"         component={HomeScreen}            />
             <Stack.Screen name="Story"        component={StoryScreen}           />
@@ -133,6 +137,8 @@ export default function App() {
             <Stack.Screen name="PullHistory"  component={PullHistoryScreen}     />
             <Stack.Screen name="Achievements" component={AchievementScreen}     />
             <Stack.Screen name="Leaderboard"  component={LeaderboardScreen}     />
+            <Stack.Screen name="Codex"        component={CodexScreen}          />
+            <Stack.Screen name="CodexDetail"  component={CodexDetailScreen}    />
             <Stack.Screen name="Events"       component={EventScreen}           />
           </Stack.Navigator>
         </NavigationContainer>

@@ -2401,6 +2401,32 @@ export const HEROES = [
       effect: 'Heals all allies 35% HP; shields team against next 1 hit each',
     },
   },
+
+  // ── hero_090 · VOIDMARK · S · Male · Attacker · The Last Child of the Rift ──
+  {
+    id: 'hero_090',
+    name: 'Valen Riftwalker',
+    frame: 'RIFTWALKER',
+    faction: 'VOIDMARK',
+    rank: 'S',
+    element: 'Void',
+    effect: 'ECLIPSEDGE',
+    class: 'Attacker',
+    cardId: 'VMK-21-VALEN',
+    image: require('../../assets/heroes/hero_090.webp'),
+    about: 'Found as a newborn at the center of a frozen crater nineteen years before the first recorded breach — the first thing to ever cross between worlds, long before anyone had a name for what a rift even was. His green eyes see fractures in reality no one else can, and his broken black katana repairs itself one rune at a time with every threat he puts down. He never wanted to be a legend. He just wanted something worth protecting.',
+    hp: 3600, atk: 660, def: 195, crit: 600,
+    skills: [
+      { name: 'Eclipsed Cut',   cost: 2, description: 'A single riftborn slash that cuts through armor and dimension alike.', damage: 2.0 },
+      { name: 'Fracture Line',  cost: 3, description: 'Opens a line of unstable rift-space beneath all enemies, tearing through their defenses at once.', damage: 2.6 },
+    ],
+    trumpCard: {
+      name: 'The Last Answer',
+      description: 'Every crack in the Eclipsed Edge opens at once — a single riftwalking strike across all enemies, answering for everything he has ever protected.',
+      damage: 5.0,
+      effect: 'Stuns all enemies 1 turn; heals all allies 25% HP',
+    },
+  },
 ];
 
 export const getHeroById        = (id)      => HEROES.find((h) => h.id === id);

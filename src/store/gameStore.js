@@ -15,6 +15,7 @@ import { DAILY_DUNGEON_ATTEMPTS, DUNGEON_REFILL_COST, DUNGEON_REFILL_AMOUNT } fr
 import { CURRENT_VERSION, migrate } from './migrations';
 import { DEFAULT_AVATAR_ID } from '../data/avatars';
 import { ACHIEVEMENT_DEFS } from '../data/achievements';
+import { getNewlyIntroducedImageKeys } from '../data/bestiary';
 import { sanitizeState } from './sanitizeState';
 import { initSyncQueue, triggerSync } from '../cloud/syncQueue';
 import { claimPlayerUid as registerPlayerUid } from '../cloud/uidService';
@@ -74,6 +75,17 @@ function pickAscensionDrop(maxQty) {
   return { itemId, qty };
 }
 
+// Returns a Codex 'relic' unlock entry the first time itemId's count crosses
+// 0 → positive in ascensionInventory, else null. Relics have no story-stage
+// tie-in like bestiary/chronicle entries do, so "first obtained" is the only
+// sensible unlock signal for them.
+function relicUnlockIfFirstTime(prevInv, newInv, itemId) {
+  if ((prevInv[itemId] || 0) === 0 && (newInv[itemId] || 0) > 0) {
+    return { type: 'relic', key: itemId };
+  }
+  return null;
+}
+
 // Single source of truth for "how many chapters are fully cleared (all 3 parts)"
 // — used by both the milestone-hero-reward check and achievement tracking, which
 // previously recomputed this independently and could silently desync.
@@ -92,8 +104,8 @@ const INITIAL_STATE = {
   playerUidClaimed:      false,  // true once playerUid is confirmed globally-unique server-side
   serverClaimedName:     null,   // last playerProfile.name value confirmed registered server-side
   pendingNameClaim:      null,   // name awaiting server (re)registration after a networkError
-  ownedHeroes:           ['hero_002', 'hero_004', 'hero_005', 'hero_016'],
-  team:                  ['hero_002', 'hero_004', 'hero_005'],
+  ownedHeroes:           ['hero_090', 'hero_004', 'hero_005', 'hero_016'],
+  team:                  ['hero_090', 'hero_004', 'hero_005'],
   gems:                  150,
   gold:                  10000,
   pity:                  0,
@@ -156,6 +168,15 @@ const INITIAL_STATE = {
   // ── Feature: Achievements ─────────────────────────────────────────────────
   achievements:              {},   // { [achievementId]: { progress, claimed } }
   pendingAchievementUnlocks: [],   // IDs queued for toast display
+
+  // ── Feature: Codex ─────────────────────────────────────────────────────────
+  // Queue of { type: 'bestiary'|'chronicle'|'relic', key } entries awaiting a
+  // "New Codex Entry" toast. Bestiary/chronicle unlock state itself is NOT
+  // persisted here — it's derived on demand from completedChapters (see
+  // getEncounteredImageKeys in data/bestiary.js) and from ascensionInventory
+  // for relics, so there's nothing to desync. This queue only tracks which
+  // *just-unlocked* entries still need to be announced.
+  pendingCodexUnlocks: [],
 
   // ── Feature: Event Banners ────────────────────────────────────────────────
   eventPity:      {},   // { [eventId]: number }
@@ -333,19 +354,39 @@ const useGameStore = create(
                 const pick = pool[Math.floor(Math.random() * pool.length)];
                 const { itemId, qty } = pickAscensionDrop(3);
                 const currentInv = get().ascensionInventory || {};
+                const newInv = { ...currentInv, [itemId]: (currentInv[itemId] || 0) + qty };
+                const relicUnlock = relicUnlockIfFirstTime(currentInv, newInv, itemId);
                 set(s => ({
                   milestonesClaimed: [...claimed, newMilestone],
                   pendingMilestoneRewards: [
                     ...(s.pendingMilestoneRewards || []),
                     { hero: pick, milestone: newMilestone, ascensionDrop: { itemId, qty } },
                   ],
-                  ascensionInventory: { ...currentInv, [itemId]: (currentInv[itemId] || 0) + qty },
+                  ascensionInventory: newInv,
+                  pendingCodexUnlocks: relicUnlock
+                    ? [...(s.pendingCodexUnlocks || []), relicUnlock]
+                    : s.pendingCodexUnlocks,
                 }));
                 get().addHero(pick.id);
               }
             }
           }
         } catch (e) { console.warn('[GameStore] Chapter reward error:', e); }
+
+        // ── Codex unlocks: new bestiary entries + chapter chronicle, story only ──
+        try {
+          const newlyIntroduced = getNewlyIntroducedImageKeys(chapterId);
+          const codexAdds = newlyIntroduced.map(imageKey => ({ type: 'bestiary', key: imageKey }));
+          // part === 3 completing means all 3 parts are now done (sequential
+          // stage unlock guarantees parts 1-2 were already cleared) — the
+          // chapter's Chronicle entry unlocks the instant it's fully cleared.
+          if (part === 3) {
+            codexAdds.push({ type: 'chronicle', key: Math.floor(chapterId / 100) });
+          }
+          if (codexAdds.length) {
+            set(s => ({ pendingCodexUnlocks: [...(s.pendingCodexUnlocks || []), ...codexAdds] }));
+          }
+        } catch (e) { console.warn('[GameStore] Codex unlock error:', e); }
 
         // ── Achievement tracking ─────────────────────────────────────────────
         try {
@@ -549,6 +590,8 @@ const useGameStore = create(
           ascensionDrop = { itemId, qty };
           set(state => {
             const inv = state.ascensionInventory || {};
+            const newInv = { ...inv, [itemId]: (inv[itemId] || 0) + qty };
+            const relicUnlock = relicUnlockIfFirstTime(inv, newInv, itemId);
             return {
               towerHighestFloor: Math.max(state.towerHighestFloor, floor),
               towerWeeklyBest: Math.max(state.towerWeeklyBest, floor),
@@ -556,7 +599,10 @@ const useGameStore = create(
               towerCoins: state.towerCoins + (rewards.coins || 0),
               gems: state.gems + (rewards.gems || 0),
               gold: state.gold + (rewards.gold || 0),
-              ascensionInventory: { ...inv, [itemId]: (inv[itemId] || 0) + qty },
+              ascensionInventory: newInv,
+              pendingCodexUnlocks: relicUnlock
+                ? [...(state.pendingCodexUnlocks || []), relicUnlock]
+                : state.pendingCodexUnlocks,
             };
           });
         } else {
@@ -633,13 +679,19 @@ const useGameStore = create(
         set(state => {
           const inv = { ...state.ascensionInventory };
           const mat = rewards?.material;
+          let relicUnlock = null;
           if (mat?.itemId && mat.qty > 0) {
-            inv[mat.itemId] = (inv[mat.itemId] || 0) + mat.qty;
+            const newQty = (inv[mat.itemId] || 0) + mat.qty;
+            relicUnlock = relicUnlockIfFirstTime(state.ascensionInventory, { ...inv, [mat.itemId]: newQty }, mat.itemId);
+            inv[mat.itemId] = newQty;
           }
           return {
             gold:               state.gold + (rewards?.gold || 0),
             gems:               state.gems + (rewards?.gems || 0),
             ascensionInventory: inv,
+            pendingCodexUnlocks: relicUnlock
+              ? [...(state.pendingCodexUnlocks || []), relicUnlock]
+              : state.pendingCodexUnlocks,
           };
         });
         triggerSync();
@@ -753,7 +805,14 @@ const useGameStore = create(
         const totalCost = item.price * qty;
         if (state.towerCoins < totalCost) return { ok: false, reason: 'coins' };
         const inv = { ...state.ascensionInventory, [itemId]: (state.ascensionInventory[itemId] || 0) + qty };
-        set({ towerCoins: state.towerCoins - totalCost, ascensionInventory: inv });
+        const relicUnlock = relicUnlockIfFirstTime(state.ascensionInventory, inv, itemId);
+        set({
+          towerCoins: state.towerCoins - totalCost,
+          ascensionInventory: inv,
+          pendingCodexUnlocks: relicUnlock
+            ? [...(state.pendingCodexUnlocks || []), relicUnlock]
+            : state.pendingCodexUnlocks,
+        });
         triggerSync();
         return { ok: true };
       },
@@ -802,7 +861,12 @@ const useGameStore = create(
         const state = get();
         const g     = pack.grant || {};
         const inv   = { ...state.ascensionInventory };
-        if (g.cores) inv.aetheria_core = (inv.aetheria_core || 0) + g.cores;
+        let relicUnlock = null;
+        if (g.cores) {
+          const newQty = (inv.aetheria_core || 0) + g.cores;
+          relicUnlock = relicUnlockIfFirstTime(state.ascensionInventory, { ...inv, aetheria_core: newQty }, 'aetheria_core');
+          inv.aetheria_core = newQty;
+        }
 
         const counts = { ...(state.shopPurchases || {}) };
         counts[packId] = (counts[packId] || 0) + 1;
@@ -812,6 +876,9 @@ const useGameStore = create(
           gold:               state.gold + (g.gold || 0),
           ascensionInventory: inv,
           shopPurchases:      counts,
+          pendingCodexUnlocks: relicUnlock
+            ? [...(state.pendingCodexUnlocks || []), relicUnlock]
+            : state.pendingCodexUnlocks,
         });
         triggerSync();
         return { ok: true, count: counts[packId] };
@@ -965,6 +1032,11 @@ const useGameStore = create(
 
       clearAchievementUnlocks: () => set({ pendingAchievementUnlocks: [] }),
 
+      // Codex unlocks are pure announcements (no per-item claim step, unlike
+      // milestone rewards), so — like clearAchievementUnlocks — this clears
+      // the whole batch at once rather than shifting one entry at a time.
+      clearCodexUnlocks: () => set({ pendingCodexUnlocks: [] }),
+
       // ── Event pity ──────────────────────────────────────────────────────────
 
       setEventPity: (eventId, n) =>
@@ -1005,9 +1077,15 @@ const useGameStore = create(
         const state = get();
         const inv   = { ...state.ascensionInventory };
         if ((inv[fromItemId] || 0) < fromQty) return false;
+        const relicUnlock = relicUnlockIfFirstTime(inv, { ...inv, [toItemId]: (inv[toItemId] || 0) + toQty }, toItemId);
         inv[fromItemId] = inv[fromItemId] - fromQty;
         inv[toItemId]   = (inv[toItemId] || 0) + toQty;
-        set({ ascensionInventory: inv });
+        set({
+          ascensionInventory: inv,
+          pendingCodexUnlocks: relicUnlock
+            ? [...(state.pendingCodexUnlocks || []), relicUnlock]
+            : state.pendingCodexUnlocks,
+        });
         triggerSync();
         return true;
       },

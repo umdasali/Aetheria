@@ -5,3 +5,5 @@ export { default as CornerBrackets } from './CornerBrackets';
 export { default as GlowButton } from './GlowButton';
 export { default as HudTitle } from './HudTitle';
 export { default as HudScreen } from './HudScreen';
+export { default as InfiniteCarousel } from './InfiniteCarousel';
+export { default as OrnateCard } from './OrnateCard';

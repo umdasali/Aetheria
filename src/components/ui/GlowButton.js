@@ -38,14 +38,14 @@ function GlowButton({
       disabled={disabled}
       style={[glow, { opacity: disabled ? 0.5 : 1 }, style]}
     >
-      <View style={[styles.clip, { height, borderRadius: radius, borderColor: disabled ? C.BORDER : C.BORDER_HUD }]}>
+      <View style={[styles.clip, { height, borderRadius: radius, borderColor: disabled ? C.BORDER : C.BORDER_STRONG }]}>
         <LinearGradient
           colors={fill}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        <LinearGradient colors={[C.GLASS_SHEEN, 'transparent']} style={styles.sheen} pointerEvents="none" />
+        <LinearGradient colors={[C.SHIMMER, 'transparent']} style={styles.sheen} pointerEvents="none" />
         <View style={styles.row}>
           {icon ? <View style={styles.icon}>{icon}</View> : null}
           {label != null && (

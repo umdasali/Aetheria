@@ -46,7 +46,7 @@ function HudFrame({
   height,
   bevel,
   corners = 'all',
-  stroke = C.BORDER_HUD,
+  stroke = C.BORDER_STRONG,
   strokeWidth = 1,
   fill = 'none',
   glow,

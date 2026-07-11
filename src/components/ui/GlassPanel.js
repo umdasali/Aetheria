@@ -53,7 +53,7 @@ function GlassPanel({
         <LinearGradient colors={tint} style={StyleSheet.absoluteFill} pointerEvents="none" />
         {sheen && (
           <LinearGradient
-            colors={[C.GLASS_SHEEN, 'transparent']}
+            colors={[C.SHIMMER, 'transparent']}
             style={styles.sheen}
             pointerEvents="none"
           />

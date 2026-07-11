@@ -64,6 +64,7 @@ export const EFFECT_MECHANICS = {
   OAKWARD:         'fortify',
   SMITE:           'smite',
   ABYSSEDGE:       'smite',
+  ECLIPSEDGE:      'smite',
 };
 
 const DEBUFF_SET = new Set(['stun', 'burn', 'poison', 'chill', 'shatter', 'weaken']);

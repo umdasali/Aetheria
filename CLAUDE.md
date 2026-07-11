@@ -4,7 +4,7 @@
 
 # Aetheria: Legends Unbound — Full Codebase Reference
 
-Landscape-only React Native RPG built with Expo 56. Card-battling with story progression, hero collection (89 heroes, 6 factions incl. KHEMARA, 6 ranks incl. SOVEREIGN), gacha summoning, endless tower, daily quests, limited-time events, real-money IAP via RevenueCat, and turn-based battle with status effects.
+Landscape-only React Native RPG built with Expo 56. Card-battling with story progression, hero collection (90 heroes, 6 factions incl. KHEMARA, 6 ranks incl. SOVEREIGN), gacha summoning, endless tower, daily quests, limited-time events, real-money IAP via RevenueCat, and turn-based battle with status effects.
 
 ---
 
@@ -42,7 +42,7 @@ src/
   theme/
     colors.js                  C.* tokens + RANK badge colors — single source of truth
   data/
-    heroes.js                  89 hero definitions + FACTIONS map + helpers
+    heroes.js                  90 hero definitions + FACTIONS map + helpers
     enemies.js                 Enemy groups for story stages + ENEMY_IMAGES map
     story.js                   30 chapters × 3 parts = 90 stages + STAGE_ORDER + CHAPTER_DEFS
     events.js                  BANNER_POOL (limited-time gacha events) + STANDARD_BANNER + date helpers
