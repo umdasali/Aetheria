@@ -7,11 +7,37 @@
 // getUpcomingEvents() — startDate > today   (sorted soonest first)
 // getEndedEvents()    — endDate < today     (sorted most-recent first)
 
-// Standard banner featured pool — Genshin-style showcase
+// ═══ GACHA POOL CONFIG — edit the values below to update pools manually ══════
+//
+// Which ranks can drop is controlled entirely by the rate tables below —
+// a rank with rate 0 never drops on that banner.
+//
+// STANDARD banner:
+//   • S pull     → exactly one of STANDARD_BANNER.featuredSRankIds (nothing else,
+//                  no Sovereign proc)
+//   • non-S pull → ALL heroes of the rolled rank
+//
+// EVENT banners:
+//   • S pull     → 50/50: the banner's featured hero, or (on a loss) one of
+//                  FIFTY_FIFTY_LOSS_IDS. Losing sets a guarantee — the next S
+//                  is always the featured hero.
+//   • non-S pull → ALL heroes of the rolled rank
+//
+// shopExclusive heroes (hero_054) are always excluded from every pool.
+
+// Standard banner S-rank pool — edit this list to change which S heroes drop.
 export const STANDARD_BANNER = {
-  featuredSRankIds:  ['hero_024', 'hero_001', 'hero_003'],
-  featuredLowerIds:  ['hero_007', 'hero_009', 'hero_010', 'hero_015', 'hero_006', 'hero_011'],
+  featuredSRankIds: ['hero_001', 'hero_003', 'hero_024'],
 };
+
+// Off-banner pool when an event 50/50 is lost — edit to change the loss pool.
+// If a banner's featured hero is in this list, it is skipped for that banner.
+export const FIFTY_FIFTY_LOSS_IDS = ['hero_001', 'hero_003', 'hero_024'];
+
+// Per-banner base rank rates (fractions, each set must sum to 1).
+// Soft/hard pity raises the S rate automatically on top of these.
+export const STANDARD_RATES = { S: 0.02, A: 0.03,    B: 0.38, C: 0.57 };
+export const EVENT_RATES    = { S: 0.02, A: 0.50, B: 0.20,    C: 0.28 };
 
 // ── Banner schedule — update startDate / endDate to manage events ─────────────
 export const BANNER_POOL = [
@@ -24,7 +50,6 @@ export const BANNER_POOL = [
     endDate:          '2026-06-28',   // ← change to schedule
     featuredHeroId:   'hero_043',
     rateUpHeroIds:    ['hero_043'],
-    featuredLowerIds: ['hero_002', 'hero_007', 'hero_010', 'hero_021', 'hero_022', 'hero_016'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_043.webp'),
     accentColor:      '#FF4500',
@@ -38,7 +63,6 @@ export const BANNER_POOL = [
     endDate:          '2026-07-19',   // ← change to schedule
     featuredHeroId:   'hero_008',
     rateUpHeroIds:    ['hero_008'],
-    featuredLowerIds: ['hero_013', 'hero_014', 'hero_020', 'hero_034', 'hero_035', 'hero_046'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_008.webp'),
     accentColor:      '#9B59B6',
@@ -52,7 +76,6 @@ export const BANNER_POOL = [
     endDate:          '2026-06-13',   // ← change to schedule
     featuredHeroId:   'hero_012',
     rateUpHeroIds:    ['hero_012'],
-    featuredLowerIds: ['hero_009', 'hero_018', 'hero_027', 'hero_028', 'hero_039', 'hero_048'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_012.webp'),
     accentColor:      '#FFD700',
@@ -63,9 +86,6 @@ export const BANNER_POOL = [
   // Dates shifted +4 days (2026-07-05 audit) — the original start (07-16) overlapped
   // event_shadow_descent (ends 07-19) by 4 days; this chain now starts the day
   // after shadow_descent ends and keeps every other gap/overlap at zero.
-  // featuredLowerIds were also re-diversified — 4 of these 8 originally shared one
-  // byte-identical 6-hero list for ~3 months, and 2 more copied their neighbor's
-  // list outright.
   {
     id:               'event_thunderstruck_vanguard',
     type:             'banner',
@@ -75,7 +95,6 @@ export const BANNER_POOL = [
     endDate:          '2026-08-08',
     featuredHeroId:   'hero_001',
     rateUpHeroIds:    ['hero_001'],
-    featuredLowerIds: ['hero_023', 'hero_062', 'hero_068', 'hero_081', 'hero_006', 'hero_009'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_001.webp'),
     accentColor:      '#FF4500',
@@ -89,7 +108,6 @@ export const BANNER_POOL = [
     endDate:          '2026-08-28',
     featuredHeroId:   'hero_003',
     rateUpHeroIds:    ['hero_003'],
-    featuredLowerIds: ['hero_011', 'hero_015', 'hero_017', 'hero_025', 'hero_026', 'hero_042'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_003.webp'),
     accentColor:      '#00B4D8',
@@ -103,7 +121,6 @@ export const BANNER_POOL = [
     endDate:          '2026-09-17',
     featuredHeroId:   'hero_030',
     rateUpHeroIds:    ['hero_030'],
-    featuredLowerIds: ['hero_004', 'hero_005', 'hero_019', 'hero_031', 'hero_032', 'hero_044'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_030.webp'),
     accentColor:      '#2ECC71',
@@ -117,7 +134,6 @@ export const BANNER_POOL = [
     endDate:          '2026-10-07',
     featuredHeroId:   'hero_024',
     rateUpHeroIds:    ['hero_024'],
-    featuredLowerIds: ['hero_040', 'hero_073', 'hero_053', 'hero_063', 'hero_050', 'hero_049'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_024.webp'),
     accentColor:      '#00B4D8',
@@ -131,7 +147,6 @@ export const BANNER_POOL = [
     endDate:          '2026-10-27',
     featuredHeroId:   'hero_036',
     rateUpHeroIds:    ['hero_036'],
-    featuredLowerIds: ['hero_013', 'hero_014', 'hero_020', 'hero_034', 'hero_035', 'hero_046'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_036.webp'),
     accentColor:      '#9B59B6',
@@ -145,7 +160,6 @@ export const BANNER_POOL = [
     endDate:          '2026-11-16',
     featuredHeroId:   'hero_033',
     rateUpHeroIds:    ['hero_033'],
-    featuredLowerIds: ['hero_038', 'hero_045', 'hero_047', 'hero_064', 'hero_071', 'hero_072'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_033.webp'),
     accentColor:      '#9B59B6',
@@ -159,7 +173,6 @@ export const BANNER_POOL = [
     endDate:          '2026-12-06',
     featuredHeroId:   'hero_051',
     rateUpHeroIds:    ['hero_051'],
-    featuredLowerIds: ['hero_077', 'hero_080', 'hero_083', 'hero_087', 'hero_014', 'hero_020'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_051.webp'),
     accentColor:      '#9B59B6',
@@ -173,7 +186,6 @@ export const BANNER_POOL = [
     endDate:          '2026-12-26',
     featuredHeroId:   'hero_079',
     rateUpHeroIds:    ['hero_079'],
-    featuredLowerIds: ['hero_013', 'hero_034', 'hero_046', 'hero_038', 'hero_064', 'hero_083'],
     pityLimit:        80,
     bannerImg:        require('../../assets/heroes/hero_079.webp'),
     accentColor:      '#9B59B6',

@@ -623,7 +623,10 @@ Landscape split (40/60):
 - **Left** (40%): banner art + rank odds display
 - **Right** (60%): ×1 (50 gems) + ×10 (450 gems) buttons + rank guide
 
-Gacha rates: S 4% / A 22% / B 30% / C 44% — **pity system: guaranteed S at 90 pulls** (tracked in `store.pity`).
+Gacha pools & rates are data-driven from `src/data/events.js` (`STANDARD_BANNER`, `FIFTY_FIFTY_LOSS_IDS`, `STANDARD_RATES`, `EVENT_RATES`) — edit there to update manually. A rank with rate 0 never drops on that banner; non-S pulls always draw from ALL heroes of the rolled rank (pool strips and the rates modal adapt automatically).
+- **Standard banner** — rates from `STANDARD_RATES`. S pulls come only from `STANDARD_BANNER.featuredSRankIds` (no Sovereign proc). **Pity: guaranteed S at 90 pulls** (tracked in `store.pity`).
+- **Event banner** — rates from `EVENT_RATES`. S pulls are a 50/50: featured hero, or on a loss one of `FIFTY_FIFTY_LOSS_IDS` (then next S is guaranteed featured). Pity at 80 pulls, per-banner (`store.eventPity` / `store.eventGuarantee`).
+- `shopExclusive` heroes (hero_054) never drop on any banner.
 
 Card flip animation: scale 0→1 (spring friction:6 tension:100) + opacity 0→1 + rotateY flip, staggered 150ms per card.
 Screen flash (`C.FLASH_GOLD`) if S pulled, (`C.FLASH_PURPLE`) if A pulled.

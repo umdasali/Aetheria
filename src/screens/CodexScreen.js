@@ -5,6 +5,8 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
@@ -16,6 +18,8 @@ import { getEncounteredImageKeys, getEnemyCatalog } from '../data/bestiary';
 import { CHAPTER_IMAGES } from '../data/chronicle';
 import { CHAPTER_DEFS } from '../data/story';
 import { ASCENSION_ITEMS } from '../data/ascensionItems';
+
+const CODEX_BG_VIDEO = require('../../assets/video/codex-bg.mp4');
 
 const SIDEBAR_W = 96;
 // Card sizing is derived at runtime from the measured content box rather than
@@ -70,6 +74,21 @@ export default function CodexScreen({ navigation }) {
   // Opening the Codex is itself the "acknowledgement" of new entries — clears
   // the bottom-tab badge instead of an interrupting unlock modal on Home.
   useFocusEffect(useCallback(() => { clearCodexUnlocks(); }, [clearCodexUnlocks]));
+
+  // Ambient looping background video — muted, paused while the screen is
+  // unfocused so it doesn't keep decoding frames off-screen. play()/pause()
+  // are wrapped in try/catch because the native player can already be
+  // released by the time this fires (e.g. on back-navigation unmount),
+  // which otherwise throws a native "shared object already released" error.
+  const bgVideoPlayer = useVideoPlayer(CODEX_BG_VIDEO, player => {
+    player.loop = true;
+    player.muted = true;
+    try { player.play(); } catch (_) {}
+  });
+  useFocusEffect(useCallback(() => {
+    try { bgVideoPlayer.play(); } catch (_) {}
+    return () => { try { bgVideoPlayer.pause(); } catch (_) {} };
+  }, [bgVideoPlayer]));
 
   const catalog = useMemo(() => getEnemyCatalog(), []);
   const encounteredKeys = useMemo(
@@ -189,7 +208,15 @@ export default function CodexScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
-      <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
+      <VideoView
+        player={bgVideoPlayer}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        nativeControls={false}
+        pointerEvents="none"
+      />
+      <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} pointerEvents="none" />
+      <LinearGradient colors={C.GRAD_BATTLE} style={StyleSheet.absoluteFill} pointerEvents="none" />
       <AmbientDust />
 
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -516,7 +543,7 @@ const styles = StyleSheet.create({
   topBar: {
     minHeight: rs(48), flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: rs(12), paddingVertical: rs(6),
-    backgroundColor: C.BG_BASE,
+    backgroundColor: C.BG_BASE+'33',
     borderBottomWidth: 1, borderBottomColor: C.BORDER,
   },
   backBtn:  { flexDirection: 'row', alignItems: 'center', gap: rs(3), marginRight: rs(12) },
@@ -535,7 +562,7 @@ const styles = StyleSheet.create({
 
   sidebar: {
     width: SIDEBAR_W, paddingVertical: rs(10), gap: rs(4),
-    backgroundColor: C.BG_BASE,
+    backgroundColor: C.BG_BASE+'33',
     borderRightWidth: 1, borderRightColor: C.BORDER,
   },
   tabBtn: {

@@ -12,7 +12,10 @@ import { C, RANK } from '../theme/colors';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import AudioManager from '../utils/AudioManager';
 import HeroCard from '../components/HeroCard';
-import { getActiveEvents, STANDARD_BANNER } from '../data/events';
+import {
+  getActiveEvents, STANDARD_BANNER, FIFTY_FIFTY_LOSS_IDS,
+  STANDARD_RATES, EVENT_RATES,
+} from '../data/events';
 import { rs, rf } from '../theme/scale';
 
 const WISH_VIDEO = require('../../assets/video/wish-animation.mp4');
@@ -25,81 +28,83 @@ const SINGLE_COST = 50;
 const MULTI_COST  = 450;
 const PITY_LIMIT  = 90;
 
-// Base rates as fractions (out of 1): S 4% / A 22% / B 30% / C 44%
-const BASE_S_RATE = 4  / 100; // 0.04
-const BASE_A_RATE = 22 / 100; // 0.22
-const BASE_B_RATE = 30 / 100; // 0.30
-// BASE_C_RATE = 44/100 — C fills whatever probability remains
-
+// Base rank rates come from src/data/events.js (STANDARD_RATES / EVENT_RATES)
+// so pools and odds can be updated manually in one place.
+//
 // pity is incremented AFTER each non-S draw. Soft-pity thresholds scale with
 // the banner's pity limit so event banners (80 pulls) ramp at the same
 // proportional points as the standard banner (90 pulls).
-const pickRank = (pity, limit = PITY_LIMIT) => {
+const pickRank = (pity, rates, limit = PITY_LIMIT) => {
   if (pity >= limit - 1) return 'S';
 
   let sRate;
   if      (pity >= Math.floor(limit * 0.78)) sRate = 0.15; // ~70/90, ~62/80
   else if (pity >= Math.floor(limit * 0.56)) sRate = 0.08; // ~50/90, ~44/80
-  else sRate = BASE_S_RATE;
+  else sRate = rates.S;
 
   const rand = Math.random();
   if (rand < sRate) return 'S';
 
-  const nonSTotal = 1 - BASE_S_RATE;
-  const remaining = 1 - sRate;
-  const scale     = remaining / nonSTotal;
-
-  const aRate = BASE_A_RATE * scale;
-  const bRate = BASE_B_RATE * scale;
+  // Scale non-S ranks so they exactly fill the probability left after sRate.
+  const scale = (1 - sRate) / (rates.A + rates.B + rates.C);
+  const aRate = rates.A * scale;
+  const bRate = rates.B * scale;
 
   if (rand < sRate + aRate) return 'A';
   if (rand < sRate + aRate + bRate) return 'B';
-  return 'C';
+  if (rates.C > 0) return 'C';
+  // Zero-C banner: float rounding can leak past the checks above — fall back
+  // to the highest nonzero non-S rank.
+  return rates.B > 0 ? 'B' : 'A';
 };
 
 // ── Genshin / WuWa-style banner system ───────────────────────────────────────
 //
+// All pools and rates are data-driven from src/data/events.js — edit
+// STANDARD_BANNER, FIFTY_FIFTY_LOSS_IDS, STANDARD_RATES and EVENT_RATES there
+// to update the gacha manually.
+//
+// Which ranks can drop on a banner is governed by its rate table — a rank
+// with rate 0 never rolls. Non-S pulls always draw from ALL heroes of the
+// rolled rank.
+//
 // Event banners (rateUpHeroIds non-empty):
-//   • 50/50 on every S pull: either the featured rate-up hero OR an off-banner S.
+//   • Rates: EVENT_RATES.
+//   • 50/50 on every S pull: either the featured rate-up hero OR an off-banner S
+//     from FIFTY_FIFTY_LOSS_IDS (minus the current rate-up).
 //   • Losing 50/50 sets guarantee = true → the NEXT S on this banner is 100% the
 //     rate-up hero, regardless of random roll.
-//   • Off-banner S pool = standard banner's featured S heroes (minus the current
-//     rate-up), mirroring the Genshin "standard 5-star" pool.
-//   • A / B / C pulls come exclusively from the banner's featuredLowerIds when
-//     provided, so the player only gets heroes relevant to this event.
 //
 // Standard banner (rateUpHeroIds empty):
-//   • No 50/50 system. Sovereign heroes have a 20 % proc from the S pool.
-//   • guarantee state is ignored and unchanged.
+//   • Rates: STANDARD_RATES.
+//   • S pulls come exclusively from STANDARD_BANNER.featuredSRankIds — no
+//     Sovereign proc, no 50/50; guarantee state is ignored and unchanged.
+//
+// shopExclusive heroes (e.g. hero_054) never appear in any pool.
 //
 // Parameters:
-//   isGuaranteed    – current guarantee flag for this banner (from store)
-//   featuredLowerIds – hero IDs for A/B/C pool on this banner (event only)
-//   pityLimit       – hard pity cap for this banner
+//   isGuaranteed – current guarantee flag for this banner (from store)
+//   pityLimit    – hard pity cap for this banner
 //
 const performSummon = (
   count,
   currentPity,
-  ownedSet        = new Set(),
-  rateUpHeroIds   = [],
-  isGuaranteed    = false,
-  featuredLowerIds = [],
-  pityLimit       = PITY_LIMIT,
+  rateUpHeroIds = [],
+  isGuaranteed  = false,
+  pityLimit     = PITY_LIMIT,
 ) => {
-  const results   = [];
-  let pity        = currentPity;
-  let guaranteed  = isGuaranteed;
-  // Mutable copy — the caller's ownedSet is a pre-pull snapshot, but a sovereign
-  // pulled at iteration i must count as "owned" for iteration i+1 within the SAME
-  // ×10 batch (addHero() for the batch doesn't run until after this returns), or
-  // the "one uncollected Sovereign at a time" gate can be rolled past twice.
-  const localOwnedSet = new Set(ownedSet);
+  const results    = [];
+  let pity         = currentPity;
+  let guaranteed   = isGuaranteed;
+  const rateUpPool = HEROES.filter(h => rateUpHeroIds.includes(h.id));
+  const isEvent    = rateUpPool.length > 0;
+  const rates      = isEvent ? EVENT_RATES : STANDARD_RATES;
 
-  // Off-banner S pool (event banners only): standard-banner featured S heroes,
-  // excluding the current rate-up heroes so the player never loses the 50/50
-  // and still ends up with the featured hero.
+  // Off-banner S pool (event banners only): the manually-curated 50/50 loss
+  // pool, excluding the current rate-up heroes so the player never loses the
+  // 50/50 and still ends up with the featured hero.
   const buildOffBannerPool = () => {
-    const pool = STANDARD_BANNER.featuredSRankIds
+    const pool = FIFTY_FIFTY_LOSS_IDS
       .map(id => HEROES.find(h => h.id === id))
       .filter(h => h && !rateUpHeroIds.includes(h.id));
     return pool.length
@@ -110,9 +115,21 @@ const performSummon = (
   let offBannerPool = null;
   const getOffBannerPool = () => { return offBannerPool || (offBannerPool = buildOffBannerPool()); };
 
+  // Standard banner S pool — exactly the curated featured list, nothing else.
+  const buildStandardSPool = () => {
+    const pool = STANDARD_BANNER.featuredSRankIds
+      .map(id => HEROES.find(h => h.id === id))
+      .filter(Boolean);
+    return pool.length
+      ? pool
+      : HEROES.filter(h => h.rank === 'S' && !h.sovereign && !h.shopExclusive);
+  };
+  let standardSPool = null;
+  const getStandardSPool = () => { return standardSPool || (standardSPool = buildStandardSPool()); };
+
   for (let i = 0; i < count; i++) {
     const wasPityPull = pity >= pityLimit - 1;
-    const rank        = pickRank(pity, pityLimit);
+    const rank        = pickRank(pity, rates, pityLimit);
     const isPity      = wasPityPull && rank === 'S';
     if (rank === 'S') pity = 0; else pity++;
 
@@ -120,49 +137,29 @@ const performSummon = (
     let isFeatured = false;
 
     if (rank === 'S') {
-      const rateUpPool = rateUpHeroIds.length
-        ? HEROES.filter(h => rateUpHeroIds.includes(h.id))
-        : [];
-
-      if (rateUpPool.length > 0) {
+      if (isEvent) {
         // ── Event banner: 50/50 guarantee system ───────────────────────────
         const wonRateUp = guaranteed || Math.random() < 0.50;
         if (wonRateUp) {
-          pool        = rateUpPool;
-          isFeatured  = true;
-          guaranteed  = false; // win resets the guarantee
+          pool       = rateUpPool;
+          isFeatured = true;
+          guaranteed = false; // win resets the guarantee
         } else {
           // Lost the 50/50 → give off-banner S, set guarantee for next pull
           pool       = getOffBannerPool();
           guaranteed = true;
         }
       } else {
-        // ── Standard banner: sovereign proc system ──────────────────────────
-        // shopExclusive sovereigns (e.g. hero_054) must never appear in gacha.
-        const sovereignPool = HEROES.filter(h => h.rank === 'S' && h.sovereign && !h.shopExclusive && !localOwnedSet.has(h.id));
-        const regularPool   = HEROES.filter(h => h.rank === 'S' && !h.sovereign && !h.shopExclusive);
-
-        if (sovereignPool.length > 0 && Math.random() < 0.20) {
-          pool = sovereignPool;
-        } else {
-          pool = regularPool.length ? regularPool : HEROES.filter(h => h.rank === 'S' && !h.shopExclusive);
-        }
+        // ── Standard banner: curated S pool only ───────────────────────────
+        pool = getStandardSPool();
       }
     } else {
-      // ── Non-S ranks ────────────────────────────────────────────────────────
-      if (featuredLowerIds.length > 0) {
-        // Event banner: restrict to the banner's defined lower pool for this rank
-        const eventPool = featuredLowerIds
-          .map(id => HEROES.find(h => h.id === id))
-          .filter(h => h && h.rank === rank);
-        pool = eventPool.length ? eventPool : HEROES.filter(h => h.rank === rank && !h.shopExclusive);
-      } else {
-        pool = HEROES.filter(h => h.rank === rank && !h.shopExclusive);
-      }
+      // ── Non-S ranks: all heroes of the rolled rank. Which ranks can roll
+      // at all is governed by the banner's rate table, not by hero lists.
+      pool = HEROES.filter(h => h.rank === rank && !h.shopExclusive);
     }
 
     const hero = pool[Math.floor(Math.random() * pool.length)];
-    localOwnedSet.add(hero.id);
     results.push({ hero, isPity, isFeatured });
   }
 
@@ -727,11 +724,9 @@ export default function SummonScreen({ navigation, route }) {
     setIsAnimating(true);
     AudioManager.playButtonSFX();
 
-    const rateUpIds        = activeEvent ? (activeEvent.rateUpHeroIds   || []) : [];
-    const featuredLowerIds = activeEvent ? (activeEvent.featuredLowerIds || []) : [];
+    const rateUpIds = activeEvent ? (activeEvent.rateUpHeroIds || []) : [];
     const { results: summonResults, newPity, newGuaranteed } = performSummon(
-      count, activePity, new Set(ownedHeroes),
-      rateUpIds, activeGuarantee, featuredLowerIds, activePityLimit,
+      count, activePity, rateUpIds, activeGuarantee, activePityLimit,
     );
     const ownedSet   = new Set(ownedHeroes);
     const seenInPull = new Set();
@@ -986,8 +981,18 @@ export default function SummonScreen({ navigation, route }) {
 
   // ── Phase: banner ─────────────────────────────────────────────────────────
   const renderBanner = () => {
-    const standardSHeroes     = STANDARD_BANNER.featuredSRankIds.map(id => HEROES.find(h => h.id === id)).filter(Boolean);
-    const standardLowerHeroes = STANDARD_BANNER.featuredLowerIds.map(id => HEROES.find(h => h.id === id)).filter(Boolean);
+    const standardSHeroes = STANDARD_BANNER.featuredSRankIds.map(id => HEROES.find(h => h.id === id)).filter(Boolean);
+    // Lower pools follow the rate tables — every hero of each rank whose base
+    // rate is above zero on that banner, best rank first.
+    const lowerPoolFor = (rates) => {
+      const ranks = ['A', 'B', 'C'].filter(r => rates[r] > 0);
+      return {
+        ranks,
+        heroes: ranks.flatMap(r => HEROES.filter(h => h.rank === r && !h.shopExclusive)),
+      };
+    };
+    const standardLower = lowerPoolFor(STANDARD_RATES);
+    const eventLower    = lowerPoolFor(EVENT_RATES);
     const feat     = activeEvent
       ? (HEROES.find(h => h.id === activeEvent.featuredHeroId) || FEATURED)
       : (standardSHeroes[featuredIdx] || FEATURED);
@@ -1072,9 +1077,9 @@ export default function SummonScreen({ navigation, route }) {
                       </TouchableOpacity>
                     ))}
                   </View>
-                  <Text style={[s.featSectionLabel, { marginTop: rs(6) }]}>A / B RANK</Text>
-                  <View style={s.featMinis}>
-                    {standardLowerHeroes.map(h => (
+                  <Text style={[s.featSectionLabel, { marginTop: rs(6) }]}>{standardLower.ranks.join(' / ')} RANK  ·  ALL {standardLower.heroes.length} HEROES</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.featMinisScroll}>
+                    {standardLower.heroes.map(h => (
                       <View key={h.id} style={[s.featMiniAB, { borderColor: RANK[h.rank].glow + '55' }]}>
                         <Image source={h.image} style={s.featMiniImg} />
                         <View style={[s.featMiniRankBadge, { backgroundColor: RANK[h.rank].bg }]}>
@@ -1082,7 +1087,7 @@ export default function SummonScreen({ navigation, route }) {
                         </View>
                       </View>
                     ))}
-                  </View>
+                  </ScrollView>
                 </View>
               ) : (
                 <View style={s.infoCard}>
@@ -1100,21 +1105,17 @@ export default function SummonScreen({ navigation, route }) {
                       );
                     })}
                   </View>
-                  <Text style={[s.featSectionLabel, { marginTop: rs(6) }]}>A / B / C RANK</Text>
-                  <View style={s.featMinis}>
-                    {(activeEvent?.featuredLowerIds ?? []).map(id => {
-                      const h = HEROES.find(hero => hero.id === id);
-                      if (!h) return null;
-                      return (
-                        <View key={h.id} style={[s.featMiniAB, { borderColor: RANK[h.rank].glow + '55' }]}>
-                          <Image source={h.image} style={s.featMiniImg} />
-                          <View style={[s.featMiniRankBadge, { backgroundColor: RANK[h.rank].bg }]}>
-                            <Text style={[s.featMiniRankTxt, { color: RANK[h.rank].text }]}>{h.rank}</Text>
-                          </View>
+                  <Text style={[s.featSectionLabel, { marginTop: rs(6) }]}>{eventLower.ranks.join(' / ')} RANK  ·  ALL {eventLower.heroes.length} HEROES</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.featMinisScroll}>
+                    {eventLower.heroes.map(h => (
+                      <View key={h.id} style={[s.featMiniAB, { borderColor: RANK[h.rank].glow + '55' }]}>
+                        <Image source={h.image} style={s.featMiniImg} />
+                        <View style={[s.featMiniRankBadge, { backgroundColor: RANK[h.rank].bg }]}>
+                          <Text style={[s.featMiniRankTxt, { color: RANK[h.rank].text }]}>{h.rank}</Text>
                         </View>
-                      );
-                    })}
-                  </View>
+                      </View>
+                    ))}
+                  </ScrollView>
                 </View>
               )}
 
@@ -1229,14 +1230,14 @@ export default function SummonScreen({ navigation, route }) {
                 <Text style={s.tapHint}>TAP ANYWHERE TO REVEAL</Text>
               </Animated.View>
             )}
-            <Animated.View
+            {/* <Animated.View
               style={[StyleSheet.absoluteFill, s.revealBarCenter, { opacity: closeBtnOpacity }]}
               pointerEvents={allRevealed ? 'auto' : 'none'}
             >
               <TouchableOpacity onPress={closeToBanner} activeOpacity={0.85} style={s.closeBtn}>
                 <Ionicons name="close" size={rs(26)} color={C.TEXT} />
               </TouchableOpacity>
-            </Animated.View>
+            </Animated.View> */}
           </View>
         </Animated.View>
       </TouchableWithoutFeedback>
@@ -1300,9 +1301,9 @@ export default function SummonScreen({ navigation, route }) {
           })}
         </View>
 
-        <TouchableOpacity onPress={closeToBanner} activeOpacity={0.85} style={s.closeBtn}>
+        {/* <TouchableOpacity onPress={closeToBanner} activeOpacity={0.85} style={s.closeBtn}>
           <Ionicons name="close" size={rs(26)} color={C.TEXT} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     );
   };
@@ -1388,32 +1389,35 @@ export default function SummonScreen({ navigation, route }) {
               </TouchableOpacity>
             </View>
             <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ paddingBottom: rs(6) }}>
-              <Text style={s.ratesSection}>Base probability per summon</Text>
-              {[
-                { rank: 'S', pct: '4%',  note: 'incl. rate-up / Sovereign — see below' },
-                { rank: 'A', pct: '22%', note: '' },
-                { rank: 'B', pct: '30%', note: '' },
-                { rank: 'C', pct: '44%', note: '' },
-              ].map((r) => {
-                const rc = RANK[r.rank];
-                return (
-                  <View key={r.rank} style={s.rateRow}>
-                    <View style={[s.rateBadge, { backgroundColor: rc.bg }]}>
-                      <Text style={[s.rateBadgeTxt, { color: rc.text }]}>{r.rank}</Text>
+              <Text style={s.ratesSection}>
+                Base probability — {activeEvent ? activeEvent.name : 'Standard banner'}
+              </Text>
+              {(() => {
+                const rates = activeEvent ? EVENT_RATES : STANDARD_RATES;
+                const noteFor = (rank) => rank === 'S'
+                  ? (activeEvent ? '50% featured / 50% standard S pool' : 'the featured S heroes only')
+                  : `all ${rank}-rank heroes`;
+                return ['S', 'A', 'B', 'C'].filter(rank => rates[rank] > 0).map(rank => {
+                  const rc = RANK[rank];
+                  return (
+                    <View key={rank} style={s.rateRow}>
+                      <View style={[s.rateBadge, { backgroundColor: rc.bg }]}>
+                        <Text style={[s.rateBadgeTxt, { color: rc.text }]}>{rank}</Text>
+                      </View>
+                      <Text style={s.ratePct}>{+(rates[rank] * 100).toFixed(1)}%</Text>
+                      <Text style={s.rateNote}>{noteFor(rank)}</Text>
                     </View>
-                    <Text style={s.ratePct}>{r.pct}</Text>
-                    {!!r.note && <Text style={s.rateNote}>{r.note}</Text>}
-                  </View>
-                );
-              })}
+                  );
+                });
+              })()}
 
               <Text style={s.ratesSection}>Pity (guaranteed S-rank)</Text>
               <Text style={s.ratesBody}>• The S-rank chance rises to <Text style={s.ratesEm}>8%</Text> from pull 50 and <Text style={s.ratesEm}>15%</Text> from pull 70 ("soft pity").</Text>
               <Text style={s.ratesBody}>• An S-rank is <Text style={s.ratesEm}>guaranteed by pull 90</Text> on the standard banner and <Text style={s.ratesEm}>pull 80</Text> on event banners ("hard pity"). The counter carries over between summons and resets when you obtain an S-rank.</Text>
 
               <Text style={s.ratesSection}>Featured heroes</Text>
-              <Text style={s.ratesBody}>• <Text style={s.ratesEm}>Event banner:</Text> each S-rank has a 50% chance to be the featured hero. If it is not, your <Text style={s.ratesEm}>next</Text> S-rank is guaranteed to be the featured hero.</Text>
-              <Text style={s.ratesBody}>• <Text style={s.ratesEm}>Standard banner:</Text> 20% of S-rank summons are a Sovereign-tier hero (when one is still uncollected).</Text>
+              <Text style={s.ratesBody}>• <Text style={s.ratesEm}>Event banner:</Text> each S-rank has a 50% chance to be the featured hero. If it is not, you receive one of the standard banner's featured S-rank heroes instead, and your <Text style={s.ratesEm}>next</Text> S-rank is guaranteed to be the featured hero.</Text>
+              <Text style={s.ratesBody}>• <Text style={s.ratesEm}>Standard banner:</Text> S-rank summons come only from the featured S-rank heroes shown on the banner.</Text>
 
               <Text style={s.ratesFoot}>Probabilities are independent per summon. ×10 summons draw 10 times at these same rates.</Text>
             </ScrollView>
@@ -1711,6 +1715,7 @@ const s = StyleSheet.create({
 
   featSectionLabel: { fontSize: rf(13), fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1.5, marginBottom: rs(4) },
   featMinis:        { flexDirection: 'row', gap: rs(5), flexWrap: 'wrap' },
+  featMinisScroll:  { flexDirection: 'row', gap: rs(5), paddingRight: rs(4) },
   featMiniS: {
     width: rs(48), height: rs(48), borderRadius: rs(8), overflow: 'hidden', borderWidth: 2,
   },

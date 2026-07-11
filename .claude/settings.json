@@ -239,7 +239,12 @@
       "Bash(NODE_PATH=/Users/codeclouds-mdalisherali/Trump-Card-game/node_modules node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/c577172d-1256-453b-b1cd-52d1e30cc691/scratchpad/debug_cards2.js)",
       "Bash(NODE_PATH=/Users/codeclouds-mdalisherali/Trump-Card-game/node_modules node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/c577172d-1256-453b-b1cd-52d1e30cc691/scratchpad/debug_cards3.js)",
       "Bash(curl -s \"http://localhost:8098/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable\" -o /tmp/bundle3.js)",
-      "Bash(NODE_PATH=/Users/codeclouds-mdalisherali/Trump-Card-game/node_modules node -e ' *)"
+      "Bash(NODE_PATH=/Users/codeclouds-mdalisherali/Trump-Card-game/node_modules node -e ' *)",
+      "Bash(git -C /Users/codeclouds-mdalisherali/Trump-Card-game diff HEAD --stat)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:19006)",
+      "Bash(node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/8b278599-cc7d-4512-a8ad-808dda645f18/scratchpad/verify/drive-summon.js)",
+      "Bash(node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/8b278599-cc7d-4512-a8ad-808dda645f18/scratchpad/verify/drive-event.js)"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"
