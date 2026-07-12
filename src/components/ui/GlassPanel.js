@@ -13,6 +13,12 @@ import { C } from '../../theme/colors';
 // Props:
 //   blurIntensity — 0 = gradient fallback; ~18–40 = frosted. Default 0.
 //   blurTint      — 'dark' | 'light' | 'default' (default 'dark')
+//   blurTarget    — Android only. A ref (from expo-blur's BlurTargetView) to
+//                   whatever background content sits behind this panel — the
+//                   caller must wrap that content in <BlurTargetView ref={...}>.
+//                   Without it, Android's real-time blur silently falls back
+//                   to a flat semi-transparent tint (no actual blur). iOS
+//                   ignores this prop; its blur is always real.
 //   baseColor     — solid backdrop. Default: transparent when blurring (so the
 //                   blur shows), else C.BG_CARD. Pass a color to override.
 //   tint          — translucent body gradient over the blur (default C.GRAD_GLASS)
@@ -23,6 +29,7 @@ import { C } from '../../theme/colors';
 function GlassPanel({
   blurIntensity = 0,
   blurTint = 'dark',
+  blurTarget,
   baseColor,
   tint = C.GRAD_GLASS,
   sheen = true,
@@ -48,7 +55,14 @@ function GlassPanel({
         ]}
       >
         {useBlur && (
-          <BlurView intensity={blurIntensity} tint={blurTint} style={StyleSheet.absoluteFill} pointerEvents="none" />
+          <BlurView
+            blurTarget={blurTarget}
+            intensity={blurIntensity}
+            tint={blurTint}
+            blurMethod="dimezisBlurView"
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
         )}
         <LinearGradient colors={tint} style={StyleSheet.absoluteFill} pointerEvents="none" />
         {sheen && (

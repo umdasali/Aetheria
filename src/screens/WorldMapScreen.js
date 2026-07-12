@@ -5,11 +5,15 @@ import {
   Animated, useWindowDimensions, StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView, BlurTargetView } from 'expo-blur';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { C, RANK } from '../theme/colors';
 import { rs, rf } from '../theme/scale';
 import { FACTIONS, getHeroesByFaction, getHeroById } from '../data/heroes';
+import { getWorldMapVideo } from '../data/worldMapVideos';
 import FactionParticles from '../components/FactionParticles';
+import DriftingClouds from '../components/DriftingClouds';
 import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
 
@@ -215,6 +219,22 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
   ));
   const cardH = Math.floor(cardW * CARD_ASPECT);
 
+  // Ambient looping background video for this faction — FactionScreen mounts
+  // fresh per faction (WorldMapScreen unmounts/remounts it on open/close), so
+  // the player is simply created once for the lifetime of this instance.
+  // surfaceType="textureView" is required on Android: the default SurfaceView
+  // renders in its own hardware layer that view-snapshot blur (dimezisBlurView)
+  // can never sample, so without it the video behind the blur stays unblurred.
+  const bgVideoPlayer = useVideoPlayer(getWorldMapVideo(faction), player => {
+    player.loop = true;
+    player.muted = true;
+    try { player.play(); } catch (_) {}
+  });
+  // Android-only: BlurView's real-time blur methods need a BlurTargetView ref
+  // to know what to sample — without it, blurMethod silently falls back to
+  // "none" (a flat tint, no actual blur). iOS ignores blurTarget entirely.
+  const videoTargetRef = useRef(null);
+
   const meta        = FACTION_META[faction];
   const factionData = FACTIONS[faction];
   const rulerHero   = getHeroById(meta.ruler.heroId);
@@ -223,11 +243,26 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
 
   return (
     <View style={S.fsRoot}>
-      {/* Dark gradient background */}
-      <LinearGradient
-        colors={[C.BG_DEEP, C.BG_MID, C.BG_DEEP]}
+      {/* Ambient background video, blurred */}
+      <BlurTargetView ref={videoTargetRef} style={StyleSheet.absoluteFill}>
+        <VideoView
+          player={bgVideoPlayer}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          nativeControls={false}
+          pointerEvents="none"
+          surfaceType="textureView"
+        />
+      </BlurTargetView>
+      <BlurView
+        blurTarget={videoTargetRef}
+        intensity={40}
+        tint="dark"
+        blurMethod="dimezisBlurView"
         style={StyleSheet.absoluteFill}
+        pointerEvents="none"
       />
+      <LinearGradient colors={C.GRAD_BATTLE} style={StyleSheet.absoluteFill} pointerEvents="none" />
 
       {/* Faction ambient particles */}
       <FactionParticles faction={faction} />
@@ -246,7 +281,12 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
         colors={[color + '28', C.BG_MID + 'F0']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={[S.fsHeader, { paddingHorizontal: rs(rsLocal(34)), paddingVertical: rs(rsLocal(20)) }]}
+        style={[S.fsHeader, {
+          paddingVertical: rs(rsLocal(20)),
+          paddingTop: rs(rsLocal(20)),
+          paddingLeft: rs(rsLocal(34)),
+          paddingRight: rs(rsLocal(34)),
+        }]}
       >
         {/* Faction icon + name + climate */}
         <Image source={factionData.image} style={[S.fsHeaderIcon, { width: rs(rsLocal(42)), height: rs(rsLocal(42)) }]} />
@@ -277,7 +317,11 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
       <View style={[S.fsAccentLine, { backgroundColor: color }]} />
 
       {/* ── Body: left info + right hero grid ── */}
-      <View style={[S.fsBody, { paddingHorizontal: rs(OUTER_PAD) }]}>
+      <View style={[S.fsBody, {
+        paddingLeft: rs(OUTER_PAD),
+        paddingRight: rs(OUTER_PAD),
+        paddingBottom: rs(10),
+      }]}>
 
         {/* LEFT — faction details (scrollable so lore is always reachable) */}
         <ScrollView
@@ -461,6 +505,9 @@ export default function WorldMapScreen({ navigation }) {
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
+
+      {/* Drifting cloud layers over the map */}
+      <DriftingClouds />
 
       {/* Faction touch zones */}
       {FACTION_KEYS.map((key) => (

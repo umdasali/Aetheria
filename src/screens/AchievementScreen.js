@@ -4,7 +4,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { ACHIEVEMENT_DEFS, ACHIEVEMENT_CATEGORIES } from '../data/achievements';
 import AudioManager from '../utils/AudioManager';
@@ -29,7 +28,6 @@ const CAT_LABELS = {
 };
 
 export default function AchievementScreen({ navigation }) {
-  const insets = useSafeAreaInsets();
   const achievements           = useGameStore(s => s.achievements);
   const claimAchievementReward = useGameStore(s => s.claimAchievementReward);
 
@@ -138,9 +136,9 @@ export default function AchievementScreen({ navigation }) {
   };
 
   return (
-    <View style={[s.root, { paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
+    <View style={s.root}>
       {/* Header */}
-      <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 8 }]}>
+      <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: 8 }]}>
         <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} style={s.backBtn} activeOpacity={0.75}>
           <Ionicons name="chevron-back" size={22} color={C.TEXT} />
         </TouchableOpacity>

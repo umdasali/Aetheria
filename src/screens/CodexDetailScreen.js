@@ -1,9 +1,11 @@
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Image, Animated, ScrollView, useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView, BlurTargetView } from 'expo-blur';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import AudioManager from '../utils/AudioManager';
 import { C } from '../theme/colors';
@@ -14,6 +16,8 @@ import { getChronicleEntry, CHAPTER_IMAGES } from '../data/chronicle';
 import { CHAPTER_DEFS } from '../data/story';
 import CornerBrackets from '../components/ui/CornerBrackets';
 import EnemyParticles from '../components/EnemyParticles';
+
+const CODEX_BG_VIDEO = require('../../assets/video/codex-bg.mp4');
 
 const BODY_PAD = 12;
 
@@ -44,9 +48,27 @@ const EFFECT_LABELS = {
 export default function CodexDetailScreen({ navigation, route }) {
   const { type, key } = route.params;
   const { width: screenW, height: screenH } = useWindowDimensions();
-  const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
 
-  const cardHAvail = screenH - topInset - bottomInset - BODY_PAD * 2;
+  // Ambient looping background video — muted, paused while the screen is
+  // unfocused so it doesn't keep decoding frames off-screen. play()/pause()
+  // are wrapped in try/catch because the native player can already be
+  // released by the time this fires (e.g. on back-navigation unmount),
+  // which otherwise throws a native "shared object already released" error.
+  const bgVideoPlayer = useVideoPlayer(CODEX_BG_VIDEO, player => {
+    player.loop = true;
+    player.muted = true;
+    try { player.play(); } catch (_) {}
+  });
+  useFocusEffect(useCallback(() => {
+    try { bgVideoPlayer.play(); } catch (_) {}
+    return () => { try { bgVideoPlayer.pause(); } catch (_) {} };
+  }, [bgVideoPlayer]));
+  // Android-only: BlurView's real-time blur methods need a BlurTargetView ref
+  // to know what to sample — without it, blurMethod silently falls back to
+  // "none" (a flat tint, no actual blur). iOS ignores blurTarget entirely.
+  const videoTargetRef = useRef(null);
+
+  const cardHAvail = screenH - BODY_PAD * 2;
   const CARD_W = Math.min(
     Math.floor(cardHAvail * (220 / 320)),
     Math.floor(screenW * 0.34),
@@ -78,9 +100,27 @@ export default function CodexDetailScreen({ navigation, route }) {
 
   return (
     <View style={styles.root}>
-      <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
+      <BlurTargetView ref={videoTargetRef} style={StyleSheet.absoluteFill}>
+        <VideoView
+          player={bgVideoPlayer}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          nativeControls={false}
+          pointerEvents="none"
+          surfaceType="textureView"
+        />
+      </BlurTargetView>
+      <BlurView
+        blurTarget={videoTargetRef}
+        intensity={40}
+        tint="dark"
+        blurMethod="dimezisBlurView"
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <LinearGradient colors={C.GRAD_BATTLE} style={StyleSheet.absoluteFill} pointerEvents="none" />
 
-      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
+      <View style={styles.safe}>
         <View style={styles.body}>
 
           {/* LEFT — card / chapter panel */}
@@ -130,7 +170,7 @@ export default function CodexDetailScreen({ navigation, route }) {
             </ScrollView>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
@@ -335,7 +375,7 @@ const styles = StyleSheet.create({
 
   loreArea:    {
     flex: 1, borderRadius: rs(12), borderWidth: 1, borderColor: C.BORDER_SUBTLE,
-    backgroundColor: C.BG_BASE,
+    backgroundColor: C.BG_BASE+'33',
   },
   loreContent: { padding: rs(16) },
   loreTxt:     { fontSize: rf(14), color: C.TEXT_SOFT, lineHeight: rf(22) },

@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { ASCENSION_ITEMS } from '../data/ascensionItems';
 import AudioManager from '../utils/AudioManager';
@@ -352,7 +351,7 @@ export default function TowerShopScreen({ navigation }) {
     <View style={s.root}>
       <LinearGradient colors={C.GRAD_TOWER} style={StyleSheet.absoluteFill} />
 
-      <SafeAreaView style={s.safe} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={s.safe}>
 
         {/* ══ HEADER ═══════════════════════════════════════════════════════ */}
         <LinearGradient colors={C.GRAD_HEADER} style={s.header}>
@@ -488,7 +487,7 @@ export default function TowerShopScreen({ navigation }) {
           </View>
         </Animated.View>
 
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

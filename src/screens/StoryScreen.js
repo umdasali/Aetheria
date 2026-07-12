@@ -7,7 +7,6 @@ const GEM_IMG  = require('../../assets/currency/gem.png');
 const GOLD_IMG = require('../../assets/currency/gold.png');
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import useGameStore from '../store/gameStore';
 import { CHAPTER_DEFS, STORY_STAGES, STAGE_ORDER, getStagesForChapter, getStageById, isStageUnlocked, stageGoldReward } from '../data/story';
@@ -216,7 +215,7 @@ export default function StoryScreen({ navigation }) {
   return (
     <View style={styles.root}>
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={styles.safe}>
 
         {/* Header */}
         <LinearGradient colors={C.GRAD_HEADER} style={styles.header}>
@@ -267,7 +266,7 @@ export default function StoryScreen({ navigation }) {
           </View>
 
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

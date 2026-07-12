@@ -5,6 +5,7 @@ import './src/cloud/supabaseConfig';
 import React, { useEffect, useRef, useState } from 'react';
 import { configure as rcConfigure, setUserId as rcSetUserId, logOut as rcLogOut, startTransactionListener as rcStartTransactionListener } from './src/utils/RevenueCatManager';
 import useGameStore from './src/store/gameStore';
+import AudioManager from './src/utils/AudioManager';
 import { onAuthChanged } from './src/cloud/auth';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, BackHandler, Modal, View, Text, TouchableOpacity } from 'react-native';
@@ -55,10 +56,22 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   const navRef             = useRef(null);
   const [quitVisible, setQuitVisible] = useState(false);
+  const settings = useGameStore(s => s.settings);
 
   useEffect(() => {
     try { NavigationBar.setHidden(true); } catch (_) {}
   }, []);
+
+  // AudioManager's volume state resets to its hardcoded defaults on every cold
+  // start, independent of the persisted mute/volume settings — previously it
+  // only picked those up once SettingsScreen mounted and ran its own effect.
+  // Applying them here, reactively, means a muted player never gets a moment
+  // of audible BGM before the user visits Settings, and covers the settings
+  // store finishing AsyncStorage hydration after this component has mounted.
+  useEffect(() => {
+    AudioManager.setMusicVolume(settings.musicMute ? 0 : settings.musicVolume);
+    AudioManager.setSFXVolume(settings.sfxMute ? 0 : settings.sfxVolume);
+  }, [settings.musicMute, settings.sfxMute, settings.musicVolume, settings.sfxVolume]);
 
   // Initialize RevenueCat once on startup, then keep its userId in sync with
   // Supabase auth so purchases are always tied to the correct account.

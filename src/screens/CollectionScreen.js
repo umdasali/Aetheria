@@ -3,11 +3,13 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Animated, Image, FlatList, useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView, BlurTargetView } from 'expo-blur';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { HEROES, FACTIONS } from '../data/heroes';
+import { getCollectionVideo } from '../data/collectionVideos';
 import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
 import { C, RANK_COLORS, RANK } from '../theme/colors';
@@ -33,11 +35,9 @@ const RANK_ORDER   = { SOVEREIGN: -1, S: 0, A: 1, B: 2, C: 3 };
 
 export default function CollectionScreen({ navigation }) {
   const { width: W }                                        = useWindowDimensions();
-  const { bottom: bottomInset,
-          left: leftInset, right: rightInset }              = useSafeAreaInsets();
   const cardW = useMemo(
-    () => Math.floor((W - leftInset - rightInset - SIDEBAR_W - GRID_PAD * 2 - GAP * (COLS - 1)) / COLS),
-    [W, leftInset, rightInset],
+    () => Math.floor((W - SIDEBAR_W - GRID_PAD * 2 - GAP * (COLS - 1)) / COLS),
+    [W],
   );
   const cardH = useMemo(() => Math.floor(cardW * 1.42), [cardW]);
   const ownedHeroes    = useGameStore(s => s.ownedHeroes);
@@ -46,6 +46,26 @@ export default function CollectionScreen({ navigation }) {
   const [filter,   setFilter]   = useState('All');
   const [sortBy,   setSortBy]   = useState('Default');
   const [showSort, setShowSort] = useState(false);
+
+  // Ambient looping background video, swapped per faction filter. Passing a
+  // new `source` to useVideoPlayer releases the old native player and spins
+  // up a fresh one bound to the new clip, so switching factions just works.
+  // Muted, paused while unfocused; play()/pause() wrapped in try/catch since
+  // the native player can already be released by the time this fires (e.g.
+  // on back-navigation unmount), which otherwise throws a native error.
+  const bgVideoPlayer = useVideoPlayer(getCollectionVideo(filter), player => {
+    player.loop = true;
+    player.muted = true;
+    try { player.play(); } catch (_) {}
+  });
+  useFocusEffect(useCallback(() => {
+    try { bgVideoPlayer.play(); } catch (_) {}
+    return () => { try { bgVideoPlayer.pause(); } catch (_) {} };
+  }, [bgVideoPlayer]));
+  // Android-only: BlurView's real-time blur methods need a BlurTargetView ref
+  // to know what to sample — without it, blurMethod silently falls back to
+  // "none" (a flat tint, no actual blur). iOS ignores blurTarget entirely.
+  const videoTargetRef = useRef(null);
 
   // O(1) membership lookups — stable refs unless the underlying arrays change
   const ownedSet = useMemo(() => new Set(ownedHeroes), [ownedHeroes]);
@@ -93,9 +113,27 @@ export default function CollectionScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
-      <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
+      <BlurTargetView ref={videoTargetRef} style={StyleSheet.absoluteFill}>
+        <VideoView
+          player={bgVideoPlayer}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          nativeControls={false}
+          pointerEvents="none"
+          surfaceType="textureView"
+        />
+      </BlurTargetView>
+      <BlurView
+        blurTarget={videoTargetRef}
+        intensity={40}
+        tint="dark"
+        blurMethod="dimezisBlurView"
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <LinearGradient colors={C.GRAD_BATTLE} style={StyleSheet.absoluteFill} pointerEvents="none" />
 
-      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <View style={styles.safe}>
 
         {/* ══ TOP BAR ══ */}
         <View style={styles.topBar}>
@@ -188,7 +226,7 @@ export default function CollectionScreen({ navigation }) {
             numColumns={COLS}
             key={`${filter}-${COLS}`}
             keyExtractor={(h) => h.id}
-            contentContainerStyle={[styles.grid, { paddingBottom: GRID_PAD + bottomInset }]}
+            contentContainerStyle={[styles.grid, { paddingBottom: GRID_PAD }]}
             columnWrapperStyle={styles.gridRow}
             showsVerticalScrollIndicator={false}
             extraData={team}
@@ -205,7 +243,7 @@ export default function CollectionScreen({ navigation }) {
             })}
           />
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
@@ -291,7 +329,7 @@ const styles = StyleSheet.create({
   topBar: {
     height: rs(48), flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: rs(12),
-    backgroundColor: C.BG_BASE,
+    backgroundColor: C.BG_BASE+'30',
     borderBottomWidth: 1, borderBottomColor: C.BORDER,
   },
   backBtn:  { flexDirection: 'row', alignItems: 'center', gap: rs(3), marginRight: rs(12) },
@@ -306,7 +344,7 @@ const styles = StyleSheet.create({
   // Sidebar — zIndex: 2 ensures sort dropdown appears above the FlatList
   sidebar: {
     width: SIDEBAR_W,
-    backgroundColor: C.BG_BASE,
+    backgroundColor: C.BG_BASE+'30',
     borderRightWidth: 1, borderRightColor: C.BORDER,
     justifyContent: 'space-between',
     zIndex: 2,

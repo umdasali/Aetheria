@@ -244,7 +244,9 @@
       "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081)",
       "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:19006)",
       "Bash(node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/8b278599-cc7d-4512-a8ad-808dda645f18/scratchpad/verify/drive-summon.js)",
-      "Bash(node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/8b278599-cc7d-4512-a8ad-808dda645f18/scratchpad/verify/drive-event.js)"
+      "Bash(node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/8b278599-cc7d-4512-a8ad-808dda645f18/scratchpad/verify/drive-event.js)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node -e \"console.log\\(require.resolve\\('@babel/parser'\\)\\)\")"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

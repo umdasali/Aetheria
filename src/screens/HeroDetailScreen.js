@@ -3,7 +3,6 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Animated, Alert, useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
@@ -523,7 +522,6 @@ export default function HeroDetailScreen({ route, navigation }) {
   const [saving,       setSaving]       = useState(false);
   const [saved,        setSaved]        = useState(false);
 
-  const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
   const { width: screenW, height: screenH } = useWindowDimensions();
   const cardRef      = useRef(null);
   const diffTimerRef = useRef(null);
@@ -588,7 +586,7 @@ export default function HeroDetailScreen({ route, navigation }) {
   // ── Derived data ──────────────────────────────────────────────────────────
   // Cap card width both by screen height (portrait aspect ratio) and by 34% of
   // screen width, so the card never crowds the right info panel on any screen size.
-  const cardHAvail = screenH - topInset - bottomInset - BODY_PAD * 2;
+  const cardHAvail = screenH - BODY_PAD * 2;
   const CARD_W = Math.min(
     Math.floor(cardHAvail * (220 / 320)),
     Math.floor(screenW * 0.34),
@@ -721,7 +719,7 @@ export default function HeroDetailScreen({ route, navigation }) {
     <View style={styles.root}>
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
-      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
+      <View style={styles.safe}>
         <View style={styles.body}>
 
           {/* LEFT — hero card */}
@@ -802,7 +800,7 @@ export default function HeroDetailScreen({ route, navigation }) {
             </View>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* Forge burst overlay */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">

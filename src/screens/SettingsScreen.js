@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
 import { C } from '../theme/colors';
@@ -345,7 +344,7 @@ export default function SettingsScreen({ navigation }) {
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
       {/* Header */}
-      <SafeAreaView edges={['top', 'left', 'right']}>
+      <View>
         <LinearGradient colors={C.GRAD_HEADER} style={styles.header}>
           <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} style={styles.backBtn} activeOpacity={0.8}>
             <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
@@ -358,9 +357,9 @@ export default function SettingsScreen({ navigation }) {
             <Ionicons name="settings" size={rs(20)} color={C.TEXT_ON_DARK_MUTED} />
           </View>
         </LinearGradient>
-      </SafeAreaView>
+      </View>
 
-      <SafeAreaView style={styles.body} edges={['bottom', 'left', 'right']}>
+      <View style={styles.body}>
 
         {/* ── Tab bar ── */}
         <View style={styles.tabBar}>
@@ -609,7 +608,7 @@ export default function SettingsScreen({ navigation }) {
 
         )}
 
-      </SafeAreaView>
+      </View>
 
       {/* ── Forced restart modal (non-dismissable) ── */}
       <Modal

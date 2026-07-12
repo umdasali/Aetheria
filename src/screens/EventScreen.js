@@ -4,7 +4,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getActiveEvents, getUpcomingEvents, getEndedEvents, secondsUntilEnd, secondsUntilStart } from '../data/events';
 import { getHeroById } from '../data/heroes';
 import { C, RANK } from '../theme/colors';
@@ -178,7 +177,6 @@ function EventCard({ event, onEnter, isGuaranteed }) {
 }
 
 export default function EventScreen({ navigation }) {
-  const insets         = useSafeAreaInsets();
   const eventGuarantee = useGameStore(s => s.eventGuarantee ?? {});
   const [tab, setTab]  = useState('active');
 
@@ -196,9 +194,9 @@ export default function EventScreen({ navigation }) {
   };
 
   return (
-    <View style={[s.root, { paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
+    <View style={s.root}>
       {/* Header */}
-      <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 8 }]}>
+      <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: 8 }]}>
         <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} style={s.backBtn} activeOpacity={0.75}>
           <Ionicons name="chevron-back" size={22} color={C.TEXT} />
         </TouchableOpacity>

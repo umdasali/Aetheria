@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { fetchTopN, fetchOwnRank, submitScore, getCurrentUserId, CATEGORIES } from '../cloud/leaderboardService';
 import { getUser, onAuthChanged } from '../cloud/auth';
@@ -532,7 +531,6 @@ const rr = StyleSheet.create({
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function LeaderboardScreen({ navigation }) {
-  const insets             = useSafeAreaInsets();
   const playerProfile      = useGameStore(s => s.playerProfile);
   const towerHighestFloor  = useGameStore(s => s.towerHighestFloor);
   const towerWeeklyBest    = useGameStore(s => s.towerWeeklyBest);
@@ -648,11 +646,11 @@ export default function LeaderboardScreen({ navigation }) {
   }, [rows]);
 
   return (
-    <View style={[s.root, { paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
+    <View style={s.root}>
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 4 }]}>
+      <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: 4 }]}>
         <TouchableOpacity
           onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }}
           style={s.backBtn}

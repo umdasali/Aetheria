@@ -7,7 +7,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import AudioManager from '../utils/AudioManager';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { HEROES, FACTIONS } from '../data/heroes';
 import { getAvatarImage } from '../data/avatars';
@@ -255,7 +254,7 @@ export default function HomeScreen({ navigation }) {
       {/* ── Weather particles ── */}
       <WeatherEffect type={weather} />
 
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={styles.safe}>
         <Animated.View
           style={[styles.shell, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
         >
@@ -376,7 +375,7 @@ export default function HomeScreen({ navigation }) {
           </View>
 
         </Animated.View>
-      </SafeAreaView>
+      </View>
 
       {/* ── Achievement unlock modal ── */}
       <Modal

@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { GEM_PACKS, BUNDLES, HERO_PACKS, IAP_ENABLED } from '../data/shopPacks';
 import { resolvePurchase } from '../shop/purchaseHandler';
@@ -335,7 +334,7 @@ export default function ShopScreen({ navigation }) {
     <View style={s.root}>
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
-      <SafeAreaView style={s.safe} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={s.safe}>
 
         {/* ══ HEADER ══ */}
         <LinearGradient colors={C.GRAD_HEADER} style={s.header}>
@@ -466,7 +465,7 @@ export default function ShopScreen({ navigation }) {
           </View>
         </Animated.View>
 
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { DAILY_REWARDS } from '../data/dailyRewards';
 import AudioManager from '../utils/AudioManager';
@@ -123,7 +122,6 @@ function DayCard({ reward, state, scale }) {
 
 export default function DailyRewardScreen({ navigation }) {
   const { width: W, height: SH } = useWindowDimensions();
-  const { top: topInset, bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
   const dailyStreak      = useGameStore(s => s.dailyStreak);
   const lastClaimDate    = useGameStore(s => s.lastClaimDate);
   const claimDailyReward = useGameStore(s => s.claimDailyReward);
@@ -233,10 +231,10 @@ export default function DailyRewardScreen({ navigation }) {
         style={[StyleSheet.absoluteFill, S.flashOverlay, { opacity: flashAnim }]}
       />
 
-      <View style={[S.wrapper, { paddingLeft: leftInset, paddingRight: rightInset }]}>
+      <View style={S.wrapper}>
 
         {/* ══ HEADER ══ */}
-        <LinearGradient colors={C.GRAD_HEADER} style={[S.header, { paddingTop: topInset + 8 }]}>
+        <LinearGradient colors={C.GRAD_HEADER} style={[S.header, { paddingTop: 8 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={S.backBtn} activeOpacity={0.8}>
             <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
           </TouchableOpacity>
@@ -252,7 +250,7 @@ export default function DailyRewardScreen({ navigation }) {
         </LinearGradient>
 
         {/* ══ BODY ══ */}
-        <View style={[S.body, { paddingBottom: bottomInset }]}>
+        <View style={S.body}>
 
           {/* ── LEFT — Today spotlight ── */}
           <View style={[S.leftPanel, { borderRightColor: accentColor + '22' }]}>

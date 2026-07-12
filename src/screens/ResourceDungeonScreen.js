@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import useGameStore from '../store/gameStore';
 import {
@@ -782,7 +781,7 @@ export default function ResourceDungeonScreen({ navigation }) {
     <View style={s.root}>
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
-      <SafeAreaView style={s.safe} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={s.safe}>
 
         {/* ── HEADER ── */}
         <View style={s.header}>
@@ -828,7 +827,7 @@ export default function ResourceDungeonScreen({ navigation }) {
           onClose={() => setExchangeModalOpen(false)}
         />
 
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

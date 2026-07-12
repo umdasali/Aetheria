@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C } from '../theme/colors';
 import { rs, rf } from '../theme/scale';
 import AudioManager from '../utils/AudioManager';
@@ -47,7 +46,6 @@ function Particle({ color, delay, duration, x, size }) {
 
 // ─── NarrationScreen ──────────────────────────────────────────────────────────
 export default function NarrationScreen({ navigation, route }) {
-  const { top: topInset, bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
   const { width: W, height: H } = useWindowDimensions();
   const { stage, enemyGroup, autoSkip } = route.params || {};
   // Guard against a missing/malformed nav entry (restored state, etc.) — the
@@ -253,18 +251,18 @@ export default function NarrationScreen({ navigation, route }) {
 
       {/* Cinematic letterbox bars */}
       <View style={S.lbTop} />
-      <View style={[S.lbBottom, { height: LBOX + bottomInset }]} />
+      <View style={[S.lbBottom, { height: LBOX }]} />
 
       {/* Back button — positioned over the letterbox */}
       <TouchableOpacity
-        style={[S.backBtn, { top: LBOX + topInset + 8, left: leftInset + 10 }]}
+        style={[S.backBtn, { top: LBOX + 8, left: 10 }]}
         onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }}
         activeOpacity={0.75}
       >
         <Ionicons name="chevron-back" size={rs(20)} color={C.TEXT_ON_DARK} />
       </TouchableOpacity>
 
-      <View style={[S.body, { marginTop: LBOX + topInset, marginBottom: LBOX + bottomInset, marginLeft: leftInset, marginRight: rightInset }]}>
+      <View style={[S.body, { marginTop: LBOX, marginBottom: LBOX }]}>
 
         {/* ── LEFT PANEL: enemy image ────────────────────────── */}
         <View style={S.leftPanel}>

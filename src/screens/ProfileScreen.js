@@ -1,15 +1,18 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Image, FlatList, Dimensions, useWindowDimensions,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView, BlurTargetView } from 'expo-blur';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { FACTIONS, getHeroById } from '../data/heroes';
 import { getAvatarImage } from '../data/avatars';
+import { getCollectionVideo } from '../data/collectionVideos';
 import { C, RANK } from '../theme/colors';
 import FactionParticles from '../components/FactionParticles';
 import { calcPlayerLevel } from '../utils/playerLevel';
@@ -47,7 +50,6 @@ function getDominantFaction(ownedHeroIds) {
 
 export default function ProfileScreen({ navigation }) {
   const { width: W, height: H } = useWindowDimensions();
-  const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
   const ownedHeroes       = useGameStore(s => s.ownedHeroes);
   const gems              = useGameStore(s => s.gems);
   const completedChapters = useGameStore(s => s.completedChapters);
@@ -66,6 +68,22 @@ export default function ProfileScreen({ navigation }) {
   const activeFaction = playerProfile.favoriteFaction || dominantFaction;
   const factionData   = activeFaction ? FACTIONS[activeFaction] : null;
   const factionColor  = factionData?.color ?? C.PRIMARY;
+
+  // Ambient looping background video, matching the player's active faction —
+  // muted, paused while unfocused so it doesn't keep decoding frames off-screen.
+  const bgVideoPlayer = useVideoPlayer(getCollectionVideo(activeFaction), player => {
+    player.loop = true;
+    player.muted = true;
+    try { player.play(); } catch (_) {}
+  });
+  useFocusEffect(useCallback(() => {
+    try { bgVideoPlayer.play(); } catch (_) {}
+    return () => { try { bgVideoPlayer.pause(); } catch (_) {} };
+  }, [bgVideoPlayer]));
+  // Android-only: BlurView's real-time blur methods need a BlurTargetView ref
+  // to know what to sample — without it, blurMethod silently falls back to
+  // "none" (a flat tint, no actual blur). iOS ignores blurTarget entirely.
+  const videoTargetRef = useRef(null);
 
   const sRankCount = useMemo(
     () => ownedHeroes.filter(id => {
@@ -246,11 +264,29 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <View style={s.root}>
-      <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
+      <BlurTargetView ref={videoTargetRef} style={StyleSheet.absoluteFill}>
+        <VideoView
+          player={bgVideoPlayer}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          nativeControls={false}
+          pointerEvents="none"
+          surfaceType="textureView"
+        />
+      </BlurTargetView>
+      <BlurView
+        blurTarget={videoTargetRef}
+        intensity={40}
+        tint="dark"
+        blurMethod="dimezisBlurView"
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <LinearGradient colors={C.GRAD_BATTLE} style={StyleSheet.absoluteFill} pointerEvents="none" />
 
       <LinearGradient
         colors={C.GRAD_HEADER}
-        style={[s.header, { height: HEADER_H + topInset, paddingTop: topInset }]}
+        style={[s.header, { height: HEADER_H }]}
       >
         <TouchableOpacity onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }} style={s.backBtn} activeOpacity={0.8} accessibilityLabel="Go back" accessibilityRole="button">
           <Ionicons name="chevron-back" size={rs(22)} color={C.TEXT} />
@@ -279,7 +315,7 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </LinearGradient>
 
-      <View style={[s.body, { paddingBottom: bottomInset }]}>
+      <View style={s.body}>
         {renderCharPanel()}
         <View style={s.divV} />
         <View style={s.rightPanel}>

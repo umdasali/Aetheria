@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { HEROES } from '../data/heroes';
 import { C, RANK } from '../theme/colors';
@@ -378,7 +377,6 @@ const SmallCardFront = ({ hero, isNew, isFeatured, width }) => {
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function SummonScreen({ navigation, route }) {
   const { width: W, height: H } = useWindowDimensions();
-  const { top: topInset, bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
   // Per-property selectors — keeps pull-reveal animations free of unrelated re-renders
   const gems                     = useGameStore(s => s.gems);
   const spendGems                = useGameStore(s => s.spendGems);
@@ -1310,9 +1308,9 @@ export default function SummonScreen({ navigation, route }) {
 
   // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <View style={[s.root, { paddingBottom: bottomInset, paddingLeft: leftInset, paddingRight: rightInset }]}>
+    <View style={s.root}>
       {/* Header */}
-      <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: topInset + 8 }]}>
+      <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: 8 }]}>
         <TouchableOpacity
           onPress={pullPhase === 'banner' ? () => navigation.goBack() : closeToBanner}
           style={s.headerBack}

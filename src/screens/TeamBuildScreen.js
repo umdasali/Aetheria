@@ -4,7 +4,6 @@ import {
   Image, ScrollView, FlatList, Dimensions, Animated,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import useGameStore from '../store/gameStore';
@@ -147,7 +146,7 @@ export default function TeamBuildScreen({ navigation }) {
     <View style={s.root}>
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
-      <SafeAreaView style={s.safe} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={s.safe}>
 
         {/* ══ HEADER ══ */}
         <LinearGradient colors={C.GRAD_HEADER} style={s.header}>
@@ -398,7 +397,7 @@ export default function TeamBuildScreen({ navigation }) {
           </View>
 
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { C } from '../theme/colors';
 import { rs, rf } from '../theme/scale';
 import {
@@ -652,7 +651,7 @@ export default function CloudAuthScreen({ navigation }) {
     <View style={s.root}>
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} pointerEvents="none" />
 
-      <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         {/* Header */}
         <LinearGradient colors={C.GRAD_HEADER} style={s.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.8}>
@@ -694,7 +693,7 @@ export default function CloudAuthScreen({ navigation }) {
             </View>
           </Animated.View>
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* ── Cloud sync modal: loading → restart (non-dismissable) ── */}
       <Modal

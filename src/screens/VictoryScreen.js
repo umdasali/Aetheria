@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioManager from '../utils/AudioManager';
 import { C } from '../theme/colors';
 import { getHeroById } from '../data/heroes';
@@ -283,7 +282,7 @@ export default function VictoryScreen({ navigation, route }) {
         <Particle key={i} color={accentClr + 'AA'} delay={p.delay} duration={p.duration} x={p.x} size={p.size} />
       ))}
 
-      <SafeAreaView style={S.body} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={S.body}>
 
         {/* ── LEFT ─────────────────────────────────────── */}
         <View style={S.leftPanel}>
@@ -595,7 +594,7 @@ export default function VictoryScreen({ navigation, route }) {
           </Animated.View>
 
         </View>
-      </SafeAreaView>
+      </View>
     </Animated.View>
   );
 }

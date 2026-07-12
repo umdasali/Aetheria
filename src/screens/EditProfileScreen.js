@@ -153,7 +153,10 @@ export default function EditProfileScreen({ navigation }) {
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
       {/* Header */}
-      <LinearGradient colors={C.GRAD_HEADER} style={s.header}>
+      <LinearGradient
+        colors={C.GRAD_HEADER}
+        style={s.header}
+      >
         <TouchableOpacity
           onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }}
           style={s.backBtn}

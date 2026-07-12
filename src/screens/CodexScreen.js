@@ -3,9 +3,8 @@ import {
   View, Text, StyleSheet, TouchableOpacity, Image, Modal, ScrollView, Animated,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
+import { BlurView, BlurTargetView } from 'expo-blur';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import useGameStore from '../store/gameStore';
@@ -60,8 +59,6 @@ const FOOTER_NOTE = {
 };
 
 export default function CodexScreen({ navigation }) {
-  const { bottom: bottomInset } = useSafeAreaInsets();
-
   const completedChapters  = useGameStore(s => s.completedChapters);
   const ascensionInventory = useGameStore(s => s.ascensionInventory);
   const clearCodexUnlocks  = useGameStore(s => s.clearCodexUnlocks);
@@ -70,6 +67,14 @@ export default function CodexScreen({ navigation }) {
   const [tierFilter, setTierFilter] = useState('all');
   const [rankFilter, setRankFilter] = useState('all');
   const [detail, setDetail]         = useState(null); // { type, key } | null
+
+  // Cross-fades the tab body on every switch so swapping between Bestiary /
+  // Relics / Chronicle reads as a smooth transition instead of an abrupt pop.
+  const contentFade = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    contentFade.setValue(0);
+    Animated.timing(contentFade, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+  }, [activeTab, contentFade]);
 
   // Opening the Codex is itself the "acknowledgement" of new entries — clears
   // the bottom-tab badge instead of an interrupting unlock modal on Home.
@@ -89,6 +94,10 @@ export default function CodexScreen({ navigation }) {
     try { bgVideoPlayer.play(); } catch (_) {}
     return () => { try { bgVideoPlayer.pause(); } catch (_) {} };
   }, [bgVideoPlayer]));
+  // Android-only: BlurView's real-time blur methods need a BlurTargetView ref
+  // to know what to sample — without it, blurMethod silently falls back to
+  // "none" (a flat tint, no actual blur). iOS ignores blurTarget entirely.
+  const videoTargetRef = useRef(null);
 
   const catalog = useMemo(() => getEnemyCatalog(), []);
   const encounteredKeys = useMemo(
@@ -123,8 +132,8 @@ export default function CodexScreen({ navigation }) {
     setBox(prev => (prev.w === width && prev.h === height) ? prev : { w: width, h: height });
   }, []);
   const cardH = useMemo(
-    () => box.h ? Math.max(CARD_MIN_H, Math.min(box.h - bottomInset - rs(8), CARD_MAX_H)) : 0,
-    [box.h, bottomInset],
+    () => box.h ? Math.max(CARD_MIN_H, Math.min(box.h - rs(8), CARD_MAX_H)) : 0,
+    [box.h],
   );
   const cardW = useMemo(() => Math.round(cardH * CARD_ASPECT), [cardH]);
   // Relics' spotlight column (badge + art + name + stars + CTA) runs taller
@@ -132,8 +141,8 @@ export default function CodexScreen({ navigation }) {
   // full measured box instead of the CARD_MAX_H clamp — otherwise the CTA
   // button clips at the carousel row's edge.
   const relicH = useMemo(
-    () => box.h ? Math.max(CARD_MIN_H, Math.min(box.h - bottomInset - rs(12), 340)) : 0,
-    [box.h, bottomInset],
+    () => box.h ? Math.max(CARD_MIN_H, Math.min(box.h - rs(12), 340)) : 0,
+    [box.h],
   );
 
   // Bestiary/Chronicle open a dedicated split-screen (card left, lore right) —
@@ -208,18 +217,28 @@ export default function CodexScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
-      <VideoView
-        player={bgVideoPlayer}
+      <BlurTargetView ref={videoTargetRef} style={StyleSheet.absoluteFill}>
+        <VideoView
+          player={bgVideoPlayer}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          nativeControls={false}
+          pointerEvents="none"
+          surfaceType="textureView"
+        />
+      </BlurTargetView>
+      <BlurView
+        blurTarget={videoTargetRef}
+        intensity={40}
+        tint="dark"
+        blurMethod="dimezisBlurView"
         style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        nativeControls={false}
         pointerEvents="none"
       />
-      <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} pointerEvents="none" />
       <LinearGradient colors={C.GRAD_BATTLE} style={StyleSheet.absoluteFill} pointerEvents="none" />
       <AmbientDust />
 
-      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <View style={styles.safe}>
 
         {/* ══ TOP BAR ══ */}
         <View style={styles.topBar}>
@@ -235,18 +254,18 @@ export default function CodexScreen({ navigation }) {
               <Text style={styles.titleFlourish}>◇</Text>
             </View>
             <Text style={styles.topCount}>{unlockedTabCount} / {totalTabCount} discovered</Text>
-            {activeTab !== 'relics' && (
-              <View style={styles.progressRow}>
-                <View style={styles.progressTrack}>
-                  <LinearGradient
-                    colors={[C.PRIMARY_DARK, C.PRIMARY]}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                    style={[styles.progressFill, { width: `${discoverPct}%` }]}
-                  />
-                </View>
-                <Text style={styles.progressPct}>{Math.round(discoverPct)}%</Text>
+            {/* Always rendered (opacity-hidden for Relics) so the header keeps a
+                constant height across tabs — avoids a body reflow on switch. */}
+            <View style={[styles.progressRow, activeTab === 'relics' && styles.progressRowHidden]} pointerEvents={activeTab === 'relics' ? 'none' : 'auto'}>
+              <View style={styles.progressTrack}>
+                <LinearGradient
+                  colors={[C.PRIMARY_DARK, C.PRIMARY]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={[styles.progressFill, { width: `${discoverPct}%` }]}
+                />
               </View>
-            )}
+              <Text style={styles.progressPct}>{Math.round(discoverPct)}%</Text>
+            </View>
           </View>
         </View>
 
@@ -273,6 +292,7 @@ export default function CodexScreen({ navigation }) {
           </View>
 
           {/* Content */}
+          <Animated.View style={{ flex: 1, opacity: contentFade }}>
           {activeTab === 'bestiary' && (
             <View style={styles.content}>
               <View style={styles.tierRow}>
@@ -291,7 +311,7 @@ export default function CodexScreen({ navigation }) {
                   );
                 })}
               </View>
-              <View style={[styles.carouselBox, { paddingBottom: bottomInset }]} onLayout={handleBoxLayout}>
+              <View style={styles.carouselBox} onLayout={handleBoxLayout}>
                 {box.w > 0 && cardW > 0 && (
                   <InfiniteCarousel
                     key={`bestiary-${tierFilter}-${cardW}`}
@@ -326,7 +346,7 @@ export default function CodexScreen({ navigation }) {
                   );
                 })}
               </View>
-              <View style={[styles.carouselBox, { paddingBottom: bottomInset }]} onLayout={handleBoxLayout}>
+              <View style={styles.carouselBox} onLayout={handleBoxLayout}>
                 {box.w > 0 && cardW > 0 && (
                   <InfiniteCarousel
                     key={`relics-${rankFilter}-${cardW}-${relicH}`}
@@ -349,7 +369,7 @@ export default function CodexScreen({ navigation }) {
 
           {activeTab === 'chronicle' && (
             <View style={styles.content}>
-              <View style={[styles.carouselBox, { paddingBottom: bottomInset }]} onLayout={handleBoxLayout}>
+              <View style={styles.carouselBox} onLayout={handleBoxLayout}>
                 {box.w > 0 && cardW > 0 && (
                   <InfiniteCarousel
                     key={`chronicle-${cardW}`}
@@ -364,8 +384,9 @@ export default function CodexScreen({ navigation }) {
               <FooterNote text={FOOTER_NOTE.chronicle} />
             </View>
           )}
+          </Animated.View>
         </View>
-      </SafeAreaView>
+      </View>
 
       <DetailModal detail={detail} onClose={closeDetail} ascensionInventory={ascensionInventory} />
     </View>
@@ -554,6 +575,7 @@ const styles = StyleSheet.create({
   topTitle: { fontSize: rf(13), fontWeight: '900', color: C.TEXT, letterSpacing: 4 },
   topCount: { fontSize: rf(12), color: C.TEXT_MUTED, letterSpacing: 0.5, marginTop: 1 },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: rs(6), marginTop: rs(4), width: rs(160) },
+  progressRowHidden: { opacity: 0 },
   progressTrack: { flex: 1, height: 4, borderRadius: 2, backgroundColor: C.BG_MID, overflow: 'hidden' },
   progressFill:  { height: 4, borderRadius: 2 },
   progressPct:   { fontSize: rf(9), fontWeight: '800', color: C.TEXT_MUTED },

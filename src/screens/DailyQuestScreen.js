@@ -4,7 +4,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { QUEST_DEFS, TOTAL_DAILY_GEMS, TOTAL_DAILY_GOLD } from '../data/dailyQuests';
 import AudioManager from '../utils/AudioManager';
@@ -62,7 +61,7 @@ export default function DailyQuestScreen({ navigation }) {
     <View style={s.root}>
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
-      <SafeAreaView style={s.safe} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={s.safe}>
 
         {/* ── Header ── */}
         <LinearGradient colors={C.GRAD_HEADER} style={s.header}>
@@ -209,7 +208,7 @@ export default function DailyQuestScreen({ navigation }) {
           </View>
 
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { C } from '../theme/colors';
 import { rs, rf } from '../theme/scale';
@@ -80,7 +79,7 @@ export default function OnboardingScreen({ navigation }) {
     <View style={styles.root}>
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
-      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
+      <View style={styles.safe}>
         {/* Skip — absolute so it doesn't affect the row layout */}
         <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.7}>
           <Text style={styles.skipText}>Skip</Text>
@@ -135,7 +134,7 @@ export default function OnboardingScreen({ navigation }) {
           </View>
 
         </Animated.View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

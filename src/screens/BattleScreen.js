@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import useGameStore from '../store/gameStore';
 import AudioManager from '../utils/AudioManager';
@@ -986,7 +985,7 @@ export default function BattleScreen({ navigation, route }) {
       <Image source={battleBg} style={StyleSheet.absoluteFill} resizeMode="cover" />
       <LinearGradient colors={C.GRAD_BATTLE} style={StyleSheet.absoluteFill} />
 
-      <SafeAreaView style={S.safe} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={S.safe}>
 
         {/* ══ HEADER ══ */}
         <View style={S.header}>
@@ -1270,7 +1269,7 @@ export default function BattleScreen({ navigation, route }) {
           </View>
         </Modal>
 
-      </SafeAreaView>
+      </View>
 
       {/* ══ FULL-SCREEN WHITE FLASH (crit / Trump impact) ══ */}
       <Animated.View

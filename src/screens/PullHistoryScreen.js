@@ -4,7 +4,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useGameStore from '../store/gameStore';
 import { ALL_EVENTS } from '../data/events';
 import { C, RANK } from '../theme/colors';
@@ -19,7 +18,6 @@ function formatDate(iso) {
 }
 
 export default function PullHistoryScreen({ navigation }) {
-  const insets = useSafeAreaInsets();
   const pullHistory = useGameStore(s => s.pullHistory);
   const pity        = useGameStore(s => s.pity);
   const eventPity   = useGameStore(s => s.eventPity ?? {});
@@ -87,9 +85,9 @@ export default function PullHistoryScreen({ navigation }) {
   );
 
   return (
-    <View style={[s.root, { paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
+    <View style={s.root}>
       {/* Header */}
-      <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: insets.top + 8 }]}>
+      <LinearGradient colors={C.GRAD_HEADER} style={[s.header, { paddingTop: 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.75}>
           <Ionicons name="chevron-back" size={22} color={C.TEXT} />
         </TouchableOpacity>
