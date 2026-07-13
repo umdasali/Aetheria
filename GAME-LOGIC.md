@@ -120,7 +120,7 @@ cost(level) = level <= 10
 
 ### Fusion (Rank Up)
 
-Requires **3 copies** + gold. Caps at rank **S** — cannot fuse past S via normal play.
+Requires **`FUSION_COPIES` = 2 copies** + gold (reduced from 3 — see code comment in `gameStore.js`). Caps at rank **S** — cannot fuse past S via normal play.
 
 | Current Rank | Rank Order Idx | Gold Cost |
 |---|---|---|
@@ -132,7 +132,7 @@ Returns `{ ok, newRank }` or `{ ok: false, reason: 'copies'|'max_rank'|'gold' }`
 
 ### Transcendence
 
-Requires **5 copies** + gold. Max 4 transcendences (hard cap: L30).
+Requires **`TRANSCEND_COPIES` = 3 copies** + gold (reduced from 5 — see code comment in `gameStore.js`). Max 4 transcendences (hard cap: L30).
 
 | Transcendence # | Gold Cost | New Max Level |
 |---|---|---|
@@ -167,16 +167,19 @@ Requires 1 ascension item (tier-matched) per level. Max `ASCENSION_MAX` levels.
 
 ---
 
-## Gacha / Summon (`src/screens/SummonScreen.js`)
+## Gacha / Summon (`src/data/events.js` — rates are data-driven, not hardcoded in SummonScreen)
 
-| Rank | Base Rate |
-|---|---|
-| S | 4% |
-| A | 22% |
-| B | 30% |
-| C | 44% |
+Standard banner and event banners use **different rate tables**:
 
-**Pity:** guaranteed S at 90 pulls (tracked in `store.pity`, resets to 0 on S pull).
+| Rank | `STANDARD_RATES` | `EVENT_RATES` |
+|---|---|---|
+| S | 2% | 2% |
+| A | 3% | 50% |
+| B | 38% | 20% |
+| C | 57% | 28% |
+
+- **Standard banner**: S pulls draw only from `STANDARD_BANNER.featuredSRankIds` (no Sovereign proc). **Pity: guaranteed S at 90 pulls** (tracked in `store.pity`, resets to 0 on S pull).
+- **Event banner**: S pulls are a 50/50 — featured hero, or on a loss one of `FIFTY_FIFTY_LOSS_IDS` (next S then guaranteed featured). Pity at 80 pulls, per-banner (`store.eventPity` / `store.eventGuarantee`).
 
 | Action | Cost |
 |---|---|
@@ -271,35 +274,40 @@ mult = 1 + sqrt(max(0, floor - 1)) × 0.30
 
 ### Reward Formula
 
+Gold and coins scale on the **same sqrt curve** as enemy stats (`mult = 1 + sqrt(max(0, floor-1)) × STAT_SCALE_PER_FLOOR`) — gems remain flat and only drop on boss floors:
+
 ```js
-gold  = 200 + floor × 80
-gems  = isBossFloor ? 30 + floor(floor / 10) * 5 : 0
-coins = isBossFloor ? floor(floor / 3) + 5 : 3 + floor(floor / 3)
-// Floor 1 → 3 coins | Floor 30 → 13 | Floor 100 → 36 | Floor 100 boss → 38
+mult  = 1 + Math.sqrt(Math.max(0, floor - 1)) * STAT_SCALE_PER_FLOOR   // 0.30
+gold  = Math.round(100 * mult)
+gems  = isBossFloor ? 30 + Math.floor(floor / 10) * 5 : 0
+coins = Math.round(4 * mult) + (isBossFloor ? 5 : 0)
+// A full 1→300 climb totals ~5,495 coins — sized against the tower shop's own economy
 ```
 
 ### Floor Types
 
 | Floor # | Type |
 |---|---|
-| % 10 === 0 | Boss floor (gems rewarded) |
-| 10, 50, 100, 150, 200 | Milestone boss |
+| `floor % 10 === 0` | Boss floor (gems rewarded) |
+| 10, 50, 100, 150, 200, 250, 300 (`FLOOR_MILESTONES`) | Milestone boss |
 | All others | Regular floor |
 
 ### Weekly Reset
 
-Reset key = ISO date of the current Monday (local time, not UTC). Tower `currentFloor` resets at the start of each week.
+Reset key (`getCurrentWeekKey()`) = local-date string of the current week's Monday. On a genuine new-week transition, `towerCurrentFloor` resets to 1 and `towerWeeklyBest` resets to 0 — `towerHighestFloor` (all-time record) is never reset.
 
-### Difficulty Labels
+### Difficulty Labels (`getFloorDifficulty(floor)` in towerData.js)
 
 | Floor Range | Label | Color |
 |---|---|---|
-| 1–24 | EASY | `C.SUCCESS` |
-| 25–49 | NORMAL | `C.CYAN` |
-| 50–74 | HARD | `C.DANGER` |
-| 75–99 | EPIC | `C.PRIMARY` |
-| 100–149 | LEGENDARY | `C.SECONDARY` |
-| 150–200 | MYTHIC | `C.SOVEREIGN_GOLD` |
+| 1–24 | EASY | `#059669` |
+| 25–49 | NORMAL | `#0891B2` |
+| 50–74 | HARD | `#E11D48` |
+| 75–99 | EPIC | `#9B59B6` |
+| 100–149 | LEGENDARY | `#F72585` |
+| 150–199 | ASCENDANT | `#38BDF8` |
+| 200–249 | MYTHIC | `#FFD700` |
+| 250–300 | TRANSCENDENT | `#FFFFFF` |
 
 ---
 
@@ -345,7 +353,7 @@ Player level cap: **99**.
 | `transcendHero` | `(heroId)` | `{ok, newMaxLevel?}` or `{ok:false, reason}` | reason: `copies\|max\|gold` |
 | `ascendHero` | `(heroId)` | `{ok}` or `{ok:false, reason}` | reason: `not_owned\|max\|missing_item\|invalid_rank` |
 | `convertExcessCopies` | `(heroId, count)` | void | Copies → tower coins |
-| `completeTowerFloor` | `(floor, rewards)` | `{ascensionDrop}` | Drops item on boss floors; rejects floor < currentFloor |
+| `completeTowerFloor` | `(floor, rewards)` | `{ascensionDrop}` | Drops item on boss floors; rejects unless `floor === currentFloor` |
 | `claimDailyReward` | `()` | `{reward, newStreak, dayIdx}` or null | null = already claimed today |
 | `claimQuestReward` | `(questId, gems, gold)` | `boolean` | false = not completed or already claimed |
 | `performSummon` | `(heroIds[], cost)` | `boolean` | false = insufficient gems |
@@ -372,8 +380,11 @@ set({ gold: state.gold - cost });   // only safe for synchronous, single-field u
 ### completeTowerFloor Guard
 
 ```js
-// Rejects if: floor > TOWER_MAX_FLOOR (200)
-// Rejects if: floor < towerCurrentFloor  ← prevents replay farming floor 200
+// Rejects (returns { ascensionDrop: null }, grants nothing) unless BOTH:
+//   floor <= TOWER_MAX_FLOOR (300)
+//   floor === towerCurrentFloor   ← strict equality, not just "not less than":
+//                                    blocks replay-farming an already-cleared floor
+//                                    AND blocks skipping/forging ahead of the current floor
 // This guard is the ONLY anti-farm protection for tower rewards.
 ```
 
@@ -387,7 +398,7 @@ set({ gold: state.gold - cost });   // only safe for synchronous, single-field u
 | `skill.cost × 20` = energy cost | CLAUDE.md #11 — the data stores raw multiplier |
 | Summon pity resets to 0 on any S pull | Don't forget to reset pity counter in `performSummon` |
 | Stage IDs are `chapterId × 100 + part` | `stageId % 10 = part`, `floor(stageId / 100) = chapter` |
-| Tower floor guard blocks `floor < currentFloor` | Remove or bypass this only for testing — it prevents infinite farming |
+| Tower floor guard requires `floor === currentFloor` (and `<= 300`) | Remove or bypass this only for testing — it prevents infinite farming |
 | `localDateStr()` uses local time, not UTC | Tower weekly key and quest reset must also use local dates |
 | `SOVEREIGN` heroes: `hero.sovereign = true`, rank stays `'S'` | Fusion caps at S; SOVEREIGN rank is display-only via effectiveRank logic |
 | Enemy images loaded via `require()` at data-file level | Never construct image paths dynamically — Metro bundler can't resolve them |
