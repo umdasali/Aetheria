@@ -37,6 +37,7 @@ export default function TeamBuildScreen({ navigation }) {
   const activeTeamPreset = useGameStore(s => s.activeTeamPreset);
   const deployPreset     = useGameStore(s => s.deployPreset);
   const saveTeamPreset   = useGameStore(s => s.saveTeamPreset);
+  const heroCollection   = useGameStore(s => s.heroCollection);
 
   const [tab,    setTab]    = useState(0);
   const [filter, setFilter] = useState('All');
@@ -121,8 +122,9 @@ export default function TeamBuildScreen({ navigation }) {
       inTeam={presetSet.has(hero.id)}
       teamFull={presetFull}
       handleToggle={handleToggle}
+      effectiveRank={hero.sovereign ? 'SOVEREIGN' : (heroCollection[hero.id]?.effectiveRank ?? hero.rank)}
     />
-  ), [presetSet, presetFull, handleToggle]);
+  ), [presetSet, presetFull, handleToggle, heroCollection]);
 
   const getItemLayout = useCallback((_, index) => ({
     length: CARD_H + GAP,
@@ -280,7 +282,12 @@ export default function TeamBuildScreen({ navigation }) {
                 {[0, 1, 2].map(i => {
                   const hero    = slotHeroes[i];
                   const faction = hero ? FACTIONS[hero.faction] : null;
-                  const rk      = hero ? RANK[hero.rank] : null;
+                  // Sovereign heroes always badge as SOVEREIGN; everyone else shows
+                  // their post-fusion effectiveRank (falls back to base rank if unset).
+                  const rankKey = hero
+                    ? (hero.sovereign ? 'SOVEREIGN' : (heroCollection[hero.id]?.effectiveRank ?? hero.rank))
+                    : null;
+                  const rk      = hero ? RANK[rankKey] : null;
 
                   if (hero) {
                     return (
@@ -306,7 +313,9 @@ export default function TeamBuildScreen({ navigation }) {
                               backgroundColor: rk.bg,
                               shadowColor: rk.glow, shadowOpacity: 0.8, shadowRadius: 4, elevation: 3,
                             }]}>
-                              <Text style={[s.slotRankTxt, { color: rk.text }]}>{hero.rank}</Text>
+                              <Text style={[s.slotRankTxt, { color: rk.text }]}>
+                                {hero.sovereign ? 'SOV' : rankKey}
+                              </Text>
                             </View>
                             <Text style={[s.slotFactionLabel, { color: faction.color }]}>{faction.name}</Text>
                             <Text style={s.slotSlotNum}>#{i + 1}</Text>
@@ -406,9 +415,9 @@ export default function TeamBuildScreen({ navigation }) {
 // Receives `heroId` (primitive) and `handleToggle` (stable ref from useCallback)
 // so React.memo can correctly skip re-renders for unaffected cards.
 
-const SelectCard = memo(function SelectCard({ hero, heroId, inTeam, teamFull, handleToggle }) {
+const SelectCard = memo(function SelectCard({ hero, heroId, inTeam, teamFull, handleToggle, effectiveRank }) {
   const faction = FACTIONS[hero.faction];
-  const rk      = RANK[hero.rank];
+  const rk      = RANK[effectiveRank];
   return (
     <TouchableOpacity
       style={[s.card, inTeam && s.cardActive]}
@@ -420,7 +429,7 @@ const SelectCard = memo(function SelectCard({ hero, heroId, inTeam, teamFull, ha
       <LinearGradient colors={['transparent', C.OVERLAY_4]} style={s.cardGrad} />
       <View style={[s.cardTopBar, { backgroundColor: faction.color }]} />
       <View style={[s.cardRank, { backgroundColor: rk.bg }]}>
-        <Text style={[s.cardRankTxt, { color: rk.text }]}>{hero.rank}</Text>
+        <Text style={[s.cardRankTxt, { color: rk.text }]}>{hero.sovereign ? 'SOV' : effectiveRank}</Text>
       </View>
       <Text style={s.cardName} numberOfLines={1}>{hero.name}</Text>
       {inTeam && (

@@ -699,6 +699,25 @@ function TabIconGlow() {
 }
 
 const BottomTab = memo(function BottomTab({ image, label, badge, screen, onNavigate }) {
+  // Same pulsing dot + ring language as SideItem's badge (Quests/Achievements) and
+  // the Daily Reward top-bar dot — was previously a mismatched red "!" bubble.
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!badge) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1, duration: 850, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0, duration: 850, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [badge]);
+
+  const ringScale = badge ? pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1.9] }) : undefined;
+  const ringOp    = badge ? pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 0]   }) : undefined;
+
   return (
     <TouchableOpacity
       onPress={() => onNavigate(screen)}
@@ -712,8 +731,11 @@ const BottomTab = memo(function BottomTab({ image, label, badge, screen, onNavig
         <TabIconGlow />
         <Image source={image} style={styles.bottomTabIcon} resizeMode="contain" />
         {badge && (
-          <View style={styles.bottomTabBadge}>
-            <Text style={styles.bottomTabBadgeText}>!</Text>
+          <View style={[styles.sideBadgeWrap, styles.bottomTabBadgeWrap]}>
+            <Animated.View
+              style={[styles.sideBadgeRing, { borderColor: C.SECONDARY, transform: [{ scale: ringScale }], opacity: ringOp }]}
+            />
+            <View style={[styles.sideBadgeDot, { backgroundColor: C.SECONDARY }]} />
           </View>
         )}
       </View>
@@ -1023,14 +1045,9 @@ const styles = StyleSheet.create({
     marginLeft: -rs(2),
     backgroundColor: C.SOVEREIGN_GOLD,
   },
-  bottomTabBadge: {
-    position: 'absolute', top: -rs(6), right: -rs(8),
-    minWidth: rs(13), height: rs(13), borderRadius: rs(7),
-    paddingHorizontal: rs(1),
-    backgroundColor: C.DANGER, borderWidth: 1, borderColor: C.BG_SCREEN,
-    alignItems: 'center', justifyContent: 'center',
+  bottomTabBadgeWrap: {
+    position: 'absolute', top: -rs(2), right: -rs(3),
   },
-  bottomTabBadgeText: { fontSize: rf(9), color: C.TEXT, fontWeight: '900', lineHeight: rf(11) },
   bottomTabLabel: {
     fontSize: rf(10), fontWeight: '700', color: C.TEXT_ON_DARK_MUTED, letterSpacing: 0.6,
     textTransform: 'uppercase',

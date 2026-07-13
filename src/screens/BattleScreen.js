@@ -705,7 +705,11 @@ export default function BattleScreen({ navigation, route }) {
       finishPhase(curEnemies, curPlayers, msg);
     }, aiDelay);
 
-    return () => clearTimeout(timer);
+    // Release the claim if this effect is torn down before the timer fires (e.g. a
+    // Trump Card cut-in appears mid-flight, changing the trumpCutIn dependency below
+    // before this timer resolves) — otherwise aiRunning stays true forever and the
+    // enemy turn can never be picked up again once the blocker clears.
+    return () => { clearTimeout(timer); aiRunning.current = false; };
   // Intentional stale closure: only re-trigger when the turn flips, the battle ends,
   // or the Trump Card cut-in clears (trumpCutIn: non-null → null triggers the AI start).
   // Including playerTeam/enemyTeam would re-fire mid-turn as those are mutated here.
@@ -916,6 +920,14 @@ export default function BattleScreen({ navigation, route }) {
   // possible — auto-pass the turn (ticking the stuns down) so a player-side stun
   // can never soft-lock the battle. If only some heroes are stunned, steer
   // control to one that can act.
+  //
+  // isAnimating/playerTeam are deliberately excluded from the deps array below.
+  // This body sets both itself (setIsAnimating(true), setPlayerTeam(...)) to start
+  // the forfeit delay — if they were dependencies, React would tear down this very
+  // effect instance the moment they change (i.e. on the next render, well before the
+  // delay elapses), cancelling the forfeit timer before it ever fires and leaving
+  // isAnimating stuck at true forever. Same stale-closure reasoning as the enemy-side
+  // AI effect above, for the same reason: don't watch state this effect itself sets.
   useEffect(() => {
     if (isEnemyTurn || battleResult || isAnimating || enemyCutIn) return;
     if (!playerTeam.length) return;
@@ -940,9 +952,11 @@ export default function BattleScreen({ navigation, route }) {
       setIsAnimating(false);
       setIsEnemyTurn(true);
     }, Math.round(700 / (speedRef.current || 1)));
-    return () => clearTimeout(t);
+    // Defensively release isAnimating too, in case this instance is torn down
+    // before the timer fires — otherwise input stays locked with no way to recover.
+    return () => { clearTimeout(t); setIsAnimating(false); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEnemyTurn, battleResult, isAnimating, enemyCutIn, playerTeam, currentTurnIdx]);
+  }, [isEnemyTurn, battleResult, enemyCutIn, currentTurnIdx]);
 
   // ── Rehydration guard — brief spinner while AsyncStorage loads ───────────
 
