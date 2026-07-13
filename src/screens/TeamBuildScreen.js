@@ -78,7 +78,7 @@ export default function TeamBuildScreen({ navigation }) {
     return base.filter(h => h.faction === filter);
   }, [filter, ownedSet]);
 
-  // ── Slot data (memoised — searches HEROES only when preset changes) ───────
+  // ── Slot data (memoised - searches HEROES only when preset changes) ───────
   const slotHeroes = useMemo(
     () => preset.map(id => (id ? HEROES.find(h => h.id === id) ?? null : null)),
     [preset],
@@ -113,7 +113,7 @@ export default function TeamBuildScreen({ navigation }) {
   }, [tab, saveTeamPreset]);
 
   // ── FlatList helpers ──────────────────────────────────────────────────────
-  // Passing handleToggle + heroId as separate props lets memo do its job —
+  // Passing handleToggle + heroId as separate props lets memo do its job -
   // handleToggle is a stable ref; heroId is a primitive string.
   const renderCard = useCallback(({ item: hero }) => (
     <SelectCard
@@ -260,7 +260,7 @@ export default function TeamBuildScreen({ navigation }) {
                           <Ionicons name="flash" size={rs(8)} color={C.SUCCESS} />
                         </View>
                       )}
-                      {/* Clear button — visible only on the active tab when it has heroes */}
+                      {/* Clear button - visible only on the active tab when it has heroes */}
                       {active && filled > 0 && (
                         <TouchableOpacity
                           style={s.tabClear}
@@ -275,7 +275,7 @@ export default function TeamBuildScreen({ navigation }) {
                 })}
               </View>
 
-              {/* 3 hero slots — wraps in Animated.View for full-preset shake feedback */}
+              {/* 3 hero slots - wraps in Animated.View for full-preset shake feedback */}
               <Animated.View
                 style={[s.slotsCol, { transform: [{ translateX: shakeAnim }] }]}
               >
@@ -374,7 +374,7 @@ export default function TeamBuildScreen({ navigation }) {
                     <Text style={[s.statusTxt, { color: C.SUCCESS }]}>ACTIVE</Text>
                   </View>
                 ) : isModified ? (
-                  // Preset was deployed but has since been edited — prompt re-deploy
+                  // Preset was deployed but has since been edited - prompt re-deploy
                   <TouchableOpacity style={s.modifiedRow} onPress={handleDeploy} activeOpacity={0.82}>
                     <Ionicons name="warning" size={rs(17)} color={C.WARNING} />
                     <Text style={[s.statusTxt, { color: C.WARNING }]}>MODIFIED</Text>

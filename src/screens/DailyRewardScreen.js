@@ -240,7 +240,7 @@ export default function DailyRewardScreen({ navigation }) {
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={S.hdrTitle}>DAILY LOGIN REWARD</Text>
-            <Text style={S.hdrSub}>Log in every day — don't break the streak!</Text>
+            <Text style={S.hdrSub}>Log in every day - don't break the streak!</Text>
           </View>
           <View style={S.streakPill}>
             <Text style={S.streakFire}>🔥</Text>
@@ -252,7 +252,7 @@ export default function DailyRewardScreen({ navigation }) {
         {/* ══ BODY ══ */}
         <View style={S.body}>
 
-          {/* ── LEFT — Today spotlight ── */}
+          {/* ── LEFT - Today spotlight ── */}
           <View style={[S.leftPanel, { borderRightColor: accentColor + '22' }]}>
 
             {/* Day counter */}
@@ -322,7 +322,7 @@ export default function DailyRewardScreen({ navigation }) {
             )}
           </View>
 
-          {/* ── RIGHT — 7-day calendar ── */}
+          {/* ── RIGHT - 7-day calendar ── */}
           <View style={S.rightPanel}>
 
             {/* Panel header row */}
@@ -350,7 +350,7 @@ export default function DailyRewardScreen({ navigation }) {
               </View>
             </View>
 
-            {/* 7 cards — flex row, no ScrollView (landscape always fits) */}
+            {/* 7 cards - flex row, no ScrollView (landscape always fits) */}
             <View style={S.cardsRow}>
               {DAILY_REWARDS.map((r, i) => (
                 <DayCard

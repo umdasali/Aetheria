@@ -31,46 +31,46 @@ const FACTION_META = {
     climate: 'Volcanic & Storm-torn',
     element: '🔥 Fire  ⚡ Lightning',
     specialties: ['Fire Mastery', 'Burn Effects', 'High ATK', 'Lightning Strikes'],
-    lore: 'A land of perpetual eruption and lightning storms where only the fiercest survive. For three cycles of the volcanic moon the ember throne sat empty — its sovereign swallowed by a dimensional rift while sealing a catastrophic breach in the realm. Into that silence strode Kira Voltz, who held the throne by sheer force of will until the day Ravenna Blaze walked back out of that same rift, carrying fire from dimensions no one else has seen. Kira surrendered the throne the moment Ravenna crossed the border. Neither of them had to say a word.',
+    lore: 'A land of perpetual eruption and lightning storms where only the fiercest survive. For three cycles of the volcanic moon the ember throne sat empty - its sovereign swallowed by a dimensional rift while sealing a catastrophic breach in the realm. Into that silence strode Kira Voltz, who held the throne by sheer force of will until the day Ravenna Blaze walked back out of that same rift, carrying fire from dimensions no one else has seen. Kira surrendered the throne the moment Ravenna crossed the border. Neither of them had to say a word.',
     ruler: {
       heroId: 'hero_041',
       name: 'Ravenna Blaze',
       title: 'The Ember Sovereign',
       status: 'RULER',
-      roleLore: 'The original sovereign of EMBERVEIL, returned from three cycles of dimensional exile carrying fire from beyond the rift. The throne did not need to be reclaimed — it simply recognized her.',
+      roleLore: 'The original sovereign of EMBERVEIL, returned from three cycles of dimensional exile carrying fire from beyond the rift. The throne did not need to be reclaimed - it simply recognized her.',
     },
   },
   GLACIARA: {
     climate: 'Arctic Blizzard & Permafrost',
     element: '❄️ Ice',
     specialties: ['Ice Control', 'Freeze Debuffs', 'High DEF', 'Crowd Control'],
-    lore: 'An eternal winter realm of ice fortresses and howling blizzards. For generations the ruling council lay sealed inside an enchanted glacier — and Yelena Morozova governed in their absence, calling herself regent long after the council ceased to be a realistic expectation. Then the original sovereign returned. Zimoslava, the woman who built GLACIARA from raw permafrost and sacrifice, walked out of her crystalline sleep and back onto her throne. Yelena Morozova stepped aside without being asked. In GLACIARA, some things simply freeze in their rightful position and stay there.',
+    lore: 'An eternal winter realm of ice fortresses and howling blizzards. For generations the ruling council lay sealed inside an enchanted glacier - and Yelena Morozova governed in their absence, calling herself regent long after the council ceased to be a realistic expectation. Then the original sovereign returned. Zimoslava, the woman who built GLACIARA from raw permafrost and sacrifice, walked out of her crystalline sleep and back onto her throne. Yelena Morozova stepped aside without being asked. In GLACIARA, some things simply freeze in their rightful position and stay there.',
     ruler: {
       heroId: 'hero_037',
       name: 'Zimoslava',
       title: 'The Frozen Sovereign',
       status: 'RULER',
-      roleLore: 'Built GLACIARA from nothing. Sacrificed her throne to seal an elder darkness. Returned from centuries of crystalline sleep to reclaim what was always hers — and found it exactly where she left it.',
+      roleLore: 'Built GLACIARA from nothing. Sacrificed her throne to seal an elder darkness. Returned from centuries of crystalline sleep to reclaim what was always hers - and found it exactly where she left it.',
     },
   },
   SUNSPIRE: {
     climate: 'Eternal Sunlight & Golden Highlands',
     element: '☀️ Holy',
     specialties: ['Holy Healing', 'Divine Buffs', 'Blessed Defense', 'Light Smite'],
-    lore: 'A radiant land of golden highlands and ivory temples where the sun never fully sets and holy light is as natural as air. Aura Bloom was chosen not by vote or bloodline, but by the light itself — during the Ceremony of Ascension she called down a single ray of pure sunlight that healed an entire city in one breath. Her reign is absolute and undisputed. Enemies who face Sunspire on the battlefield have been known to lay down their arms not from defeat, but from the sudden, total certainty that they had already lost.',
+    lore: 'A radiant land of golden highlands and ivory temples where the sun never fully sets and holy light is as natural as air. Aura Bloom was chosen not by vote or bloodline, but by the light itself - during the Ceremony of Ascension she called down a single ray of pure sunlight that healed an entire city in one breath. Her reign is absolute and undisputed. Enemies who face Sunspire on the battlefield have been known to lay down their arms not from defeat, but from the sudden, total certainty that they had already lost.',
     ruler: {
       heroId: 'hero_012',
       name: 'Aura Bloom',
       title: 'The Radiant Sovereign',
       status: 'RULER',
-      roleLore: 'Chosen by light itself during the Ceremony of Ascension. Her reign is undisputed across all of Sunspire — the first true sovereign the realm has known in centuries.',
+      roleLore: 'Chosen by light itself during the Ceremony of Ascension. Her reign is undisputed across all of Sunspire - the first true sovereign the realm has known in centuries.',
     },
   },
   VERDANIA: {
     climate: 'Tropical Ancient Forest & Living Jungle',
     element: '🌿 Nature  🌪️ Wind',
     specialties: ['Nature Magic', 'Toxin Builds', 'Root Control', 'Healing'],
-    lore: 'An ancient primordial forest so vast its borders have never been fully mapped, where the oldest trees remember the first age of the world. Iris Vale was not appointed or elected — she was chosen. During the Night of Blossoming, the eldest trees of Verdania flowered for the first time in a thousand years and named her queen. She does not rule from a palace; she walks the roots, speaks with the canopy, and feels every wound dealt to her forest as if it were carved into her own skin.',
+    lore: 'An ancient primordial forest so vast its borders have never been fully mapped, where the oldest trees remember the first age of the world. Iris Vale was not appointed or elected - she was chosen. During the Night of Blossoming, the eldest trees of Verdania flowered for the first time in a thousand years and named her queen. She does not rule from a palace; she walks the roots, speaks with the canopy, and feels every wound dealt to her forest as if it were carved into her own skin.',
     ruler: {
       heroId: 'hero_030',
       name: 'Iris Vale',
@@ -83,7 +83,7 @@ const FACTION_META = {
     climate: 'Corrupted Void & Broken Reality',
     element: '🌀 Void',
     specialties: ['DEF-Ignore', 'Instant KO', 'Reality Tears', 'Shadow Strikes'],
-    lore: 'A fractured realm where the sky tears open without warning and the laws of reality are more suggestion than rule. There is no coronation ceremony in Voidmark — only survival. Nyx Vael rules because every challenger who came before her is no longer a concern. She does not speak of governance, only of dominance. In a realm where loyalty shifts like smoke and entire districts can slip between dimensions overnight, her absolute, immovable presence is the only thing stopping Voidmark from collapsing into itself. Even her inner court fears her. She considers that proof of competence.',
+    lore: 'A fractured realm where the sky tears open without warning and the laws of reality are more suggestion than rule. There is no coronation ceremony in Voidmark - only survival. Nyx Vael rules because every challenger who came before her is no longer a concern. She does not speak of governance, only of dominance. In a realm where loyalty shifts like smoke and entire districts can slip between dimensions overnight, her absolute, immovable presence is the only thing stopping Voidmark from collapsing into itself. Even her inner court fears her. She considers that proof of competence.',
     ruler: {
       heroId: 'hero_033',
       name: 'Nyx Vael',
@@ -96,13 +96,13 @@ const FACTION_META = {
     climate: 'Endless Dunes & Silver Nights',
     element: '🏜️ Sand  🌙 Moon',
     specialties: ['Lunar Judgment', 'Dynastic Rule', 'Sand & Dust', 'Moonlit Magic'],
-    lore: 'A vast desert dominion of obelisks, sunken tombs, and dunes that swallow whole armies — a realm of scorching days and cold silver nights where the moon is worshipped and the dead are honored as gods. Khemara does not appear on any map a traveler can buy; its borders open only to those who already know the way. At its heart sits Nefertari Shahrzad, goddess and pharaoh in one, crowned by the full desert moon during a ceremony no outsider has ever witnessed. Her court measures time in dynasties, not years, and her judgment falls as silently as moonlight on sand. Those who seek Khemara do not find it. It decides whether to find them.',
+    lore: 'A vast desert dominion of obelisks, sunken tombs, and dunes that swallow whole armies - a realm of scorching days and cold silver nights where the moon is worshipped and the dead are honored as gods. Khemara does not appear on any map a traveler can buy; its borders open only to those who already know the way. At its heart sits Nefertari Shahrzad, goddess and pharaoh in one, crowned by the full desert moon during a ceremony no outsider has ever witnessed. Her court measures time in dynasties, not years, and her judgment falls as silently as moonlight on sand. Those who seek Khemara do not find it. It decides whether to find them.',
     ruler: {
       heroId: 'hero_054',
       name: 'Nefertari Shahrzad',
       title: 'The Moon-Queen of Khemara',
       status: 'RULER',
-      roleLore: 'Goddess and pharaoh of the sand realm, crowned by the full desert moon itself. She cannot be summoned or won — she descends only for those who seek her court directly, and weighs all who stand before her in the dark.',
+      roleLore: 'Goddess and pharaoh of the sand realm, crowned by the full desert moon itself. She cannot be summoned or won - she descends only for those who seek her court directly, and weighs all who stand before her in the dark.',
     },
   },
 };
@@ -141,7 +141,7 @@ const STATUS_COLORS = {
 };
 
 // ── Full-screen faction detail ────────────────────────────────────────────────
-// ── Faction hero grid item — memoized so panel re-renders don't repaint the grid ──
+// ── Faction hero grid item - memoized so panel re-renders don't repaint the grid ──
 const FactionHeroCard = React.memo(function FactionHeroCard({ hero, owned, color, onHeroPress, cardW, cardH, scale }) {
   const r  = RANK[hero.rank];
   const rsLocal = n => Math.max(1, Math.round(n * scale));
@@ -193,7 +193,7 @@ const FactionHeroCard = React.memo(function FactionHeroCard({ hero, owned, color
 function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPress }) {
   const { width: W, height: H } = useWindowDimensions();
 
-  // Responsive scale — reference design at 1280px wide, clamped 0.65–1.25
+  // Responsive scale - reference design at 1280px wide, clamped 0.65–1.25
   const scale = Math.max(0.65, Math.min(1.25, W / 1280));
   const rsLocal = n => Math.max(1, Math.round(n * scale));
 
@@ -212,14 +212,14 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
     [],
   );
 
-  // Card sizing — derived from the measured right column width
+  // Card sizing - derived from the measured right column width
   const cardW = Math.max(40, Math.min(
     Math.floor((rightColW - GRID_GAP) / GRID_COLS) - 1,
     Math.floor(H * 0.48 / CARD_ASPECT),
   ));
   const cardH = Math.floor(cardW * CARD_ASPECT);
 
-  // Ambient looping background video for this faction — FactionScreen mounts
+  // Ambient looping background video for this faction - FactionScreen mounts
   // fresh per faction (WorldMapScreen unmounts/remounts it on open/close), so
   // the player is simply created once for the lifetime of this instance.
   // surfaceType="textureView" is required on Android: the default SurfaceView
@@ -231,7 +231,7 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
     try { player.play(); } catch (_) {}
   });
   // Android-only: BlurView's real-time blur methods need a BlurTargetView ref
-  // to know what to sample — without it, blurMethod silently falls back to
+  // to know what to sample - without it, blurMethod silently falls back to
   // "none" (a flat tint, no actual blur). iOS ignores blurTarget entirely.
   const videoTargetRef = useRef(null);
 
@@ -323,7 +323,7 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
         paddingBottom: rs(10),
       }]}>
 
-        {/* LEFT — faction details (scrollable so lore is always reachable) */}
+        {/* LEFT - faction details (scrollable so lore is always reachable) */}
         <ScrollView
           style={[S.fsLeft, { width: LEFT_COL_W }]}
           contentContainerStyle={[S.fsLeftContent, { paddingHorizontal: rs(4) }]}
@@ -386,7 +386,7 @@ function FactionScreen({ faction, heroes, ownedHeroes, color, onClose, onHeroPre
         {/* Vertical separator */}
         <View style={[S.fsSep, { backgroundColor: color + '35' }]} />
 
-        {/* RIGHT — champion grid */}
+        {/* RIGHT - champion grid */}
         <View style={S.fsRight} onLayout={onRightLayout}>
           <View style={S.championsHeader}>
             <Text style={[S.championsTitle, { fontSize: rf(rsLocal(11)), letterSpacing: 2.5 }]}>CHAMPIONS</Text>
@@ -442,7 +442,7 @@ export default function WorldMapScreen({ navigation }) {
     FACTION_KEYS.reduce((acc, k) => ({ ...acc, [k]: new Animated.Value(1) }), {})
   ).current;
 
-  // World map BGM — start on focus, stop on blur
+  // World map BGM - start on focus, stop on blur
   useFocusEffect(
     useCallback(() => {
       AudioManager.startCollectionBGM();
@@ -762,7 +762,7 @@ const S = StyleSheet.create({
     gap: rs(COL_GAP),
   },
 
-  // Left info column — width set via inline style (live from useWindowDimensions)
+  // Left info column - width set via inline style (live from useWindowDimensions)
   fsLeft: {},
   fsLeftContent: {
     gap: rs(8),

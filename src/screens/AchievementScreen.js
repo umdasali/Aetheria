@@ -38,7 +38,7 @@ export default function AchievementScreen({ navigation }) {
     [activeCategory],
   );
 
-  // Derive counts directly from achievements store — never stale after claiming
+  // Derive counts directly from achievements store - never stale after claiming
   const totalUnlocked = useMemo(
     () => ACHIEVEMENT_DEFS.filter(d => (achievements[d.id]?.progress ?? 0) >= d.target).length,
     [achievements],

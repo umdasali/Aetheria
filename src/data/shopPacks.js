@@ -1,8 +1,8 @@
 // ─── Shop pack catalog ─────────────────────────────────────────────────────
 // Three categories surfaced on the Home → Shop screen:
-//   • GEM_PACKS  — premium gems. currency:'iap' (real money), live via RevenueCat.
-//   • BUNDLES    — gems + gold value packs. currency:'iap', live via RevenueCat.
-//   • HERO_PACKS — the shop-exclusive Sovereign. currency:'gems' (playable now),
+//   • GEM_PACKS  - premium gems. currency:'iap' (real money), live via RevenueCat.
+//   • BUNDLES    - gems + gold value packs. currency:'iap', live via RevenueCat.
+//   • HERO_PACKS - the shop-exclusive Sovereign. currency:'gems' (playable now),
 //                  repeatable (+1 copy each buy), grants bonus gold + Aetheria's Core.
 //
 // Payment is resolved by src/shop/purchaseHandler.js (gem-spend for currency:'gems',
@@ -12,10 +12,10 @@
 // interrupted purchase (app killed mid-transaction, etc).
 //
 // NOTE: these `productId`s must exist as real, live products in App Store
-// Connect / Play Console — RevenueCat can't sell a product the store doesn't know
+// Connect / Play Console - RevenueCat can't sell a product the store doesn't know
 // about. Confirm they're published before shipping with IAP_ENABLED = true.
 //
-// `grant` shape (all optional): { gems, gold, cores }  — `cores` = Aetheria's Core.
+// `grant` shape (all optional): { gems, gold, cores }  - `cores` = Aetheria's Core.
 // `heroId` (top level) is the headline hero granted + previewed.
 // `cost` is a NUMBER for currency:'gems', and `priceLabel` is the display string
 // for currency:'iap' (real money handled by the store later via `productId`).
@@ -23,7 +23,7 @@
 import { C } from '../theme/colors';
 
 // ─── Real-money IAP master switch ──────────────────────────────────────────
-// TRUE — RevenueCat is wired (src/utils/RevenueCatManager.js) and IAP packs are
+// TRUE - RevenueCat is wired (src/utils/RevenueCatManager.js) and IAP packs are
 // live in the Shop. While false: the GEMS and BUNDLES tabs are hidden and
 // purchaseHandler refuses any `currency:'iap'` pack (never grants for free).
 // The gem-priced EXCLUSIVE Sovereign pack is always playable regardless.

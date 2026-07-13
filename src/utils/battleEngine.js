@@ -103,7 +103,7 @@ const effectiveUnit = (unit) => {
 export const calculateDamage = (attacker, defender, multiplier) => {
   const defMechanic = EFFECT_MECHANICS[defender.effect];
 
-  // Evasion checked before shield — a successful dodge preserves shield charges
+  // Evasion checked before shield - a successful dodge preserves shield charges
   if (defMechanic === 'evasion' && Math.random() < 0.20) {
     return { damage: 0, isCrit: false, blocked: false, dodged: true };
   }
@@ -294,14 +294,14 @@ export const processStatusEffects = (unit) => {
 /**
  * getSmartAIAction
  * Priority order:
- *  1. Kill focus — if any player is at ≤25% HP, overwhelm them with best skill (85-95% chance)
- *  2. One-shot check — use skill[1] if its low-end estimate kills the primary target
- *  3. Energy urgency — at ≥80 energy always spend a skill (never waste a full bar)
- *  4. Boss burst-save — hoard energy toward skill[1] if still building up
+ *  1. Kill focus - if any player is at ≤25% HP, overwhelm them with best skill (85-95% chance)
+ *  2. One-shot check - use skill[1] if its low-end estimate kills the primary target
+ *  3. Energy urgency - at ≥80 energy always spend a skill (never waste a full bar)
+ *  4. Boss burst-save - hoard energy toward skill[1] if still building up
  *  5. Tier-based skill chance (mob 60% → mini-boss 72% → boss 82%; rage: 92%)
  *  6. Basic attack
  *
- * Rage phase: boss at ≤45% HP or already enraged enters rage mode — skill chance
+ * Rage phase: boss at ≤45% HP or already enraged enters rage mode - skill chance
  * jumps to 92%, heavy-skill preference to 80%, and it always targets unshielded heroes.
  *
  * Target selection: mob → lowest HP ratio; mini-boss → 30% highest ATK; boss → 40%
@@ -328,7 +328,7 @@ export const getSmartAIAction = (enemy, playerTeam, actorEnergy = 0, skillCosts 
   const minibossPhase2 = tier === 'mini-boss' && enemyHpRatio <= 0.50;
 
   // ── 1. Kill focus ────────────────────────────────────────────────────────────
-  // Any player at or below 25% HP is a "finish them" target — elite units strongly prioritise.
+  // Any player at or below 25% HP is a "finish them" target - elite units strongly prioritise.
   const dyingPlayers = byHpRatio.filter(p => (p.currentHp / p.maxHp) <= 0.25);
   if (dyingPlayers.length > 0 && (tier === 'boss' || tier === 'mini-boss')) {
     const killTarget = dyingPlayers[0];
@@ -382,7 +382,7 @@ export const getSmartAIAction = (enemy, playerTeam, actorEnergy = 0, skillCosts 
     }
   }
 
-  // ── 3. Energy urgency — full bar, always spend ───────────────────────────────
+  // ── 3. Energy urgency - full bar, always spend ───────────────────────────────
   if (actorEnergy >= 80) {
     const affordable = enemy.skills.map((_, i) => i).filter(canAfford);
     if (affordable.length > 0) {
@@ -393,7 +393,7 @@ export const getSmartAIAction = (enemy, playerTeam, actorEnergy = 0, skillCosts 
   }
 
   // ── 4. Boss burst-save ───────────────────────────────────────────────────────
-  // Skip skill and basic-attack to hoard energy toward skill[1] — but not while raging.
+  // Skip skill and basic-attack to hoard energy toward skill[1] - but not while raging.
   if (!isRaging && tier === 'boss' && enemy.skills.length > 1 && !canAfford(1) && canAfford(0)) {
     if (actorEnergy >= (skillCosts[0] ?? 30) * 1.5) {
       return { action: 'attack', skillIdx: -1, targetIdx: primary._i };

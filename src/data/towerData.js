@@ -41,7 +41,7 @@ export function getTowerEnemyGroup(floor) {
   const pool   = isBoss ? _bossGroups : _regularGroups;
   // Cycle through the pool so higher floors reuse enemies at greater power.
   // Boss floors only land every TOWER_BOSS_INTERVAL floors, so index by boss
-  // number (not raw floor) — indexing by raw floor here would only ever hit
+  // number (not raw floor) - indexing by raw floor here would only ever hit
   // gcd(TOWER_BOSS_INTERVAL, pool.length) distinct residues, hiding most bosses.
   const base   = isBoss
     ? pool[Math.floor((floor - 1) / TOWER_BOSS_INTERVAL) % pool.length]
@@ -51,7 +51,7 @@ export function getTowerEnemyGroup(floor) {
   return {
     id:          `tower_${floor}`,
     name:        isBossFloor(floor)
-      ? `Floor ${floor} — ${isMilestoneFloor(floor) ? '⚡ MILESTONE BOSS' : '💀 Boss'}`
+      ? `Floor ${floor} - ${isMilestoneFloor(floor) ? '⚡ MILESTONE BOSS' : '💀 Boss'}`
       : `Floor ${floor}`,
     description: isMilestoneFloor(floor)
       ? 'A legendary guardian awakened by the tower\'s deepest power.'
@@ -74,7 +74,7 @@ export function getTowerEnemyGroup(floor) {
  * Returns { gold, gems, coins } earned for clearing a floor.
  * Gold and coins scale on the SAME sqrt curve as enemy stats (STAT_SCALE_PER_FLOOR)
  * so reward growth tracks difficulty growth instead of outrunning it.
- * Gems are only awarded every 10 floors (boss floors) — untouched by the rescale
+ * Gems are only awarded every 10 floors (boss floors) - untouched by the rescale
  * below since that pool is sized against quest/boss income, not the coin shop.
  */
 export function getTowerFloorReward(floor) {
@@ -82,7 +82,7 @@ export function getTowerFloorReward(floor) {
   return {
     gold:  Math.round(100 * mult),
     gems:  isBossFloor(floor) ? 30 + Math.floor(floor / 10) * 5 : 0,
-    // A full 1→300 climb now totals ~5,495 coins (was ~15,910) — back in line
+    // A full 1→300 climb now totals ~5,495 coins (was ~15,910) - back in line
     // with the tower shop's own "~2,000 gems/week via the coin shop" target.
     coins: Math.round(4 * mult) + (isBossFloor(floor) ? 5 : 0),
   };
@@ -99,7 +99,7 @@ export function getCurrentWeekKey() {
   const monday = new Date(now);
   monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
   monday.setHours(0, 0, 0, 0);
-  // Build the key from LOCAL date components — toISOString() returns UTC which
+  // Build the key from LOCAL date components - toISOString() returns UTC which
   // can be a different calendar day in timezones far ahead of UTC (e.g. UTC+10).
   const y = monday.getFullYear();
   const m = String(monday.getMonth() + 1).padStart(2, '0');

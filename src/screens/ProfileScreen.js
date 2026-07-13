@@ -69,7 +69,7 @@ export default function ProfileScreen({ navigation }) {
   const factionData   = activeFaction ? FACTIONS[activeFaction] : null;
   const factionColor  = factionData?.color ?? C.PRIMARY;
 
-  // Ambient looping background video, matching the player's active faction —
+  // Ambient looping background video, matching the player's active faction -
   // muted, paused while unfocused so it doesn't keep decoding frames off-screen.
   const bgVideoPlayer = useVideoPlayer(getCollectionVideo(activeFaction), player => {
     player.loop = true;
@@ -81,7 +81,7 @@ export default function ProfileScreen({ navigation }) {
     return () => { try { bgVideoPlayer.pause(); } catch (_) {} };
   }, [bgVideoPlayer]));
   // Android-only: BlurView's real-time blur methods need a BlurTargetView ref
-  // to know what to sample — without it, blurMethod silently falls back to
+  // to know what to sample - without it, blurMethod silently falls back to
   // "none" (a flat tint, no actual blur). iOS ignores blurTarget entirely.
   const videoTargetRef = useRef(null);
 
@@ -120,7 +120,7 @@ export default function ProfileScreen({ navigation }) {
     <View style={[s.charPanel, { width: dynamicLeftW }]}>
       {activeFaction && <FactionParticles faction={activeFaction} />}
 
-      {/* Plaque — replaces the old stretched-avatar background; the small
+      {/* Plaque - replaces the old stretched-avatar background; the small
           circular avatar straddles its bottom edge. UID now lives in the header. */}
       <View style={s.plaqueZone}>
         <View style={[s.plaque, { borderColor: factionColor + '55' }]}>
@@ -178,7 +178,7 @@ export default function ProfileScreen({ navigation }) {
         </View>
         <Text style={s.xpLabel}>{currentXP} / {nextLevelXP} XP</Text>
 
-        {/* Stats strip — 4 items */}
+        {/* Stats strip - 4 items */}
         <View style={s.statBar}>
           {[
             { val: ownedHeroes.length,       lbl: 'HEROES'   },
@@ -367,7 +367,7 @@ const s = StyleSheet.create({
     flexDirection: 'column',
   },
 
-  // Plaque — dark HUD surface behind the avatar, which straddles its bottom edge.
+  // Plaque - dark HUD surface behind the avatar, which straddles its bottom edge.
   plaqueZone: { alignItems: 'center', paddingTop: rs(-10), paddingBottom: rs(0) },
   plaque: {
     width: '50%', minHeight: rs(130),

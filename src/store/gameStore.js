@@ -44,7 +44,7 @@ function generatePlayerUID() {
   return `${id.slice(0, 3)}-${id.slice(3, 6)}-${id.slice(6)}`;
 }
 
-// Opaque ownership proof paired with playerUid — never shown to the player.
+// Opaque ownership proof paired with playerUid - never shown to the player.
 // Lets claim_player_uid() tell "this device re-confirming its own uid" apart
 // from "a different device that collided with this uid" (see
 // supabase/migrations/0005_player_uid_registry.sql).
@@ -57,7 +57,7 @@ function generatePlayerUidSecret() {
   return secret;
 }
 
-// Droppable ascension items (excludes aetheria_core / SOVEREIGN — too rare to drop freely)
+// Droppable ascension items (excludes aetheria_core / SOVEREIGN - too rare to drop freely)
 const DROP_POOL = [
   { id: 'broken_wing',    weight: 65 },
   { id: 'lost_butterfly', weight: 25 },
@@ -87,16 +87,16 @@ function relicUnlockIfFirstTime(prevInv, newInv, itemId) {
 }
 
 // Single source of truth for "how many chapters are fully cleared (all 3 parts)"
-// — used by both the milestone-hero-reward check and achievement tracking, which
+// - used by both the milestone-hero-reward check and achievement tracking, which
 // previously recomputed this independently and could silently desync.
 function countFullChapters(completedList) {
   return CHAPTER_DEFS.filter(ch => [1, 2, 3].every(p => completedList.includes(ch.id * 100 + p))).length;
 }
 
-// Canonical initial state — used both to seed the store and to reset it on account switch.
+// Canonical initial state - used both to seed the store and to reset it on account switch.
 const INITIAL_STATE = {
   schemaVersion:         CURRENT_VERSION,
-  updatedAt:             0,       // last local mutation time (ms) — drives cloud last-writer-wins
+  updatedAt:             0,       // last local mutation time (ms) - drives cloud last-writer-wins
   cloudAccountEmail:     null,
   localUserId:           null,   // Supabase user id that owns this local save; null = unclaimed
   playerUid:             null,   // Persistent display UID shown on profile; generated once
@@ -113,7 +113,7 @@ const INITIAL_STATE = {
   dailyStreak:           0,
   completedChapters:     [],
   milestonesClaimed:     [],
-  // Queue, not a single slot — chaining "Next Stage" across two milestone
+  // Queue, not a single slot - chaining "Next Stage" across two milestone
   // boundaries without ever returning to Home used to overwrite an unclaimed
   // reward with the next one, silently losing it.
   pendingMilestoneRewards: [],
@@ -138,7 +138,7 @@ const INITIAL_STATE = {
   },
   // Shop purchase counts, keyed by pack id (repeatable packs increment).
   shopPurchases: {},
-  // RevenueCat transaction IDs already granted — prevents double-granting when
+  // RevenueCat transaction IDs already granted - prevents double-granting when
   // the CustomerInfo listener replays the same non-subscription transaction.
   processedIapTransactionIds: [],
   playerProfile: {
@@ -172,7 +172,7 @@ const INITIAL_STATE = {
   // ── Feature: Codex ─────────────────────────────────────────────────────────
   // Queue of { type: 'bestiary'|'chronicle'|'relic', key } entries awaiting a
   // "New Codex Entry" toast. Bestiary/chronicle unlock state itself is NOT
-  // persisted here — it's derived on demand from completedChapters (see
+  // persisted here - it's derived on demand from completedChapters (see
   // getEncounteredImageKeys in data/bestiary.js) and from ascensionInventory
   // for relics, so there's nothing to desync. This queue only tracks which
   // *just-unlocked* entries still need to be announced.
@@ -180,7 +180,7 @@ const INITIAL_STATE = {
 
   // ── Feature: Event Banners ────────────────────────────────────────────────
   eventPity:      {},   // { [eventId]: number }
-  eventGuarantee: {},   // { [eventId]: boolean } — true = next S on that banner is guaranteed rate-up
+  eventGuarantee: {},   // { [eventId]: boolean } - true = next S on that banner is guaranteed rate-up
 };
 
 const useGameStore = create(
@@ -203,7 +203,7 @@ const useGameStore = create(
 
       // Wipes AsyncStorage and resets Zustand to defaults.
       // Call this when a new or different user signs in to prevent data leakage.
-      // Uses rawSet (not the wrapped set) so updatedAt stays 0 — if we used the
+      // Uses rawSet (not the wrapped set) so updatedAt stays 0 - if we used the
       // wrapped set it would stamp Date.now(), making the blank reset state appear
       // newer than the incoming user's cloud save and causing resolveConflict to
       // discard the cloud data in favour of the empty local state.
@@ -325,7 +325,7 @@ const useGameStore = create(
             const heroData = HEROES.find(h => h.id === actualHeroId);
             if (heroData?.rank === 'S') {
               // Story stage hero rewards should never be S-rank (S heroes are
-              // gacha/fusion-gated) — void it, but compensate so the advertised
+              // gacha/fusion-gated) - void it, but compensate so the advertised
               // reward isn't silently smaller than promised.
               actualHeroId = null;
               get().addGems(50);
@@ -378,7 +378,7 @@ const useGameStore = create(
           const newlyIntroduced = getNewlyIntroducedImageKeys(chapterId);
           const codexAdds = newlyIntroduced.map(imageKey => ({ type: 'bestiary', key: imageKey }));
           // part === 3 completing means all 3 parts are now done (sequential
-          // stage unlock guarantees parts 1-2 were already cleared) — the
+          // stage unlock guarantees parts 1-2 were already cleared) - the
           // chapter's Chronicle entry unlocks the instant it's fully cleared.
           if (part === 3) {
             codexAdds.push({ type: 'chronicle', key: Math.floor(chapterId / 100) });
@@ -478,7 +478,7 @@ const useGameStore = create(
       // supabase/migrations/0005_player_uid_registry.sql), not just
       // "unlikely to collide" from Math.random() alone. That guarantee
       // matters because playerUid also serves as the owner_uid trust token
-      // for the player_names rename/release RPCs — two installs sharing a
+      // for the player_names rename/release RPCs - two installs sharing a
       // UID could otherwise rename or release each other's claimed name.
       // Safe to call on every app launch: the RPC is idempotent for an
       // already-registered (uid, secret) pair, and best-effort offline
@@ -490,7 +490,7 @@ const useGameStore = create(
         const { uid, secret: confirmedSecret, networkError } = await registerPlayerUid(candidate, secret);
         if (networkError || !uid) return;
         // Skip the wrapped set() (and its updatedAt: Date.now() stamp) when
-        // nothing actually changed — this runs on every launch, so calling
+        // nothing actually changed - this runs on every launch, so calling
         // set() unconditionally would reintroduce the same "cold start bumps
         // updatedAt with no real edit" problem fixed in checkTowerWeekReset,
         // corrupting resolveConflict()'s last-writer-wins merge signal.
@@ -502,7 +502,7 @@ const useGameStore = create(
       // a networkError (see OnboardingScreen.js / EditProfileScreen.js). Those
       // screens commit the chosen name to playerProfile.name locally right
       // away (offline-friendly UX) but leave the server registration stuck on
-      // whatever serverClaimedName was last confirmed — without this retry,
+      // whatever serverClaimedName was last confirmed - without this retry,
       // that gap never closes on its own. Safe to call on every app launch:
       // no-ops when there's nothing pending, and best-effort offline.
       retryPendingNameClaim: async () => {
@@ -515,12 +515,12 @@ const useGameStore = create(
           ? await renameName(state.serverClaimedName, pending, uid)
           : await claimName(pending, uid);
 
-        if (res.networkError) return; // still offline — leave pendingNameClaim set for next retry
+        if (res.networkError) return; // still offline - leave pendingNameClaim set for next retry
 
         if (res.claimed || res.renamed) {
           set({ serverClaimedName: res.displayName || pending, pendingNameClaim: null });
         } else {
-          // 'taken' or 'not_owner' — this exact retry will never succeed on its
+          // 'taken' or 'not_owner' - this exact retry will never succeed on its
           // own (another player has since claimed it, or ownership can't be
           // verified). Drop it instead of retrying forever; the player can
           // pick a new name from EditProfileScreen if they still want to.
@@ -579,7 +579,7 @@ const useGameStore = create(
       completeTowerFloor: (floor, rewards) => {
         // Reject anything but the exact floor the player is currently on: beyond
         // the cap, replaying a floor already cleared (e.g. re-entering floor 200
-        // after the tower is conquered — an infinite gem/gold/coin farm), or a
+        // after the tower is conquered - an infinite gem/gold/coin farm), or a
         // stale/forged floor ahead of towerCurrentFloor that would skip floors.
         if (floor > TOWER_MAX_FLOOR || floor !== get().towerCurrentFloor) {
           return { ascensionDrop: null };
@@ -622,17 +622,17 @@ const useGameStore = create(
       checkTowerWeekReset: () => {
         const weekKey = getCurrentWeekKey();
         const current = get().towerWeekResetDate;
-        // Already up-to-date for this week — bail out WITHOUT calling set(), which
+        // Already up-to-date for this week - bail out WITHOUT calling set(), which
         // always stamps updatedAt: Date.now(). This runs on every app rehydration
         // (onRehydrateStorage), so touching set() here on a no-op would bump
         // updatedAt on every cold start and make local data spuriously "win"
         // resolveConflict()'s last-writer-wins merge against genuinely newer cloud data.
         if (current === weekKey) return;
         set(
-          // First-ever open (no stored key yet) — just stamp the week, don't wipe progress
+          // First-ever open (no stored key yet) - just stamp the week, don't wipe progress
           !current
             ? { towerWeekResetDate: weekKey }
-            // Genuine new-week transition — reset current floor + weekly best, keep all-time record
+            // Genuine new-week transition - reset current floor + weekly best, keep all-time record
             : { towerCurrentFloor: 1, towerWeeklyBest: 0, towerWeekResetDate: weekKey }
         );
       },
@@ -663,7 +663,7 @@ const useGameStore = create(
         const state = get();
         if (state.gems < DUNGEON_REFILL_COST) return false;
         const used = state.dungeonResetDate === today ? state.dungeonAttemptsUsed : 0;
-        // Energy already full — never charge gems for a no-op.
+        // Energy already full - never charge gems for a no-op.
         if (used <= 0) return false;
         set({
           gems:                state.gems - DUNGEON_REFILL_COST,
@@ -737,7 +737,7 @@ const useGameStore = create(
         const state = get();
         const data  = state.heroCollection[heroId];
         if (!data) return { ok: false, reason: 'not_owned' };
-        // 3 copies per transcendence (was 5) — see FUSION_COPIES note. 4 transcendences
+        // 3 copies per transcendence (was 5) - see FUSION_COPIES note. 4 transcendences
         // to reach L30 now costs 12 copies of one hero instead of an unreachable 20.
         if ((data.copies ?? 1) < TRANSCEND_COPIES) return { ok: false, reason: 'copies' };
 
@@ -800,7 +800,7 @@ const useGameStore = create(
         const state = get();
         const item  = ASCENSION_ITEMS.find(i => i.id === itemId);
         if (!item) return { ok: false, reason: 'invalid_item' };
-        // Store is the validation layer — never trust caller-provided qty
+        // Store is the validation layer - never trust caller-provided qty
         qty = Math.max(1, Math.floor(Number(qty) || 1));
         const totalCost = item.price * qty;
         if (state.towerCoins < totalCost) return { ok: false, reason: 'coins' };
@@ -884,7 +884,7 @@ const useGameStore = create(
         return { ok: true, count: counts[packId] };
       },
 
-      // Recovers a real-money purchase that was charged but never granted —
+      // Recovers a real-money purchase that was charged but never granted -
       // e.g. the app was killed between RevenueCat confirming the charge and
       // ShopScreen calling grantShopPack(). RevenueCat replays every
       // non-subscription transaction on the CustomerInfo listener on every
@@ -1033,7 +1033,7 @@ const useGameStore = create(
       clearAchievementUnlocks: () => set({ pendingAchievementUnlocks: [] }),
 
       // Codex unlocks are pure announcements (no per-item claim step, unlike
-      // milestone rewards), so — like clearAchievementUnlocks — this clears
+      // milestone rewards), so - like clearAchievementUnlocks - this clears
       // the whole batch at once rather than shifting one entry at a time.
       clearCodexUnlocks: () => set({ pendingCodexUnlocks: [] }),
 
@@ -1054,7 +1054,7 @@ const useGameStore = create(
           const current = state.heroCollection[heroId];
           const hero    = HEROES.find(h => h.id === heroId);
           if (!current || current.copies < count || count <= 0) return state;
-          // Sovereign heroes are stored as rank 'S' + sovereign:true — fusion caps
+          // Sovereign heroes are stored as rank 'S' + sovereign:true - fusion caps
           // at S, so effectiveRank never becomes 'SOVEREIGN'. Without this check
           // every sovereign copy silently converted at the S rate (80) instead of
           // the SOVEREIGN rate (200), a 60% shortfall. Same override as ascendHero.
@@ -1072,7 +1072,7 @@ const useGameStore = create(
       },
 
       // Exchange lower-tier ascension materials for higher-tier ones.
-      // Validates the recipe server-side — callers must not trust UI counts alone.
+      // Validates the recipe server-side - callers must not trust UI counts alone.
       exchangeAscensionItems: (fromItemId, fromQty, toItemId, toQty) => {
         const state = get();
         const inv   = { ...state.ascensionInventory };

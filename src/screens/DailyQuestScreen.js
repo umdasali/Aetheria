@@ -123,7 +123,7 @@ export default function DailyQuestScreen({ navigation }) {
                     : <Ionicons name={quest.icon} size={rs(20)} color={accentColor} />}
                 </View>
 
-                {/* Middle — title + progress */}
+                {/* Middle - title + progress */}
                 <View style={s.middle}>
                   <Text style={[s.questTitle, isClaimed && { color: C.TEXT_MUTED }]}>
                     {quest.title}
@@ -142,7 +142,7 @@ export default function DailyQuestScreen({ navigation }) {
                   </Text>
                 </View>
 
-                {/* Right — reward + claim */}
+                {/* Right - reward + claim */}
                 <View style={s.right}>
                   {/* Reward chips */}
                   <View style={s.rewardRow}>

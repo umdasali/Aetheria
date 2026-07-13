@@ -19,7 +19,7 @@ const SIDEBAR_W  = 172;
 const PART_LABEL = ['', 'Part  I', 'Part  II', 'Part  III'];
 const PART_ICON  = ['', 'shield-outline', 'flame-outline', 'skull'];
 
-// ── Chapter tab — memoized so only the tabs whose state changed re-render ────
+// ── Chapter tab - memoized so only the tabs whose state changed re-render ────
 const ChapterTab = memo(function ChapterTab({ ch, accessible, done, active, onSelect }) {
   const tabColor = ch.color || C.PRIMARY;
   return (
@@ -68,7 +68,7 @@ export default function StoryScreen({ navigation }) {
     return isChapterCompleted(cid - 1);
   };
 
-  // Story BGM — start on focus, stop on blur
+  // Story BGM - start on focus, stop on blur
   useFocusEffect(
     useCallback(() => {
       AudioManager.startStoryBGM();
@@ -85,7 +85,7 @@ export default function StoryScreen({ navigation }) {
           if (s) { setSelectedChId(s.chapterId); return; }
         }
       }
-      // All stages done — stay on the last chapter
+      // All stages done - stay on the last chapter
       setSelectedChId(CHAPTER_DEFS[CHAPTER_DEFS.length - 1].id);
     }, [completedChapters])
   );
@@ -191,7 +191,7 @@ export default function StoryScreen({ navigation }) {
                 <Text style={[styles.rewardGems, { color: chColor }]}>Hero</Text>
               </>
             )}
-            {/* Gold value — keep in sync with stageGoldReward() */}
+            {/* Gold value - keep in sync with stageGoldReward() */}
           </View>
 
           {/* Enter button */}

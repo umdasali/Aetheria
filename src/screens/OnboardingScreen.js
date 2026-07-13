@@ -23,7 +23,7 @@ const STEPS = [
     icon:    'people',
     color:   C.PRIMARY,
     title:   'Summon & Collect Heroes',
-    body:    'Spend Gems in the Summon room to recruit heroes from five factions — Emberveil, Glaciara, Sunspire, Verdania, and Voidmark. Each hero has unique skills and a Trump Card.',
+    body:    'Spend Gems in the Summon room to recruit heroes from five factions - Emberveil, Glaciara, Sunspire, Verdania, and Voidmark. Each hero has unique skills and a Trump Card.',
     accent:  [C.PRIMARY_DARK, C.PRIMARY],
   },
   {
@@ -37,7 +37,7 @@ const STEPS = [
     icon:    'thunderstorm',
     color:   C.SECONDARY,
     title:   'Battle & Trump Cards',
-    body:    'Each turn, attack or use skills to build Energy. At 100⚡ your hero unleashes their Trump Card — a devastating ultimate ability. Ready? Tap below to try your first battle with your starter team.',
+    body:    'Each turn, attack or use skills to build Energy. At 100⚡ your hero unleashes their Trump Card - a devastating ultimate ability. Ready? Tap below to try your first battle with your starter team.',
     accent:  C.GRAD_PINK,
   },
 ];
@@ -80,7 +80,7 @@ export default function OnboardingScreen({ navigation }) {
       <LinearGradient colors={C.GRAD_BG} style={StyleSheet.absoluteFill} />
 
       <View style={styles.safe}>
-        {/* Skip — absolute so it doesn't affect the row layout */}
+        {/* Skip - absolute so it doesn't affect the row layout */}
         <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.7}>
           <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
@@ -88,7 +88,7 @@ export default function OnboardingScreen({ navigation }) {
         {/* Landscape row: icon left | text + button right */}
         <Animated.View style={[styles.shell, { opacity: fadeAnim }]}>
 
-          {/* LEFT — icon ring */}
+          {/* LEFT - icon ring */}
           <View style={styles.iconCol}>
             <View style={[styles.iconRing, { borderColor: current.color + '55', backgroundColor: current.color + '14' }]}>
               <LinearGradient
@@ -101,7 +101,7 @@ export default function OnboardingScreen({ navigation }) {
             </View>
           </View>
 
-          {/* RIGHT — step dots, title, body, button */}
+          {/* RIGHT - step dots, title, body, button */}
           <View style={styles.textCol}>
             {/* Step indicator */}
             <View style={styles.stepDots}>
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   },
   skipText: { fontSize: rf(12), color: C.TEXT_MUTED, fontWeight: '600' },
 
-  // Left column — icon centred vertically
+  // Left column - icon centred vertically
   iconCol: {
     width: '36%',
     alignItems: 'center',
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
 
-  // Right column — all text + controls stacked, no overflow risk
+  // Right column - all text + controls stacked, no overflow risk
   textCol: {
     flex: 1,
     paddingLeft: rs(28),

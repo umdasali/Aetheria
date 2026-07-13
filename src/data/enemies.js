@@ -96,7 +96,7 @@ export const ENEMY_IMAGES = {
 
 export const ENEMY_GROUPS = [
 
-  // ── CH 1: SHATTERED VEIL — Lysha the Glacial Empress ──────────────────────
+  // ── CH 1: SHATTERED VEIL - Lysha the Glacial Empress ──────────────────────
   {
     id: 101, chapter: 1, part: 1,
     name: 'Ice Vanguard',
@@ -128,7 +128,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 2: ASHEN INFERNO — Pyrevex the Ashen Drake ─────────────────────────
+  // ── CH 2: ASHEN INFERNO - Pyrevex the Ashen Drake ─────────────────────────
   {
     id: 201, chapter: 2, part: 1,
     name: 'Ember Legion',
@@ -160,7 +160,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 3: DAWN OF RADIANCE — Aurariel the Light Maiden ────────────────────
+  // ── CH 3: DAWN OF RADIANCE - Aurariel the Light Maiden ────────────────────
   {
     id: 301, chapter: 3, part: 1,
     name: 'Fallen Paladins',
@@ -192,7 +192,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 4: THORNWALL — Thornqueen Sylva ────────────────────────────────────
+  // ── CH 4: THORNWALL - Thornqueen Sylva ────────────────────────────────────
   {
     id: 401, chapter: 4, part: 1,
     name: 'Root Horde',
@@ -224,7 +224,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 5: VERDANT RUIN — Verdara the Bloom Devourer ───────────────────────
+  // ── CH 5: VERDANT RUIN - Verdara the Bloom Devourer ───────────────────────
   {
     id: 501, chapter: 5, part: 1,
     name: 'Bloom Swarm',
@@ -256,7 +256,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 6: SHADOWBLOOM — Nyx Shadowbloom ───────────────────────────────────
+  // ── CH 6: SHADOWBLOOM - Nyx Shadowbloom ───────────────────────────────────
   {
     id: 601, chapter: 6, part: 1,
     name: 'Thorn Wraiths',
@@ -280,7 +280,7 @@ export const ENEMY_GROUPS = [
   {
     id: 603, chapter: 6, part: 3,
     name: "Nyx's Black Garden",
-    description: "Nyx Shadowbloom emerges from the corrupted World Tree's heart — darkness wearing nature's crown.",
+    description: "Nyx Shadowbloom emerges from the corrupted World Tree's heart - darkness wearing nature's crown.",
     enemies: [
       { id: 'e_603_1', name: 'Rotclaw Ghoul',            tier: 'mob',       imageKey: 'mob_010',       hp: 3700, maxHp: 3700, atk: 328, def: 212, skills: [{ name: 'Decay Strike',      damage: 1.6 }, { name: 'Rotting Claw',    damage: 2.2 }] },
       { id: 'e_603_2', name: 'Celestial Fallen Valkyrie', tier: 'mini-boss', imageKey: 'mini-boss_011', hp: 7500, maxHp: 7500, atk: 470, def: 328, effect: 'VOID_CURSE', skills: [{ name: 'Fallen Judgement',  damage: 2.5 }, { name: 'Corruption Spear', damage: 3.5 }] },
@@ -288,7 +288,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 7: ABYSSAL GATE — The Abyss Sovereign ──────────────────────────────
+  // ── CH 7: ABYSSAL GATE - The Abyss Sovereign ──────────────────────────────
   {
     id: 701, chapter: 7, part: 1,
     name: 'Void Legions',
@@ -320,7 +320,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 8: ECLIPSE RISING — Radiant Dragon Emperor ─────────────────────────
+  // ── CH 8: ECLIPSE RISING - Radiant Dragon Emperor ─────────────────────────
   {
     id: 801, chapter: 8, part: 1,
     name: 'Eclipse Vanguard',
@@ -352,11 +352,11 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 9: CELESTIAL FRACTURE — Celestial Valkor ───────────────────────────
+  // ── CH 9: CELESTIAL FRACTURE - Celestial Valkor ───────────────────────────
   {
     id: 901, chapter: 9, part: 1,
     name: 'Fractured Celestials',
-    description: 'Heaven and abyss collide — twisted bloom guardians and puppet soldiers flood the celestial realm.',
+    description: 'Heaven and abyss collide - twisted bloom guardians and puppet soldiers flood the celestial realm.',
     enemies: [
       { id: 'e_901_1', name: 'Dark Huntress',       tier: 'mob', imageKey: 'mob_012', hp: 5000, maxHp: 5000, atk: 415, def: 275, skills: [{ name: 'Dark Sting',  damage: 1.7 }, { name: 'Shadow Lash',       damage: 2.3 }] },
       { id: 'e_901_2', name: 'Forest Marionette', tier: 'mob', imageKey: 'mob_013', hp: 5200, maxHp: 5200, atk: 425, def: 282, skills: [{ name: 'Vine Slash', damage: 1.7 }, { name: 'Root Bind', damage: 2.3 }] },
@@ -384,7 +384,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 10: VOID QUEEN'S REIGN — Queen Nythera ─────────────────────────────
+  // ── CH 10: VOID QUEEN'S REIGN - Queen Nythera ─────────────────────────────
   {
     id: 1001, chapter: 10, part: 1,
     name: "Queen's Vanguard",
@@ -416,7 +416,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 11: TITAN'S MARCH — The Infernal Titan King ────────────────────────
+  // ── CH 11: TITAN'S MARCH - The Infernal Titan King ────────────────────────
   {
     id: 1101, chapter: 11, part: 1,
     name: "Titan's Vanguard",
@@ -448,7 +448,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 12: TIME'S END — Chronos ───────────────────────────────────────────
+  // ── CH 12: TIME'S END - Chronos ───────────────────────────────────────────
   {
     id: 1201, chapter: 12, part: 1,
     name: 'Chrono Soldiers',
@@ -480,7 +480,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 13: ETERNAL WINTER — The Frostbound Monarch ────────────────────────
+  // ── CH 13: ETERNAL WINTER - The Frostbound Monarch ────────────────────────
   {
     id: 1301, chapter: 13, part: 1,
     name: 'Frozen Legions',
@@ -512,7 +512,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 14: CRIMSON EMPIRE — Seraphine the Crimson Empress ─────────────────
+  // ── CH 14: CRIMSON EMPIRE - Seraphine the Crimson Empress ─────────────────
   {
     id: 1401, chapter: 14, part: 1,
     name: "Seraphine's Court",
@@ -544,11 +544,11 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 15: WORLD'S LAST HOUR — The World Eater Leviathan ─────────────────
+  // ── CH 15: WORLD'S LAST HOUR - The World Eater Leviathan ─────────────────
   {
     id: 1501, chapter: 15, part: 1,
     name: "World Eater's Herald",
-    description: "The World Eater's herald forces march as reality dissolves — the final war for all existence begins.",
+    description: "The World Eater's herald forces march as reality dissolves - the final war for all existence begins.",
     enemies: [
       { id: 'e_1501_1', name: 'Stormbreaker Titan',       tier: 'mob', imageKey: 'mob_011', hp: 9000, maxHp: 9000, atk: 648, def: 452, skills: [{ name: 'Storm Crush',  damage: 2.0 }, { name: 'Thunder Slam',    damage: 2.7 }] },
       { id: 'e_1501_2', name: 'Forest Marionette', tier: 'mob', imageKey: 'mob_013', hp: 9400, maxHp: 9400, atk: 662, def: 462, skills: [{ name: 'Vine Slash', damage: 2.0 }, { name: 'Root Bind', damage: 2.7 }] },
@@ -576,7 +576,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 16: CATHEDRAL OF CHAINS — Visalia the Crimson ─────────────────────
+  // ── CH 16: CATHEDRAL OF CHAINS - Visalia the Crimson ─────────────────────
   {
     id: 1601, chapter: 16, part: 1,
     name: 'Bell Tower Guardians',
@@ -600,7 +600,7 @@ export const ENEMY_GROUPS = [
   {
     id: 1603, chapter: 16, part: 3,
     name: 'Visalia the Crimson',
-    description: 'The true architect of the Crimson Empire emerges — a demon-vampire hybrid who engineered every war from the shadows.',
+    description: 'The true architect of the Crimson Empire emerges - a demon-vampire hybrid who engineered every war from the shadows.',
     enemies: [
       { id: 'e_1603_1', name: 'Earth Sentinel', tier: 'mob',       imageKey: 'mob_017',       hp: 11800, maxHp: 11800, atk: 752, def: 532, skills: [{ name: 'Earth Smash',       damage: 2.1 }, { name: 'Stone Guard',   damage: 2.9 }] },
       { id: 'e_1603_2', name: 'Stone Keeper',        tier: 'mini-boss', imageKey: 'mini-boss_014', hp: 23000, maxHp: 23000, atk: 1075, def: 715, effect: 'SHATTER', skills: [{ name: 'Stone Toll',   damage: 2.7 }, { name: 'Earth Shockwave', damage: 3.7 }] },
@@ -608,7 +608,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 17: THE HOLLOW CROWN — The Crownless King ──────────────────────────
+  // ── CH 17: THE HOLLOW CROWN - The Crownless King ──────────────────────────
   {
     id: 1701, chapter: 17, part: 1,
     name: "Lost Kingdom's Dead",
@@ -640,7 +640,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 18: DIVIDED HEAVEN — Mother Eclipse ────────────────────────────────
+  // ── CH 18: DIVIDED HEAVEN - Mother Eclipse ────────────────────────────────
   {
     id: 1801, chapter: 18, part: 1,
     name: 'Forge Cultists',
@@ -664,7 +664,7 @@ export const ENEMY_GROUPS = [
   {
     id: 1803, chapter: 18, part: 3,
     name: 'Mother Eclipse',
-    description: 'A cosmic goddess of two merged souls — one of divine light, one of consuming darkness — awakens in terrible balance.',
+    description: 'A cosmic goddess of two merged souls - one of divine light, one of consuming darkness - awakens in terrible balance.',
     enemies: [
       { id: 'e_1803_1', name: 'Obsidian Sentinel', tier: 'mob',       imageKey: 'mob_022',       hp: 13400, maxHp: 13400, atk: 835, def: 590, skills: [{ name: 'Obsidian Guard',  damage: 2.3 }, { name: 'Volcanic Crush',    damage: 3.1 }] },
       { id: 'e_1803_2', name: 'The Furnace Saint', tier: 'mini-boss', imageKey: 'mini-boss_016', hp: 25000, maxHp: 25000, atk: 1135, def: 755, effect: 'BURN', skills: [{ name: 'Cursed Hammer',   damage: 2.8 }, { name: 'Forge Consecration', damage: 3.8 }] },
@@ -672,7 +672,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 19: THE LIVING ARCHIVE — The Archive Devourer ─────────────────────
+  // ── CH 19: THE LIVING ARCHIVE - The Archive Devourer ─────────────────────
   {
     id: 1901, chapter: 19, part: 1,
     name: 'Wayward Scholars',
@@ -704,7 +704,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 20: BEFORE THE FIRST BREATH — The First Dream ─────────────────────
+  // ── CH 20: BEFORE THE FIRST BREATH - The First Dream ─────────────────────
   {
     id: 2001, chapter: 20, part: 1,
     name: 'Dream Sentinels',
@@ -718,7 +718,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2002, chapter: 20, part: 2,
     name: 'The Last Marionette',
-    description: 'The First Dream\'s most beloved creation — an elegant puppet queen — performs her final act as an eternal guardian.',
+    description: 'The First Dream\'s most beloved creation - an elegant puppet queen - performs her final act as an eternal guardian.',
     enemies: [
       { id: 'e_2002_1', name: 'Porcelain Guard',         tier: 'mob',       imageKey: 'mob_025',       hp: 14700, maxHp: 14700, atk: 888, def: 628, skills: [{ name: 'Porcelain Strike',  damage: 2.4 }, { name: 'Marionette Smash',   damage: 3.2 }] },
       { id: 'e_2002_2', name: 'Celestial String Dancer', tier: 'mob',       imageKey: 'mob_026',       hp: 15100, maxHp: 15100, atk: 905, def: 642, skills: [{ name: 'String Slash',      damage: 2.4 }, { name: 'Celestial Waltz',    damage: 3.2 }] },
@@ -728,7 +728,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2003, chapter: 20, part: 3,
     name: 'The First Dream',
-    description: 'The ancient entity sleeping beneath reality opens its eyes — a being of stars, memories, and shattered worlds that dreamed existence into being.',
+    description: 'The ancient entity sleeping beneath reality opens its eyes - a being of stars, memories, and shattered worlds that dreamed existence into being.',
     enemies: [
       { id: 'e_2003_1', name: 'Celestial String Dancer', tier: 'mob',       imageKey: 'mob_026',       hp: 15300, maxHp: 15300, atk: 912, def: 648, skills: [{ name: 'String Slash',       damage: 2.4 }, { name: 'Celestial Waltz',    damage: 3.3 }] },
       { id: 'e_2003_2', name: 'The Last Marionette',     tier: 'mini-boss', imageKey: 'mini-boss_018', hp: 27500, maxHp: 27500, atk: 1200, def: 800, effect: 'VOID_CURSE', skills: [{ name: 'Puppet Crescendo',  damage: 2.9 }, { name: 'Final Curtain',      damage: 4.0 }] },
@@ -736,7 +736,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 21: SHADOW SOVEREIGN — The Shadow Sovereign ───────────────────────────
+  // ── CH 21: SHADOW SOVEREIGN - The Shadow Sovereign ───────────────────────────
   {
     id: 2101, chapter: 21, part: 1,
     name: 'Shadow Vanguard',
@@ -760,7 +760,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2103, chapter: 21, part: 3,
     name: 'The Shadow Sovereign',
-    description: 'The Shadow Sovereign herself rises — a dark-power ruler who has consolidated shadow energy since before time had a name.',
+    description: 'The Shadow Sovereign herself rises - a dark-power ruler who has consolidated shadow energy since before time had a name.',
     enemies: [
       { id: 'e_2103_1', name: 'Dark Crowmancer',     tier: 'mob',       imageKey: 'mob_032',       hp: 17200, maxHp: 17200, atk: 988,  def: 708, skills: [{ name: 'Dark Feather',    damage: 2.5 }, { name: 'Crow Curse',     damage: 3.3 }] },
       { id: 'e_2103_2', name: 'Kitsune Specter',     tier: 'mini-boss', imageKey: 'mini-boss_019', hp: 30500, maxHp: 30500, atk: 1265, def: 848, effect: 'BURN', skills: [{ name: 'Fox Fire',         damage: 2.9 }, { name: 'Nine Tail Surge', damage: 3.9 }] },
@@ -768,7 +768,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 22: THE COSMIC WEAVE — Caelestra the Cosmic Weaver ────────────────────
+  // ── CH 22: THE COSMIC WEAVE - Caelestra the Cosmic Weaver ────────────────────
   {
     id: 2201, chapter: 22, part: 1,
     name: 'Star Crawlers',
@@ -792,7 +792,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2203, chapter: 22, part: 3,
     name: 'Caelestra the Cosmic Weaver',
-    description: 'Caelestra awakens from within a collapsing star — a mage who absorbed the dying memories of entire worlds and rewove them into herself.',
+    description: 'Caelestra awakens from within a collapsing star - a mage who absorbed the dying memories of entire worlds and rewove them into herself.',
     enemies: [
       { id: 'e_2203_1', name: 'Abyss Spider',             tier: 'mob',       imageKey: 'mob_031',       hp: 18500, maxHp: 18500, atk: 1030, def: 748, skills: [{ name: 'Web Ensnare',    damage: 2.6 }, { name: 'Venom Bite',      damage: 3.5 }] },
       { id: 'e_2203_2', name: 'Obsidian Scholar',          tier: 'mini-boss', imageKey: 'mini-boss_020', hp: 32000, maxHp: 32000, atk: 1310, def: 878, effect: 'VOID_CURSE', skills: [{ name: 'Dark Lecture',   damage: 2.9 }, { name: 'Void Formula',    damage: 4.0 }] },
@@ -800,7 +800,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 23: DEMON GLACIER — Glacidra the Frost Demon ──────────────────────────
+  // ── CH 23: DEMON GLACIER - Glacidra the Frost Demon ──────────────────────────
   {
     id: 2301, chapter: 23, part: 1,
     name: 'Frozen Underworld',
@@ -824,7 +824,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2303, chapter: 23, part: 3,
     name: 'Glacidra the Frost Demon',
-    description: 'Glacidra emerges from beneath the sealed ice — an ice demon mage whose frost is not natural cold but a demonic absolute that corrodes dimensional matter.',
+    description: 'Glacidra emerges from beneath the sealed ice - an ice demon mage whose frost is not natural cold but a demonic absolute that corrodes dimensional matter.',
     enemies: [
       { id: 'e_2303_1', name: 'Abyss Spider',          tier: 'mob',       imageKey: 'mob_031',       hp: 19800, maxHp: 19800, atk: 1060, def: 775, skills: [{ name: 'Web Ensnare',   damage: 2.6 }, { name: 'Venom Bite',      damage: 3.6 }] },
       { id: 'e_2303_2', name: 'Lysse the Youngest',    tier: 'mini-boss', imageKey: 'mini-boss_021', hp: 33500, maxHp: 33500, atk: 1352, def: 906, effect: 'VOID_CURSE', skills: [{ name: 'Blood Lash',    damage: 2.9 }, { name: 'Crimson Fang',    damage: 4.0 }] },
@@ -832,7 +832,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 24: THE ELDER CRIMSON — Lady Lyssiel ──────────────────────────────────
+  // ── CH 24: THE ELDER CRIMSON - Lady Lyssiel ──────────────────────────────────
   {
     id: 2401, chapter: 24, part: 1,
     name: 'Crimson Canopy',
@@ -856,7 +856,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2403, chapter: 24, part: 3,
     name: 'Lady Lyssiel the Elder Crimson',
-    description: 'The eldest of the Crimson bloodline surfaces — more ancient than Visalia, patient beyond measure, bearing both elven grace and the full weight of an undying crimson heritage.',
+    description: 'The eldest of the Crimson bloodline surfaces - more ancient than Visalia, patient beyond measure, bearing both elven grace and the full weight of an undying crimson heritage.',
     enemies: [
       { id: 'e_2403_1', name: 'Dark Crowmancer',            tier: 'mob',       imageKey: 'mob_032',       hp: 21000, maxHp: 21000, atk: 1102, def: 808, skills: [{ name: 'Dark Feather',    damage: 2.8 }, { name: 'Crow Curse',        damage: 3.7 }] },
       { id: 'e_2403_2', name: 'Fae Enchantress',            tier: 'mini-boss', imageKey: 'mini-boss_022', hp: 35000, maxHp: 35000, atk: 1398, def: 934, effect: 'TOXIN', skills: [{ name: 'Fae Hex',          damage: 3.0 }, { name: 'Pixie Storm',       damage: 4.1 }] },
@@ -864,7 +864,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 25: THE FIRST ENTITY — The Origin ─────────────────────────────────────
+  // ── CH 25: THE FIRST ENTITY - The Origin ─────────────────────────────────────
   {
     id: 2501, chapter: 25, part: 1,
     name: 'Before History',
@@ -878,7 +878,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2502, chapter: 25, part: 2,
     name: 'Briar the Elder Assassin',
-    description: 'The elder sister of the Nature Assassin stands at the threshold of the primordial dark — a hunter older and more lethal than any before her.',
+    description: 'The elder sister of the Nature Assassin stands at the threshold of the primordial dark - a hunter older and more lethal than any before her.',
     enemies: [
       { id: 'e_2502_1', name: 'Bone Harpy',      tier: 'mob',       imageKey: 'mob_029',       hp: 21200, maxHp: 21200, atk: 1115, def: 808, skills: [{ name: 'Bone Dive',     damage: 2.7 }, { name: 'Death Shriek',   damage: 3.7 }] },
       { id: 'e_2502_2', name: 'Dark Crowmancer',  tier: 'mob',       imageKey: 'mob_032',       hp: 21800, maxHp: 21800, atk: 1132, def: 825, skills: [{ name: 'Dark Feather',  damage: 2.8 }, { name: 'Crow Curse',     damage: 3.7 }] },
@@ -888,7 +888,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2503, chapter: 25, part: 3,
     name: 'The Origin',
-    description: 'The First Entity awakens — the oldest being in Aetheria\'s universe, whose existence predates the gods, the void, and the concept of darkness itself. It does not attack from malice. It simply is, and its mere presence unmakes all things.',
+    description: 'The First Entity awakens - the oldest being in Aetheria\'s universe, whose existence predates the gods, the void, and the concept of darkness itself. It does not attack from malice. It simply is, and its mere presence unmakes all things.',
     enemies: [
       { id: 'e_2503_1', name: 'Dark Crowmancer', tier: 'mob',       imageKey: 'mob_032',       hp: 22000, maxHp: 22000, atk: 1145, def: 835, skills: [{ name: 'Dark Feather',      damage: 2.8 }, { name: 'Crow Curse',         damage: 3.8 }] },
       { id: 'e_2503_2', name: 'Briar the Elder', tier: 'mini-boss', imageKey: 'mini-boss_023', hp: 36500, maxHp: 36500, atk: 1445, def: 968, effect: 'TOXIN', skills: [{ name: 'Nature Ambush',    damage: 3.1 }, { name: 'Elder Poison',       damage: 4.3 }] },
@@ -896,7 +896,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 26: VOID ETERNAL — The Void Eternal ───────────────────────────────────
+  // ── CH 26: VOID ETERNAL - The Void Eternal ───────────────────────────────────
   {
     id: 2601, chapter: 26, part: 1,
     name: 'Eternal Echoes',
@@ -928,7 +928,7 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 27: CELESTIAL RECKONING — The Grand Reckoning ─────────────────────────
+  // ── CH 27: CELESTIAL RECKONING - The Grand Reckoning ─────────────────────────
   {
     id: 2701, chapter: 27, part: 1,
     name: 'Judgment Hosts',
@@ -960,11 +960,11 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 28: SERAPHIC JUDGMENT — The Last Seraph ───────────────────────────────
+  // ── CH 28: SERAPHIC JUDGMENT - The Last Seraph ───────────────────────────────
   {
     id: 2801, chapter: 28, part: 1,
     name: 'Seraphic Vanguard',
-    description: 'Lesser seraphim descend in disciplined, silent ranks — a herald choir sent to weigh whether mortal defiance still deserves to walk the road ahead.',
+    description: 'Lesser seraphim descend in disciplined, silent ranks - a herald choir sent to weigh whether mortal defiance still deserves to walk the road ahead.',
     enemies: [
       { id: 'e_2801_1', name: 'Shadow Feline', tier: 'mob', imageKey: 'mob_027', hp: 26800, maxHp: 26800, atk: 1290, def: 962, skills: [{ name: 'Shadow Pounce', damage: 2.9 }, { name: 'Dark Claw Strike', damage: 3.9 }] },
       { id: 'e_2801_2', name: 'Crystal Drake',  tier: 'mob', imageKey: 'mob_030', hp: 27400, maxHp: 27400, atk: 1308, def: 978, skills: [{ name: 'Crystal Bite',  damage: 2.9 }, { name: 'Gem Shard Blast', damage: 4.0 }] },
@@ -974,7 +974,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2802, chapter: 28, part: 2,
     name: 'Ophaniel the Vigilant',
-    description: 'A wheel of eyes and wings descends to bar the way — one rank below the final seraph, and no less merciless in its judgment.',
+    description: 'A wheel of eyes and wings descends to bar the way - one rank below the final seraph, and no less merciless in its judgment.',
     enemies: [
       { id: 'e_2802_1', name: 'Crystal Drake',        tier: 'mob',       imageKey: 'mob_030',       hp: 27600, maxHp: 27600, atk: 1312, def: 980, skills: [{ name: 'Crystal Bite',  damage: 2.9 }, { name: 'Gem Shard Blast', damage: 4.0 }] },
       { id: 'e_2802_2', name: 'Abyss Spider',         tier: 'mob',       imageKey: 'mob_031',       hp: 28200, maxHp: 28200, atk: 1330, def: 996, skills: [{ name: 'Web Ensnare',   damage: 3.0 }, { name: 'Venom Bite',      damage: 4.1 }] },
@@ -992,11 +992,11 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 29: THE SILENT VIGIL — The Silent Watcher ─────────────────────────────
+  // ── CH 29: THE SILENT VIGIL - The Silent Watcher ─────────────────────────────
   {
     id: 2901, chapter: 29, part: 1,
     name: 'Silent Sentinels',
-    description: 'Constructs of pure observation manifest at the edge of perception, cataloguing every strike — testing whether this story is even worth being witnessed.',
+    description: 'Constructs of pure observation manifest at the edge of perception, cataloguing every strike - testing whether this story is even worth being witnessed.',
     enemies: [
       { id: 'e_2901_1', name: 'Void Viper',      tier: 'mob', imageKey: 'mob_028', hp: 29000, maxHp: 29000, atk: 1362, def: 1028, skills: [{ name: 'Venom Lunge',  damage: 3.0 }, { name: 'Void Fang',    damage: 4.1 }] },
       { id: 'e_2901_2', name: 'Bone Harpy',      tier: 'mob', imageKey: 'mob_029', hp: 29600, maxHp: 29600, atk: 1380, def: 1045, skills: [{ name: 'Bone Dive',    damage: 3.1 }, { name: 'Death Shriek', damage: 4.2 }] },
@@ -1006,7 +1006,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2902, chapter: 29, part: 2,
     name: 'The Recording Eye',
-    description: 'A fragment of the great observer takes form — no longer content to merely witness, it moves to decide whether this story deserves to be recorded at all.',
+    description: 'A fragment of the great observer takes form - no longer content to merely witness, it moves to decide whether this story deserves to be recorded at all.',
     enemies: [
       { id: 'e_2902_1', name: 'Bone Harpy',         tier: 'mob',       imageKey: 'mob_029',       hp: 29800, maxHp: 29800, atk: 1385, def: 1048, skills: [{ name: 'Bone Dive',     damage: 3.1 }, { name: 'Death Shriek',   damage: 4.2 }] },
       { id: 'e_2902_2', name: 'Dark Crowmancer',    tier: 'mob',       imageKey: 'mob_032',       hp: 30400, maxHp: 30400, atk: 1402, def: 1065, skills: [{ name: 'Dark Feather', damage: 3.1 }, { name: 'Crow Curse',     damage: 4.3 }] },
@@ -1016,7 +1016,7 @@ export const ENEMY_GROUPS = [
   {
     id: 2903, chapter: 29, part: 3,
     name: 'The Silent Watcher',
-    description: 'The Silent Watcher breaks its eternal vow of non-interference — for the first time across the history of all realities, it chooses to act rather than merely observe.',
+    description: 'The Silent Watcher breaks its eternal vow of non-interference - for the first time across the history of all realities, it chooses to act rather than merely observe.',
     enemies: [
       { id: 'e_2903_1', name: 'Dark Crowmancer',     tier: 'mob',       imageKey: 'mob_032',       hp: 30800, maxHp: 30800, atk: 1418, def: 1082, skills: [{ name: 'Dark Feather',    damage: 3.2 }, { name: 'Crow Curse',      damage: 4.3 }] },
       { id: 'e_2903_2', name: 'The Recording Eye',   tier: 'mini-boss', imageKey: 'mini-boss_027', hp: 48500, maxHp: 48500, atk: 1800, def: 1172, effect: 'SHATTER', skills: [{ name: 'Unblinking Record',  damage: 3.3 }, { name: 'Erased Frame',  damage: 4.5 }] },
@@ -1024,11 +1024,11 @@ export const ENEMY_GROUPS = [
     ],
   },
 
-  // ── CH 30: BEYOND CREATION — The One Above All ───────────────────────────────
+  // ── CH 30: BEYOND CREATION - The One Above All ───────────────────────────────
   {
     id: 3001, chapter: 30, part: 1,
     name: 'The Final Threshold',
-    description: 'The last guardians — extensions of the One Above All\'s own will — defend a threshold none have ever crossed and returned from.',
+    description: 'The last guardians - extensions of the One Above All\'s own will - defend a threshold none have ever crossed and returned from.',
     enemies: [
       { id: 'e_3001_1', name: 'Shadow Feline', tier: 'mob', imageKey: 'mob_027', hp: 31200, maxHp: 31200, atk: 1435, def: 1098, skills: [{ name: 'Shadow Pounce', damage: 3.2 }, { name: 'Dark Claw Strike', damage: 4.3 }] },
       { id: 'e_3001_2', name: 'Void Viper',    tier: 'mob', imageKey: 'mob_028', hp: 31800, maxHp: 31800, atk: 1452, def: 1115, skills: [{ name: 'Venom Lunge',    damage: 3.3 }, { name: 'Void Fang',        damage: 4.4 }] },
@@ -1038,7 +1038,7 @@ export const ENEMY_GROUPS = [
   {
     id: 3002, chapter: 30, part: 2,
     name: 'Echo of the One Above All',
-    description: 'A pale reflection of the One Above All\'s own voice bars the final path — even a fraction of that authority is almost beyond comprehension.',
+    description: 'A pale reflection of the One Above All\'s own voice bars the final path - even a fraction of that authority is almost beyond comprehension.',
     enemies: [
       { id: 'e_3002_1', name: 'Void Viper',                    tier: 'mob',       imageKey: 'mob_028',       hp: 32000, maxHp: 32000, atk: 1458, def: 1118, skills: [{ name: 'Venom Lunge',   damage: 3.3 }, { name: 'Void Fang',      damage: 4.4 }] },
       { id: 'e_3002_2', name: 'Crystal Drake',                 tier: 'mob',       imageKey: 'mob_030',       hp: 32600, maxHp: 32600, atk: 1475, def: 1135, skills: [{ name: 'Crystal Bite',  damage: 3.4 }, { name: 'Gem Shard Blast', damage: 4.5 }] },
@@ -1048,7 +1048,7 @@ export const ENEMY_GROUPS = [
   {
     id: 3003, chapter: 30, part: 3,
     name: 'The One Above All',
-    description: 'The final authority over every story, every universe, every ending ever written reveals itself at last — above the Origin, above the Watcher, above creation itself.',
+    description: 'The final authority over every story, every universe, every ending ever written reveals itself at last - above the Origin, above the Watcher, above creation itself.',
     enemies: [
       { id: 'e_3003_1', name: 'Crystal Drake',              tier: 'mob',       imageKey: 'mob_030',       hp: 33000, maxHp: 33000, atk: 1492, def: 1152, skills: [{ name: 'Crystal Bite',      damage: 3.4 }, { name: 'Gem Shard Blast',   damage: 4.6 }] },
       { id: 'e_3003_2', name: 'Echo of the One Above All',  tier: 'mini-boss', imageKey: 'mini-boss_028', hp: 51500, maxHp: 51500, atk: 1910, def: 1252, effect: 'BLESSING', skills: [{ name: 'Authored Pulse', damage: 3.5 }, { name: 'First Word Echo', damage: 4.7 }] },

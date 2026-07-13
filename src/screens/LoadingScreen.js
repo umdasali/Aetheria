@@ -48,12 +48,12 @@ const PRELOAD_SOURCES = [
   require('../../assets/currency/heroes.webp'),
   require('../../assets/currency/team.webp'),
   require('../../assets/enemy/boss_001.webp'),
-  // First 16 hero portraits — covers the team picker and Collection first page
+  // First 16 hero portraits - covers the team picker and Collection first page
   ...HEROES.slice(0, 16).map(h => h.image),
 ];
 
 export default function LoadingScreen({ navigation }) {
-  // Live window dimensions — re-reads after the landscape orientation lock
+  // Live window dimensions - re-reads after the landscape orientation lock
   // settles, so the splash always fills the real screen (no stale portrait
   // width that would leave the right edge clipped).
   const { width: W, height: H } = useWindowDimensions();
@@ -74,7 +74,7 @@ export default function LoadingScreen({ navigation }) {
     }).start(() => SplashScreen.hideAsync());
   }, []);
 
-  // Progress bar — smooth cubic fill over 2400 ms to give images time to decode,
+  // Progress bar - smooth cubic fill over 2400 ms to give images time to decode,
   // then navigate ONLY once BOTH the bar animation AND store hydration have finished.
   // Reading hasSeenOnboarding at mount used to race AsyncStorage rehydrate: if the bar
   // finished first, a returning player was wrongly sent to Onboarding. We now wait for
@@ -93,7 +93,7 @@ export default function LoadingScreen({ navigation }) {
     const tryNavigate = () => {
       if (navigated || !barDone || !hydrated || !versionChecked) return;
       navigated = true;
-      // A forced update always wins over onboarding/home — an out-of-date
+      // A forced update always wins over onboarding/home - an out-of-date
       // client shouldn't touch save data or the store until it updates.
       if (updateInfo?.required) {
         navigation.replace('ForceUpdate', { storeUrl: updateInfo.storeUrl, message: updateInfo.message });
@@ -103,7 +103,7 @@ export default function LoadingScreen({ navigation }) {
       // Best-effort, fire-and-forget: retries a uid/name claim that previously
       // failed offline mid-registration (see CloudAuthScreen.js /
       // EditProfileScreen.js). Guests who never registered have nothing
-      // pending here, so this is a no-op for them — claimPlayerUid/claimName
+      // pending here, so this is a no-op for them - claimPlayerUid/claimName
       // now only fire from CloudAuthScreen's sign-up flow, not unconditionally
       // on every launch, so an install that never registers never reserves a
       // uid/name row server-side.
@@ -168,7 +168,7 @@ export default function LoadingScreen({ navigation }) {
       <LinearGradient colors={[C.BG_SCREEN + '73', 'transparent']} style={styles.vigTop} />
       <LinearGradient colors={['transparent', C.BG_SCREEN + 'B8', C.BG_SCREEN + 'F7']} style={styles.vigBottom} />
 
-      {/* Off-screen image pre-decoder — 0×0, hidden behind the splash */}
+      {/* Off-screen image pre-decoder - 0×0, hidden behind the splash */}
       <View style={styles.preloadContainer} pointerEvents="none">
         {PRELOAD_SOURCES.map((src, i) => (
           <Image key={i} source={src} style={styles.preloadImg} />
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   vigTop:    { position: 'absolute', top: 0, left: 0, right: 0, height: '25%' },
   vigBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '42%' },
 
-  // Off-screen preload container — clipped to 0×0, invisible to the user
+  // Off-screen preload container - clipped to 0×0, invisible to the user
   preloadContainer: {
     position: 'absolute',
     width: 0, height: 0,

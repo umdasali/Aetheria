@@ -328,7 +328,7 @@ export const ACHIEVEMENT_DEFS = [
     id:       'tower_300',
     category: 'tower',
     title:    'Eternal Sovereign',
-    desc:     'Reach the top — Tower Floor 300',
+    desc:     'Reach the top Tower Floor 300',
     icon:     'layers-outline',
     trackKey: 'towerHighestFloor',
     target:   300,

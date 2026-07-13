@@ -40,7 +40,7 @@ const MEDALS       = [null, MEDAL_GOLD, MEDAL_SILVER, MEDAL_BRONZE];
 // ── Per-tab response cache (prevents redundant fetches) ───────────────────────
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const _cache = new Map(); // key: category → { data, ownRank, ownScore, ownUserId, ts }
-// The user the cache belongs to — when it changes (sign in/out/switch) the cache
+// The user the cache belongs to - when it changes (sign in/out/switch) the cache
 // is wiped so one account never shows another's rank.
 let _cacheUserId = null;
 
@@ -192,12 +192,12 @@ const av = StyleSheet.create({
   txt:  { fontWeight: '900' },
 });
 
-// ── Champion card (rank #1 — full width, gold, shimmer) ───────────────────────
+// ── Champion card (rank #1 - full width, gold, shimmer) ───────────────────────
 function ChampionCard({ player, unit }) {
   const empty   = !player;
   const shimmer = useRef(new Animated.Value(-1)).current;
   useEffect(() => {
-    // Only animate when there's a champion — the sweep view isn't rendered when empty.
+    // Only animate when there's a champion - the sweep view isn't rendered when empty.
     if (empty) return;
     const anim = Animated.loop(
       Animated.timing(shimmer, { toValue: 1, duration: 2200, useNativeDriver: true })
@@ -422,7 +422,7 @@ function YourRankCard({ rank, score, name, unit, signedIn, onRegister }) {
                 <Text style={yr.rankHash}>#</Text>
                 <Text style={yr.rankNum}>{rank}</Text>
               </>
-            : <Text style={yr.unranked}>—</Text>
+            : <Text style={yr.unranked}>-</Text>
           }
         </View>
       </TouchableOpacity>
@@ -466,7 +466,7 @@ const yr = StyleSheet.create({
 const RankRow = React.memo(function RankRow({ item, ownUserId }) {
   const isTop3 = item.rank <= 3;
   const tier   = isTop3 ? TIER[item.rank - 1] : null;
-  // Identity is matched by user id — never by rank (ties share a rank number).
+  // Identity is matched by user id - never by rank (ties share a rank number).
   const isOwn  = !!ownUserId && item.user_id === ownUserId;
   return (
     <View style={[rr.row, isOwn && rr.rowOwn, isTop3 && { backgroundColor: tier.bg }]}>
@@ -545,12 +545,12 @@ export default function LeaderboardScreen({ navigation }) {
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
   // Score submission is a no-op for guests (submitScore returns 'not_signed_in'
-  // instead of failing loudly) — track this separately so YourRankCard can
+  // instead of failing loudly) - track this separately so YourRankCard can
   // route them to registration instead of silently showing an empty rank.
   const [signedIn,  setSignedIn]  = useState(!!getUser());
   useEffect(() => onAuthChanged(user => setSignedIn(!!user)), []);
 
-  // Monotonic request id — only the most recent load is allowed to commit state,
+  // Monotonic request id - only the most recent load is allowed to commit state,
   // so a slow response for a tab the user already left can't overwrite the view.
   const reqIdRef = useRef(0);
 
@@ -627,7 +627,7 @@ export default function LeaderboardScreen({ navigation }) {
     }
   }, [activeTab, scoreForTab, playerProfile, checkTowerWeekReset]);
 
-  // Reload whenever the tab changes. loadLeaderboard is intentionally omitted —
+  // Reload whenever the tab changes. loadLeaderboard is intentionally omitted -
   // it already closes over activeTab, and listing it would re-fire on unrelated
   // store changes (score/profile) mid-view.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -706,7 +706,7 @@ export default function LeaderboardScreen({ navigation }) {
       {/* ── Body ────────────────────────────────────────────────────────── */}
       <View style={s.body}>
         {loading && rows.length === 0 ? (
-          // Skeleton only on a cold load — a refresh over existing data keeps the
+          // Skeleton only on a cold load - a refresh over existing data keeps the
           // content on screen (the header spinner signals the in-flight request).
           <>
             <LeftPanelSkeleton />
@@ -746,12 +746,12 @@ export default function LeaderboardScreen({ navigation }) {
                 <Text style={[s.colHdr, { width: 56, textAlign: 'right' }]}>{unit}</Text>
               </View>
 
-              {/* Non-blocking error banner — shown when a refresh failed but we
+              {/* Non-blocking error banner - shown when a refresh failed but we
                   still have data to display underneath. */}
               {error && rows.length > 0 && (
                 <View style={s.errBanner}>
                   <Ionicons name="cloud-offline-outline" size={rs(16)} color={C.DANGER} />
-                  <Text style={s.errBannerTxt} numberOfLines={1}>Couldn’t refresh — showing saved ranks</Text>
+                  <Text style={s.errBannerTxt} numberOfLines={1}>Couldn’t refresh - showing saved ranks</Text>
                 </View>
               )}
 

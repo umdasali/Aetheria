@@ -29,9 +29,9 @@ export const FACTIONS = {
     accentColor: '#D7BDE2',
     image: require('../../assets/faction/VOIDMARK.webp'),
   },
-  // Sand-and-moon dynasty realm — Egyptian-inspired desert kingdom of dunes,
-  // moonlit nights, and the honored dead. (NOT sun-aligned — sand & moon.)
-  // NOTE: KHEMARA.png is a placeholder copy — swap in the real faction emblem.
+  // Sand-and-moon dynasty realm - Egyptian-inspired desert kingdom of dunes,
+  // moonlit nights, and the honored dead. (NOT sun-aligned - sand & moon.)
+  // NOTE: KHEMARA.png is a placeholder copy - swap in the real faction emblem.
   KHEMARA: {
     name: 'KHEMARA',
     color: '#E0912E',
@@ -54,7 +54,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'EMB-01-KIRA',
     image: require('../../assets/heroes/hero_001.webp'),
-    about: 'A relentless thunder mage who channels raw storm energy into devastating chain strikes. She was exiled from EMBERVEIL for refusing orders and now fights entirely on her own terms. She held the ember throne through three cycles of dark silence — and stepped aside the moment its true sovereign returned, without a word asked or given.',
+    about: 'A relentless thunder mage who channels raw storm energy into devastating chain strikes. She was exiled from EMBERVEIL for refusing orders and now fights entirely on her own terms. She held the ember throne through three cycles of dark silence - and stepped aside the moment its true sovereign returned, without a word asked or given.',
     hp: 3400, atk: 600, def: 185, crit: 550,
     skills: [
       { name: 'Chain Lightning', cost: 2, description: 'Arcs a bolt between all enemies, chaining three times.', damage: 1.8 },
@@ -106,7 +106,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'GLA-01-YELENA',
     image: require('../../assets/heroes/hero_003.webp'),
-    about: 'Supreme ice mage of GLACIARA. Yelena channels glacial frost into devastating arcane constructs — her crystalline spell-towers and blizzard barriers are considered masterpieces of the frozen battlefield.',
+    about: 'Supreme ice mage of GLACIARA. Yelena channels glacial frost into devastating arcane constructs - her crystalline spell-towers and blizzard barriers are considered masterpieces of the frozen battlefield.',
     hp: 3000, atk: 640, def: 155, crit: 580,
     skills: [
       { name: 'Frost Lance',    cost: 2, description: 'Hurls razor-sharp ice lances at the enemy.', damage: 2.0 },
@@ -184,7 +184,7 @@ export const HEROES = [
     class: 'Support',
     cardId: 'SUN-01-SOL',
     image: require('../../assets/heroes/hero_006.webp'),
-    about: 'A sacred herald of SUNSPIRE who fires blessed light arrows that both weaken foes and restore allies. His aim is guided by solar energy — once released, his arrows never miss.',
+    about: 'A sacred herald of SUNSPIRE who fires blessed light arrows that both weaken foes and restore allies. His aim is guided by solar energy - once released, his arrows never miss.',
     hp: 3700, atk: 400, def: 230, crit: 370,
     skills: [
       { name: 'Holy Arrow',   cost: 1, description: 'A sacred arrow that weakens enemy defenses.', damage: 1.2 },
@@ -288,7 +288,7 @@ export const HEROES = [
     class: 'Support',
     cardId: 'EMB-04-TARA',
     image: require('../../assets/heroes/hero_010.webp'),
-    about: 'EMBERVEIL\'s fire-dancing sentinel. Tara amplifies her allies with volcanic energy while her own movements flow like living flame — impossible to track and lethal to approach.',
+    about: 'EMBERVEIL\'s fire-dancing sentinel. Tara amplifies her allies with volcanic energy while her own movements flow like living flame - impossible to track and lethal to approach.',
     hp: 3300, atk: 320, def: 260, crit: 340,
     skills: [
       { name: 'Fire Waltz',   cost: 1, description: 'Dances through flames raising team attack power.', damage: 0.8 },
@@ -340,7 +340,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'SUN-03-AURA',
     image: require('../../assets/heroes/hero_012.webp'),
-    about: 'The Radiant Sovereign of SUNSPIRE — chosen not by bloodline or election but by the light itself during the Ceremony of Ascension. Aura commands solar energy and sacred flame at a level no mage born of training can replicate. Her brilliance on the battlefield is not considered divine. It is.',
+    about: 'The Radiant Sovereign of SUNSPIRE - chosen not by bloodline or election but by the light itself during the Ceremony of Ascension. Aura commands solar energy and sacred flame at a level no mage born of training can replicate. Her brilliance on the battlefield is not considered divine. It is.',
     hp: 3400, atk: 760, def: 175, crit: 700, sovereign: true,
     skills: [
       { name: 'Solar Rend',   cost: 2, description: 'Channels concentrated sovereign solar energy that ignores elemental resistances.', damage: 2.6 },
@@ -348,7 +348,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Divine Radiance',
-      description: 'Calls down the full sovereign power of SUNSPIRE\'s sacred flame — absolute holy light consuming all enemies at once and restoring the team.',
+      description: 'Calls down the full sovereign power of SUNSPIRE\'s sacred flame - absolute holy light consuming all enemies at once and restoring the team.',
       damage: 6.0,
       effect: 'Stuns all enemies 2 turns; heals entire team 30% HP; removes all debuffs from allies',
     },
@@ -366,7 +366,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VMK-03-OMEN',
     image: require('../../assets/heroes/hero_013.webp'),
-    about: 'A void scholar who has spent decades studying entities older than recorded history. Omen perceives abyss energy the way others perceive sound — as constant, layered information. She left VOIDMARK\'s inner court when she realized the court feared what she knew more than they feared the void itself.',
+    about: 'A void scholar who has spent decades studying entities older than recorded history. Omen perceives abyss energy the way others perceive sound - as constant, layered information. She left VOIDMARK\'s inner court when she realized the court feared what she knew more than they feared the void itself.',
     hp: 3000, atk: 580, def: 155, crit: 540,
     skills: [
       { name: 'Void Reading', cost: 2, description: 'Channels dimensional knowledge into a crushing void strike that bypasses barriers.', damage: 2.3 },
@@ -504,7 +504,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'KHE-01-NEFRET',
     image: require('../../assets/heroes/hero_018.webp'),
-    about: 'A moonlit huntress of KHEMARA who stalks the dunes after dark, running down corrupted things with twin blades that drink the night sky. Nefret strikes with blinding speed and is gone before her quarry can register the attack — only a settling of cold sand where she stood remains.',
+    about: 'A moonlit huntress of KHEMARA who stalks the dunes after dark, running down corrupted things with twin blades that drink the night sky. Nefret strikes with blinding speed and is gone before her quarry can register the attack - only a settling of cold sand where she stood remains.',
     hp: 3500, atk: 530, def: 200, crit: 480,
     skills: [
       { name: 'Moon Fang',      cost: 1, description: 'A swift moon-edged strike that bites deeper than the dark it came from.', damage: 1.5 },
@@ -591,7 +591,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'EMB-06-NYX',
     image: require('../../assets/heroes/hero_021.webp'),
-    about: 'A volatile mage of EMBERVEIL who weaponises wildfire in its purest form. Nyx refuses to contain her power — she simply feeds it. Enemies who survive her opening blast rarely last long enough to regret it.',
+    about: 'A volatile mage of EMBERVEIL who weaponises wildfire in its purest form. Nyx refuses to contain her power - she simply feeds it. Enemies who survive her opening blast rarely last long enough to regret it.',
     hp: 2900, atk: 555, def: 155, crit: 510,
     skills: [
       { name: 'Scorch',      cost: 2, description: 'Ignites a target in uncontrolled wildfire dealing heavy damage.', damage: 1.8 },
@@ -673,7 +673,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'GLA-05-IVAN',
     image: require('../../assets/heroes/hero_024.webp'),
-    about: 'The lone wolf hunter of GLACIARA — an anomaly among the faction\'s warrior elite. Ivan moves through frozen terrain like a living shadow, shattering targets with strikes that exploit the brittleness extreme cold creates in both armour and flesh.',
+    about: 'The lone wolf hunter of GLACIARA - an anomaly among the faction\'s warrior elite. Ivan moves through frozen terrain like a living shadow, shattering targets with strikes that exploit the brittleness extreme cold creates in both armour and flesh.',
     hp: 3400, atk: 620, def: 200, crit: 570,
     skills: [
       { name: 'Ice Shatter',   cost: 2, description: 'A devastating strike that shatters frozen targets for bonus damage.', damage: 2.1 },
@@ -701,7 +701,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'GLA-06-SNEZHANA',
     image: require('../../assets/heroes/hero_025.webp'),
-    about: 'A storm-class mage of GLACIARA who conjures blizzards on command. Snezhana prefers overwhelming area coverage over precision — her philosophy is simple: if enough ice falls, nothing survives.',
+    about: 'A storm-class mage of GLACIARA who conjures blizzards on command. Snezhana prefers overwhelming area coverage over precision - her philosophy is simple: if enough ice falls, nothing survives.',
     hp: 2950, atk: 595, def: 160, crit: 545,
     skills: [
       { name: 'Hailstorm',    cost: 2, description: 'Conjures a barrage of ice shards striking all enemies.', damage: 1.9 },
@@ -757,7 +757,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'SUN-05-CYREN',
     image: require('../../assets/heroes/hero_027.webp'),
-    about: 'A prism mage of SUNSPIRE who treats combat as a geometry problem. Cyren refracts raw sunlight into precision arcane beams — find the correct angle and a single ray can pass through an entire enemy formation.',
+    about: 'A prism mage of SUNSPIRE who treats combat as a geometry problem. Cyren refracts raw sunlight into precision arcane beams - find the correct angle and a single ray can pass through an entire enemy formation.',
     hp: 3050, atk: 610, def: 160, crit: 560,
     skills: [
       { name: 'Prism Ray',     cost: 2, description: 'Refracts a solar beam through multiple enemies in a line.', damage: 2.2 },
@@ -843,11 +843,11 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'VRD-05-IRIS',
     image: require('../../assets/heroes/hero_030.webp'),
-    about: 'The Thornborn Queen of VERDANIA — crowned by the jungle itself during the Night of Blossoming when the eldest trees flowered for the first time in a thousand years. Iris feels every wound dealt to her forest as if carved into her own skin. On the battlefield she is the forest: she does not hunt her targets, she becomes the terrain they are standing on.',
+    about: 'The Thornborn Queen of VERDANIA - crowned by the jungle itself during the Night of Blossoming when the eldest trees flowered for the first time in a thousand years. Iris feels every wound dealt to her forest as if carved into her own skin. On the battlefield she is the forest: she does not hunt her targets, she becomes the terrain they are standing on.',
     hp: 4000, atk: 780, def: 225, crit: 720, sovereign: true,
     skills: [
       { name: 'Thorn Blitz',      cost: 2, description: 'Launches a sovereign volley of tracking thorns that pierce through elemental defenses.', damage: 2.4 },
-      { name: 'Predator\'s Mark', cost: 3, description: 'Marks an enemy — all subsequent attacks deal massively increased damage to them.', damage: 3.0 },
+      { name: 'Predator\'s Mark', cost: 3, description: 'Marks an enemy - all subsequent attacks deal massively increased damage to them.', damage: 3.0 },
     ],
     trumpCard: {
       name: 'Verdant Fury',
@@ -898,7 +898,7 @@ export const HEROES = [
     class: 'Defender',
     cardId: 'VRD-07-RAE',
     image: require('../../assets/heroes/hero_032.webp'),
-    about: 'A sentinel of VERDANIA who has merged her body with living bark and vine. Rae\'s skin is reinforced by constantly regenerating plant-matter — the longer a fight lasts, the harder she becomes to damage.',
+    about: 'A sentinel of VERDANIA who has merged her body with living bark and vine. Rae\'s skin is reinforced by constantly regenerating plant-matter - the longer a fight lasts, the harder she becomes to damage.',
     hp: 6500, atk: 330, def: 545, crit: 180,
     skills: [
       { name: 'Bark Shield',  cost: 1, description: 'Hardens bark armour around self or an ally absorbing the next attack.', damage: 0 },
@@ -926,7 +926,7 @@ export const HEROES = [
     class: 'Defender',
     cardId: 'VMK-04-NYX',
     image: require('../../assets/heroes/hero_033.webp'),
-    about: 'The unopposed sovereign of VOIDMARK — a void-forged empress whose body has merged with the abyss itself and been reborn stronger. Nyx does not debate authority; in a realm where reality tears without warning, she is the only constant. Three challenger factions dissolved attempting to dethrone her. Their names are no longer spoken in VOIDMARK, which here is a fate more feared than death.',
+    about: 'The unopposed sovereign of VOIDMARK - a void-forged empress whose body has merged with the abyss itself and been reborn stronger. Nyx does not debate authority; in a realm where reality tears without warning, she is the only constant. Three challenger factions dissolved attempting to dethrone her. Their names are no longer spoken in VOIDMARK, which here is a fate more feared than death.',
     hp: 9500, atk: 500, def: 800, crit: 300, sovereign: true,
     skills: [
       { name: 'Void Absorb',   cost: 1, description: 'Pulls an incoming attack into sovereign void space, nullifying damage and storing energy for a counter-burst.', damage: 0 },
@@ -934,7 +934,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Void Sovereignty',
-      description: 'Asserts absolute dominion over the void — opens a sovereign rift beneath all enemies and detonates the dimensional collapse inward.',
+      description: 'Asserts absolute dominion over the void - opens a sovereign rift beneath all enemies and detonates the dimensional collapse inward.',
       damage: 5.8,
       effect: 'Stuns all enemies 2 turns; heals self 25% HP',
     },
@@ -953,7 +953,7 @@ export const HEROES = [
     class: 'Support',
     cardId: 'VMK-05-NERA',
     image: require('../../assets/heroes/hero_034.webp'),
-    about: 'A void medium of VOIDMARK who siphons life force from the battlefield and redistributes it among her allies. Nera walks the thin line between healing and corruption — her methods work, and she stopped asking whether they should.',
+    about: 'A void medium of VOIDMARK who siphons life force from the battlefield and redistributes it among her allies. Nera walks the thin line between healing and corruption - her methods work, and she stopped asking whether they should.',
     hp: 3800, atk: 350, def: 250, crit: 300,
     skills: [
       { name: 'Life Siphon',   cost: 1, description: 'Drains life energy from an enemy, partially restoring an ally\'s HP.', damage: 0.8 },
@@ -979,7 +979,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VMK-07-VESPER',
     image: require('../../assets/heroes/hero_036.webp'),
-    about: 'A supreme void mage of VOIDMARK whose consciousness partially inhabits the space between dimensions. Vesper doesn\'t merely cast spells — she rewrites the rules of engagement at will, cursing entire formations and bending dimensional law to her design.',
+    about: 'A supreme void mage of VOIDMARK whose consciousness partially inhabits the space between dimensions. Vesper doesn\'t merely cast spells - she rewrites the rules of engagement at will, cursing entire formations and bending dimensional law to her design.',
     hp: 3400, atk: 640, def: 200, crit: 580,
     skills: [
       { name: 'Void Curse',    cost: 2, description: 'Brands an enemy with a consuming void mark that amplifies all damage they receive for 2 turns.', damage: 2.2 },
@@ -1032,11 +1032,11 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'GLA-08-ZIMOSLAVA',
     image: require('../../assets/heroes/hero_037.webp'),
-    about: 'The original sovereign who built GLACIARA from nothing and sacrificed her throne to seal an elder darkness that would have consumed the realm. Crystallized into legend for centuries, she has awakened to find pretenders sitting her seat. Her power does not ask for recognition — it simply makes every other ice mage in the world feel like they are standing in snow while she commands the glacier itself.',
+    about: 'The original sovereign who built GLACIARA from nothing and sacrificed her throne to seal an elder darkness that would have consumed the realm. Crystallized into legend for centuries, she has awakened to find pretenders sitting her seat. Her power does not ask for recognition - it simply makes every other ice mage in the world feel like they are standing in snow while she commands the glacier itself.',
     hp: 3500, atk: 780, def: 185, crit: 710, sovereign: true,
     skills: [
       { name: 'Sovereign Frost', cost: 2, description: 'Releases ice of absolute sovereign authority, freezing and shattering target defenses simultaneously.', damage: 2.6 },
-      { name: 'Glacial Decree',  cost: 3, description: 'Issues a sovereign decree in absolute zero — all enemies take ice damage and have DEF reduced 30%.', damage: 2.2 },
+      { name: 'Glacial Decree',  cost: 3, description: 'Issues a sovereign decree in absolute zero - all enemies take ice damage and have DEF reduced 30%.', damage: 2.2 },
     ],
     trumpCard: {
       name: 'Throne of Eternal Ice',
@@ -1058,7 +1058,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VMK-08-VEYRA',
     image: require('../../assets/heroes/hero_038.webp'),
-    about: 'A former scholar of forbidden void texts who crossed the line between knowledge and corruption. Veyra no longer reads the void — she channels it directly through her nervous system, making her spells faster and more unpredictable than any trained mage alive.',
+    about: 'A former scholar of forbidden void texts who crossed the line between knowledge and corruption. Veyra no longer reads the void - she channels it directly through her nervous system, making her spells faster and more unpredictable than any trained mage alive.',
     hp: 3100, atk: 560, def: 185, crit: 510,
     skills: [
       { name: 'Void Pulse',   cost: 2, description: 'Sends a concentrated burst of void energy that phases through physical defenses entirely.', damage: 2.0 },
@@ -1084,7 +1084,7 @@ export const HEROES = [
     class: 'Defender',
     cardId: 'SUN-08-CAELUM',
     image: require('../../assets/heroes/hero_039.webp'),
-    about: 'A veteran paladin of SUNSPIRE who has survived more campaigns than any other active knight on the line. Caelum fights from the front with practiced precision — his sacred shield has absorbed blows that would have ended entire battles, and he has never once lost a comrade under his watch.',
+    about: 'A veteran paladin of SUNSPIRE who has survived more campaigns than any other active knight on the line. Caelum fights from the front with practiced precision - his sacred shield has absorbed blows that would have ended entire battles, and he has never once lost a comrade under his watch.',
     hp: 6800, atk: 350, def: 580, crit: 220,
     skills: [
       { name: 'Sacred Guard',   cost: 1, description: 'Raises a divine barrier blocking the next attack targeting any ally.', damage: 0 },
@@ -1110,15 +1110,15 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'EMB-09-RAVENNA',
     image: require('../../assets/heroes/hero_041.webp'),
-    about: 'The original sovereign of EMBERVEIL — swallowed by a dimensional rift three cycles of the volcanic moon ago while sealing a catastrophic breach in the realm. She has returned carrying fire from the other side of dimensions, fire that burns even those immune to ordinary flame. Kira Voltz surrendered the throne the moment Ravenna crossed the border. Neither of them had to say a word.',
+    about: 'The original sovereign of EMBERVEIL - swallowed by a dimensional rift three cycles of the volcanic moon ago while sealing a catastrophic breach in the realm. She has returned carrying fire from the other side of dimensions, fire that burns even those immune to ordinary flame. Kira Voltz surrendered the throne the moment Ravenna crossed the border. Neither of them had to say a word.',
     hp: 4200, atk: 820, def: 235, crit: 750, sovereign: true,
     skills: [
-      { name: 'Sovereign Flame',   cost: 2, description: 'Channels fire from beyond dimensions — pierces all resistances and burns through elemental defenses.', damage: 2.6 },
+      { name: 'Sovereign Flame',   cost: 2, description: 'Channels fire from beyond dimensions - pierces all resistances and burns through elemental defenses.', damage: 2.6 },
       { name: 'Dimensional Pyre',  cost: 3, description: 'Opens a rift of sovereign fire that scorches all enemies simultaneously, ignoring barriers.', damage: 2.2 },
     ],
     trumpCard: {
       name: 'Emberveil Apocalypse',
-      description: 'Unleashes the full sovereign fire of EMBERVEIL — dimensional flame consuming all enemies in a cataclysm nothing was built to resist.',
+      description: 'Unleashes the full sovereign fire of EMBERVEIL - dimensional flame consuming all enemies in a cataclysm nothing was built to resist.',
       damage: 6.2,
       effect: 'Stuns all enemies 2 turns; heals all allies 25% HP',
     },
@@ -1162,7 +1162,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'GLA-10-OKSANA',
     image: require('../../assets/heroes/hero_042.webp'),
-    about: 'A crystallomancer from GLACIARA\'s deep research halls who spent three years studying the mathematical patterns of ice formation before ever casting her first offensive spell. Oksana treats combat like a theorem — isolate the variable, reduce it to zero. Her precision is unnerving, her frost constructs are flawless, and she has never once needed to improvise.',
+    about: 'A crystallomancer from GLACIARA\'s deep research halls who spent three years studying the mathematical patterns of ice formation before ever casting her first offensive spell. Oksana treats combat like a theorem - isolate the variable, reduce it to zero. Her precision is unnerving, her frost constructs are flawless, and she has never once needed to improvise.',
     hp: 3100, atk: 520, def: 188, crit: 472,
     skills: [
       { name: 'Frost Pulse',    cost: 2, description: 'Fires a concentrated crystalline pulse that slows movement and shatters enemy armour.', damage: 2.0 },
@@ -1188,7 +1188,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'EMB-10-KITSURI',
     image: require('../../assets/heroes/hero_043.webp'),
-    about: 'A nine-tailed kitsune swordswoman from EMBERVEIL\'s volcanic highlands who inherited her fox spirit bloodline\'s fire through every one of her tails — each one a different harmonic of the same impossible blaze. Kitsuri fights with the fluidity of fox spirit and the lethality of a blade master. Her enemies rarely live long enough to notice they saw the same move twice. When her ninth tail ignites, the battle is already over.',
+    about: 'A nine-tailed kitsune swordswoman from EMBERVEIL\'s volcanic highlands who inherited her fox spirit bloodline\'s fire through every one of her tails - each one a different harmonic of the same impossible blaze. Kitsuri fights with the fluidity of fox spirit and the lethality of a blade master. Her enemies rarely live long enough to notice they saw the same move twice. When her ninth tail ignites, the battle is already over.',
     hp: 4100, atk: 730, def: 248, crit: 665,
     skills: [
       { name: 'Fox Blaze',       cost: 2, description: 'Dashes through the enemy with a fire-wreathed blade strike, leaving a burning trail across the field.', damage: 2.2 },
@@ -1196,7 +1196,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Kitsune Inferno',
-      description: 'All nine tails ignite simultaneously — the kitsune vanishes and reappears behind every enemy at once in a single catastrophic firestorm.',
+      description: 'All nine tails ignite simultaneously - the kitsune vanishes and reappears behind every enemy at once in a single catastrophic firestorm.',
       damage: 5.2,
       effect: 'Burns all enemies 3 turns; 50% chance to stun each target; heals all allies 20% HP',
     },
@@ -1214,7 +1214,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VRD-08-FENN',
     image: require('../../assets/heroes/hero_044.webp'),
-    about: 'A fox-spirit mage from VERDANIA\'s windswept canopy who draws power from the boundary between forest gale and root-bound earth. Rivals claim she doesn\'t cast magic — she simply asks the forest and sky to agree, and they always do. Her spells cross wind and nature with a fluidity that feels less like power and more like the forest itself changing its mind at speed.',
+    about: 'A fox-spirit mage from VERDANIA\'s windswept canopy who draws power from the boundary between forest gale and root-bound earth. Rivals claim she doesn\'t cast magic - she simply asks the forest and sky to agree, and they always do. Her spells cross wind and nature with a fluidity that feels less like power and more like the forest itself changing its mind at speed.',
     hp: 3000, atk: 535, def: 182, crit: 485,
     skills: [
       { name: 'Gale Blossom',    cost: 2, description: 'Whips up a vortex of petals and wind energy, striking all enemies in a spinning arc.', damage: 1.9 },
@@ -1240,7 +1240,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VMK-09-UMBRA',
     image: require('../../assets/heroes/hero_045.webp'),
-    about: 'A void-dark dual-channeler of VOIDMARK who has learned to weaponize the tension between dark energy and void space — the interference pattern between two incompatible forces, turned into a controlled detonation. Umbra doesn\'t choose between darkness and void; she operates in the frequency where they cancel each other out, and that frequency is the most destructive thing in either spectrum.',
+    about: 'A void-dark dual-channeler of VOIDMARK who has learned to weaponize the tension between dark energy and void space - the interference pattern between two incompatible forces, turned into a controlled detonation. Umbra doesn\'t choose between darkness and void; she operates in the frequency where they cancel each other out, and that frequency is the most destructive thing in either spectrum.',
     hp: 3200, atk: 500, def: 172, crit: 455,
     skills: [
       { name: 'Dark Void Pulse', cost: 2, description: 'Channels dark and void energy simultaneously, creating a destructive interference burst at the target.', damage: 1.8 },
@@ -1266,7 +1266,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'VMK-10-KAIDEN',
     image: require('../../assets/heroes/hero_046.webp'),
-    about: 'Commander of VOIDMARK\'s void-elite rapid response force — a unit that operates beyond formal orders, answering only to the sovereign\'s silence and its own doctrine of absolute superiority. Kaiden leads through example and ends debates with results. His void-enhanced firearms don\'t fire conventional rounds; they fire collapsed dimensional points that arrive before they are shot.',
+    about: 'Commander of VOIDMARK\'s void-elite rapid response force - a unit that operates beyond formal orders, answering only to the sovereign\'s silence and its own doctrine of absolute superiority. Kaiden leads through example and ends debates with results. His void-enhanced firearms don\'t fire conventional rounds; they fire collapsed dimensional points that arrive before they are shot.',
     hp: 4400, atk: 498, def: 258, crit: 445,
     skills: [
       { name: 'Void Round',          cost: 1, description: 'Fires a collapsed dimensional point that bypasses physical armour entirely.', damage: 1.5 },
@@ -1274,7 +1274,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Sovereign\'s Command',
-      description: 'Issues the ultimate elite force command — every void-round in the arsenal fires simultaneously across all targets.',
+      description: 'Issues the ultimate elite force command - every void-round in the arsenal fires simultaneously across all targets.',
       damage: 4.2,
       effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
     },
@@ -1292,7 +1292,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VMK-11-MORVAN',
     image: require('../../assets/heroes/hero_047.webp'),
-    about: 'A dark arts scholar of VOIDMARK who decided that understanding darkness was insufficient — immersion was required. Morvan has spent more time inside theoretical dark-space constructs than in the physical world, which has given his spells a depth that most dark mages cannot reach from the outside. He still writes detailed academic papers on every spell he casts. After the battle.',
+    about: 'A dark arts scholar of VOIDMARK who decided that understanding darkness was insufficient - immersion was required. Morvan has spent more time inside theoretical dark-space constructs than in the physical world, which has given his spells a depth that most dark mages cannot reach from the outside. He still writes detailed academic papers on every spell he casts. After the battle.',
     hp: 3300, atk: 545, def: 185, crit: 495,
     skills: [
       { name: 'Dark Codex',    cost: 2, description: 'Channels a textbook-precise dark energy sequence that drains the target\'s life force.', damage: 1.9 },
@@ -1300,7 +1300,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Living Dissertation',
-      description: 'Releases a complete academic dark-energy construct — every formula, every derivation, detonated at once across all enemies.',
+      description: 'Releases a complete academic dark-energy construct - every formula, every derivation, detonated at once across all enemies.',
       damage: 4.5,
       effect: 'Drains life from all enemies healing self 30% max HP; stuns all enemies 1 turn',
     },
@@ -1326,7 +1326,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Dual Sanctification',
-      description: 'Both blades ignite with pure divine radiance — Aeron performs a continuous sanctification slash across every enemy on the field.',
+      description: 'Both blades ignite with pure divine radiance - Aeron performs a continuous sanctification slash across every enemy on the field.',
       damage: 4.6,
       effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
     },
@@ -1344,7 +1344,7 @@ export const HEROES = [
     class: 'Support',
     cardId: 'SUN-10-LYRA',
     image: require('../../assets/heroes/hero_049.webp'),
-    about: 'One of three Flame sisters — born beside Nyx Flame of EMBERVEIL and Terra Flame of VERDANIA, and uniquely blessed with holy light where her sisters carry fire and earth. Lyra joined SUNSPIRE not to leave her family behind but because the light pulled in a direction she could not ignore. She has spent years learning that illumination and fire have always had the same source, just different forms.',
+    about: 'One of three Flame sisters - born beside Nyx Flame of EMBERVEIL and Terra Flame of VERDANIA, and uniquely blessed with holy light where her sisters carry fire and earth. Lyra joined SUNSPIRE not to leave her family behind but because the light pulled in a direction she could not ignore. She has spent years learning that illumination and fire have always had the same source, just different forms.',
     hp: 3500, atk: 345, def: 242, crit: 292,
     skills: [
       { name: 'Holy Warmth',    cost: 1, description: 'Channels holy light into the most wounded ally, restoring HP and granting brief damage resistance.', damage: 0 },
@@ -1352,7 +1352,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Threefold Radiance',
-      description: 'Calls upon the bond of three sisters — fire, earth, and holy light combined — flooding the battlefield with restorative sacred energy.',
+      description: 'Calls upon the bond of three sisters - fire, earth, and holy light combined - flooding the battlefield with restorative sacred energy.',
       damage: 1.8,
       effect: 'Heals all allies 35% max HP; stuns all enemies 1 turn',
     },
@@ -1370,7 +1370,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VRD-09-TERRA',
     image: require('../../assets/heroes/hero_050.webp'),
-    about: 'One of three Flame sisters — born alongside Nyx Flame of EMBERVEIL and Lyra Flame of SUNSPIRE, and drawn from birth toward the root rather than the flame. Terra watched one sister burn everything she touches and another illuminate it, and chose instead to grow things. She is gentle in three languages and devastating in all of them.',
+    about: 'One of three Flame sisters - born alongside Nyx Flame of EMBERVEIL and Lyra Flame of SUNSPIRE, and drawn from birth toward the root rather than the flame. Terra watched one sister burn everything she touches and another illuminate it, and chose instead to grow things. She is gentle in three languages and devastating in all of them.',
     hp: 3700, atk: 435, def: 218, crit: 388,
     skills: [
       { name: 'Root Surge',    cost: 2, description: 'Calls roots from the earth to bind and poison a single target, draining their vitality into the soil.', damage: 1.8 },
@@ -1378,7 +1378,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Earthfire Bloom',
-      description: 'Draws on the fire of her bloodline through earth and root — a volcanic bloom erupts across the entire field, healing allies and stunning all enemies.',
+      description: 'Draws on the fire of her bloodline through earth and root - a volcanic bloom erupts across the entire field, healing allies and stunning all enemies.',
       damage: 3.8,
       effect: 'Heals allies 20% max HP; stuns all enemies 1 turn',
     },
@@ -1396,7 +1396,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VMK-12-MIRA',
     image: require('../../assets/heroes/hero_051.webp'),
-    about: 'VOIDMARK\'s sovereign Nyx Vael keeps no inner council — except one. Mira Vael is not royal by blood, not second in command, not a general; she is simply the one person in VOIDMARK whose counsel Nyx listens to without exception or question. No one knows what was said between them the day that arrangement began. No one has dared to ask. Mira\'s void magic is quiet and absolute — exactly like the trust that grants her access to the abyss throne.',
+    about: 'VOIDMARK\'s sovereign Nyx Vael keeps no inner council - except one. Mira Vael is not royal by blood, not second in command, not a general; she is simply the one person in VOIDMARK whose counsel Nyx listens to without exception or question. No one knows what was said between them the day that arrangement began. No one has dared to ask. Mira\'s void magic is quiet and absolute - exactly like the trust that grants her access to the abyss throne.',
     hp: 3400, atk: 640, def: 202, crit: 580,
     skills: [
       { name: 'Counsel of Void', cost: 2, description: 'Delivers a precise void curse drawn from sovereign-level void doctrine, reducing the target\'s power at its source.', damage: 2.1 },
@@ -1404,7 +1404,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Sovereign\'s Will',
-      description: 'Channels the full weight of Nyx Vael\'s sovereign void authority — a devastating edict that stuns all enemies and restores the caster.',
+      description: 'Channels the full weight of Nyx Vael\'s sovereign void authority - a devastating edict that stuns all enemies and restores the caster.',
       damage: 5.2,
       effect: 'Stuns all enemies 2 turns; heals self 20% HP',
     },
@@ -1448,7 +1448,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VRD-10-AVARA',
     image: require('../../assets/heroes/hero_053.webp'),
-    about: 'A nature mage of VERDANIA who arrived at her magical specialty by accident — she was trying to communicate with a wounded crow and ended up channeling the entire forest\'s awareness through the bird\'s dying perception. She has never been the same since. Avara\'s bird companions function as extensions of her senses, her range, and her power; every spell she casts arrives from an angle that shouldn\'t be possible.',
+    about: 'A nature mage of VERDANIA who arrived at her magical specialty by accident - she was trying to communicate with a wounded crow and ended up channeling the entire forest\'s awareness through the bird\'s dying perception. She has never been the same since. Avara\'s bird companions function as extensions of her senses, her range, and her power; every spell she casts arrives from an angle that shouldn\'t be possible.',
     hp: 3200, atk: 542, def: 188, crit: 492,
     skills: [
       { name: 'Feather Storm', cost: 2, description: 'Sends a flock of nature-infused birds to strike from impossible angles no defence can anticipate.', damage: 1.9 },
@@ -1456,17 +1456,17 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Murder of Crows',
-      description: 'Calls upon every bird companion at once — a dark tempest of nature-infused wings and thorns descends on all enemies from every direction.',
+      description: 'Calls upon every bird companion at once - a dark tempest of nature-infused wings and thorns descends on all enemies from every direction.',
       damage: 4.6,
       effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
     },
   },
 
   // ── hero_054 · KHEMARA · S · Female · Mage · SOVEREIGN · SHOP-EXCLUSIVE ─────
-  // Marquee shop-only Sovereign — the moon-queen who rules the new sand-and-moon
+  // Marquee shop-only Sovereign - the moon-queen who rules the new sand-and-moon
   // realm of KHEMARA. shopExclusive:true keeps her out of every gacha pool (see
   // SummonScreen). Ascends with Aetheria's Core (sovereign routing).
-  // NOTE: hero_054.webp is currently a placeholder copy — swap in the real art.
+  // NOTE: hero_054.webp is currently a placeholder copy - swap in the real art.
   {
     id: 'hero_054',
     name: 'Nefertari Shahrzad',
@@ -1478,15 +1478,15 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'KHE-EX-NEFERTARI',
     image: require('../../assets/heroes/hero_054.webp'),
-    about: 'The living moon-queen of KHEMARA — a sand dominion of obelisks, shifting dunes, and silver nights that bows to no other sovereign. Crowned not by daylight but by the full desert moon, Nefertari rules as goddess and pharaoh in one, her word law from the cooling sands to the deepest dunes. She cannot be summoned or won in battle; she descends only for those who seek her court directly, trailing a veil of moonlit dust that turns the night air to silver. To stand before her is to be weighed in the dark.',
+    about: 'The living moon-queen of KHEMARA - a sand dominion of obelisks, shifting dunes, and silver nights that bows to no other sovereign. Crowned not by daylight but by the full desert moon, Nefertari rules as goddess and pharaoh in one, her word law from the cooling sands to the deepest dunes. She cannot be summoned or won in battle; she descends only for those who seek her court directly, trailing a veil of moonlit dust that turns the night air to silver. To stand before her is to be weighed in the dark.',
     hp: 4300, atk: 800, def: 240, crit: 740, sovereign: true, shopExclusive: true,
     skills: [
-      { name: 'Lunar Verdict', cost: 2, description: 'Brands a single enemy under the cold light of the moon — silver judgment that pierces every resistance.', damage: 2.7 },
+      { name: 'Lunar Verdict', cost: 2, description: 'Brands a single enemy under the cold light of the moon - silver judgment that pierces every resistance.', damage: 2.7 },
       { name: 'Duneshroud',    cost: 3, description: 'Raises a blinding veil of moonlit sand that scours all enemies at once.', damage: 2.2 },
     ],
     trumpCard: {
       name: 'Dominion of the Moon',
-      description: 'Nefertari draws the full desert moon down over the battlefield — a tide of silver light and singing sand that buries every enemy while its glow mends her court.',
+      description: 'Nefertari draws the full desert moon down over the battlefield - a tide of silver light and singing sand that buries every enemy while its glow mends her court.',
       damage: 6.3,
       effect: 'Stuns all enemies 2 turns; heals all allies 30% HP',
     },
@@ -1504,7 +1504,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'KHE-02-KARIM',
     image: require('../../assets/heroes/hero_055.webp'),
-    about: 'A street-born sand conjurer who taught himself the old desert magic from half-buried scrolls salvaged out of collapsed tombs. Raw, untrained, and reckless — but the dunes answer him all the same, and KHEMARA has learned not to mock the boy who can turn an entire street into a swallowing pit of sand.',
+    about: 'A street-born sand conjurer who taught himself the old desert magic from half-buried scrolls salvaged out of collapsed tombs. Raw, untrained, and reckless - but the dunes answer him all the same, and KHEMARA has learned not to mock the boy who can turn an entire street into a swallowing pit of sand.',
     hp: 2850, atk: 500, def: 150, crit: 470,
     skills: [
       { name: 'Grit Scrawl',     cost: 1, description: 'Hurls a hastily-drawn glyph that flays a single enemy with razor-edged sand.', damage: 1.4 },
@@ -1530,7 +1530,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'KHE-03-ZUBAIDA',
     image: require('../../assets/heroes/hero_056.webp'),
-    about: 'The richest woman in KHEMARA — her vaults outshine the royal treasury and her gilded sigils turn an enemy\'s own vitality into tribute. Wealth, to Zubaida, is simply life that has not yet been collected. She funds the throne, owns half the delta, and has never once been told no.',
+    about: 'The richest woman in KHEMARA - her vaults outshine the royal treasury and her gilded sigils turn an enemy\'s own vitality into tribute. Wealth, to Zubaida, is simply life that has not yet been collected. She funds the throne, owns half the delta, and has never once been told no.',
     hp: 3050, atk: 600, def: 165, crit: 560,
     skills: [
       { name: 'Gilded Siphon', cost: 2, description: 'Brands a target with a gold sigil that bleeds its life away to the caster.', damage: 1.9 },
@@ -1556,7 +1556,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'KHE-04-HATHOR',
     image: require('../../assets/heroes/hero_057.webp'),
-    about: 'A temple dancer whose movements are a language older than KHEMARA itself. Those who watch her dance too long forget how to move at all — and by then the sand has already coiled around their ankles. The court calls her art devotion. Her enemies call it the last thing they saw.',
+    about: 'A temple dancer whose movements are a language older than KHEMARA itself. Those who watch her dance too long forget how to move at all - and by then the sand has already coiled around their ankles. The court calls her art devotion. Her enemies call it the last thing they saw.',
     hp: 2950, atk: 545, def: 158, crit: 510,
     skills: [
       { name: 'Veil Step',    cost: 2, description: 'A hypnotic spin that mesmerizes a single enemy as sand coils tight around it.', damage: 1.7 },
@@ -1564,7 +1564,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Dance of the Forgotten',
-      description: 'Performs the final movement no enemy can look away from — a desert trance that roots them where they stand.',
+      description: 'Performs the final movement no enemy can look away from - a desert trance that roots them where they stand.',
       damage: 4.4,
       effect: 'Stuns all enemies 1 turn',
     },
@@ -1590,7 +1590,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Unbroken Counsel',
-      description: 'Raises the full weight of the sovereign\'s aegis — shielding the court and burying those who dare approach the throne beneath the sand.',
+      description: 'Raises the full weight of the sovereign\'s aegis - shielding the court and burying those who dare approach the throne beneath the sand.',
       damage: 3.8,
       effect: 'Shields the team against the next hit; heals all allies 20% HP',
     },
@@ -1608,7 +1608,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'KHE-06-NITOCRIS',
     image: require('../../assets/heroes/hero_059.webp'),
-    about: 'KHEMARA\'s quietest law — the blade the throne never admits to owning. Nitocris moves through the dunes like a rumor and leaves only a settling of sand where a target used to breathe. The court does not speak of her. That is precisely how she prefers it.',
+    about: 'KHEMARA\'s quietest law - the blade the throne never admits to owning. Nitocris moves through the dunes like a rumor and leaves only a settling of sand where a target used to breathe. The court does not speak of her. That is precisely how she prefers it.',
     hp: 3400, atk: 560, def: 195, crit: 600,
     skills: [
       { name: 'Scorpion\'s Kiss',  cost: 1, description: 'A lightning-fast khopesh slash that lands before it can be seen.', damage: 1.6 },
@@ -1616,7 +1616,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Verdict of the Sands',
-      description: 'Delivers the throne\'s unspoken sentence — a flurry of unseen strikes that buries the battlefield in settling sand.',
+      description: 'Delivers the throne\'s unspoken sentence - a flurry of unseen strikes that buries the battlefield in settling sand.',
       damage: 4.9,
       effect: 'Stuns all enemies 1 turn',
     },
@@ -1634,11 +1634,11 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'KHE-07-THOTH',
     image: require('../../assets/heroes/hero_060.webp'),
-    about: 'KHEMARA\'s lawgiver — keeper of the great scales and the edicts carved into obelisk-stone, sworn to the moon under which all verdicts are weighed. When Thoth reads a judgment aloud, the guilty feel their defenses crack like moon-bleached clay long before the sentence ever lands. The law, he insists, is not cruelty. It is simply weight, applied evenly.',
+    about: 'KHEMARA\'s lawgiver - keeper of the great scales and the edicts carved into obelisk-stone, sworn to the moon under which all verdicts are weighed. When Thoth reads a judgment aloud, the guilty feel their defenses crack like moon-bleached clay long before the sentence ever lands. The law, he insists, is not cruelty. It is simply weight, applied evenly.',
     hp: 3000, atk: 555, def: 162, crit: 515,
     skills: [
       { name: 'Edict of Ruin',      cost: 2, description: 'Pronounces a verdict that fractures a single enemy\'s defenses with a sentence of cold moonlight.', damage: 1.8 },
-      { name: 'Scales of Judgment', cost: 3, description: 'Weighs all enemies and finds them wanting — answering with a cascade of silver moonfire.', damage: 2.1 },
+      { name: 'Scales of Judgment', cost: 3, description: 'Weighs all enemies and finds them wanting - answering with a cascade of silver moonfire.', damage: 2.1 },
     ],
     trumpCard: {
       name: 'Final Decree',
@@ -1686,7 +1686,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'EMB-11-HIGAN',
     image: require('../../assets/heroes/hero_062.webp'),
-    about: 'Named for the red spider lily that blooms only where the dead have passed, Higan carries that same quiet finality into battle — her flame doesn\'t rage, it simply arrives, and by the time it\'s noticed the outcome is already decided. EMBERVEIL keeps her at arm\'s length; even fire respects an ending.',
+    about: 'Named for the red spider lily that blooms only where the dead have passed, Higan carries that same quiet finality into battle - her flame doesn\'t rage, it simply arrives, and by the time it\'s noticed the outcome is already decided. EMBERVEIL keeps her at arm\'s length; even fire respects an ending.',
     hp: 3150, atk: 565, def: 180, crit: 525,
     skills: [
       { name: 'Higanbana Bloom', cost: 2, description: 'Unfurls a blossom of scorching petals across a single target.', damage: 1.8 },
@@ -1712,7 +1712,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'SUN-12-SOLENNE',
     image: require('../../assets/heroes/hero_063.webp'),
-    about: 'A cathedral-forged lancer who carries a shard of the sun itself in the head of her spear. Solenne was never chosen by prophecy or bloodline — she simply walked into the light one day and it never let her leave.',
+    about: 'A cathedral-forged lancer who carries a shard of the sun itself in the head of her spear. Solenne was never chosen by prophecy or bloodline - she simply walked into the light one day and it never let her leave.',
     hp: 4150, atk: 545, def: 245, crit: 575,
     skills: [
       { name: 'Radiant Thrust', cost: 1, description: 'A blazing lance strike aimed straight through an enemy\'s guard.', damage: 1.6 },
@@ -1738,7 +1738,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'VMK-13-SUZU',
     image: require('../../assets/heroes/hero_064.webp'),
-    about: 'A masterless blade who trained under VOIDMARK\'s silent dueling halls until her katana strokes stopped casting shadows of their own. She speaks rarely and fights less — one clean draw is usually all she allows an opponent to see.',
+    about: 'A masterless blade who trained under VOIDMARK\'s silent dueling halls until her katana strokes stopped casting shadows of their own. She speaks rarely and fights less - one clean draw is usually all she allows an opponent to see.',
     hp: 3550, atk: 585, def: 220, crit: 615,
     skills: [
       { name: 'Iaijutsu Flicker', cost: 1, description: 'A single draw-cut faster than the eye can track.', damage: 1.6 },
@@ -1816,7 +1816,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'KHE-08-BASTET',
     image: require('../../assets/heroes/hero_067.webp'),
-    about: 'Bastet moves through KHEMARA\'s moonlit alleys like a shadow given claws — silent, sure-footed, and never quite where you last looked. She keeps no court and answers to no throne, only the hunt.',
+    about: 'Bastet moves through KHEMARA\'s moonlit alleys like a shadow given claws - silent, sure-footed, and never quite where you last looked. She keeps no court and answers to no throne, only the hunt.',
     hp: 3450, atk: 575, def: 205, crit: 590,
     skills: [
       { name: 'Claw Rake',      cost: 1, description: 'A blur of raking claws across a single target.', damage: 1.5 },
@@ -1842,7 +1842,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'EMB-12-ANALA',
     image: require('../../assets/heroes/hero_068.webp'),
-    about: 'Named for the Sanskrit word for fire, Anala carries the sacred flame-craft of her homeland into EMBERVEIL\'s ranks, painting sigils of living ember across the air with a fingertip. The old rites she was taught as a child still hold — the flame answers her like family.',
+    about: 'Named for the Sanskrit word for fire, Anala carries the sacred flame-craft of her homeland into EMBERVEIL\'s ranks, painting sigils of living ember across the air with a fingertip. The old rites she was taught as a child still hold - the flame answers her like family.',
     hp: 3100, atk: 515, def: 168, crit: 470,
     skills: [
       { name: 'Ember Sigil',       cost: 1, description: 'Draws a burning sigil that scorches a single enemy.', damage: 1.4 },
@@ -1894,7 +1894,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'KHE-10-SERQET',
     image: require('../../assets/heroes/hero_070.webp'),
-    about: 'Trained in KHEMARA\'s hidden scarab cults, Serqet kills with a whispered verse rather than a blade — a curse that drinks a target\'s strength before they even register the wound. The throne has used her twice. Both times, no one else was told.',
+    about: 'Trained in KHEMARA\'s hidden scarab cults, Serqet kills with a whispered verse rather than a blade - a curse that drinks a target\'s strength before they even register the wound. The throne has used her twice. Both times, no one else was told.',
     hp: 3050, atk: 570, def: 175, crit: 540,
     skills: [
       { name: 'Scarab\'s Whisper', cost: 2, description: 'A murmured curse that siphons vitality from a single enemy.', damage: 1.8 },
@@ -1946,7 +1946,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VMK-15-SELVIRA',
     image: require('../../assets/heroes/hero_072.webp'),
-    about: 'Her silver hair is said to have turned that color the night she first opened a rift into VOIDMARK\'s deep current — and never quite closed it all the way. She speaks softly, but the space around her never stops humming.',
+    about: 'Her silver hair is said to have turned that color the night she first opened a rift into VOIDMARK\'s deep current - and never quite closed it all the way. She speaks softly, but the space around her never stops humming.',
     hp: 3150, atk: 510, def: 172, crit: 480,
     skills: [
       { name: 'Silver Rift',      cost: 1, description: 'Opens a small tear in the void that lashes a single enemy.', damage: 1.5 },
@@ -1972,7 +1972,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'GLA-11-YULIANA',
     image: require('../../assets/heroes/hero_073.webp'),
-    about: 'Her white hair and pale blue eyes have led more than one traveler to mistake her for a spirit of the GLACIARA peaks rather than a living mage. She has stopped correcting them — it makes the blizzards she calls a little easier to explain.',
+    about: 'Her white hair and pale blue eyes have led more than one traveler to mistake her for a spirit of the GLACIARA peaks rather than a living mage. She has stopped correcting them - it makes the blizzards she calls a little easier to explain.',
     hp: 3050, atk: 590, def: 182, crit: 555,
     skills: [
       { name: 'Frostgaze Lance', cost: 2, description: 'A piercing shard of ice loosed with a single cold stare.', damage: 1.9 },
@@ -2102,7 +2102,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'KHE-11-SOPDET',
     image: require('../../assets/heroes/hero_078.webp'),
-    about: 'Named for the faint star her grandmother taught her to find in the dark, Sopdet commands sand the way others command clocks — pouring it forward, backward, or simply still, until an enemy\'s defenses erode like a shore under an unseen tide.',
+    about: 'Named for the faint star her grandmother taught her to find in the dark, Sopdet commands sand the way others command clocks - pouring it forward, backward, or simply still, until an enemy\'s defenses erode like a shore under an unseen tide.',
     hp: 3150, atk: 560, def: 178, crit: 530,
     skills: [
       { name: 'Hourglass Fracture', cost: 2, description: 'Reverses a moment of time around a single enemy, cracking their guard.', damage: 1.8 },
@@ -2128,7 +2128,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VMK-17-VAREK',
     image: require('../../assets/heroes/hero_079.webp'),
-    about: 'Varek built VOIDMARK\'s underworld syndicate from a single debt collected in the dark, and now every favor owed in the city eventually comes due to him. He speaks softly because he has never needed to raise his voice — the shadows do the negotiating for him.',
+    about: 'Varek built VOIDMARK\'s underworld syndicate from a single debt collected in the dark, and now every favor owed in the city eventually comes due to him. He speaks softly because he has never needed to raise his voice - the shadows do the negotiating for him.',
     hp: 3600, atk: 660, def: 195, crit: 615,
     skills: [
       { name: 'Backroom Deal',  cost: 1, description: 'Makes a single enemy an offer they cannot refuse, striking hard enough to press the point home.', damage: 1.5 },
@@ -2258,7 +2258,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'KHE-12-THUTMOSE',
     image: require('../../assets/heroes/hero_084.webp'),
-    about: 'Thutmose reads KHEMARA\'s history the way others read a clock face, and has learned to bend the space between one second and the next just enough to win a fight before it starts. He insists he isn\'t rewinding time — he\'s simply refusing to let it catch up.',
+    about: 'Thutmose reads KHEMARA\'s history the way others read a clock face, and has learned to bend the space between one second and the next just enough to win a fight before it starts. He insists he isn\'t rewinding time - he\'s simply refusing to let it catch up.',
     hp: 3500, atk: 670, def: 200, crit: 605,
     skills: [
       { name: 'Fractured Second',   cost: 2, description: 'Splits a single moment in two, striking before the enemy\'s reaction ever arrives.', damage: 1.8 },
@@ -2362,7 +2362,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'VRD-16-LORIAN',
     image: require('../../assets/heroes/hero_088.webp'),
-    about: 'Lorian carries a dagger for every leaf that ever fell in his corner of VERDANIA\'s forest, or so the story goes — no one has ever moved fast enough to count him drawing them. He treats a duel as a conversation best finished before the other side realizes it started.',
+    about: 'Lorian carries a dagger for every leaf that ever fell in his corner of VERDANIA\'s forest, or so the story goes - no one has ever moved fast enough to count him drawing them. He treats a duel as a conversation best finished before the other side realizes it started.',
     hp: 3050, atk: 600, def: 170, crit: 555,
     skills: [
       { name: 'Falling Leaf Strike',  cost: 1, description: 'A quick dagger flick timed to a falling leaf, striking a single enemy before it hits the ground.', damage: 1.5 },
@@ -2414,7 +2414,7 @@ export const HEROES = [
     class: 'Attacker',
     cardId: 'VMK-21-VALEN',
     image: require('../../assets/heroes/hero_090.webp'),
-    about: 'Found as a newborn at the center of a frozen crater nineteen years before the first recorded breach — the first thing to ever cross between worlds, long before anyone had a name for what a rift even was. His green eyes see fractures in reality no one else can, and his broken black katana repairs itself one rune at a time with every threat he puts down. He never wanted to be a legend. He just wanted something worth protecting.',
+    about: 'Found as a newborn at the center of a frozen crater nineteen years before the first recorded breach - the first thing to ever cross between worlds, long before anyone had a name for what a rift even was. His green eyes see fractures in reality no one else can, and his broken black katana repairs itself one rune at a time with every threat he puts down. He never wanted to be a legend. He just wanted something worth protecting.',
     hp: 3600, atk: 660, def: 195, crit: 600,
     skills: [
       { name: 'Eclipsed Cut',   cost: 2, description: 'A single riftborn slash that cuts through armor and dimension alike.', damage: 2.0 },
@@ -2422,7 +2422,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'The Last Answer',
-      description: 'Every crack in the Eclipsed Edge opens at once — a single riftwalking strike across all enemies, answering for everything he has ever protected.',
+      description: 'Every crack in the Eclipsed Edge opens at once - a single riftwalking strike across all enemies, answering for everything he has ever protected.',
       damage: 5.0,
       effect: 'Stuns all enemies 1 turn; heals all allies 25% HP',
     },

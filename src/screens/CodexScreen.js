@@ -76,11 +76,11 @@ export default function CodexScreen({ navigation }) {
     Animated.timing(contentFade, { toValue: 1, duration: 220, useNativeDriver: true }).start();
   }, [activeTab, contentFade]);
 
-  // Opening the Codex is itself the "acknowledgement" of new entries — clears
+  // Opening the Codex is itself the "acknowledgement" of new entries - clears
   // the bottom-tab badge instead of an interrupting unlock modal on Home.
   useFocusEffect(useCallback(() => { clearCodexUnlocks(); }, [clearCodexUnlocks]));
 
-  // Ambient looping background video — muted, paused while the screen is
+  // Ambient looping background video - muted, paused while the screen is
   // unfocused so it doesn't keep decoding frames off-screen. play()/pause()
   // are wrapped in try/catch because the native player can already be
   // released by the time this fires (e.g. on back-navigation unmount),
@@ -95,7 +95,7 @@ export default function CodexScreen({ navigation }) {
     return () => { try { bgVideoPlayer.pause(); } catch (_) {} };
   }, [bgVideoPlayer]));
   // Android-only: BlurView's real-time blur methods need a BlurTargetView ref
-  // to know what to sample — without it, blurMethod silently falls back to
+  // to know what to sample - without it, blurMethod silently falls back to
   // "none" (a flat tint, no actual blur). iOS ignores blurTarget entirely.
   const videoTargetRef = useRef(null);
 
@@ -138,14 +138,14 @@ export default function CodexScreen({ navigation }) {
   const cardW = useMemo(() => Math.round(cardH * CARD_ASPECT), [cardH]);
   // Relics' spotlight column (badge + art + name + stars + CTA) runs taller
   // than the bordered portrait cards, so it gets its own row height using the
-  // full measured box instead of the CARD_MAX_H clamp — otherwise the CTA
+  // full measured box instead of the CARD_MAX_H clamp - otherwise the CTA
   // button clips at the carousel row's edge.
   const relicH = useMemo(
     () => box.h ? Math.max(CARD_MIN_H, Math.min(box.h - rs(12), 340)) : 0,
     [box.h],
   );
 
-  // Bestiary/Chronicle open a dedicated split-screen (card left, lore right) —
+  // Bestiary/Chronicle open a dedicated split-screen (card left, lore right) -
   // mirrors HeroDetailScreen rather than a modal, since the lore is long-form.
   // Relics stay a modal here: only 4 items, short lore, no need for a full screen.
   const openBestiaryDetail  = useCallback((imageKey) => { AudioManager.playButtonSFX(); navigation.navigate('CodexDetail', { type: 'bestiary', key: imageKey }); }, [navigation]);
@@ -255,7 +255,7 @@ export default function CodexScreen({ navigation }) {
             </View>
             <Text style={styles.topCount}>{unlockedTabCount} / {totalTabCount} discovered</Text>
             {/* Always rendered (opacity-hidden for Relics) so the header keeps a
-                constant height across tabs — avoids a body reflow on switch. */}
+                constant height across tabs - avoids a body reflow on switch. */}
             <View style={[styles.progressRow, activeTab === 'relics' && styles.progressRowHidden]} pointerEvents={activeTab === 'relics' ? 'none' : 'auto'}>
               <View style={styles.progressTrack}>
                 <LinearGradient
@@ -393,13 +393,13 @@ export default function CodexScreen({ navigation }) {
   );
 }
 
-// ─── Relic spotlight card — Relics' floating, borderless "artifact" style
+// ─── Relic spotlight card - Relics' floating, borderless "artifact" style
 // (a deliberately different presentation from OrnateCard: no frame, one item
 // spotlighted at a time by the carousel's focusMode scale/dim + glow). ──────
 
 function RelicSpotlightCard({ item, rank, isCenter, centerProgress, unlocked, cardW, cardH, onPress }) {
   // Fixed vertical budget: badge / name / stars / CTA slot are constant-height,
-  // the art gets whatever remains — so the column always fits the carousel row
+  // the art gets whatever remains - so the column always fits the carousel row
   // and the CTA button can never clip at the row's bottom edge.
   const artSize = Math.max(rs(56), Math.min(Math.round(cardW * 0.85), cardH - rs(128)));
   const displayName = unlocked ? item.name : '???';
@@ -423,8 +423,8 @@ function RelicSpotlightCard({ item, rank, isCenter, centerProgress, unlocked, ca
           </>
         )}
         <View pointerEvents="none" style={[styles.relicGlow, { backgroundColor: rank.bg + (unlocked ? '18' : '0F') }]} />
-        {/* Locked relics still show their art (dimmed) — the mystery is the
-            name/lore, matching the reference — not a blacked-out silhouette. */}
+        {/* Locked relics still show their art (dimmed) - the mystery is the
+            name/lore, matching the reference - not a blacked-out silhouette. */}
         <Image source={item.image} style={[styles.relicArt, !unlocked && styles.relicArtDim]} resizeMode="contain" />
       </View>
 
@@ -439,7 +439,7 @@ function RelicSpotlightCard({ item, rank, isCenter, centerProgress, unlocked, ca
       )}
 
       {/* Constant-height slot: button (centered+unlocked), lock (locked), or
-          empty — keeps every column's badge/art/name rows vertically aligned.
+          empty - keeps every column's badge/art/name rows vertically aligned.
           The button's opacity rides centerProgress so it eases in as the item
           settles into center rather than popping at the midpoint. */}
       <View style={styles.relicCtaSlot}>
@@ -463,7 +463,7 @@ function RelicSpotlightCard({ item, rank, isCenter, centerProgress, unlocked, ca
   );
 }
 
-// ─── Ambient dust — a handful of tiny twinkling motes behind the whole
+// ─── Ambient dust - a handful of tiny twinkling motes behind the whole
 // screen for atmosphere; cheap (native-driven opacity only), screen-local. ──
 
 const DUST_COUNT = 16;
@@ -515,7 +515,7 @@ function FooterNote({ text }) {
   );
 }
 
-// ─── Detail modal — Relics only. Bestiary/Chronicle detail is a dedicated
+// ─── Detail modal - Relics only. Bestiary/Chronicle detail is a dedicated
 // split-screen (CodexDetailScreen) since their lore runs much longer; relics
 // have just 4 short entries, so a modal is enough. ─────────────────────────
 

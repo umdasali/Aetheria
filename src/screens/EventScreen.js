@@ -111,7 +111,7 @@ function EventCard({ event, onEnter, isGuaranteed }) {
               <Text style={s.rateUpLabel}>RATE UP</Text>
               {rateUpHeroes.map(hero => {
                 // hero here is raw HEROES data (no effectiveRank field exists on
-                // it — that's a per-player heroCollection concept), so this always
+                // it - that's a per-player heroCollection concept), so this always
                 // fell through to hero.rank, showing a plain pink "S" chip next to
                 // a gold "SOVEREIGN" HeroCard on Sovereign banners. Match HeroCard's
                 // own isSovereign check instead.

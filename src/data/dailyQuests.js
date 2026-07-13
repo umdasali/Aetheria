@@ -14,7 +14,7 @@ export const QUEST_DEFS = [
   {
     id:     'use_trump',
     title:  'Trump Card Unleashed',
-    // Reduced from 5 to 3 — more accessible for casual sessions
+    // Reduced from 5 to 3 - more accessible for casual sessions
     desc:   'Use a Trump Card 3 times',
     icon:   'thunderstorm-outline',
     target: 3,
@@ -34,7 +34,7 @@ export const QUEST_DEFS = [
     desc:   'Perform at least 1 summon',
     icon:   'sparkles-outline',
     target: 1,
-    // Was 10 gems — summoning 1× costs 50 gems, so reward was a −40 net loss.
+    // Was 10 gems - summoning 1× costs 50 gems, so reward was a −40 net loss.
     // Now 22 gems + gold makes the spend feel worthwhile.
     reward: { gems: 22, gold: 500 },
   },

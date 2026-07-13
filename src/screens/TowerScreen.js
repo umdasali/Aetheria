@@ -217,7 +217,7 @@ const sc = StyleSheet.create({
 export default function TowerScreen({ navigation }) {
   const { width: W, height: H } = useWindowDimensions();
 
-  // Responsive scale — reference 1280px wide, clamped 0.70–1.30
+  // Responsive scale - reference 1280px wide, clamped 0.70–1.30
   const scale  = Math.max(0.70, Math.min(1.30, W / 1280));
   const rsc    = n => Math.max(1, Math.round(n * scale));
   const LEFT_W = Math.round(W * 0.30);
@@ -312,7 +312,7 @@ export default function TowerScreen({ navigation }) {
   const btn = isMilestone ? [C.GOLD_DARK, C.GOLD]
             : isBoss      ? [C.DANGER_DARK, C.DANGER]
             :               [C.PRIMARY_DARK, C.PRIMARY];
-  const lbl = conquered   ? `🏆 TOWER CONQUERED — RESETS IN ${resetIn}`
+  const lbl = conquered   ? `🏆 TOWER CONQUERED - RESETS IN ${resetIn}`
             : isMilestone ? `⚡ MILESTONE  FLOOR ${floor}`
             : isBoss      ? `💀 BOSS FLOOR  ${floor}`
             :               `ENTER  FLOOR  ${floor}`;
@@ -352,7 +352,7 @@ export default function TowerScreen({ navigation }) {
             <View style={s.hPills}>
               <View style={[s.pill, { borderColor: C.GOLD + '55', backgroundColor: C.GOLD + '12' }]}>
                 <Ionicons name="trophy" size={rs(10)} color={C.GOLD} />
-                <Text style={[s.pillTxt, { color: C.GOLD, fontSize: rf(13) }]}>Best {towerHighestFloor || '—'}</Text>
+                <Text style={[s.pillTxt, { color: C.GOLD, fontSize: rf(13) }]}>Best {towerHighestFloor || '-'}</Text>
               </View>
               <View style={[s.pill, { borderColor: C.PRIMARY_LIGHT + '55', backgroundColor: C.PRIMARY_GLOW }]}>
                 <Image source={COIN_IMG} style={[s.pillIcon, { width: rs(14), height: rs(14) }]} resizeMode="contain" />
@@ -425,7 +425,7 @@ export default function TowerScreen({ navigation }) {
             </Animated.View>
 
             <View style={s.statsRow}>
-              <StatCell icon="trophy-outline" label="Best"  value={towerHighestFloor || '—'} color={C.GOLD}          scale={scale} />
+              <StatCell icon="trophy-outline" label="Best"  value={towerHighestFloor || '-'} color={C.GOLD}          scale={scale} />
               <View style={s.statSep} />
               <StatCell icon="star-outline"   label="Coins" value={towerCoins}              color={C.PRIMARY_LIGHT}  scale={scale} />
             </View>
@@ -438,7 +438,7 @@ export default function TowerScreen({ navigation }) {
           {/* ── RIGHT: intel ──────────────────────────────────────────── */}
           <View style={s.rightCol}>
 
-            {/* Enemy section — flex:1 so it fills whatever space remains above the fixed bottom */}
+            {/* Enemy section - flex:1 so it fills whatever space remains above the fixed bottom */}
             <View style={s.enemySection} onLayout={onEnemySectionLayout}>
               <SHead text="ENEMIES THIS FLOOR" scale={scale} />
               <View style={[s.enemyRow, { height: enemyCardH }]}>
@@ -451,7 +451,7 @@ export default function TowerScreen({ navigation }) {
               </View>
             </View>
 
-            {/* Rewards — always visible; not inside flex:1 so never pushed off screen */}
+            {/* Rewards - always visible; not inside flex:1 so never pushed off screen */}
             <SHead text="FLOOR REWARDS" scale={scale} />
             <View style={s.rewardCard}>
               <LinearGradient colors={[C.GLASS_1, 'transparent']} style={StyleSheet.absoluteFill} />
@@ -459,7 +459,7 @@ export default function TowerScreen({ navigation }) {
               <View style={s.chipSep} />
               <RewardChip img={COIN_IMG} color={C.GOLD}         value={`+${reward.coins}`}                label="Coins" scale={scale} />
               <View style={s.chipSep} />
-              <RewardChip img={GEM_IMG}  color={C.PRIMARY_LIGHT} value={reward.gems > 0 ? `+${reward.gems}` : '—'} label="Gems" dimmed={reward.gems === 0} scale={scale} />
+              <RewardChip img={GEM_IMG}  color={C.PRIMARY_LIGHT} value={reward.gems > 0 ? `+${reward.gems}` : '-'} label="Gems" dimmed={reward.gems === 0} scale={scale} />
             </View>
 
             {/* Milestone progress */}
@@ -525,7 +525,7 @@ const s = StyleSheet.create({
   body:    { flex: 1, flexDirection: 'row' },
   colSep:  { width: 1, backgroundColor: C.BORDER_SUBTLE, marginVertical: rs(PAD) },
 
-  // ── Left column — width applied inline ──────────────────────────────────────
+  // ── Left column - width applied inline ──────────────────────────────────────
   leftCol: {
     alignItems: 'center', justifyContent: 'center',
     gap: rs(GAP), paddingHorizontal: rs(PAD), paddingVertical: rs(PAD),
@@ -562,13 +562,13 @@ const s = StyleSheet.create({
     flex: 1, paddingHorizontal: rs(PAD), paddingVertical: rs(PAD), gap: rs(GAP),
   },
 
-  // Flex:1 — expands to fill remaining space above the fixed rewards/button section.
+  // Flex:1 - expands to fill remaining space above the fixed rewards/button section.
   // Cards are sized from this measured height via onLayout.
   enemySection: {
     flex: 1, gap: rs(GAP),
   },
 
-  // Enemy row — height set inline to fill available space
+  // Enemy row - height set inline to fill available space
   enemyRow: {
     flexDirection: 'row', gap: rs(GAP), justifyContent: 'center',
   },

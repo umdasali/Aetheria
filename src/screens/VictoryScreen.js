@@ -83,7 +83,7 @@ export default function VictoryScreen({ navigation, route }) {
   // Ascension material to show: tower boss drop, or a dungeon's fixed material reward.
   const materialDrop = towerAscensionDrop || (dungeonMode ? (dungeonRewards?.material ?? null) : null);
 
-  // XP — compute both before and after states precisely
+  // XP - compute both before and after states precisely
   const afterState  = calcPlayerLevel({ completedChapters, ownedHeroes, heroCollection, dailyStreak });
   const beforeState = calcLevelFromXP(afterState.totalXP - xpGained);
   const leveledUp   = isWin && xpGained > 0 && afterState.level > beforeState.level;
@@ -99,7 +99,7 @@ export default function VictoryScreen({ navigation, route }) {
   const rewardFade   = useRef(new Animated.Value(0)).current;
   const btnFade      = useRef(new Animated.Value(0)).current;
 
-  // XP bar — starts at beforeState.progress (exact "before" position)
+  // XP bar - starts at beforeState.progress (exact "before" position)
   const xpBarAnim    = useRef(new Animated.Value(beforeState.progress)).current;
   const xpCountAnim  = useRef(new Animated.Value(beforeState.currentXP)).current;
   const xpBadgeScale = useRef(new Animated.Value(0)).current;
@@ -112,7 +112,7 @@ export default function VictoryScreen({ navigation, route }) {
   const xpTimersRef  = useRef([]);          // pending XP-sequence timeouts
   const xpCleanupRef = useRef(() => {});    // removes listener + stops shimmer
   const [displayXP,  setDisplayXP] = useState(beforeState.currentXP);
-  // Track width measured at layout — lets the XP bar animate as a native-driven
+  // Track width measured at layout - lets the XP bar animate as a native-driven
   // left-anchored scaleX instead of a JS-thread width animation
   const [xpTrackW,   setXpTrackW]  = useState(0);
 
@@ -152,14 +152,14 @@ export default function VictoryScreen({ navigation, route }) {
       Animated.timing(btnFade, { toValue: 1, duration: 360, useNativeDriver: true }),
     ]).start();
 
-    // Icon glow loop — reference stored so cleanup can stop it on unmount
+    // Icon glow loop - reference stored so cleanup can stop it on unmount
     glowLoopRef.current = Animated.loop(Animated.sequence([
       Animated.timing(glowPulse, { toValue: 0.75, duration: 1300, useNativeDriver: true }),
       Animated.timing(glowPulse, { toValue: 0.20, duration: 1300, useNativeDriver: true }),
     ]));
     glowLoopRef.current.start();
 
-    // XP sequence — fires after rewards have faded in
+    // XP sequence - fires after rewards have faded in
     if (isWin && xpGained > 0) {
       const listenerId = xpCountAnim.addListener(({ value }) => setDisplayXP(Math.round(value)));
 
@@ -250,7 +250,7 @@ export default function VictoryScreen({ navigation, route }) {
     navigation.replace('Narration', { stage: nextStage, enemyGroup: grp });
   };
   const handleRetry = () => {
-    // Practice battles have no stage — relaunch the practice battle directly
+    // Practice battles have no stage - relaunch the practice battle directly
     if (practiceMode) { navigation.replace('Battle', { practiceMode: true }); return; }
     const curStage = getStageById(stageId);
     if (curStage && enemyGroup) navigation.replace('Narration', { stage: curStage, enemyGroup, autoSkip: true });
@@ -335,7 +335,7 @@ export default function VictoryScreen({ navigation, route }) {
               <Animated.View style={{ flex: 1, opacity: rewardFade, transform: [{ translateY: rewardSlide }] }}>
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={S.scrollContent}>
 
-                  {/* Currency chips — side by side */}
+                  {/* Currency chips - side by side */}
                   <View style={S.chipRow}>
                     {goldReward > 0 && (
                       <View style={[S.chip, { borderColor: C.GOLD + '50', backgroundColor: C.GOLD + '14' }]}>
@@ -370,7 +370,7 @@ export default function VictoryScreen({ navigation, route }) {
                     </View>
                   )}
 
-                  {/* Ascension material drop — boss floors only */}
+                  {/* Ascension material drop - boss floors only */}
                   {materialDrop && (() => {
                     const item = ASCENSION_ITEMS.find(i => i.id === materialDrop.itemId);
                     if (!item) return null;
@@ -388,7 +388,7 @@ export default function VictoryScreen({ navigation, route }) {
                     );
                   })()}
 
-                  {/* Hero reward — compact horizontal row */}
+                  {/* Hero reward - compact horizontal row */}
                   {hero && (() => {
                     const r = RANK[hero.rank];
                     const factionColor = FACTIONS[hero.faction]?.color ?? C.PRIMARY;
@@ -637,7 +637,7 @@ const S = StyleSheet.create({
   chipAmt: { fontSize: rf(20), fontWeight: '900' },
   chipLbl: { fontSize: rf(13), color: C.TEXT_ON_DARK_MUTED, fontWeight: '600', alignSelf: 'flex-end', marginBottom: rs(2) },
 
-  // Hero reward — compact horizontal row
+  // Hero reward - compact horizontal row
   heroRow: {
     flexDirection: 'row', alignItems: 'center', gap: rs(10),
     borderWidth: 1, borderRadius: rs(10), overflow: 'hidden',

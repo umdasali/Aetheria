@@ -1,15 +1,15 @@
 // ─── Limited-Time Event Definitions ──────────────────────────────────────────
 // type: 'banner'
 // Dates are maintained here manually. Update startDate / endDate (YYYY-MM-DD UTC)
-// to schedule rotations — no app update needed for dates alone.
+// to schedule rotations - no app update needed for dates alone.
 //
-// getActiveEvents()   — startDate <= today <= endDate
-// getUpcomingEvents() — startDate > today   (sorted soonest first)
-// getEndedEvents()    — endDate < today     (sorted most-recent first)
+// getActiveEvents()   - startDate <= today <= endDate
+// getUpcomingEvents() - startDate > today   (sorted soonest first)
+// getEndedEvents()    - endDate < today     (sorted most-recent first)
 
-// ═══ GACHA POOL CONFIG — edit the values below to update pools manually ══════
+// ═══ GACHA POOL CONFIG - edit the values below to update pools manually ══════
 //
-// Which ranks can drop is controlled entirely by the rate tables below —
+// Which ranks can drop is controlled entirely by the rate tables below -
 // a rank with rate 0 never drops on that banner.
 //
 // STANDARD banner:
@@ -19,18 +19,18 @@
 //
 // EVENT banners:
 //   • S pull     → 50/50: the banner's featured hero, or (on a loss) one of
-//                  FIFTY_FIFTY_LOSS_IDS. Losing sets a guarantee — the next S
+//                  FIFTY_FIFTY_LOSS_IDS. Losing sets a guarantee - the next S
 //                  is always the featured hero.
 //   • non-S pull → ALL heroes of the rolled rank
 //
 // shopExclusive heroes (hero_054) are always excluded from every pool.
 
-// Standard banner S-rank pool — edit this list to change which S heroes drop.
+// Standard banner S-rank pool - edit this list to change which S heroes drop.
 export const STANDARD_BANNER = {
   featuredSRankIds: ['hero_001', 'hero_003', 'hero_024'],
 };
 
-// Off-banner pool when an event 50/50 is lost — edit to change the loss pool.
+// Off-banner pool when an event 50/50 is lost - edit to change the loss pool.
 // If a banner's featured hero is in this list, it is skipped for that banner.
 export const FIFTY_FIFTY_LOSS_IDS = ['hero_001', 'hero_003', 'hero_024'];
 
@@ -39,7 +39,7 @@ export const FIFTY_FIFTY_LOSS_IDS = ['hero_001', 'hero_003', 'hero_024'];
 export const STANDARD_RATES = { S: 0.02, A: 0.03,    B: 0.38, C: 0.57 };
 export const EVENT_RATES    = { S: 0.02, A: 0.50, B: 0.20,    C: 0.28 };
 
-// ── Banner schedule — update startDate / endDate to manage events ─────────────
+// ── Banner schedule - update startDate / endDate to manage events ─────────────
 export const BANNER_POOL = [
   {
     id:               'event_blazing_vanguard',
@@ -80,10 +80,10 @@ export const BANNER_POOL = [
     bannerImg:        require('../../assets/heroes/hero_012.webp'),
     accentColor:      '#FFD700',
   },
-  // ── Next rotation — 8 events, back-to-back, 20 days each ────────────────────
+  // ── Next rotation - 8 events, back-to-back, 20 days each ────────────────────
   // Order: non-sovereign, non-sovereign, SOVEREIGN, repeat.
-  // Khemara's sovereign (hero_054, Nefertari Shahrzad) is shop-exclusive — excluded.
-  // Dates shifted +4 days (2026-07-05 audit) — the original start (07-16) overlapped
+  // Khemara's sovereign (hero_054, Nefertari Shahrzad) is shop-exclusive - excluded.
+  // Dates shifted +4 days (2026-07-05 audit) - the original start (07-16) overlapped
   // event_shadow_descent (ends 07-19) by 4 days; this chain now starts the day
   // after shadow_descent ends and keeps every other gap/overlap at zero.
   {

@@ -117,13 +117,13 @@ function TierCard({ dungeon, tier, onEnter }) {
           colors={[C.BG_RAISED, C.BG_CARD, C.BG_BOTTOM]}
           style={StyleSheet.absoluteFill}
         />
-        {/* very faint diff wash — informational only */}
+        {/* very faint diff wash - informational only */}
         <View style={[tc.artWash, { backgroundColor: diffCol + '0E' }]} />
 
         {/* faint watermark */}
         <Text style={[tc.watermark, { color: dungeon.accent + '12' }]}>{tier.label}</Text>
 
-        {/* diff badge — top right, small */}
+        {/* diff badge - top right, small */}
         <View style={[tc.artBadge, { backgroundColor: diffCol + '18', borderColor: diffCol + '55' }]}>
           <Text style={[tc.artBadgeTxt, { color: diffCol }]}>{tier.diff}</Text>
         </View>
@@ -139,14 +139,14 @@ function TierCard({ dungeon, tier, onEnter }) {
           </View>
         </View>
 
-        {/* stars — dungeon accent when filled */}
+        {/* stars - dungeon accent when filled */}
         <View style={tc.starsBar}>
           {stars.map((on, i) => (
             <Text key={i} style={[tc.star, { color: on ? dungeon.accent : C.GLASS_5 }]}>★</Text>
           ))}
         </View>
 
-        {/* corner brackets — dungeon accent */}
+        {/* corner brackets - dungeon accent */}
         <View style={[tc.cTL, { borderColor: dungeon.accent + 'AA' }]} />
         <View style={[tc.cTR, { borderColor: dungeon.accent + 'AA' }]} />
       </View>
@@ -170,7 +170,7 @@ function TierCard({ dungeon, tier, onEnter }) {
           </Text>
         </View>
 
-        {/* reward quantity — accent colored */}
+        {/* reward quantity - accent colored */}
         <Text style={[tc.qty, { color: dungeon.accent }]}>
           {material ? `×${reward.material.qty}` : `${(reward.gold || 0).toLocaleString()}`}
         </Text>
@@ -183,11 +183,11 @@ function TierCard({ dungeon, tier, onEnter }) {
           </View>
         )}
 
-        {/* power — muted, not accent */}
+        {/* power - muted, not accent */}
         <Text style={tc.powerTxt}>{tier.mult}× power</Text>
       </View>
 
-      {/* ── DESCEND BUTTON — dark + accent outline, no saturated fill ── */}
+      {/* ── DESCEND BUTTON - dark + accent outline, no saturated fill ── */}
       <TouchableOpacity
         style={[tc.btnWrap, { borderTopColor: dungeon.accent + '55' }]}
         onPress={() => onEnter(dungeon, tier)}
@@ -310,7 +310,7 @@ function DungeonDetail({ dungeon, onEnter }) {
       {dungeon.image && (
         <Image source={dungeon.image} style={[StyleSheet.absoluteFill, { width: '100%', height: H }]} resizeMode="cover" />
       )}
-      {/* Dark gradient overlay — keeps text readable over any image */}
+      {/* Dark gradient overlay - keeps text readable over any image */}
       <LinearGradient
         colors={[C.SHADOW + '14', C.SHADOW + '9E', C.SHADOW + 'F0']}
         locations={[0, 0.45, 1]}
@@ -429,7 +429,7 @@ function ExchangeModal({ visible, inventory, onExchange, onClose }) {
 
           <View style={em.divider} />
 
-          {/* Recipe list — always visible; individual rows disable when qty insufficient */}
+          {/* Recipe list - always visible; individual rows disable when qty insufficient */}
           <ScrollView
             style={em.recipeScroll}
             contentContainerStyle={em.recipeList}

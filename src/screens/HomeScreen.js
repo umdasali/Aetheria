@@ -30,7 +30,7 @@ const SIDE_GAP   = 8;
 
 const SUMMON_THUMB = require('../../assets/heroes/hero_002.webp');
 
-// Secondary hub actions — vertical list on the left. Heroes/Team/World/Codex
+// Secondary hub actions - vertical list on the left. Heroes/Team/World/Codex
 // live in the bottom tab bar instead, and Daily Reward is a top-HUD icon.
 const SIDE_MENU = [
   { key: 'events',       image: require('../../assets/home/events.png'),  label: 'Events',   sub: 'New rewards!',  a11yLabel: 'Limited Events',   badge: false, accent: C.GOLD,          screen: 'Events'       },
@@ -39,7 +39,7 @@ const SIDE_MENU = [
   { key: 'rankings',     image: require('../../assets/home/ranking.png'), label: 'Rankings', sub: 'Top players',   a11yLabel: 'Leaderboards',      badge: false, accent: C.CYAN,          screen: 'Leaderboard'  },
 ];
 
-// Persistent-look bottom bar — pushes into the existing Stack (not a real
+// Persistent-look bottom bar - pushes into the existing Stack (not a real
 // react-navigation tab bar), so there's no cross-screen "active tab" state.
 const BOTTOM_TABS = [
   { key: 'heroes', image: require('../../assets/home/heroes.png'),    label: 'Heroes', screen: 'Collection' },
@@ -51,7 +51,7 @@ const BOTTOM_TABS = [
 export default function HomeScreen({ navigation }) {
   const { width: screenW } = useWindowDimensions();
 
-  // Per-property selectors — the screen only re-renders when a value it reads changes
+  // Per-property selectors - the screen only re-renders when a value it reads changes
   const gems                      = useGameStore(s => s.gems);
   const gold                      = useGameStore(s => s.gold);
   const lastClaimDate             = useGameStore(s => s.lastClaimDate);
@@ -74,7 +74,7 @@ export default function HomeScreen({ navigation }) {
   const pendingCodexUnlocks       = useGameStore(s => s.pendingCodexUnlocks);
 
   const [milestoneVisible, setMilestoneVisible] = useState(false);
-  // Show the head of the queue — clearMilestoneReward shifts it off, revealing
+  // Show the head of the queue - clearMilestoneReward shifts it off, revealing
   // the next one (if any) rather than ever overwriting/losing an unclaimed reward.
   const pendingMilestoneReward = pendingMilestoneRewards?.[0] ?? null;
   const milestoneHero = pendingMilestoneReward?.hero ?? null;
@@ -88,7 +88,7 @@ export default function HomeScreen({ navigation }) {
   );
 
   // Codex unlocks are surfaced only as a badge on the bottom tab (see BOTTOM_TABS
-  // below) — cleared when the player actually opens the Codex screen — rather
+  // below) - cleared when the player actually opens the Codex screen - rather
   // than an interrupting modal.
 
   const { level: playerLevel, currentXP, nextLevelXP, progress } = useMemo(
@@ -98,7 +98,7 @@ export default function HomeScreen({ navigation }) {
   const xpCurrent = Math.round(progress * 100);
   const xpLabel   = `EXP  ${currentXP} / ${nextLevelXP}`;
 
-  // Badge state — daily/quests require manual refresh on focus.
+  // Badge state - daily/quests require manual refresh on focus.
   // Achievements are derived directly via useMemo so they react instantly to store changes.
   const [canClaim, setCanClaim]               = useState(false);
   const [hasClaimableQuests, setHasClaimableQuests] = useState(false);
@@ -180,7 +180,7 @@ export default function HomeScreen({ navigation }) {
       tag: 'TOWER',
       accent: C.GOLD,
       title: 'Endless Tower',
-      sub: `Floor ${towerCurrentFloor} · Best ${towerHighestFloor || '—'}`,
+      sub: `Floor ${towerCurrentFloor} · Best ${towerHighestFloor || '-'}`,
       thumb: require('../../assets/enemy/boss_010.webp'),
       accessibilityLabel: 'Go to Tower',
       onPress: () => { AudioManager.playButtonSFX(); navigation.navigate('Tower'); },
@@ -200,13 +200,13 @@ export default function HomeScreen({ navigation }) {
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(14)).current;
 
-  // BGM — singleton persists across navigation, pauses when screen loses focus
+  // BGM - singleton persists across navigation, pauses when screen loses focus
   useFocusEffect(useCallback(() => {
     AudioManager.playHome();
     return () => AudioManager.pauseHome();
   }, []));
 
-  // Show milestone modal whenever the queue has an unclaimed reward — a plain
+  // Show milestone modal whenever the queue has an unclaimed reward - a plain
   // effect (not useFocusEffect) so collecting one while already on Home
   // immediately reveals the next queued reward instead of waiting for a refocus.
   useEffect(() => {
@@ -260,7 +260,7 @@ export default function HomeScreen({ navigation }) {
         >
           {/* ══════════════ TOP HUD ══════════════ */}
           <View style={styles.topHud}>
-            {/* Avatar + name + xp — tappable to open Profile */}
+            {/* Avatar + name + xp - tappable to open Profile */}
             <TouchableOpacity style={styles.playerBlock} onPress={() => { AudioManager.playButtonSFX(); navigation.navigate('Profile'); }} activeOpacity={0.8}>
               <View style={[styles.avatarFrame, { borderColor: factionColor }]}>
                 <Image source={avatarImage} style={styles.avatarImg} />
@@ -346,7 +346,7 @@ export default function HomeScreen({ navigation }) {
             {/* small spacer between sidebar and the card stack */}
             <View style={styles.centerGap} />
 
-            {/* ── Right action panels — single-column cinematic card stack ── */}
+            {/* ── Right action panels - single-column cinematic card stack ── */}
             <View style={[styles.rightPanels, { width: (screenW - SIDEBAR_W - 16) / 2 }]}>
               {panelData.map(({ key: k, ...p }) => (
                 <ActionPanel key={k} {...p} />
@@ -355,7 +355,7 @@ export default function HomeScreen({ navigation }) {
 
           </View>
 
-          {/* ── Bottom tab bar — pushes into the existing Stack, not a real tab navigator.
+          {/* ── Bottom tab bar - pushes into the existing Stack, not a real tab navigator.
               No tab is drawn "active": Home isn't literally any of these 4 screens. ── */}
           <View style={styles.bottomBar}>
             <LinearGradient
@@ -406,7 +406,7 @@ export default function HomeScreen({ navigation }) {
             {/* Divider */}
             <View style={styles.achDivider} />
 
-            {/* Achievement list — scrollable if many */}
+            {/* Achievement list - scrollable if many */}
             <ScrollView
               style={styles.achList}
               showsVerticalScrollIndicator={false}
@@ -595,7 +595,7 @@ const SideItem = memo(function SideItem({ icon, image, label, sub, a11yLabel, ba
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.72} style={styles.sideItem} accessibilityLabel={a11yLabel || label} accessibilityRole="button">
 
-      {/* Card face — horizontal row */}
+      {/* Card face - horizontal row */}
       <View style={[styles.sideFace, { borderColor: accent + '45' }]}>
         <LinearGradient
           colors={[C.BG_SCREEN + 'EB', C.BG_DARK + 'D6']}
@@ -638,7 +638,7 @@ const SideItem = memo(function SideItem({ icon, image, label, sub, a11yLabel, ba
   );
 });
 
-// Simple floating particle effect for the tab bar — small dots rise and fade,
+// Simple floating particle effect for the tab bar - small dots rise and fade,
 // looping forever, spread across the whole tab.
 const TAB_PARTICLES = [
   { delay: 0,    left: '20%', duration: 2200 },
@@ -700,7 +700,7 @@ function TabIconGlow() {
 
 const BottomTab = memo(function BottomTab({ image, label, badge, screen, onNavigate }) {
   // Same pulsing dot + ring language as SideItem's badge (Quests/Achievements) and
-  // the Daily Reward top-bar dot — was previously a mismatched red "!" bubble.
+  // the Daily Reward top-bar dot - was previously a mismatched red "!" bubble.
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -755,7 +755,7 @@ function ActionPanel({ tag, accent, title, sub, thumb, progressRatio, badge, onP
       {/* Glowing border overlay */}
       <View style={[styles.panelBorder, { borderColor: accent + '55' }]} />
 
-      {/* Row: [strip] [content] [thumb] — no absolute, no overlap */}
+      {/* Row: [strip] [content] [thumb] - no absolute, no overlap */}
       <View style={[styles.panelStrip, { backgroundColor: accent }]} />
 
       <View style={styles.panelContent}>
@@ -782,7 +782,7 @@ function ActionPanel({ tag, accent, title, sub, thumb, progressRatio, badge, onP
         )}
       </View>
 
-      {/* Thumbnail — normal flex child, no overlap */}
+      {/* Thumbnail - normal flex child, no overlap */}
       {thumb && (
         <View style={styles.panelThumbWrap}>
           <Image source={thumb} style={styles.panelThumb} resizeMode="cover" />
@@ -886,7 +886,7 @@ const styles = StyleSheet.create({
   // ── Main row ──────────────────────────────────
   mainRow: { flex: 1, flexDirection: 'row' },
 
-  // ── Left sidebar — vertical action list ────────────
+  // ── Left sidebar - vertical action list ────────────
   leftSidebar: {
     width: SIDEBAR_W,
     justifyContent: 'center',
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
     height: rs(56),
   },
 
-  // Card face — horizontal row: [strip][icon][label+sub][badge]
+  // Card face - horizontal row: [strip][icon][label+sub][badge]
   sideFace: {
     flex: 1,
     borderRadius: rs(10),
@@ -946,7 +946,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  // Badge — sits at the row's right edge
+  // Badge - sits at the row's right edge
   sideBadgeWrap: {
     width: rs(13), height: rs(13),
     alignItems: 'center',
@@ -1006,7 +1006,7 @@ const styles = StyleSheet.create({
   },
   panelProgFill: { height: 2, borderRadius: 1 },
 
-  // ── Bottom tab bar — flat tactical panel, plain icons, gold hairline frame ──
+  // ── Bottom tab bar - flat tactical panel, plain icons, gold hairline frame ──
   bottomBar: {
     flexDirection: 'row',
     paddingVertical: rs(8),

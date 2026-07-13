@@ -1,5 +1,5 @@
 // Per-faction ambient background videos for CollectionScreen. Swap which clip
-// plays behind a faction's hero grid by editing a single line below — every
+// plays behind a faction's hero grid by editing a single line below - every
 // require() must stay a static literal (Metro can't resolve dynamic paths),
 // so add the new file under assets/video/ first, then point the key at it.
 //

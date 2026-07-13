@@ -48,7 +48,7 @@ function Particle({ color, delay, duration, x, size }) {
 export default function NarrationScreen({ navigation, route }) {
   const { width: W, height: H } = useWindowDimensions();
   const { stage, enemyGroup, autoSkip } = route.params || {};
-  // Guard against a missing/malformed nav entry (restored state, etc.) — the
+  // Guard against a missing/malformed nav entry (restored state, etc.) - the
   // mount effect below navigates away and the component early-returns null.
   const invalidParams = !stage || !Array.isArray(enemyGroup?.enemies) || enemyGroup.enemies.length === 0;
 
@@ -59,7 +59,7 @@ export default function NarrationScreen({ navigation, route }) {
   const chColor   = chapter?.color  || C.PRIMARY;
   const chAccent  = chapter?.accent || C.PRIMARY_LIGHT;
   // chColor is used only for ambient/atmospheric effects (gradient tints, glow, decorative line).
-  // chFg is the interactive foreground color — always uses chAccent which is guaranteed to be
+  // chFg is the interactive foreground color - always uses chAccent which is guaranteed to be
   // a bright, visible hue. Chapters 21-25 have near-black chColor values that would render
   // text, borders, and icons invisible against the dark background.
   const chFg      = chAccent;
@@ -83,7 +83,7 @@ export default function NarrationScreen({ navigation, route }) {
   const btnPulse   = useRef(new Animated.Value(1)).current;
   const linePulse  = useRef(new Animated.Value(0.4)).current;
 
-  // ── Story BGM — keep playing while narration is shown ────────────────────
+  // ── Story BGM - keep playing while narration is shown ────────────────────
   useEffect(() => {
     AudioManager.startStoryBGM();
     return () => AudioManager.stopStoryBGM();
@@ -188,7 +188,7 @@ export default function NarrationScreen({ navigation, route }) {
     startDlg(0);
   }, []);
 
-  // Invalid entry — render nothing; the mount effect navigates away.
+  // Invalid entry - render nothing; the mount effect navigates away.
   if (invalidParams) return null;
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ export default function NarrationScreen({ navigation, route }) {
       <View style={S.lbTop} />
       <View style={[S.lbBottom, { height: LBOX }]} />
 
-      {/* Back button — positioned over the letterbox */}
+      {/* Back button - positioned over the letterbox */}
       <TouchableOpacity
         style={[S.backBtn, { top: LBOX + 8, left: 10 }]}
         onPress={() => { AudioManager.playButtonSFX(); navigation.goBack(); }}
@@ -279,7 +279,7 @@ export default function NarrationScreen({ navigation, route }) {
             opacity: glowPulse,
           }]} />
 
-          {/* Enemy image — floating + scale entrance */}
+          {/* Enemy image - floating + scale entrance */}
           <Animated.View style={{
             transform: [{ translateY: floatY }, { scale: imgScale }],
             opacity: imgFade,
@@ -321,7 +321,7 @@ export default function NarrationScreen({ navigation, route }) {
           {/* Animated accent line */}
           <Animated.View style={[S.accentLine, { backgroundColor: chColor, opacity: linePulse }]} />
 
-          {/* Dialogue box — tap to skip typewriter */}
+          {/* Dialogue box - tap to skip typewriter */}
           <TouchableOpacity activeOpacity={1} onPress={skipTyping} style={[S.dlgBox, { borderColor: chColor + '28' }]}>
             <LinearGradient
               colors={[C.SHADOW + 'A6', C.SHADOW + '61']}

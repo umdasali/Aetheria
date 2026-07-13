@@ -24,7 +24,7 @@ const GRID_GAP = 6;
 const CARD_W   = Math.floor((RIGHT_W - GRID_PAD * 2 - GRID_GAP * (COLS - 1)) / COLS);
 const CARD_H   = CARD_W; // avatars are 1:1
 
-const NAME_HINT = '3-16 characters — letters, numbers, spaces, - or _';
+const NAME_HINT = '3-16 characters - letters, numbers, spaces, - or _';
 
 const NAME_STATUS = [
   { key: 'unchanged', text: NAME_HINT,                    color: C.TEXT_MUTED },
@@ -39,7 +39,7 @@ export default function EditProfileScreen({ navigation }) {
   const updateProfile  = useGameStore(s => s.updateProfile);
   const playerUid      = useGameStore(s => s.playerUid);
 
-  // The Commander name is a globally-unique, server-claimed identity — only
+  // The Commander name is a globally-unique, server-claimed identity - only
   // available to registered (signed-in) players, claimed together with their
   // account at CloudAuthScreen sign-up. Guests keep the local default name.
   const [registered, setRegistered] = useState(!!getUser());
@@ -54,7 +54,7 @@ export default function EditProfileScreen({ navigation }) {
   // The player's original name was claimed server-side as globally unique (see
   // OnboardingScreen.js / supabase/migrations/0003_player_names.sql). Renaming
   // here must go through the same claim system instead of writing playerProfile
-  // .name directly — otherwise a player could freely rename to a duplicate of
+  // .name directly - otherwise a player could freely rename to a duplicate of
   // someone else's claimed name (which also leaks onto the public leaderboard).
   const [nameStatus, setNameStatus] = useState('unchanged'); // unchanged|invalid|checking|available|taken
   const [saving,     setSaving]     = useState(false);
@@ -78,7 +78,7 @@ export default function EditProfileScreen({ navigation }) {
     const t = setTimeout(async () => {
       const res = await checkNameAvailable(trimmed);
       if (checkIdRef.current !== myCheckId) return; // superseded by a newer edit
-      // Can't verify while offline/unreachable — don't block typing over it;
+      // Can't verify while offline/unreachable - don't block typing over it;
       // the actual claim attempt on Save is still the source of truth.
       setNameStatus(res.networkError ? 'unchanged' : (res.available ? 'available' : 'taken'));
     }, 450);
@@ -89,7 +89,7 @@ export default function EditProfileScreen({ navigation }) {
     AudioManager.playButtonSFX();
     const trimmed = editName.trim();
     const oldName = (playerProfile.name || '').trim();
-    // The name last CONFIRMED registered server-side — may lag behind oldName
+    // The name last CONFIRMED registered server-side - may lag behind oldName
     // if a previous claim/rename here or in Onboarding hit a networkError and
     // only committed locally. Renaming against a stale server name would fail
     // ownership checks, so fall back to claiming fresh when nothing is
@@ -106,7 +106,7 @@ export default function EditProfileScreen({ navigation }) {
       navigation.goBack();
     };
 
-    // Unchanged name — skip validation/claim entirely and just save the other
+    // Unchanged name - skip validation/claim entirely and just save the other
     // fields. Important for accounts whose current name predates NAME_PATTERN
     // enforcement here (e.g. saved through this screen before this fix): without
     // this early return, those players would be permanently blocked from saving
@@ -288,7 +288,7 @@ export default function EditProfileScreen({ navigation }) {
         {/* Divider */}
         <View style={s.divider} />
 
-        {/* Right: avatar grid — dedicated profile avatars */}
+        {/* Right: avatar grid - dedicated profile avatars */}
         <View style={s.rightPanel}>
           <View style={s.sectionHdr}>
             <View style={[s.sectionAccent, { backgroundColor: C.PRIMARY }]} />
@@ -303,7 +303,7 @@ export default function EditProfileScreen({ navigation }) {
             showsVerticalScrollIndicator={false}
             renderItem={({ item: avatar, index }) => {
               const sel = editAvatarId === avatar.id;
-              // Only the non-last column in each row needs a right margin — the
+              // Only the non-last column in each row needs a right margin - the
               // grid's contentContainerStyle already supplies the row-to-row (gap)
               // spacing. Applying marginRight unconditionally to every item (as
               // before) added one extra GRID_GAP per row beyond what CARD_W's math
@@ -420,7 +420,7 @@ const s = StyleSheet.create({
 
   heroGrid: { paddingHorizontal: GRID_PAD, paddingBottom: 10, gap: GRID_GAP },
   // marginRight is applied conditionally per-item in renderItem (skipped on the
-  // last column) so rows don't overflow the panel width — see the FlatList above.
+  // last column) so rows don't overflow the panel width - see the FlatList above.
   heroItem:  { width: CARD_W, marginBottom: 0 },
   heroCard: {
     width: CARD_W, height: CARD_H,

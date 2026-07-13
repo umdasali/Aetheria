@@ -21,7 +21,7 @@ export const DUNGEON_DEFS = [
     id:         'gilded_vault',
     name:       'Gilded Vault',
     subtitle:   'Hoarded gold for the taking',
-    lore:       'Deep beneath the ruins of the Emberveil war camps, the victors buried their fortune — guarded by greed-driven phantoms who never truly died.',
+    lore:       'Deep beneath the ruins of the Emberveil war camps, the victors buried their fortune - guarded by greed-driven phantoms who never truly died.',
     rewardType: 'gold',
     accent:     C.GOLD,
     icon:       'cash-outline',
@@ -38,7 +38,7 @@ export const DUNGEON_DEFS = [
     id:         'ascendant_grotto',
     name:       'Ascendant Grotto',
     subtitle:   'Rank-gated ascension materials',
-    lore:       'The Grotto pulses with raw aetheria energy — wings, butterflies, and feathers crystallised from fallen champions who gave everything to ascend.',
+    lore:       'The Grotto pulses with raw aetheria energy - wings, butterflies, and feathers crystallised from fallen champions who gave everything to ascend.',
     rewardType: 'material',
     accent:     C.PRIMARY_LIGHT,
     icon:       'sparkles-outline',
@@ -54,8 +54,8 @@ export const DUNGEON_DEFS = [
   {
     id:         'void_sanctum',
     name:       'Void Sanctum',
-    subtitle:   'Mixed materials — all ranks',
-    lore:       'Where the five factions\' leylines converge, the Sanctum bleeds all forms of aetheria at once. The void does not discriminate — bring the strongest to claim its bounty.',
+    subtitle:   'Mixed materials - all ranks',
+    lore:       'Where the five factions\' leylines converge, the Sanctum bleeds all forms of aetheria at once. The void does not discriminate - bring the strongest to claim its bounty.',
     rewardType: 'material',
     accent:     C.CYAN,
     icon:       'planet-outline',
@@ -111,7 +111,7 @@ export function getDungeonTier(dungeonId, tier) {
   return d ? (d.tiers.find(t => t.tier === tier) || null) : null;
 }
 
-// Scaled enemy group for a dungeon tier — mirrors the Tower's stat-scaling approach.
+// Scaled enemy group for a dungeon tier - mirrors the Tower's stat-scaling approach.
 export function getDungeonEnemyGroup(dungeonId, tier) {
   const d = getDungeonById(dungeonId);
   if (!d) return ENEMY_GROUPS[0];
@@ -120,7 +120,7 @@ export function getDungeonEnemyGroup(dungeonId, tier) {
   const mult = t.mult;
   return {
     id:          `dungeon_${dungeonId}_${tier}`,
-    name:        `${d.name} — Tier ${t.label}`,
+    name:        `${d.name} - Tier ${t.label}`,
     description: d.subtitle,
     enemies: base.enemies.map(e => ({
       ...e,

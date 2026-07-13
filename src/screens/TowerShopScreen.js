@@ -33,7 +33,7 @@ const BDL_IMG_H = Math.round(CARD_H * 0.28);
 // Gem pricing: a full weekly 1→300 climb yields ~5,495 coins (rescaled 2026-07 to
 // track the same sqrt difficulty curve as enemy stats, after TOWER_MAX_FLOOR was
 // raised 200→300 without re-tuning coin totals). At ~2.5-3 coins per gem that
-// caps shop gems at ~2,000/week — in line with quest/boss income.
+// caps shop gems at ~2,000/week - in line with quest/boss income.
 // (The old 0.3 coins/gem rate made the tower worth ~17k gems/week and broke
 // the gacha economy; the pre-rescale linear coin/gold formulas later did too.)
 const BUNDLES = [
@@ -66,12 +66,12 @@ function AscCard({ item, coins, ownedCount, onBuy }) {
         />
         <Image source={item.image} style={ac.img} resizeMode="contain" />
 
-        {/* Rank badge — top right */}
+        {/* Rank badge - top right */}
         <View style={[ac.rankBadge, { backgroundColor: r.bg, borderColor: r.glow + 'AA' }]}>
           <Text style={[ac.rankTxt, { color: r.text }]}>{item.rankLabel}</Text>
         </View>
 
-        {/* Owned count — top left, only if owned */}
+        {/* Owned count - top left, only if owned */}
         {ownedCount > 0 && (
           <View style={ac.ownedBadge}>
             <Text style={ac.ownedTxt}>×{ownedCount}</Text>

@@ -95,7 +95,7 @@ export default function PullHistoryScreen({ navigation }) {
           <Text style={s.headerTitle}>PULL HISTORY</Text>
           <Text style={s.headerSub}>{pullHistory.length} / 300 records</Text>
         </View>
-        {/* Pity counter — reflects the banner type of the most recent pull */}
+        {/* Pity counter - reflects the banner type of the most recent pull */}
         <View style={s.pityChip}>
           <Text style={s.pityChipLabel}>{pityLabel}</Text>
           <Text style={s.pityChipCount}>{displayPity}</Text>
@@ -105,7 +105,7 @@ export default function PullHistoryScreen({ navigation }) {
 
       {/* Body: sidebar filter + list */}
       <View style={s.body}>
-        {/* Left sidebar — rank filter */}
+        {/* Left sidebar - rank filter */}
         <View style={s.sidebar}>
           <LinearGradient colors={[C.BG_BASE, C.BG_MID]} style={StyleSheet.absoluteFill} />
           {FILTERS.map(f => {

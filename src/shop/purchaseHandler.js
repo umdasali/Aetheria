@@ -16,7 +16,7 @@ export async function resolvePurchase(pack) {
   }
 
   if (pack.currency === 'iap') {
-    // Defensive backstop — the Shop UI hides IAP packs while IAP_ENABLED is
+    // Defensive backstop - the Shop UI hides IAP packs while IAP_ENABLED is
     // false, so this path is only reached when RevenueCat is fully configured.
     if (!IAP_ENABLED) return { ok: false, reason: 'unavailable' };
     return rcPurchase(pack.productId);

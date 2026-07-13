@@ -24,7 +24,7 @@ const BODY_PAD = 12;
 const TIER_BADGE_COLOR = { boss: C.DANGER, 'mini-boss': C.WARNING, mob: C.TEXT_MUTED };
 const TIER_BADGE_LABEL = { boss: 'BOSS', 'mini-boss': 'MINI-BOSS', mob: 'MOB' };
 
-// Human-readable ailment descriptions — mirrors the effect → mechanic mapping
+// Human-readable ailment descriptions - mirrors the effect → mechanic mapping
 // in battleEngine.js, spelled out for players browsing the Codex rather than
 // fighting the battle live.
 const EFFECT_LABELS = {
@@ -49,7 +49,7 @@ export default function CodexDetailScreen({ navigation, route }) {
   const { type, key } = route.params;
   const { width: screenW, height: screenH } = useWindowDimensions();
 
-  // Ambient looping background video — muted, paused while the screen is
+  // Ambient looping background video - muted, paused while the screen is
   // unfocused so it doesn't keep decoding frames off-screen. play()/pause()
   // are wrapped in try/catch because the native player can already be
   // released by the time this fires (e.g. on back-navigation unmount),
@@ -64,7 +64,7 @@ export default function CodexDetailScreen({ navigation, route }) {
     return () => { try { bgVideoPlayer.pause(); } catch (_) {} };
   }, [bgVideoPlayer]));
   // Android-only: BlurView's real-time blur methods need a BlurTargetView ref
-  // to know what to sample — without it, blurMethod silently falls back to
+  // to know what to sample - without it, blurMethod silently falls back to
   // "none" (a flat tint, no actual blur). iOS ignores blurTarget entirely.
   const videoTargetRef = useRef(null);
 
@@ -123,7 +123,7 @@ export default function CodexDetailScreen({ navigation, route }) {
       <View style={styles.safe}>
         <View style={styles.body}>
 
-          {/* LEFT — card / chapter panel */}
+          {/* LEFT - card / chapter panel */}
           <View style={[styles.cardCol, { width: CARD_W }]}>
             {bestiary ? (
               <EnemyCard entry={bestiary} width={CARD_W} height={CARD_H} isBoss={isBoss} />
@@ -135,7 +135,7 @@ export default function CodexDetailScreen({ navigation, route }) {
             </TouchableOpacity>
           </View>
 
-          {/* RIGHT — lore panel */}
+          {/* RIGHT - lore panel */}
           <View style={styles.infoCol}>
             {bestiary ? (
               <>
@@ -175,7 +175,7 @@ export default function CodexDetailScreen({ navigation, route }) {
   );
 }
 
-// ─── Combat profile — HP/ATK/DEF, ailment, signature skills ────────────────
+// ─── Combat profile - HP/ATK/DEF, ailment, signature skills ────────────────
 
 function CombatProfile({ combat, accent }) {
   return (
@@ -230,7 +230,7 @@ function EnemyCard({ entry, width, height, isBoss }) {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
   // Boss-only VFX: a slow breathing glow around the border, plus a diagonal
-  // shimmer sweep that fires, pauses, then repeats — same pattern HeroCard.js
+  // shimmer sweep that fires, pauses, then repeats - same pattern HeroCard.js
   // already uses for Sovereign heroes, just recolored to the boss accent.
   useEffect(() => {
     if (!isBoss) return;

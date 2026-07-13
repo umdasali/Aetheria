@@ -1,4 +1,4 @@
-// Dedicated 1:1 player profile avatars — independent from hero art.
+// Dedicated 1:1 player profile avatars - independent from hero art.
 export const DEFAULT_AVATAR_ID = 'avatar-01';
 
 const AVATAR_IMAGES = {

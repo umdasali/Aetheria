@@ -19,7 +19,7 @@ import { checkNameAvailable, claimName, NAME_PATTERN } from '../cloud/nameServic
 
 // Name key rules mirror supabase/migrations/0003_player_names.sql exactly:
 // 3-16 chars, letters/digits/spaces/underscore/hyphen only.
-const NAME_HINT = '3-16 characters — letters, numbers, spaces, - or _';
+const NAME_HINT = '3-16 characters - letters, numbers, spaces, - or _';
 
 const NAME_STATUS = [
   { key: 'idle',      text: NAME_HINT,                    color: C.TEXT_MUTED },
@@ -30,7 +30,7 @@ const NAME_STATUS = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// InputField MUST be defined at module level — never inside the component.
+// InputField MUST be defined at module level - never inside the component.
 // Defining it inside causes React to treat it as a new component type on every
 // render, which remounts the TextInput and dismisses the keyboard after each
 // character typed.
@@ -136,7 +136,7 @@ export default function CloudAuthScreen({ navigation }) {
   const [name,       setName]       = useState('');
   const [nameStatus, setNameStatus] = useState('idle'); // idle|invalid|checking|available|taken
   // Set once signUp() has created the auth account but claiming the chosen name
-  // failed (race: someone else claimed it a moment earlier) — the account
+  // failed (race: someone else claimed it a moment earlier) - the account
   // already exists, so retrying here must only re-attempt the name claim, not
   // signUp() again (which would fail with "already registered").
   const [pendingAccountUser, setPendingAccountUser] = useState(null);
@@ -158,14 +158,14 @@ export default function CloudAuthScreen({ navigation }) {
     const t = setTimeout(async () => {
       const res = await checkNameAvailable(trimmed);
       if (checkIdRef.current !== myCheckId) return; // superseded by a newer edit
-      // Can't verify while offline/unreachable — don't block the player over it.
+      // Can't verify while offline/unreachable - don't block the player over it.
       setNameStatus(res.networkError ? 'idle' : (res.available ? 'available' : 'taken'));
     }, 450);
     return () => clearTimeout(t);
   }, [name, step]);
 
   // Claims the uid (guaranteeing it's globally unique before it's used as a
-  // trust token — see uidService.js) then the chosen name. Used both right
+  // trust token - see uidService.js) then the chosen name. Used both right
   // after a fresh signUp() and as the retry when a first attempt hit 'taken'.
   const claimIdentity = async (trimmedName) => {
     await useGameStore.getState().claimPlayerUid();
@@ -232,7 +232,7 @@ export default function CloudAuthScreen({ navigation }) {
 
   // ── Cloud sync after verified sign-in ─────────────────────────────────────
   const syncAndClose = async (user) => {
-    // See syncStartedRef above — a second concurrent call (timeout-delayed
+    // See syncStartedRef above - a second concurrent call (timeout-delayed
     // background resolve, or a racing AppState/manual verify check) must be a
     // pure no-op, not a second download+merge+upload cycle.
     if (syncStartedRef.current) return;
@@ -240,7 +240,7 @@ export default function CloudAuthScreen({ navigation }) {
 
     const currentUid = user.id;
 
-    // Auth succeeded — stop the button spinner and show the loading phase.
+    // Auth succeeded - stop the button spinner and show the loading phase.
     setLoading(false);
     setError('');
     setCloudSyncState('loading');
@@ -251,7 +251,7 @@ export default function CloudAuthScreen({ navigation }) {
     // True when a DIFFERENT user's data is sitting in the store (e.g. device sharing).
     const isDifferentUser = existingLocal.localUserId && existingLocal.localUserId !== currentUid;
 
-    // True when the local save is unclaimed — either never logged in or just logged
+    // True when the local save is unclaimed - either never logged in or just logged
     // out (resetStore sets localUserId back to null).
     // IMPORTANT: we must NOT run resolveConflict against an unclaimed local state.
     // After logout, checkTowerWeekReset() fires via onRehydrateStorage and stamps
@@ -260,7 +260,7 @@ export default function CloudAuthScreen({ navigation }) {
     // values, permanently destroying purchased currency when it re-uploads.
     const isUnclaimed = !existingLocal.localUserId;
 
-    // Everything below — including resetStore() — is inside this try/finally so a
+    // Everything below - including resetStore() - is inside this try/finally so a
     // failure anywhere (e.g. AsyncStorage.removeItem throwing inside resetStore)
     // can never leave cloudSyncState stuck on 'loading'. That state drives a
     // non-dismissable full-screen modal (onRequestClose is a no-op), so previously
@@ -273,7 +273,7 @@ export default function CloudAuthScreen({ navigation }) {
       const downloadResult = await withTimeout(downloadSave(currentUid), SYNC_TIMEOUT_MS);
 
       if (!downloadResult.ok) {
-        // Supabase returned an error (not a timeout — those throw to the catch below).
+        // Supabase returned an error (not a timeout - those throw to the catch below).
         // Don't touch the cloud save; just stamp auth info so the player can play.
         // The sync queue will retry automatically.
         useGameStore.setState({ cloudAccountEmail: user.email, localUserId: currentUid });
@@ -285,13 +285,13 @@ export default function CloudAuthScreen({ navigation }) {
         const cleanCloud = sanitizeState(migratedCloud) || migratedCloud;
 
         if (isDifferentUser || isUnclaimed) {
-          // Account switch OR returning after logout — load cloud save directly.
+          // Account switch OR returning after logout - load cloud save directly.
           // Merging is unsafe here: a blank/reset local state carries a fresh
           // updatedAt from checkTowerWeekReset and would win the LWW comparison,
           // silently replacing real gems/gold with initial-state defaults.
           useGameStore.setState({ ...cleanCloud, cloudAccountEmail: user.email, localUserId: currentUid });
         } else {
-          // Same authenticated user re-opening the app — merge to keep any
+          // Same authenticated user re-opening the app - merge to keep any
           // offline edits made since the last sync (e.g. gems earned mid-flight).
           const local = useGameStore.getState();
           const merged = resolveConflict(local, cleanCloud);
@@ -300,7 +300,7 @@ export default function CloudAuthScreen({ navigation }) {
         }
       } else {
         // ── No cloud save yet (ok=true, data=null) ─────────────────────────────
-        // First login for this account — upload the current local state so it
+        // First login for this account - upload the current local state so it
         // becomes the player's initial cloud save (preserves offline progress).
         // Note: handleSignUp already sets localUserId before syncAndClose runs,
         // so a brand-new account always hits this branch with isUnclaimed=false
@@ -311,11 +311,11 @@ export default function CloudAuthScreen({ navigation }) {
       }
     } catch (e) {
       console.warn('[CloudAuth] sync error:', e?.message ?? e?.code);
-      // Network timeout or unhandled error — mark the user as signed in so they
+      // Network timeout or unhandled error - mark the user as signed in so they
       // can keep playing. Their cloud save will sync on the next connection.
       useGameStore.setState({ cloudAccountEmail: user.email, localUserId: currentUid });
     } finally {
-      // Guaranteed to run even if resetStore() or anything above throws —
+      // Guaranteed to run even if resetStore() or anything above throws -
       // transitions to the restart prompt so the modal never gets stuck.
       setCloudSyncState('done');
     }
@@ -325,10 +325,10 @@ export default function CloudAuthScreen({ navigation }) {
   const handleLogin = async () => {
     if (!email.trim() || !password) return;
     setLoading(true); setError(''); setInfo('');
-    // withTimeout() can only abandon the CLIENT'S WAIT — it never cancels the
+    // withTimeout() can only abandon the CLIENT'S WAIT - it never cancels the
     // underlying request. If the 15s timeout fires but Supabase's real signIn
     // still succeeds a moment later, we must still reconcile (download+merge)
-    // instead of leaving localUserId unset — otherwise the next debounced
+    // instead of leaving localUserId unset - otherwise the next debounced
     // background sync would upload this never-merged local state straight
     // over the player's real cloud save. syncAndClose's own guard makes it
     // safe to also await it below without double-running.
@@ -339,7 +339,7 @@ export default function CloudAuthScreen({ navigation }) {
       await syncAndClose(user);
     } catch (e) {
       if (__DEV__) console.warn('[CloudAuth] login error:', JSON.stringify(e));
-      // Supabase throws when email is unconfirmed — redirect to verify step
+      // Supabase throws when email is unconfirmed - redirect to verify step
       if ((e?.message ?? '').includes('Email not confirmed')) {
         verifyPasswordRef.current = password;
         setVerifyEmail(email.trim().toLowerCase());
@@ -358,14 +358,14 @@ export default function CloudAuthScreen({ navigation }) {
 
     // Retry path: a previous attempt already created the account and only the
     // name claim failed (someone else took it a moment earlier). Don't call
-    // signUp() again — Supabase would reject it as "already registered".
+    // signUp() again - Supabase would reject it as "already registered".
     if (pendingAccountUser) {
       setLoading(true); setError('');
       const claimRes = await claimIdentity(trimmedName);
       setLoading(false);
       if (!claimRes.ok) {
         setNameStatus('taken');
-        setError('That name is already taken — try another.');
+        setError('That name is already taken - try another.');
         return;
       }
       const user = pendingAccountUser;
@@ -384,7 +384,7 @@ export default function CloudAuthScreen({ navigation }) {
     try {
       const user = await withTimeout(signUp(email.trim().toLowerCase(), password));
 
-      // Only wipe local data when it belongs to a DIFFERENT existing user — this
+      // Only wipe local data when it belongs to a DIFFERENT existing user - this
       // stops their progress leaking into the new account.
       // A player with no prior account (localUserId === null) keeps their offline
       // progress; it will be uploaded as their first cloud save after verification.
@@ -398,7 +398,7 @@ export default function CloudAuthScreen({ navigation }) {
       useGameStore.setState({ localUserId: user.id });
 
       // Claim the Commander name (and, transitively, the uid it rides on)
-      // together with the account — see claimIdentity above. Identity is
+      // together with the account - see claimIdentity above. Identity is
       // only ever reserved server-side at this registration step, never at
       // app launch, so an install that never signs up never burns a
       // uid/name row.
@@ -409,7 +409,7 @@ export default function CloudAuthScreen({ navigation }) {
         setLoading(false);
         setPendingAccountUser(user);
         setNameStatus('taken');
-        setError('That name was just taken — pick another to finish setting up your account.');
+        setError('That name was just taken - pick another to finish setting up your account.');
         return;
       }
 
@@ -456,7 +456,7 @@ export default function CloudAuthScreen({ navigation }) {
     if (step !== 'verify') return;
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') {
-        // Attach to the raw promise, not the withTimeout-wrapped race — a
+        // Attach to the raw promise, not the withTimeout-wrapped race - a
         // timeout here only means "stop waiting," not "the request failed."
         // Since this check is silent (no loading/error UI), a slow-but-real
         // success must still reach syncAndClose or it's stranded the same way
@@ -530,7 +530,7 @@ export default function CloudAuthScreen({ navigation }) {
     if (step === 'signup') {
       const nameInfo = NAME_STATUS.find(st => st.key === nameStatus) ?? NAME_STATUS[0];
       // Set once a previous attempt already created the account and only the
-      // name claim needs to be retried — the account fields are locked so the
+      // name claim needs to be retried - the account fields are locked so the
       // player can't accidentally trigger a second signUp() for the same email.
       const accountLocked = !!pendingAccountUser;
       const nameOk = NAME_PATTERN.test(name.trim()) && nameStatus !== 'taken' && nameStatus !== 'checking';
@@ -620,13 +620,13 @@ export default function CloudAuthScreen({ navigation }) {
         <Text style={s.formSub}>
           Click the link in your email (one-time use), then tap the button below.
           If you see an "expired" message on the web page, the link may already have
-          worked — just tap "I've Verified" to check.
+          worked - just tap "I've Verified" to check.
         </Text>
         <View style={s.errorArea}>
           {error ? <Text style={s.errorTxt}>{error}</Text> : null}
           {info  ? <Text style={s.infoTxt}>{info}</Text>  : null}
         </View>
-        <PrimaryBtn label="I'VE VERIFIED — CONTINUE" onPress={handleCheckVerified} loading={loading} />
+        <PrimaryBtn label="I'VE VERIFIED - CONTINUE" onPress={handleCheckVerified} loading={loading} />
         <View style={s.linksRow}>
           <TouchableOpacity
             onPress={handleResend}

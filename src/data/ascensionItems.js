@@ -31,7 +31,7 @@ export const ASCENSION_ITEMS = [
     forRanks:  ['A'],
     price:     300,
     image:     require('../../assets/Character-Ascension/the-lost-butterfly.webp'),
-    lore:      'A spirit that drifted between worlds for centuries, preserved in amber silence. Even frozen, its wings remember the wind — and the strength it carried.',
+    lore:      'A spirit that drifted between worlds for centuries, preserved in amber silence. Even frozen, its wings remember the wind - and the strength it carried.',
   },
   {
     id:        'broken_wing',

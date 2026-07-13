@@ -63,11 +63,11 @@ export default function CollectionScreen({ navigation }) {
     return () => { try { bgVideoPlayer.pause(); } catch (_) {} };
   }, [bgVideoPlayer]));
   // Android-only: BlurView's real-time blur methods need a BlurTargetView ref
-  // to know what to sample — without it, blurMethod silently falls back to
+  // to know what to sample - without it, blurMethod silently falls back to
   // "none" (a flat tint, no actual blur). iOS ignores blurTarget entirely.
   const videoTargetRef = useRef(null);
 
-  // O(1) membership lookups — stable refs unless the underlying arrays change
+  // O(1) membership lookups - stable refs unless the underlying arrays change
   const ownedSet = useMemo(() => new Set(ownedHeroes), [ownedHeroes]);
   const teamSet  = useMemo(() => new Set(team),        [team]);
   const isOwned  = useCallback((id) => ownedSet.has(id), [ownedSet]);
@@ -84,7 +84,7 @@ export default function CollectionScreen({ navigation }) {
     return list;
   }, [filter, sortBy, heroCollection]);
 
-  // Collection BGM — start on focus, stop on blur
+  // Collection BGM - start on focus, stop on blur
   useFocusEffect(
     useCallback(() => {
       AudioManager.startCollectionBGM();
@@ -92,13 +92,13 @@ export default function CollectionScreen({ navigation }) {
     }, [])
   );
 
-  // Stable press handler — keeps HeroGridCard memoization effective across re-renders
+  // Stable press handler - keeps HeroGridCard memoization effective across re-renders
   const handleHeroPress = useCallback((heroId) => {
     AudioManager.playButtonSFX();
     navigation.navigate('HeroDetail', { heroId });
   }, [navigation]);
 
-  // Stable renderItem — only re-created when the dependencies that affect card rendering change.
+  // Stable renderItem - only re-created when the dependencies that affect card rendering change.
   const renderItem = useCallback(({ item: hero }) => (
     <HeroGridCard
       hero={hero}
@@ -152,7 +152,7 @@ export default function CollectionScreen({ navigation }) {
         {/* ══ BODY ══ */}
         <View style={styles.body}>
 
-          {/* Faction sidebar — zIndex: 2 ensures sort dropdown floats above FlatList */}
+          {/* Faction sidebar - zIndex: 2 ensures sort dropdown floats above FlatList */}
           <View style={styles.sidebar}>
             <View style={styles.sideList}>
               {FACTION_FILTERS.map((f) => {
@@ -187,7 +187,7 @@ export default function CollectionScreen({ navigation }) {
               })}
             </View>
 
-            {/* Sort — sortArea has high zIndex so dropdown floats above grid */}
+            {/* Sort - sortArea has high zIndex so dropdown floats above grid */}
             <View style={styles.sortArea}>
               <View style={styles.sortSep} />
               <TouchableOpacity
@@ -219,7 +219,7 @@ export default function CollectionScreen({ navigation }) {
           </View>
 
           {/* Hero grid
-              extraData={team} — when team changes FlatList forces item re-renders
+              extraData={team} - when team changes FlatList forces item re-renders
               even if `filtered` (the data array) didn't change.             */}
           <FlatList
             data={filtered}
@@ -254,13 +254,13 @@ const HeroGridCard = memo(function HeroGridCard({ hero, owned, onTeam, effective
   const [imgErr, setImgErr] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const faction   = FACTIONS[hero.faction];
-  // Sovereign heroes are stored as rank 'S' + sovereign:true — fusion caps at S,
+  // Sovereign heroes are stored as rank 'S' + sovereign:true - fusion caps at S,
   // so effectiveRank (heroCollection data) never becomes 'SOVEREIGN'. Without
   // this, the grid badge showed a plain pink "S" for Sovereign heroes.
   const rankKey   = hero.sovereign ? 'SOVEREIGN' : effectiveRank;
   const rank      = RANK_COLORS[rankKey] || RANK_COLORS[hero.rank] || RANK_COLORS.C;
   // Badge is a compact auto-width pill sized for a single letter (no numberOfLines/
-  // ellipsis) — abbreviate to "SOV" like HeroCard.js does, rather than overflowing
+  // ellipsis) - abbreviate to "SOV" like HeroCard.js does, rather than overflowing
   // the grid card with the full "SOVEREIGN" string.
   const rankLabel = hero.sovereign ? 'SOV' : rankKey;
 
@@ -274,7 +274,7 @@ const HeroGridCard = memo(function HeroGridCard({ hero, owned, onTeam, effective
       onPress={() => onPress(hero.id)}
       activeOpacity={0.82}
     >
-      {/* Faction-tinted skeleton — visible immediately while portrait decodes */}
+      {/* Faction-tinted skeleton - visible immediately while portrait decodes */}
       {!imgErr && (
         <View style={[styles.cardArt, styles.cardPlaceholder, { backgroundColor: faction.color + '22' }]} />
       )}
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
   // ── Body ───────────────────────────────────────────────────────────────────
   body: { flex: 1, flexDirection: 'row' },
 
-  // Sidebar — zIndex: 2 ensures sort dropdown appears above the FlatList
+  // Sidebar - zIndex: 2 ensures sort dropdown appears above the FlatList
   sidebar: {
     width: SIDEBAR_W,
     backgroundColor: C.BG_BASE+'30',
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   sideCountBadge:  { marginRight: rs(8), paddingHorizontal: rs(6), paddingVertical: rs(2), borderRadius: rs(8) },
   sideCountText:   { fontSize: rf(12), fontWeight: '800' },
 
-  // Sort — elevated above sibling FlatList so dropdown is never clipped
+  // Sort - elevated above sibling FlatList so dropdown is never clipped
   sortArea: { paddingBottom: rs(6), zIndex: 10, elevation: 10 },
   sortSep:  { height: 1, backgroundColor: C.BORDER_SUBTLE, marginBottom: 2 },
   sortBtn:  { flexDirection: 'row', alignItems: 'center', gap: rs(5), paddingHorizontal: rs(12), paddingVertical: rs(8) },

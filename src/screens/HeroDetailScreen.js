@@ -263,7 +263,7 @@ function LevelTab({
           </View>
         </View>
 
-        {/* Progress bar — taller, full width */}
+        {/* Progress bar - taller, full width */}
         <View style={styles.lvBarWrap}>
           <StatBar value={level} max={maxLevel} color={C.PRIMARY} height={9} />
         </View>
@@ -412,7 +412,7 @@ function ForgeTab({
   const rankKey = hero.sovereign ? 'SOVEREIGN' : effectiveRankKey;
   const rank    = RANK_COLORS[effectiveRankKey] || RANK_COLORS[hero.rank];
   // Was keyed on effectiveRankKey directly, skipping the sovereign override right
-  // above — the preview showed the 80-coin S rate instead of the 200-coin
+  // above - the preview showed the 80-coin S rate instead of the 200-coin
   // SOVEREIGN rate for the exact copies convertExcessCopies now correctly pays out.
   const rate    = COINS_PER_COPY[rankKey] ?? COINS_PER_COPY.C;
   const maxConv = heroData?.copies ?? 0;
@@ -608,7 +608,7 @@ export default function HeroDetailScreen({ route, navigation }) {
   const maxLevel      = 10 + transcendence * 5;
 
   const effectiveRankKey = owned ? getEffectiveRank(hero.id) : hero.rank;
-  // Sovereign heroes are stored as rank 'S' + sovereign:true — fusion caps at S,
+  // Sovereign heroes are stored as rank 'S' + sovereign:true - fusion caps at S,
   // so effectiveRankKey never becomes 'SOVEREIGN'. Use rankKey (not
   // effectiveRankKey) anywhere this is DISPLAYED so the badge doesn't show a
   // plain pink "S" next to a gold-styled Sovereign HeroCard.
@@ -722,7 +722,7 @@ export default function HeroDetailScreen({ route, navigation }) {
       <View style={styles.safe}>
         <View style={styles.body}>
 
-          {/* LEFT — hero card */}
+          {/* LEFT - hero card */}
           <View style={[styles.cardCol, { width: CARD_W }]}>
             <Animated.View ref={cardRef} collapsable={false} style={{ transform: [{ scale: fuseScale }] }}>
               <HeroCard hero={hero} width={CARD_W} effectiveRank={effectiveRankKey} />
@@ -732,13 +732,13 @@ export default function HeroDetailScreen({ route, navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* RIGHT — info panel */}
+          {/* RIGHT - info panel */}
           <View style={styles.infoCol}>
             <View style={styles.nameRow}>
               <View style={[styles.rankDot, { backgroundColor: rank.bg }]} />
               <Text style={styles.heroName} numberOfLines={1}>{hero.name.toUpperCase()}</Text>
               <View style={[styles.rankBadge, { backgroundColor: rank.bg }]}>
-                {/* "SOV" abbreviation matches HeroCard's own compact rank badge —
+                {/* "SOV" abbreviation matches HeroCard's own compact rank badge -
                     the full "SOVEREIGN" string is reserved for its crown banner. */}
                 <Text style={[styles.rankTxt, { color: rank.text }]}>{hero.sovereign ? 'SOV' : rankKey}</Text>
               </View>

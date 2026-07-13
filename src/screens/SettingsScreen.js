@@ -170,7 +170,7 @@ export default function SettingsScreen({ navigation }) {
   // Keep auth state in sync; re-read on focus so returning from CloudAuth is instant
   useEffect(() => onAuthChanged(setAuthUser), []);
 
-  // Last-sync time is loaded on mount + every focus (see useFocusEffect below) —
+  // Last-sync time is loaded on mount + every focus (see useFocusEffect below) -
   // handleSyncNow updates it manually in between.
 
   const handleSyncNow = useCallback(async () => {
@@ -199,7 +199,7 @@ export default function SettingsScreen({ navigation }) {
             try {
               // Flush any progress made since the last debounced auto-sync (up to
               // 30s, or minutes if a retry is backing off) BEFORE wiping local
-              // state — otherwise resetStore() below silently destroys it both
+              // state - otherwise resetStore() below silently destroys it both
               // on-device and in the cloud with no way to recover it.
               const flush = await syncNow(() => useGameStore.getState());
               if (!flush.ok) {
@@ -214,7 +214,7 @@ export default function SettingsScreen({ navigation }) {
                 `${e?.message || 'Could not disconnect right now.'} Please check your connection and try again.`
               );
             } finally {
-              // Always clear the spinner, even if signOut()/resetStore() threw —
+              // Always clear the spinner, even if signOut()/resetStore() threw -
               // otherwise the DISCONNECT button spins forever with no recovery.
               setSignOut(false);
             }
@@ -247,7 +247,7 @@ export default function SettingsScreen({ navigation }) {
                     try {
                       await deleteAccount();
                       // Read fresh from the store rather than the closed-over
-                      // playerProfile/playerUid — this callback is memoized once
+                      // playerProfile/playerUid - this callback is memoized once
                       // (deps: [navigation]) and native-stack keeps SettingsScreen
                       // mounted underneath other screens, so a rename via
                       // EditProfileScreen since mount would otherwise release the
@@ -292,7 +292,7 @@ export default function SettingsScreen({ navigation }) {
   }, []);
 
   // Play home BGM while on this screen so the player can live-test music volume.
-  // Re-read auth state AND last-sync time on every focus — otherwise switching
+  // Re-read auth state AND last-sync time on every focus - otherwise switching
   // accounts via CloudAuth and returning here shows the previous account's stale
   // "Last Synced" timestamp under the newly connected account.
   useFocusEffect(
@@ -475,7 +475,7 @@ export default function SettingsScreen({ navigation }) {
               </View>
             </View>
 
-            {/* Sync now + account deletion — only when signed in */}
+            {/* Sync now + account deletion - only when signed in */}
             {authUser ? (
               <>
                 <View style={styles.cloudCard}>
@@ -502,7 +502,7 @@ export default function SettingsScreen({ navigation }) {
                   </View>
                 </View>
 
-                {/* Danger zone — account deletion (App Store / Play requirement) */}
+                {/* Danger zone - account deletion (App Store / Play requirement) */}
                 <View style={styles.cloudCard}>
                   <LinearGradient colors={[C.GLASS_1, C.GLASS_2]} style={StyleSheet.absoluteFill} />
                   <View style={[styles.rowBorder, { borderColor: C.DANGER + '40' }]} />

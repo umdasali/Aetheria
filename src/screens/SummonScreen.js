@@ -52,18 +52,18 @@ const pickRank = (pity, rates, limit = PITY_LIMIT) => {
   if (rand < sRate + aRate) return 'A';
   if (rand < sRate + aRate + bRate) return 'B';
   if (rates.C > 0) return 'C';
-  // Zero-C banner: float rounding can leak past the checks above — fall back
+  // Zero-C banner: float rounding can leak past the checks above - fall back
   // to the highest nonzero non-S rank.
   return rates.B > 0 ? 'B' : 'A';
 };
 
 // ── Genshin / WuWa-style banner system ───────────────────────────────────────
 //
-// All pools and rates are data-driven from src/data/events.js — edit
+// All pools and rates are data-driven from src/data/events.js - edit
 // STANDARD_BANNER, FIFTY_FIFTY_LOSS_IDS, STANDARD_RATES and EVENT_RATES there
 // to update the gacha manually.
 //
-// Which ranks can drop on a banner is governed by its rate table — a rank
+// Which ranks can drop on a banner is governed by its rate table - a rank
 // with rate 0 never rolls. Non-S pulls always draw from ALL heroes of the
 // rolled rank.
 //
@@ -76,7 +76,7 @@ const pickRank = (pity, rates, limit = PITY_LIMIT) => {
 //
 // Standard banner (rateUpHeroIds empty):
 //   • Rates: STANDARD_RATES.
-//   • S pulls come exclusively from STANDARD_BANNER.featuredSRankIds — no
+//   • S pulls come exclusively from STANDARD_BANNER.featuredSRankIds - no
 //     Sovereign proc, no 50/50; guarantee state is ignored and unchanged.
 //
 // shopExclusive heroes (e.g. hero_054) never appear in any pool.
@@ -114,7 +114,7 @@ const performSummon = (
   let offBannerPool = null;
   const getOffBannerPool = () => { return offBannerPool || (offBannerPool = buildOffBannerPool()); };
 
-  // Standard banner S pool — exactly the curated featured list, nothing else.
+  // Standard banner S pool - exactly the curated featured list, nothing else.
   const buildStandardSPool = () => {
     const pool = STANDARD_BANNER.featuredSRankIds
       .map(id => HEROES.find(h => h.id === id))
@@ -355,7 +355,7 @@ const SmallCardFront = ({ hero, isNew, isFeatured, width }) => {
         colors={['transparent', 'transparent', C.OVERLAY_DEEP]}
         style={StyleSheet.absoluteFill}
       />
-      {/* FEATURED star badge — top-left, only for rate-up S pulls */}
+      {/* FEATURED star badge - top-left, only for rate-up S pulls */}
       {isFeatured && (
         <View style={s.scFeatured}>
           <Text style={s.scFeaturedTxt}>★</Text>
@@ -377,7 +377,7 @@ const SmallCardFront = ({ hero, isNew, isFeatured, width }) => {
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function SummonScreen({ navigation, route }) {
   const { width: W, height: H } = useWindowDimensions();
-  // Per-property selectors — keeps pull-reveal animations free of unrelated re-renders
+  // Per-property selectors - keeps pull-reveal animations free of unrelated re-renders
   const gems                     = useGameStore(s => s.gems);
   const spendGems                = useGameStore(s => s.spendGems);
   const addHero                  = useGameStore(s => s.addHero);
@@ -441,7 +441,7 @@ export default function SummonScreen({ navigation, route }) {
   const sfxTimers       = useRef([]);
   const videoCardTimers = useRef([]);
   const videoEndedNaturally = useRef(false);
-  // Synchronous double-tap guard — isAnimating is React state, so two taps
+  // Synchronous double-tap guard - isAnimating is React state, so two taps
   // landing before the setIsAnimating(true) re-render commits both pass the
   // `isAnimating` check below and both run a full pull, silently overwriting
   // the first pull's in-flight reveal with the second's.
@@ -458,7 +458,7 @@ export default function SummonScreen({ navigation, route }) {
   const videoTransitioned   = useRef(false);
   const transitionToRevealRef = useRef(null);
 
-  // Banner ambient animation loops removed — background stays static.
+  // Banner ambient animation loops removed - background stays static.
 
   // ── Star particles ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -980,7 +980,7 @@ export default function SummonScreen({ navigation, route }) {
   // ── Phase: banner ─────────────────────────────────────────────────────────
   const renderBanner = () => {
     const standardSHeroes = STANDARD_BANNER.featuredSRankIds.map(id => HEROES.find(h => h.id === id)).filter(Boolean);
-    // Lower pools follow the rate tables — every hero of each rank whose base
+    // Lower pools follow the rate tables - every hero of each rank whose base
     // rate is above zero on that banner, best rank first.
     const lowerPoolFor = (rates) => {
       const ranks = ['A', 'B', 'C'].filter(r => rates[r] > 0);
@@ -1136,7 +1136,7 @@ export default function SummonScreen({ navigation, route }) {
                   }]} />
                 </View>
 
-                {/* 50/50 guarantee indicator — only shown on event banners */}
+                {/* 50/50 guarantee indicator - only shown on event banners */}
                 {activeEvent && (
                   <View style={[
                     s.guaranteeRow,
@@ -1221,7 +1221,7 @@ export default function SummonScreen({ navigation, route }) {
 
           {renderCardGrid(cardW, cardH)}
 
-          {/* Bottom action bar — both elements fill the bar, crossfade via opacity */}
+          {/* Bottom action bar - both elements fill the bar, crossfade via opacity */}
           <View style={s.revealBar}>
             {!isSingle && (
               <Animated.View style={[StyleSheet.absoluteFill, s.revealBarCenter, { opacity: tapHintAnim }]} pointerEvents="none">
@@ -1257,7 +1257,7 @@ export default function SummonScreen({ navigation, route }) {
 
         {/* Summary row */}
         <View style={s.summaryRow}>
-          {/* Featured chip — S-rank rate-up heroes on event banners */}
+          {/* Featured chip - S-rank rate-up heroes on event banners */}
           {(() => {
             const count = pullResults.filter(i => i.isFeatured).length;
             if (!count) return null;
@@ -1270,7 +1270,7 @@ export default function SummonScreen({ navigation, route }) {
               </View>
             );
           })()}
-          {/* Sovereign chip — heroes with sovereign flag */}
+          {/* Sovereign chip - heroes with sovereign flag */}
           {(() => {
             const count = pullResults.filter(i => i.hero?.sovereign).length;
             if (!count) return null;
@@ -1360,7 +1360,7 @@ export default function SummonScreen({ navigation, route }) {
         {pullPhase === 'results' && renderResults()}
       </View>
 
-      {/* Video phase — full-screen overlay (covers header too) */}
+      {/* Video phase - full-screen overlay (covers header too) */}
       {pullPhase === 'video' && (
         <View style={[StyleSheet.absoluteFill, s.videoOverlay]}>
           {renderVideo()}
@@ -1373,7 +1373,7 @@ export default function SummonScreen({ navigation, route }) {
       <Animated.View pointerEvents="none" style={[s.overlay, { backgroundColor: C.FLASH_GOLD,   opacity: flashGold  }]} />
       <Animated.View pointerEvents="none" style={[s.overlay, { backgroundColor: C.FLASH_PURPLE, opacity: flashPurp  }]} />
 
-      {/* Rates / odds disclosure — required for App Store (3.1.1) & Google Play */}
+      {/* Rates / odds disclosure - required for App Store (3.1.1) & Google Play */}
       {showRates && (
         <View style={[StyleSheet.absoluteFill, s.ratesOverlay]}>
           <TouchableWithoutFeedback onPress={() => setShowRates(false)}>
@@ -1388,7 +1388,7 @@ export default function SummonScreen({ navigation, route }) {
             </View>
             <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ paddingBottom: rs(6) }}>
               <Text style={s.ratesSection}>
-                Base probability — {activeEvent ? activeEvent.name : 'Standard banner'}
+                Base probability - {activeEvent ? activeEvent.name : 'Standard banner'}
               </Text>
               {(() => {
                 const rates = activeEvent ? EVENT_RATES : STANDARD_RATES;

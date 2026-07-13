@@ -47,31 +47,31 @@ const BG_CYCLE = ['emberveil', 'glaciara', 'sunspire', 'verdania', 'voidmark', '
 // Per-chapter battlefield theme (chapter number 1-25 → background key).
 // Matches each chapter's actual story theme rather than an arbitrary cycle.
 const CHAPTER_BG = {
-  1:  'glaciara',  // Shattered Veil — ice scouts invade
-  2:  'emberveil', // Ashen Inferno — fire drakes
-  3:  'sunspire',  // Dawn of Radiance — sacred light shrines
-  4:  'verdania',  // Thornwall — twisted ancient forest
-  5:  'verdania',  // Verdant Ruin — bloom corruption of nature
-  6:  'voidmark',  // Shadowbloom — darkness claims nature's crown
-  7:  'voidmark',  // Abyssal Gate — the abyss tears reality open
-  8:  'sunspire',  // Eclipse Rising — radiant light dragon
-  9:  'sunspire',  // Celestial Fracture — the celestial realm
-  10: 'voidmark',  // Void Queen's Reign — corrupted queen
-  11: 'emberveil', // Titan's March — titan army burns everything
-  12: 'voidmark',  // Time's End — the god of time unmakes the timeline
-  13: 'glaciara',  // Eternal Winter — permanent ice
-  14: 'emberveil', // Crimson Empire — blood empress
-  15: 'voidmark',  // World's Last Hour — the World Eater
-  16: 'voidmark',  // Cathedral of Chains — blood and shadow
-  17: 'khemara',   // The Hollow Crown — erased king's domain
-  18: 'sunspire',  // Divided Heaven — divine light and darkness
-  19: 'khemara',   // The Living Archive — ancient library labyrinth
-  20: 'voidmark',  // Before the First Breath — the dreaming entity
-  21: 'voidmark',  // Shadow Sovereign — the shadow realm
-  22: 'voidmark',  // The Cosmic Weave — rewriting reality from a star
-  23: 'glaciara',  // Demon Glacier — ice demon's frost
-  24: 'emberveil', // The Elder Crimson — the crimson bloodline
-  25: 'voidmark',  // The First Entity — predates the gods and the void
+  1:  'glaciara',  // Shattered Veil - ice scouts invade
+  2:  'emberveil', // Ashen Inferno - fire drakes
+  3:  'sunspire',  // Dawn of Radiance - sacred light shrines
+  4:  'verdania',  // Thornwall - twisted ancient forest
+  5:  'verdania',  // Verdant Ruin - bloom corruption of nature
+  6:  'voidmark',  // Shadowbloom - darkness claims nature's crown
+  7:  'voidmark',  // Abyssal Gate - the abyss tears reality open
+  8:  'sunspire',  // Eclipse Rising - radiant light dragon
+  9:  'sunspire',  // Celestial Fracture - the celestial realm
+  10: 'voidmark',  // Void Queen's Reign - corrupted queen
+  11: 'emberveil', // Titan's March - titan army burns everything
+  12: 'voidmark',  // Time's End - the god of time unmakes the timeline
+  13: 'glaciara',  // Eternal Winter - permanent ice
+  14: 'emberveil', // Crimson Empire - blood empress
+  15: 'voidmark',  // World's Last Hour - the World Eater
+  16: 'voidmark',  // Cathedral of Chains - blood and shadow
+  17: 'khemara',   // The Hollow Crown - erased king's domain
+  18: 'sunspire',  // Divided Heaven - divine light and darkness
+  19: 'khemara',   // The Living Archive - ancient library labyrinth
+  20: 'voidmark',  // Before the First Breath - the dreaming entity
+  21: 'voidmark',  // Shadow Sovereign - the shadow realm
+  22: 'voidmark',  // The Cosmic Weave - rewriting reality from a star
+  23: 'glaciara',  // Demon Glacier - ice demon's frost
+  24: 'emberveil', // The Elder Crimson - the crimson bloodline
+  25: 'voidmark',  // The First Entity - predates the gods and the void
 };
 
 function getBattleBg(dungeonMode, dungeonId, towerMode, towerFloor, chapterId) {
@@ -170,7 +170,7 @@ const applyEnrage = (teamArr) => {
 // ─── BattleScreen ─────────────────────────────────────────────────────────────
 
 export default function BattleScreen({ navigation, route }) {
-  // Per-property selectors — avoids whole-store re-renders during battle animations
+  // Per-property selectors - avoids whole-store re-renders during battle animations
   const team                      = useGameStore(s => s.team);
   const completeChapter           = useGameStore(s => s.completeChapter);
   const getHeroData               = useGameStore(s => s.getHeroData);
@@ -206,7 +206,7 @@ export default function BattleScreen({ navigation, route }) {
   const dungeonId      = route?.params?.dungeonId      || null;
   const dungeonRewards = route?.params?.dungeonRewards || null;
 
-  // Live screen dimensions — recalculated on resize (Expo web, tablet rotation, etc.)
+  // Live screen dimensions - recalculated on resize (Expo web, tablet rotation, etc.)
   const { width: dynW, height: dynH } = useWindowDimensions();
   const dynSideW      = Math.floor(dynW / 2) - SIDE_PAD * 2;
   const dynCardW      = Math.floor((dynSideW - CARD_GAP * 2) / 3 * 0.76);
@@ -248,7 +248,7 @@ export default function BattleScreen({ navigation, route }) {
   const [playerTeam,     setPlayerTeam]     = useState(buildPlayers);
   const [enemyTeam,      setEnemyTeam]      = useState(buildEnemies);
   const [energy,         setEnergy]         = useState(0);
-  // Shared enemy energy pool — mirrors the player's single energy bar (whichever
+  // Shared enemy energy pool - mirrors the player's single energy bar (whichever
   // enemy acts this turn draws from / feeds this one pool).
   const [enemyEnergy,    setEnemyEnergy]    = useState(0);
   const [turnNumber,     setTurnNumber]     = useState(1);
@@ -259,9 +259,9 @@ export default function BattleScreen({ navigation, route }) {
   const [battleResult,   setBattleResult]   = useState(null);
   const [isAnimating,    setIsAnimating]    = useState(false);
   const [selectedEnemy,  setSelectedEnemy]  = useState(0);
-  // Trump Card cinematic cut-in — holds the casting hero while the overlay plays
+  // Trump Card cinematic cut-in - holds the casting hero while the overlay plays
   const [trumpCutIn,     setTrumpCutIn]     = useState(null);
-  // Enemy skill cut-in — bosses/mini-bosses get a menacing slam when they unleash a skill
+  // Enemy skill cut-in - bosses/mini-bosses get a menacing slam when they unleash a skill
   const [enemyCutIn,     setEnemyCutIn]     = useState(null);
   // Battle speed: 1 | 2 | 3. Mirrored into a ref so async timers read the latest.
   const [speed,          setSpeed]          = useState(_lastSpeed);
@@ -279,13 +279,13 @@ export default function BattleScreen({ navigation, route }) {
   }, []);
   const playerAnims = useRef(mkAnims()).current;
   const enemyAnims  = useRef(mkAnims()).current;
-  // Whole-arena impact shake + full-screen flash (cosmetic overlays only —
+  // Whole-arena impact shake + full-screen flash (cosmetic overlays only -
   // these never gate the visibility of cards, so a missed frame is harmless)
   const arenaShakeX = useRef(new Animated.Value(0)).current;
   const screenFlash = useRef(new Animated.Value(0)).current;
 
   // If this screen mounted before AsyncStorage hydration finished, the teams
-  // were built from the default (pre-hydration) store — rebuild them once.
+  // were built from the default (pre-hydration) store - rebuild them once.
   const wasUnhydrated = useRef(!useGameStore.persist.hasHydrated());
   useEffect(() => {
     if (hydrated && wasUnhydrated.current) {
@@ -295,7 +295,7 @@ export default function BattleScreen({ navigation, route }) {
     }
   }, [hydrated, buildPlayers, buildEnemies]);
 
-  // Battle BGM — start when screen gains focus, stop the moment it loses focus
+  // Battle BGM - start when screen gains focus, stop the moment it loses focus
   useFocusEffect(useCallback(() => {
     AudioManager.startBattleBGM();
     return () => AudioManager.stopBattleBGM();
@@ -304,7 +304,7 @@ export default function BattleScreen({ navigation, route }) {
   // Cancel pending victory navigation if the screen unmounts (e.g. quit during the 750ms delay)
   useEffect(() => () => { clearTimeout(resultTimerRef.current); clearTimeout(phaseTimerRef.current); }, []);
 
-  // Shared quit confirmation — used by both the Quit button and hardware back.
+  // Shared quit confirmation - used by both the Quit button and hardware back.
   const confirmQuit = useCallback(() => {
     Alert.alert(
       'Quit Battle?',
@@ -316,7 +316,7 @@ export default function BattleScreen({ navigation, route }) {
     );
   }, [navigation]);
 
-  // Intercept Android hardware back so it can't silently abandon the battle —
+  // Intercept Android hardware back so it can't silently abandon the battle -
   // route it through the same Quit confirmation instead of popping the screen.
   useFocusEffect(useCallback(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -332,7 +332,7 @@ export default function BattleScreen({ navigation, route }) {
     const a = anims[Math.min(idx, 2)];
     if (!a) return;
     Animated.parallel([
-      // 5-stage decreasing shake — physical impact decay
+      // 5-stage decreasing shake - physical impact decay
       Animated.sequence([
         Animated.timing(a.shake, { toValue:  12, duration: 36, useNativeDriver: true }),
         Animated.timing(a.shake, { toValue: -10, duration: 36, useNativeDriver: true }),
@@ -345,7 +345,7 @@ export default function BattleScreen({ navigation, route }) {
         Animated.timing(a.flash, { toValue: 0.95, duration: 48,  useNativeDriver: true }),
         Animated.timing(a.flash, { toValue: 0,    duration: 340, useNativeDriver: true }),
       ]),
-      // Scale punch: compress → spring back — feels like absorbing the blow
+      // Scale punch: compress → spring back - feels like absorbing the blow
       Animated.sequence([
         Animated.timing(a.scale, { toValue: 0.86, duration: 52, useNativeDriver: true }),
         Animated.spring(a.scale, { toValue: 1.0, friction: 4, tension: 220, useNativeDriver: true }),
@@ -374,7 +374,7 @@ export default function BattleScreen({ navigation, route }) {
     Animated.parallel(animations).start();
   }, []);
 
-  // Whole-arena shake — symmetric translateX around 0 (pure transform, native-safe).
+  // Whole-arena shake - symmetric translateX around 0 (pure transform, native-safe).
   const triggerShake = useCallback((mag = 8) => {
     arenaShakeX.setValue(0);
     Animated.sequence([
@@ -386,7 +386,7 @@ export default function BattleScreen({ navigation, route }) {
     ]).start();
   }, [arenaShakeX]);
 
-  // Full-screen white flash — jump to peak via setValue, then fade to 0.
+  // Full-screen white flash - jump to peak via setValue, then fade to 0.
   // Fade-OUT direction is the proven-safe pattern on the New Architecture.
   const triggerScreenFlash = useCallback((peak = 0.4) => {
     screenFlash.setValue(peak);
@@ -456,14 +456,14 @@ export default function BattleScreen({ navigation, route }) {
       if (chapterId && !wasReplay) {
         completeChapter(chapterId, chapterRewards.gems, chapterRewards.heroId);
       } else if (chapterId && wasReplay) {
-        // Replays earn gold only — VictoryScreen and the stage card both
+        // Replays earn gold only - VictoryScreen and the stage card both
         // advertise this ("REPLAY · GOLD ONLY"), so actually grant it.
         addGold(stageGoldReward(chapterId % 10));
       }
 
       // Quest tracking
       trackQuestProgress('win_battles');
-      // Replays count too — the daily quest is "clear a stage", and players who
+      // Replays count too - the daily quest is "clear a stage", and players who
       // finished all 75 stages have no first-clears left to complete it with.
       if (fromStory) trackQuestProgress('clear_stage');
       trackAchievementProgress('battlesWon', 1);
@@ -503,7 +503,7 @@ export default function BattleScreen({ navigation, route }) {
 
   useEffect(() => {
     if (!isEnemyTurn || battleResult) return;
-    // Don't start the enemy turn while a Trump Card cut-in is still playing —
+    // Don't start the enemy turn while a Trump Card cut-in is still playing -
     // wait for onDone to clear trumpCutIn, then this effect re-fires cleanly.
     if (trumpCutIn) return;
     if (aiRunning.current) return;
@@ -522,7 +522,7 @@ export default function BattleScreen({ navigation, route }) {
       // ── Phase start: enemy DOTs/expiry, enrage, player regen (once) ─────────
       const dotMsgs = [];
       curEnemies = curEnemies.map((e, i) => {
-        // Must tick even with an empty statusEffects list — regen (BLESSING and
+        // Must tick even with an empty statusEffects list - regen (BLESSING and
         // friends) is driven by e.effect directly inside processStatusEffects,
         // not by an active debuff, so gating on statusEffects.length silently
         // starved every regen-passive enemy of its heal.
@@ -551,7 +551,7 @@ export default function BattleScreen({ navigation, route }) {
 
       // Helper: end the phase (commit a state, hand control back to the player).
       // stunDecrement runs once per ROUND for every stunned enemy, so a 2-stack
-      // always clears in exactly two rounds — the count visibly ticks down.
+      // always clears in exactly two rounds - the count visibly ticks down.
       const finishPhase = (enemies, players, message) => {
         const ticked = enemies.map((e) =>
           (e.stunned || 0) > 0 ? { ...e, stunned: e.stunned - 1 } : e
@@ -562,7 +562,7 @@ export default function BattleScreen({ navigation, route }) {
         if (!checkEnd(players, ticked)) {
           const nextIdx = nextPlayerIdx(players, currentTurnIdx);
           setCurrentTurnIdx(nextIdx);
-          // Chill halves this round's energy gain — symmetric with the enemy-side
+          // Chill halves this round's energy gain - symmetric with the enemy-side
           // rule (chill previously only ever slowed the acting enemy's own energy).
           const nextChilled = (players[nextIdx]?.statusEffects || []).some((fx) => fx.type === 'chill');
           setEnergy((p) => Math.min(MAX_ENERGY, p + (nextChilled ? Math.floor(ENERGY_PER_TURN * 0.5) : ENERGY_PER_TURN)));
@@ -640,14 +640,14 @@ export default function BattleScreen({ navigation, route }) {
             damageKey:  (curPlayers[targetIdx].damageKey || 0) + 1,
           };
           // Enemy effects (burn/poison/chill/shatter/weaken/stun) now actually proc on
-          // the player — basic attack = 25% chance via applyOnHitDebuff.
+          // the player - basic attack = 25% chance via applyOnHitDebuff.
           curPlayers[targetIdx] = applyOnHitDebuff(actor, curPlayers[targetIdx], false);
           if (EFFECT_MECHANICS[actor.effect] === 'lifedrain') {
             const drain = Math.floor(damage * 0.15);
             curEnemies[actorIdx] = { ...curEnemies[actorIdx], currentHp: Math.min(curEnemies[actorIdx].maxHp, curEnemies[actorIdx].currentHp + drain) };
           }
           lastDmg = damage;
-          msg = `${actor.name} attacks${isCrit ? ' — CRITICAL!' : ''}`;
+          msg = `${actor.name} attacks${isCrit ? ' - CRITICAL!' : ''}`;
           setTimeout(() => triggerHit(playerAnims, targetIdx), 80);
           triggerAttack(enemyAnims, actorIdx, 1);
           if (isCrit) { triggerScreenFlash(0.28); triggerShake(6); }
@@ -681,7 +681,7 @@ export default function BattleScreen({ navigation, route }) {
               curEnemies[actorIdx] = { ...curEnemies[actorIdx], currentHp: Math.min(curEnemies[actorIdx].maxHp, curEnemies[actorIdx].currentHp + drain) };
             }
             lastDmg = damage;
-            msg = `${actor.name}: ${skill.name}${isCrit ? ' — CRIT!' : ''}`;
+            msg = `${actor.name}: ${skill.name}${isCrit ? ' - CRIT!' : ''}`;
             setTimeout(() => triggerHit(playerAnims, targetIdx), 80);
             triggerAttack(enemyAnims, actorIdx, 1);
             if (isCrit) { triggerScreenFlash(0.28); triggerShake(6); }
@@ -707,7 +707,7 @@ export default function BattleScreen({ navigation, route }) {
 
     // Release the claim if this effect is torn down before the timer fires (e.g. a
     // Trump Card cut-in appears mid-flight, changing the trumpCutIn dependency below
-    // before this timer resolves) — otherwise aiRunning stays true forever and the
+    // before this timer resolves) - otherwise aiRunning stays true forever and the
     // enemy turn can never be picked up again once the blocker clears.
     return () => { clearTimeout(timer); aiRunning.current = false; };
   // Intentional stale closure: only re-trigger when the turn flips, the battle ends,
@@ -722,7 +722,7 @@ export default function BattleScreen({ navigation, route }) {
     if (isEnemyTurn || isAnimating || battleResult || enemyCutIn) return;
     const hero = playerTeam[currentTurnIdx];
     if (!hero || hero.currentHp <= 0) return;
-    // A stunned hero can't act — the player must switch to an unstunned hero
+    // A stunned hero can't act - the player must switch to an unstunned hero
     // (or, if the whole team is stunned, the stun-skip effect auto-passes the turn).
     if ((hero.stunned || 0) > 0) { setStatusMsg(`${hero.name} is stunned!`); return; }
 
@@ -746,7 +746,7 @@ export default function BattleScreen({ navigation, route }) {
         ne[tgtIdx] = { ...ne[tgtIdx], shield: Math.max(0, ne[tgtIdx].shield - 1) };
         msg = `${ne[tgtIdx].name}'s shield blocked!`;
       } else if (dodged) {
-        msg = `${hero.name} attacks — DODGED!`;
+        msg = `${hero.name} attacks - DODGED!`;
       } else {
         ne[tgtIdx] = {
           ...ne[tgtIdx],
@@ -759,10 +759,10 @@ export default function BattleScreen({ navigation, route }) {
           const drain = Math.floor(damage * 0.15);
           np[currentTurnIdx] = { ...np[currentTurnIdx], currentHp: Math.min(np[currentTurnIdx].maxHp, np[currentTurnIdx].currentHp + drain), lastHeal: drain, healKey: (np[currentTurnIdx].healKey || 0) + 1 };
         }
-        msg = `${hero.name} attacks${isCrit ? ' — CRITICAL HIT!' : '!'}`;
+        msg = `${hero.name} attacks${isCrit ? ' - CRITICAL HIT!' : '!'}`;
         setTimeout(() => triggerHit(enemyAnims, tgtIdx), 100);
         if (isCrit) { triggerScreenFlash(0.32); triggerShake(7); }
-        // Energy only on a connected hit — not on dodge or block
+        // Energy only on a connected hit - not on dodge or block
         newEnergy = Math.min(MAX_ENERGY, newEnergy + 15);
       }
 
@@ -797,7 +797,7 @@ export default function BattleScreen({ navigation, route }) {
             const drain = Math.floor(totalDmg * 0.15);
             if (drain > 0) np[currentTurnIdx] = { ...np[currentTurnIdx], currentHp: Math.min(np[currentTurnIdx].maxHp, np[currentTurnIdx].currentHp + drain), lastHeal: drain, healKey: (np[currentTurnIdx].healKey || 0) + 1 };
           }
-          msg = `${hero.name}: ${skill.name} — All enemies!`;
+          msg = `${hero.name}: ${skill.name} - All enemies!`;
           // Grant energy only if at least one enemy was actually hit
           if (aoeHit) newEnergy = Math.min(MAX_ENERGY, newEnergy + 10);
         } else {
@@ -806,7 +806,7 @@ export default function BattleScreen({ navigation, route }) {
             ne[tgtIdx] = { ...ne[tgtIdx], shield: Math.max(0, ne[tgtIdx].shield - 1) };
             msg = `Shield absorbed ${skill.name}!`;
           } else if (dodged) {
-            msg = `${hero.name}: ${skill.name} — DODGED!`;
+            msg = `${hero.name}: ${skill.name} - DODGED!`;
           } else {
             ne[tgtIdx] = { ...ne[tgtIdx], currentHp: Math.max(0, ne[tgtIdx].currentHp - damage), lastDamage: damage, lastCrit: isCrit, damageKey: (ne[tgtIdx].damageKey || 0) + 1 };
             ne[tgtIdx] = applyOnHitDebuff(hero, ne[tgtIdx], true);
@@ -814,7 +814,7 @@ export default function BattleScreen({ navigation, route }) {
               const drain = Math.floor(damage * 0.15);
               np[currentTurnIdx] = { ...np[currentTurnIdx], currentHp: Math.min(np[currentTurnIdx].maxHp, np[currentTurnIdx].currentHp + drain), lastHeal: drain, healKey: (np[currentTurnIdx].healKey || 0) + 1 };
             }
-            msg = `${hero.name}: ${skill.name}${isCrit ? ' — CRIT!' : ''}`;
+            msg = `${hero.name}: ${skill.name}${isCrit ? ' - CRIT!' : ''}`;
             setTimeout(() => triggerHit(enemyAnims, tgtIdx), 100);
             if (isCrit) { triggerScreenFlash(0.32); triggerShake(7); }
             // Energy only on a connected hit
@@ -831,7 +831,7 @@ export default function BattleScreen({ navigation, route }) {
           np = np.map((p, i) =>
             i === currentTurnIdx ? { ...p, shield: (p.shield || 0) + 1 } : p
           );
-          msg = `${hero.name}: ${skill.name} — Shielded!`;
+          msg = `${hero.name}: ${skill.name} - Shielded!`;
         } else {
           const preHealHps = np.map(p => p.currentHp);
           np = applyHealSkill(hero, np);
@@ -840,9 +840,9 @@ export default function BattleScreen({ navigation, route }) {
             if (healAmt > 0) return { ...p, lastHeal: healAmt, healKey: (p.healKey || 0) + 1 };
             return p;
           });
-          msg = `${hero.name}: ${skill.name} — Healed!`;
+          msg = `${hero.name}: ${skill.name} - Healed!`;
         }
-        // Heals and shields always succeed — always grant energy
+        // Heals and shields always succeed - always grant energy
         newEnergy = Math.min(MAX_ENERGY, newEnergy + 10);
       }
 
@@ -861,13 +861,13 @@ export default function BattleScreen({ navigation, route }) {
           lastHeal: drain, healKey: (np[currentTurnIdx].healKey || 0) + 1,
         };
       }
-      // Fire hit animations immediately — useNativeDriver means they run on the
+      // Fire hit animations immediately - useNativeDriver means they run on the
       // native thread, so no JS-thread stagger is needed and fewer timers = less lag.
       ne.forEach((e, i) => { if ((e.lastDamage || 0) > 0) triggerHit(enemyAnims, i); });
       msg = `${hero.name}: ${hero.trumpCard.name}!`;
       newEnergy = 0;
       // Signature moment: shake + blinding flash FIRST, then cut-in slides in
-      // through the fading brightness — identical to the summon reveal design.
+      // through the fading brightness - identical to the summon reveal design.
       const hd = getHeroData(hero.id);
       const cutInRank = hero.sovereign ? 'SOVEREIGN' : (hd?.effectiveRank || hero.rank);
       triggerShake(18);
@@ -885,7 +885,7 @@ export default function BattleScreen({ navigation, route }) {
     // ── Turn limit ──────────────────────────────────────────────────────────────
     const newTurnCount = turnCount + 1;
 
-    // One round has passed — tick down any player stuns (symmetric with the
+    // One round has passed - tick down any player stuns (symmetric with the
     // per-round enemy stun decrement in finishPhase).
     np = np.map((p) => ((p.stunned || 0) > 0 ? { ...p, stunned: p.stunned - 1 } : p));
 
@@ -896,11 +896,11 @@ export default function BattleScreen({ navigation, route }) {
     setTurnCount(newTurnCount);
 
     setTimeout(() => {
-      // Win check BEFORE turn limit — a killing blow on the 50th action must
+      // Win check BEFORE turn limit - a killing blow on the 50th action must
       // count as a victory, not a timeout loss.
       if (!checkEnd(np, ne)) {
         if (newTurnCount >= TURN_LIMIT) {
-          setStatusMsg('⏰ Turn limit reached — enemies endure...');
+          setStatusMsg('⏰ Turn limit reached - enemies endure...');
           showResult('lose', { wasReplay: false, xpGained: 0, towerMode, towerFloor, towerRewards, dungeonMode, dungeonRewards });
         } else {
           setIsEnemyTurn(true);
@@ -917,13 +917,13 @@ export default function BattleScreen({ navigation, route }) {
 
   // ── Player stun-skip ────────────────────────────────────────────────────
   // If it's the player's turn and EVERY living hero is stunned, no action is
-  // possible — auto-pass the turn (ticking the stuns down) so a player-side stun
+  // possible - auto-pass the turn (ticking the stuns down) so a player-side stun
   // can never soft-lock the battle. If only some heroes are stunned, steer
   // control to one that can act.
   //
   // isAnimating/playerTeam are deliberately excluded from the deps array below.
   // This body sets both itself (setIsAnimating(true), setPlayerTeam(...)) to start
-  // the forfeit delay — if they were dependencies, React would tear down this very
+  // the forfeit delay - if they were dependencies, React would tear down this very
   // effect instance the moment they change (i.e. on the next render, well before the
   // delay elapses), cancelling the forfeit timer before it ever fires and leaving
   // isAnimating stuck at true forever. Same stale-closure reasoning as the enemy-side
@@ -935,7 +935,7 @@ export default function BattleScreen({ navigation, route }) {
     if (!living.length) return;
 
     if (living.some((p) => (p.stunned || 0) <= 0)) {
-      // At least one hero can act — make sure the active slot isn't stunned/dead.
+      // At least one hero can act - make sure the active slot isn't stunned/dead.
       const active = playerTeam[currentTurnIdx];
       if (!active || active.currentHp <= 0 || (active.stunned || 0) > 0) {
         const idx = playerTeam.findIndex((p) => p.currentHp > 0 && (p.stunned || 0) <= 0);
@@ -953,12 +953,12 @@ export default function BattleScreen({ navigation, route }) {
       setIsEnemyTurn(true);
     }, Math.round(700 / (speedRef.current || 1)));
     // Defensively release isAnimating too, in case this instance is torn down
-    // before the timer fires — otherwise input stays locked with no way to recover.
+    // before the timer fires - otherwise input stays locked with no way to recover.
     return () => { clearTimeout(t); setIsAnimating(false); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnemyTurn, battleResult, enemyCutIn, currentTurnIdx]);
 
-  // ── Rehydration guard — brief spinner while AsyncStorage loads ───────────
+  // ── Rehydration guard - brief spinner while AsyncStorage loads ───────────
 
   if (!hydrated) {
     return (
@@ -1062,7 +1062,7 @@ export default function BattleScreen({ navigation, route }) {
         {/* ══ ARENA ══ */}
         <Animated.View style={[S.arena, { transform: [{ translateX: arenaShakeX }] }]}>
 
-          {/* — Enemy side — */}
+          {/* - Enemy side - */}
           <View style={S.teamSide}>
             <Text style={[S.teamLabel, { color: C.SECONDARY }]}>ENEMY TEAM</Text>
 
@@ -1105,10 +1105,10 @@ export default function BattleScreen({ navigation, route }) {
             </View>
           </View>
 
-          {/* — Divider — */}
+          {/* - Divider - */}
           <View style={S.divider} />
 
-          {/* — Player side — */}
+          {/* - Player side - */}
           <View style={S.teamSide}>
             <Text style={[S.teamLabel, { color: C.PRIMARY }]}>YOUR TEAM</Text>
             <View style={[S.cardRow, { gap: dynCardMargin }]}>
@@ -1193,7 +1193,7 @@ export default function BattleScreen({ navigation, route }) {
                     ) : (
                       <PillBtn
                         label="No Skill"
-                        sub="—"
+                        sub="-"
                         colors={[C.TEXT_DISABLED, C.TEXT_MUTED]}
                         onPress={() => {}}
                         disabled
@@ -1237,7 +1237,7 @@ export default function BattleScreen({ navigation, route }) {
           )}
         </View>
 
-        {/* ══ ENERGY TUTORIAL — shown once on first battle ══ */}
+        {/* ══ ENERGY TUTORIAL - shown once on first battle ══ */}
         <Modal visible={showTutorial} transparent animationType="fade">
           <View style={S.tutOverlay}>
             <View style={S.tutCard}>
@@ -1276,7 +1276,7 @@ export default function BattleScreen({ navigation, route }) {
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={S.tutBtnInner}
                 >
-                  <Text style={S.tutBtnTxt}>GOT IT  —  START BATTLE</Text>
+                  <Text style={S.tutBtnTxt}>GOT IT  -  START BATTLE</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -1303,7 +1303,7 @@ export default function BattleScreen({ navigation, route }) {
 
 // ─── BattleCard ───────────────────────────────────────────────────────────────
 
-// Lightweight status-effects key: "burn:2,poison:1" — much cheaper than JSON.stringify.
+// Lightweight status-effects key: "burn:2,poison:1" - much cheaper than JSON.stringify.
 const _fxKey = (arr) => (arr || []).map(fx => `${fx.type}:${fx.duration}`).join(',');
 
 // Custom equality: only re-render when the fields that actually change the card's
@@ -1329,7 +1329,7 @@ function _cardEqual(prev, next) {
   );
 }
 
-// Spring-in badge — each badge pops to scale(1) from scale(0) when first mounted.
+// Spring-in badge - each badge pops to scale(1) from scale(0) when first mounted.
 function BadgePill({ cfg, label }) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -1356,7 +1356,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
   const hpRatio  = unit.maxHp > 0 ? Math.max(0, unit.currentHp / unit.maxHp) : 0;
   const defeated = unit.currentHp <= 0;
 
-  // Gentle vertical float on the active hero — signals whose turn it is
+  // Gentle vertical float on the active hero - signals whose turn it is
   const floatAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!isActive || defeated) { floatAnim.setValue(0); return; }
@@ -1368,7 +1368,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
     return () => loop.stop();
   }, [isActive, defeated, floatAnim]);
 
-  // Death animation — scale down + fade when HP hits 0 (plays once per defeat)
+  // Death animation - scale down + fade when HP hits 0 (plays once per defeat)
   const deathAlpha = useRef(new Animated.Value(1)).current;
   const deathScale = useRef(new Animated.Value(1)).current;
   const wasDefeated = useRef(false);
@@ -1386,7 +1386,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
     }
   }, [defeated, deathAlpha, deathScale]);
 
-  // Ghost HP trail — amber bar that lingers at the old HP level, then catches up
+  // Ghost HP trail - amber bar that lingers at the old HP level, then catches up
   const prevHpRatioRef = useRef(hpRatio);
   const [ghostRatio, setGhostRatio] = useState(hpRatio);
   useEffect(() => {
@@ -1408,7 +1408,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
   const primaryFxCfg  = primaryFxType ? STATUS_DISPLAY[primaryFxType] : null;
   const statusColor   = primaryFxCfg?.color ?? null;
 
-  // Pulsing tint overlay — per-status timing and opacity range.
+  // Pulsing tint overlay - per-status timing and opacity range.
   const glowPulse = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!primaryFxCfg || defeated) { glowPulse.setValue(0); return; }
@@ -1421,7 +1421,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
     return () => loop.stop();
   }, [primaryFxType, defeated, glowPulse]);
 
-  // Stun stars — a small cluster that spins above the head while stunned.
+  // Stun stars - a small cluster that spins above the head while stunned.
   const stunSpin = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!stunned || defeated) return;
@@ -1499,7 +1499,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
       <View style={[S.hpBarRow, { width: cardW }]}>
         <Text style={S.hpLabel}>HP</Text>
         <View style={S.hpBarBg}>
-          {/* Ghost trail — lingers at old HP, then catches up */}
+          {/* Ghost trail - lingers at old HP, then catches up */}
           <View style={[S.hpGhostFill, { width: `${ghostRatio * 100}%` }]} />
           <LinearGradient
             colors={hpBarColors}
@@ -1534,7 +1534,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           </View>
         )}
 
-        {/* Pulsing filled tint — color + opacity keyed to the primary status effect */}
+        {/* Pulsing filled tint - color + opacity keyed to the primary status effect */}
         {primaryFxCfg && !defeated && (
           <Animated.View
             pointerEvents="none"
@@ -1555,7 +1555,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           />
         )}
 
-        {/* Status particle VFX — sparks/drops/crystals/shards per effect type */}
+        {/* Status particle VFX - sparks/drops/crystals/shards per effect type */}
         {primaryFxCfg && !defeated && (
           <StatusParticles
             type={primaryFxType}
@@ -1583,7 +1583,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           ]} />
         )}
 
-        {/* Status application flash — one-shot tint on debuff land */}
+        {/* Status application flash - one-shot tint on debuff land */}
         <Animated.View
           pointerEvents="none"
           style={[
@@ -1592,7 +1592,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           ]}
         />
 
-        {/* Heal flash — bright green glow when HP is restored */}
+        {/* Heal flash - bright green glow when HP is restored */}
         <Animated.View
           pointerEvents="none"
           style={[
@@ -1601,7 +1601,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           ]}
         />
 
-        {/* Heal burst — rising sparkle particles (same pattern as FloatingHeal) */}
+        {/* Heal burst - rising sparkle particles (same pattern as FloatingHeal) */}
         <HealBurst trigger={unit.healKey} imgH={cardH} />
 
         {/* Active faction ring */}
@@ -1621,14 +1621,14 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
           </View>
         )}
 
-        {/* Switch hint — shown on inactive alive player heroes */}
+        {/* Switch hint - shown on inactive alive player heroes */}
         {canSwitch && (
           <View style={S.switchHint}>
             <Text style={S.switchHintText}>SWITCH</Text>
           </View>
         )}
 
-        {/* Target badge — shown on selected enemy */}
+        {/* Target badge - shown on selected enemy */}
         {isSelected && !defeated && side === 'enemy' && (
           <View style={S.targetBadge}>
             <Text style={S.targetBadgeText}>TARGET</Text>
@@ -1663,7 +1663,7 @@ const BattleCard = React.memo(function BattleCard({ unit, side, isActive, isSele
         <FloatingDamage value={unit.lastDamage} isCrit={unit.lastCrit} trigger={unit.damageKey} imgH={cardH} />
         {/* Floating heal */}
         <FloatingHeal value={unit.lastHeal} trigger={unit.healKey} imgH={cardH} />
-        {/* Floating DOT damage — distinct color + icon, rises from bottom */}
+        {/* Floating DOT damage - distinct color + icon, rises from bottom */}
         <FloatingStatusDamage value={unit.lastDotDamage} dotType={unit.dotType} trigger={unit.dotKey} imgH={cardH} />
 
         {/* Name strip */}
@@ -1789,7 +1789,7 @@ const FloatingStatusDamage = React.memo(function FloatingStatusDamage({ value, d
 
 // ─── HealBurst ────────────────────────────────────────────────────────────────
 // One-shot burst of green sparkles on heal. Modelled on FloatingHeal:
-//   • starts at opacity 1 immediately (not fade-in) — same proven approach
+//   • starts at opacity 1 immediately (not fade-in) - same proven approach
 //   • uses bottom + alignSelf positioning to stay within overflow:hidden card bounds
 //   • 4 particles spread across different horizontal offsets
 
@@ -1873,7 +1873,7 @@ const STATUS_SPARK_COUNTS = { burn: 5, poison: 4, chill: 5, shatter: 4, weaken: 
 function StatusSpark({ type, cardW, cardH, index, count, color }) {
   const prog = useRef(new Animated.Value(0)).current;
 
-  // Stable per-spark layout + timing — computed once on mount via ref guard.
+  // Stable per-spark layout + timing - computed once on mount via ref guard.
   const r = useRef(null);
   if (!r.current) {
     const frac   = count > 1 ? index / (count - 1) : 0.5;
@@ -1998,7 +1998,7 @@ function StatusParticles({ type, cfg, cardW, cardH }) {
 // Full-screen cinematic when a Trump Card fires: the hero portrait slams in from
 // the left, the name + trump banner sweeps in from the right, then the whole
 // thing fades out. Purely cosmetic overlay (pointerEvents none) layered above the
-// battle — the Trump's damage has already been applied underneath, so nothing
+// battle - the Trump's damage has already been applied underneath, so nothing
 // here gates game logic. Native-safe: all entrances are transforms, and the only
 // opacity move is a fade-OUT from a setValue(1) start.
 

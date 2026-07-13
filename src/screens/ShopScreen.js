@@ -32,7 +32,7 @@ const BODY_H    = H - HEADER_H;
 const CARD_W    = Math.floor((CONTENT_W - PAD * 2 - GAP * 3) / 4);
 const CARD_H    = BODY_H - PAD * 2 - 18 - GAP;   // minus section strip + gap
 
-// ─── Currency pack card (gems / bundles — real-money, IAP) ─────────────────────
+// ─── Currency pack card (gems / bundles - real-money, IAP) ─────────────────────
 function PackCard({ pack, onBuy, purchasing, livePriceLabel }) {
   const accent = pack.color || C.PRIMARY;
   const imgH   = Math.round(CARD_H * 0.30);
@@ -77,7 +77,7 @@ function PackCard({ pack, onBuy, purchasing, livePriceLabel }) {
           style={pc.buyInner}
         >
           {/* Prefer the store's own live, localized price over the hardcoded
-              fallback — a baked-in priceLabel can drift from what's actually
+              fallback - a baked-in priceLabel can drift from what's actually
               charged (currency, region, a price change made in the store). */}
           <Text style={pc.buyTxt}>{livePriceLabel ?? pack.priceLabel}</Text>
         </LinearGradient>
@@ -121,12 +121,12 @@ function HeroPackPanel({ pack, gems, ownedCount, onBuy, purchasing }) {
 
   return (
     <View style={hp.panel}>
-      {/* Left — the card */}
+      {/* Left - the card */}
       <View style={hp.cardCol}>
         {hero ? <HeroCard hero={hero} width={cardW} /> : null}
       </View>
 
-      {/* Right — details + grant + buy */}
+      {/* Right - details + grant + buy */}
       <View style={hp.infoCol}>
         <View style={[hp.exTag, { borderColor: C.SOVEREIGN_GOLD + '88' }]}>
           <Ionicons name="sparkles" size={11} color={C.SOVEREIGN_GOLD} />
@@ -147,7 +147,7 @@ function HeroPackPanel({ pack, gems, ownedCount, onBuy, purchasing }) {
           <Text style={hp.grantHead}>THIS PACK CONTAINS</Text>
           <View style={hp.grantRow}>
             <Ionicons name="person" size={13} color={C.SOVEREIGN_GOLD} />
-            <Text style={hp.grantTxt}>{hero?.name ?? 'Hero'} — Sovereign hero (+1 copy)</Text>
+            <Text style={hp.grantTxt}>{hero?.name ?? 'Hero'} - Sovereign hero (+1 copy)</Text>
           </View>
           {!!g.gems && (
             <View style={hp.grantRow}>
@@ -282,7 +282,7 @@ export default function ShopScreen({ navigation }) {
 
   const handleBuy = async (pack) => {
     if (purchasingRef.current) return;
-    // Real-money purchases require a registered account — a guest's uid/name
+    // Real-money purchases require a registered account - a guest's uid/name
     // is never claimed server-side, so there's no identity to attach a
     // receipt/refund history to. Gem-cost packs (exclusive/hero packs) spend
     // in-game currency, not real money, so guests can still buy those.
@@ -300,12 +300,12 @@ export default function ShopScreen({ navigation }) {
         showToast(successMsg(pack), true);
       } else {
         if (res.reason === 'cancelled') {
-          // User dismissed the billing sheet — no toast needed
+          // User dismissed the billing sheet - no toast needed
         } else {
           const msg = res.reason === 'gems'           ? 'Not enough gems!'
-            : res.reason === 'unavailable'            ? 'Coming soon — not yet available'
+            : res.reason === 'unavailable'            ? 'Coming soon - not yet available'
             : res.reason === 'not_configured'         ? 'Store not available right now'
-            : res.reason === 'product_not_found'      ? 'Product unavailable — try again later'
+            : res.reason === 'product_not_found'      ? 'Product unavailable - try again later'
             : 'Purchase failed. Please try again.';
           showToast(msg, false);
         }
@@ -318,11 +318,11 @@ export default function ShopScreen({ navigation }) {
 
   const toastColor = toastIsOk ? C.SUCCESS : C.DANGER;
 
-  // GEMS and BUNDLES are real-money (IAP) tabs — hidden until IAP_ENABLED.
+  // GEMS and BUNDLES are real-money (IAP) tabs - hidden until IAP_ENABLED.
   const ALL_TABS = [
     { key: 'gems',      label: 'GEMS',      icon: 'diamond-outline',  hint: 'Premium gems for summoning and the exclusive shop.', iap: true },
     { key: 'bundles',   label: 'BUNDLES',   icon: 'gift-outline',     hint: 'Best-value gem + gold packs for fast progress.', iap: true },
-    { key: 'exclusive', label: 'EXCLUSIVE', icon: 'sparkles-outline', hint: 'A Sovereign found nowhere else — only here.' },
+    { key: 'exclusive', label: 'EXCLUSIVE', icon: 'sparkles-outline', hint: 'A Sovereign found nowhere else - only here.' },
   ];
   const TABS = ALL_TABS.filter(t => IAP_ENABLED || !t.iap);
   const activeHint = TABS.find(t => t.key === activeTab)?.hint ?? '';
@@ -348,7 +348,7 @@ export default function ShopScreen({ navigation }) {
 
           <View style={s.headerMid}>
             <Text style={s.hTitle}>SHOP</Text>
-            <Text style={s.hSub}>{IAP_ENABLED ? 'Gems, bundles & the exclusive Sovereign' : 'The exclusive Sovereign — more coming soon'}</Text>
+            <Text style={s.hSub}>{IAP_ENABLED ? 'Gems, bundles & the exclusive Sovereign' : 'The exclusive Sovereign - more coming soon'}</Text>
           </View>
 
           <View style={s.balPill}>

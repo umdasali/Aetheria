@@ -10,7 +10,7 @@ import { APP_INFO } from '../constants/appInfo';
 const DEFAULT_MESSAGE =
   'A new version of Aetheria: Legends Unbound is available with fixes and improvements. Please update to continue playing.';
 
-// Blocking screen — reached only from LoadingScreen when checkForceUpdate()
+// Blocking screen - reached only from LoadingScreen when checkForceUpdate()
 // (src/cloud/versionCheck.js) reports the installed build is below the
 // platform's min_version. There is no navigation route back to Home from
 // here: the hardware back button falls through to App.js's generic
