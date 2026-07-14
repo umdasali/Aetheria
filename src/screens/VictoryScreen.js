@@ -22,6 +22,8 @@ const { width: W, height: H } = Dimensions.get('window');
 const GEM_IMG  = require('../../assets/currency/gem.png');
 const GOLD_IMG = require('../../assets/currency/gold.png');
 const COIN_IMG = require('../../assets/currency/coin.png');
+const VICTORY_IMG = require('../../assets/battlefield-bg/victory.png');
+const DEFEAT_IMG  = require('../../assets/battlefield-bg/defeat.png');
 
 // ─── Particle ────────────────────────────────────────────────────────────────
 function Particle({ color, delay, duration, x, size }) {
@@ -68,6 +70,7 @@ export default function VictoryScreen({ navigation, route }) {
 
   // Tower mode: override rewards
   const part       = stageId ? stageId % 10 : 0;
+  const chapterNum = stageId ? Math.floor(stageId / 100) : 0;
   const goldReward = towerMode
     ? (towerRewards?.gold ?? 0)
     : dungeonMode
@@ -288,7 +291,7 @@ export default function VictoryScreen({ navigation, route }) {
         <View style={S.leftPanel}>
           <Animated.View style={[S.iconGlow, { backgroundColor: accentClr + '18', shadowColor: accentClr, opacity: glowPulse }]} />
           <Animated.View style={{ transform: [{ scale: iconScale }], opacity: iconFade }}>
-            <Text style={S.resultIcon}>{isWin ? '🏆' : '💀'}</Text>
+            <Image source={isWin ? VICTORY_IMG : DEFEAT_IMG} style={S.resultIcon} resizeMode="contain" />
           </Animated.View>
           <Animated.View style={{ transform: [{ translateY: titleSlide }], opacity: titleFade, alignItems: 'center' }}>
             <Text style={[S.resultTitle, { color: accentClr }]}>{isWin ? 'VICTORY!' : 'DEFEATED!'}</Text>
@@ -296,7 +299,7 @@ export default function VictoryScreen({ navigation, route }) {
             {stageId ? (
               <View style={[S.stagePill, { borderColor: accentClr + '40', backgroundColor: accentClr + '12' }]}>
                 <Ionicons name="map-outline" size={rs(10)} color={accentClr} />
-                <Text style={[S.stagePillTxt, { color: accentClr }]}>Stage {stageId}</Text>
+                <Text style={[S.stagePillTxt, { color: accentClr }]}>Chapter {chapterNum} · Part {part}</Text>
               </View>
             ) : null}
           </Animated.View>
@@ -606,7 +609,7 @@ const S = StyleSheet.create({
   // ── Left panel ──────────────────────────────────────────────────
   leftPanel: { width: '40%', justifyContent: 'center', alignItems: 'center', gap: rs(12), overflow: 'hidden' },
   iconGlow:  { position: 'absolute', width: rs(180), height: rs(180), borderRadius: rs(90), shadowRadius: 55, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, elevation: 40 },
-  resultIcon:  { fontSize: rf(64) },
+  resultIcon:  { width: rs(96), height: rs(96) },
   resultTitle: { fontSize: rf(26), fontWeight: '900', letterSpacing: 4, textAlign: 'center', textShadowColor: C.OVERLAY_MODAL, textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 8 },
   resultSub:   { fontSize: rf(13), color: C.TEXT_ON_DARK_SOFT, marginTop: rs(4), letterSpacing: 0.5, textAlign: 'center' },
   stagePill:   { flexDirection: 'row', alignItems: 'center', gap: rs(5), borderWidth: 1, borderRadius: rs(6), paddingHorizontal: rs(9), paddingVertical: rs(3), marginTop: rs(8) },
