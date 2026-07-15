@@ -47,11 +47,12 @@ function GlassPanel({
     : null;
 
   return (
-    <View style={[glow, style]}>
+    <View style={glow}>
       <View
         style={[
           styles.clip,
           { borderRadius: radius, borderWidth, borderColor, backgroundColor: bg },
+          style,
         ]}
       >
         {useBlur && (
