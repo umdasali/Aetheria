@@ -263,7 +263,9 @@
       "Bash(awk '{before+=$3; after+=$4; if\\($1==\"OK\"\\) ok++; if\\($1==\"SKIP\"\\) skip++} END { *)",
       "Bash(ffmpeg -encoders)",
       "Bash(timeout 20 ffmpeg -y -v error -nostdin -i \"assets/audio/Collection/reward-claim.mp3\" -c:a libmp3lame -b:a 128k /tmp/test_out.mp3)",
-      "Bash(ffmpeg -y -v error -nostdin -i \"assets/audio/Collection/reward-claim.mp3\" -c:a libmp3lame -b:a 128k /tmp/test_out.mp3)"
+      "Bash(ffmpeg -y -v error -nostdin -i \"assets/audio/Collection/reward-claim.mp3\" -c:a libmp3lame -b:a 128k /tmp/test_out.mp3)",
+      "Bash(echo \"started with pid $!\")",
+      "Bash(wait 68508)"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

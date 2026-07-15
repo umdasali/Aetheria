@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, Image, StyleSheet, TouchableOpacity, TouchableWithoutFeedback,
-  Animated, Dimensions, Easing, ScrollView, useWindowDimensions,
+  Animated, Dimensions, Easing, ScrollView, FlatList, useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -167,6 +167,38 @@ const performSummon = (
 
 // ── Featured hero (first S-rank) ─────────────────────────────────────────────
 const FEATURED = HEROES.find(h => h.rank === 'S') || HEROES[0];
+
+// ── Lower-rank pools (computed once - rate tables/heroes are static) ─────────
+// Every hero of each rank whose base rate is above zero on that banner, best
+// rank first. Hoisted out of renderBanner so the FlatList `data` prop below
+// stays reference-stable across re-renders instead of recomputing/reallocating
+// this ~89-entry array every time the screen re-renders (e.g. the 3.5s
+// featured-hero auto-cycle on the standard banner).
+const lowerPoolFor = (rates) => {
+  const ranks = ['A', 'B', 'C'].filter(r => rates[r] > 0);
+  return {
+    ranks,
+    heroes: ranks.flatMap(r => HEROES.filter(h => h.rank === r && !h.shopExclusive)),
+  };
+};
+const STANDARD_LOWER = lowerPoolFor(STANDARD_RATES);
+const EVENT_LOWER    = lowerPoolFor(EVENT_RATES);
+const STANDARD_S_HEROES = STANDARD_BANNER.featuredSRankIds.map(id => HEROES.find(h => h.id === id)).filter(Boolean);
+
+const MINI_AB_W   = rs(32);
+const MINI_AB_GAP = rs(5);
+const MINI_AB_ITEM_W = MINI_AB_W + MINI_AB_GAP;
+
+// ── Lower-rank thumbnail (memoized - avoids re-rendering ~89 Images on every
+// unrelated SummonScreen re-render, e.g. the featured-hero auto-cycle) ───────
+const MiniHeroThumb = React.memo(({ hero }) => (
+  <View style={[s.featMiniAB, { borderColor: RANK[hero.rank].glow + '55', marginRight: MINI_AB_GAP }]}>
+    <Image source={hero.image} style={s.featMiniImg} />
+    <View style={[s.featMiniRankBadge, { backgroundColor: RANK[hero.rank].bg }]}>
+      <Text style={[s.featMiniRankTxt, { color: RANK[hero.rank].text }]}>{hero.rank}</Text>
+    </View>
+  </View>
+));
 
 // ── Star particle data (fixed per module) ─────────────────────────────────────
 const STARS = Array.from({ length: 14 }, (_, i) => ({
@@ -979,18 +1011,9 @@ export default function SummonScreen({ navigation, route }) {
 
   // ── Phase: banner ─────────────────────────────────────────────────────────
   const renderBanner = () => {
-    const standardSHeroes = STANDARD_BANNER.featuredSRankIds.map(id => HEROES.find(h => h.id === id)).filter(Boolean);
-    // Lower pools follow the rate tables - every hero of each rank whose base
-    // rate is above zero on that banner, best rank first.
-    const lowerPoolFor = (rates) => {
-      const ranks = ['A', 'B', 'C'].filter(r => rates[r] > 0);
-      return {
-        ranks,
-        heroes: ranks.flatMap(r => HEROES.filter(h => h.rank === r && !h.shopExclusive)),
-      };
-    };
-    const standardLower = lowerPoolFor(STANDARD_RATES);
-    const eventLower    = lowerPoolFor(EVENT_RATES);
+    const standardSHeroes = STANDARD_S_HEROES;
+    const standardLower = STANDARD_LOWER;
+    const eventLower    = EVENT_LOWER;
     const feat     = activeEvent
       ? (HEROES.find(h => h.id === activeEvent.featuredHeroId) || FEATURED)
       : (standardSHeroes[featuredIdx] || FEATURED);
@@ -1076,16 +1099,19 @@ export default function SummonScreen({ navigation, route }) {
                     ))}
                   </View>
                   <Text style={[s.featSectionLabel, { marginTop: rs(6) }]}>{standardLower.ranks.join(' / ')} RANK  ·  ALL {standardLower.heroes.length} HEROES</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.featMinisScroll}>
-                    {standardLower.heroes.map(h => (
-                      <View key={h.id} style={[s.featMiniAB, { borderColor: RANK[h.rank].glow + '55' }]}>
-                        <Image source={h.image} style={s.featMiniImg} />
-                        <View style={[s.featMiniRankBadge, { backgroundColor: RANK[h.rank].bg }]}>
-                          <Text style={[s.featMiniRankTxt, { color: RANK[h.rank].text }]}>{h.rank}</Text>
-                        </View>
-                      </View>
-                    ))}
-                  </ScrollView>
+                  <FlatList
+                    horizontal
+                    data={standardLower.heroes}
+                    keyExtractor={h => h.id}
+                    renderItem={({ item }) => <MiniHeroThumb hero={item} />}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={s.featMinisScroll}
+                    initialNumToRender={12}
+                    maxToRenderPerBatch={12}
+                    windowSize={5}
+                    removeClippedSubviews
+                    getItemLayout={(_, index) => ({ length: MINI_AB_ITEM_W, offset: MINI_AB_ITEM_W * index, index })}
+                  />
                 </View>
               ) : (
                 <View style={s.infoCard}>
@@ -1104,16 +1130,19 @@ export default function SummonScreen({ navigation, route }) {
                     })}
                   </View>
                   <Text style={[s.featSectionLabel, { marginTop: rs(6) }]}>{eventLower.ranks.join(' / ')} RANK  ·  ALL {eventLower.heroes.length} HEROES</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.featMinisScroll}>
-                    {eventLower.heroes.map(h => (
-                      <View key={h.id} style={[s.featMiniAB, { borderColor: RANK[h.rank].glow + '55' }]}>
-                        <Image source={h.image} style={s.featMiniImg} />
-                        <View style={[s.featMiniRankBadge, { backgroundColor: RANK[h.rank].bg }]}>
-                          <Text style={[s.featMiniRankTxt, { color: RANK[h.rank].text }]}>{h.rank}</Text>
-                        </View>
-                      </View>
-                    ))}
-                  </ScrollView>
+                  <FlatList
+                    horizontal
+                    data={eventLower.heroes}
+                    keyExtractor={h => h.id}
+                    renderItem={({ item }) => <MiniHeroThumb hero={item} />}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={s.featMinisScroll}
+                    initialNumToRender={12}
+                    maxToRenderPerBatch={12}
+                    windowSize={5}
+                    removeClippedSubviews
+                    getItemLayout={(_, index) => ({ length: MINI_AB_ITEM_W, offset: MINI_AB_ITEM_W * index, index })}
+                  />
                 </View>
               )}
 
@@ -1713,7 +1742,7 @@ const s = StyleSheet.create({
 
   featSectionLabel: { fontSize: rf(13), fontWeight: '800', color: C.TEXT_MUTED, letterSpacing: 1.5, marginBottom: rs(4) },
   featMinis:        { flexDirection: 'row', gap: rs(5), flexWrap: 'wrap' },
-  featMinisScroll:  { flexDirection: 'row', gap: rs(5), paddingRight: rs(4) },
+  featMinisScroll:  { flexDirection: 'row', paddingRight: rs(4) },
   featMiniS: {
     width: rs(48), height: rs(48), borderRadius: rs(8), overflow: 'hidden', borderWidth: 2,
   },
