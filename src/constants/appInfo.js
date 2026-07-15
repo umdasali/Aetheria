@@ -8,7 +8,7 @@ export const APP_INFO = {
   privacyUrl:        'https://ziriverse.com/privacy',
   termsUrl:          'https://ziriverse.com/terms',
   accountDeletionUrl:'https://ziriverse.com/account-deletion',
-  version:      '1.0.0',
+  version:      '1.1.0',
   year:         '2025',
   heroCount:    HEROES.length,       // auto-updates as heroes.js grows
   stageCount:   STAGE_ORDER.length,  // auto-updates as story.js grows
