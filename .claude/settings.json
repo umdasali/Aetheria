@@ -250,7 +250,20 @@
       "Bash(git log *)",
       "Bash(~/Library/Android/sdk/emulator/emulator -list-avds)",
       "Bash(nohup ~/Library/Android/sdk/emulator/emulator -avd Pixel_6a -no-snapshot-load -no-boot-anim)",
-      "Bash(echo \"started, pid $!\")"
+      "Bash(echo \"started, pid $!\")",
+      "Bash(awk -F\"'\" '{print $2}')",
+      "Bash(grep -nwFf /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/0a81dc24-32c6-4637-87f9-401e544ab389/scratchpad/name_tokens.txt src/data/achievements.js)",
+      "Bash(grep -nwFf /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/0a81dc24-32c6-4637-87f9-401e544ab389/scratchpad/name_tokens.txt src/data/events.js)",
+      "Bash(grep -nwFf /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/0a81dc24-32c6-4637-87f9-401e544ab389/scratchpad/name_tokens.txt src/data/chronicle.js)",
+      "Bash(python3 /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/0a81dc24-32c6-4637-87f9-401e544ab389/scratchpad/do_gender_fix.py)",
+      "Bash(command -v npx)",
+      "Bash(cp assets/video/wish-animation.mp4 /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/03ee097d-00be-421d-a917-d0eef4c6404f/scratchpad/vid_orig.mp4)",
+      "Bash(ffmpeg -y -v error -i vid_orig.mp4 -c:v libx264 -crf 26 -preset slow -c:a aac -b:a 96k vid_crf26.mp4)",
+      "Bash(ffmpeg -y -v error -i vid_orig.mp4 -c:v libx264 -crf 23 -preset slow -c:a aac -b:a 96k vid_crf23.mp4)",
+      "Bash(awk '{before+=$3; after+=$4; if\\($1==\"OK\"\\) ok++; if\\($1==\"SKIP\"\\) skip++} END { *)",
+      "Bash(ffmpeg -encoders)",
+      "Bash(timeout 20 ffmpeg -y -v error -nostdin -i \"assets/audio/Collection/reward-claim.mp3\" -c:a libmp3lame -b:a 128k /tmp/test_out.mp3)",
+      "Bash(ffmpeg -y -v error -nostdin -i \"assets/audio/Collection/reward-claim.mp3\" -c:a libmp3lame -b:a 128k /tmp/test_out.mp3)"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

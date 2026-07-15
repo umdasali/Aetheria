@@ -65,6 +65,24 @@ export const EFFECT_MECHANICS = {
   SMITE:           'smite',
   ABYSSEDGE:       'smite',
   ECLIPSEDGE:      'smite',
+  SPECTERFLAME:    'smite',
+  // ── hero_091–107 additions ─────────────────────────────────────────────────
+  CIRCUIT_RIP:      'shatter',
+  PERMAFROST_FIST:  'shatter',
+  DEMON_BRAND:      'weaken',
+  NEURAL_OVERLOAD:  'weaken',
+  SCRIPTBIND:       'weaken',
+  SOULREAP:         'weaken',
+  CIRCUIT_CURSE:    'weaken',
+  DREAM_SNARE:      'stun',
+  MOON_HOWL:        'stun',
+  SYSTEM_FREEZE:    'stun',
+  HEXFLAME:         'burn',
+  RIME_TOUCH:       'chill',
+  BRAMBLE_REND:     'poison',
+  MIRRORSTEP:       'evasion',
+  SPRING_ZEAL:      'regen',
+  BIOSYNTH_BLOOM:   'regen',
 };
 
 const DEBUFF_SET = new Set(['stun', 'burn', 'poison', 'chill', 'shatter', 'weaken']);

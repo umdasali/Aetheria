@@ -59,7 +59,7 @@ export const HERO_PACKS = [
     repeatable: true,
     heroId: 'hero_054',
     grant: { gems: 500, gold: 50000, cores: 3 },
-    label: 'Nefertari Shahrzad',
+    label: 'Nefertari',
     sublabel: 'Shop-Exclusive Sovereign',
     tag: 'EXCLUSIVE',
     color: C.SOVEREIGN_GOLD,

@@ -45,14 +45,14 @@ export const HEROES = [
   // ── hero_001 · EMBERVEIL · S · Female ─────────────────────────────────────
   {
     id: 'hero_001',
-    name: 'Kira Voltz',
+    name: 'Marisol',
     frame: 'STORMCALLER',
     faction: 'EMBERVEIL',
     rank: 'S',
     element: 'Lightning',
     effect: 'PARALYSIS',
     class: 'Attacker',
-    cardId: 'EMB-01-KIRA',
+    cardId: 'EMB-01-MARISOL',
     image: require('../../assets/heroes/hero_001.webp'),
     about: 'A relentless thunder mage who channels raw storm energy into devastating chain strikes. She was exiled from EMBERVEIL for refusing orders and now fights entirely on her own terms. She held the ember throne through three cycles of dark silence - and stepped aside the moment its true sovereign returned, without a word asked or given.',
     hp: 3400, atk: 600, def: 185, crit: 550,
@@ -71,16 +71,16 @@ export const HEROES = [
   // ── hero_002 · EMBERVEIL · A · Female ─────────────────────────────────────
   {
     id: 'hero_002',
-    name: 'Ash Renn',
+    name: 'Valentina Ardente',
     frame: 'BLAZEGUARD',
     faction: 'EMBERVEIL',
     rank: 'A',
     element: 'Fire',
     effect: 'INCINERATE',
     class: 'Attacker',
-    cardId: 'EMB-02-ASH',
+    cardId: 'EMB-02-VALENTINA',
     image: require('../../assets/heroes/hero_002.webp'),
-    about: 'Elite vanguard of EMBERVEIL. Ash\'s sword is perpetually wreathed in solar flames capable of melting through any barrier. Born in the volcanic highlands, she fights without hesitation.',
+    about: 'Elite vanguard of EMBERVEIL. Valentina\'s sword is perpetually wreathed in solar flames capable of melting through any barrier. Born in the volcanic highlands, she fights without hesitation.',
     hp: 4200, atk: 520, def: 220, crit: 460,
     skills: [
       { name: 'Crescent Slash', cost: 1, description: 'A swift arc slash dealing moderate damage.', damage: 1.4 },
@@ -97,16 +97,16 @@ export const HEROES = [
   // ── hero_003 · GLACIARA · S · Female ──────────────────────────────────────
   {
     id: 'hero_003',
-    name: 'Yelena Morozova',
+    name: 'Zimara',
     frame: 'FROSTMEND',
     faction: 'GLACIARA',
     rank: 'S',
     element: 'Ice',
     effect: 'GLACIATION',
     class: 'Mage',
-    cardId: 'GLA-01-YELENA',
+    cardId: 'GLA-01-ZIMARA',
     image: require('../../assets/heroes/hero_003.webp'),
-    about: 'Supreme ice mage of GLACIARA. Yelena channels glacial frost into devastating arcane constructs - her crystalline spell-towers and blizzard barriers are considered masterpieces of the frozen battlefield.',
+    about: 'Supreme ice mage of GLACIARA. Zimara channels glacial frost into devastating arcane constructs - her crystalline spell-towers and blizzard barriers are considered masterpieces of the frozen battlefield.',
     hp: 3000, atk: 640, def: 155, crit: 580,
     skills: [
       { name: 'Frost Lance',    cost: 2, description: 'Hurls razor-sharp ice lances at the enemy.', damage: 2.0 },
@@ -123,16 +123,16 @@ export const HEROES = [
   // ── hero_004 · VERDANIA · A · Female ──────────────────────────────────────
   {
     id: 'hero_004',
-    name: 'Lyra Frost',
+    name: 'Aisling Doyle',
     frame: 'BLOOMWEAVE',
     faction: 'VERDANIA',
     rank: 'A',
     element: 'Nature',
     effect: 'BLOOM',
     class: 'Mage',
-    cardId: 'VRD-01-LYRA',
+    cardId: 'VRD-01-AISLING',
     image: require('../../assets/heroes/hero_004.webp'),
-    about: 'Nature mage of VERDANIA. Lyra commands living flora with arcane precision, weaving vines and blossoms into devastating spell constructs that overwhelm enemies with uncontrolled growth.',
+    about: 'Nature mage of VERDANIA. Aisling commands living flora with arcane precision, weaving vines and blossoms into devastating spell constructs that overwhelm enemies with uncontrolled growth.',
     hp: 2900, atk: 580, def: 160, crit: 540,
     skills: [
       { name: 'Thorn Barrage',  cost: 2, description: 'Launches a volley of enchanted thorns at a target.', damage: 2.0 },
@@ -149,16 +149,16 @@ export const HEROES = [
   // ── hero_005 · VERDANIA · B · Female ──────────────────────────────────────
   {
     id: 'hero_005',
-    name: 'Guren Tide',
+    name: 'Maeve Boyle',
     frame: 'ROOTGUARD',
     faction: 'VERDANIA',
     rank: 'B',
     element: 'Wind',
     effect: 'ENTANGLEMENT',
     class: 'Defender',
-    cardId: 'VRD-02-GUREN',
+    cardId: 'VRD-02-MAEVE',
     image: require('../../assets/heroes/hero_005.webp'),
-    about: 'Guardian of the VERDANIA woodlands. Guren\'s body is hardened by years of forest training, allowing her to withstand tremendous punishment while ensnaring enemies with enchanted roots and vines.',
+    about: 'Guardian of the VERDANIA woodlands. Maeve\'s body is hardened by years of forest training, allowing her to withstand tremendous punishment while ensnaring enemies with enchanted roots and vines.',
     hp: 6000, atk: 340, def: 470, crit: 260,
     skills: [
       { name: 'Root Bind',   cost: 1, description: 'Ensnares an enemy with enchanted roots.', damage: 0.5 },
@@ -175,14 +175,14 @@ export const HEROES = [
   // ── hero_006 · SUNSPIRE · B · Male ────────────────────────────────────────
   {
     id: 'hero_006',
-    name: 'Sol Frost',
+    name: 'Diego Lucero',
     frame: 'SOLARBOW',
     faction: 'SUNSPIRE',
     rank: 'B',
     element: 'Holy',
     effect: 'BLESSING',
     class: 'Support',
-    cardId: 'SUN-01-SOL',
+    cardId: 'SUN-01-DIEGO',
     image: require('../../assets/heroes/hero_006.webp'),
     about: 'A sacred herald of SUNSPIRE who fires blessed light arrows that both weaken foes and restore allies. His aim is guided by solar energy - once released, his arrows never miss.',
     hp: 3700, atk: 400, def: 230, crit: 370,
@@ -201,16 +201,16 @@ export const HEROES = [
   // ── hero_007 · EMBERVEIL · A · Male ───────────────────────────────────────
   {
     id: 'hero_007',
-    name: 'Zane Ember',
+    name: 'Dario Ferraro',
     frame: 'FLAMEBLADE',
     faction: 'EMBERVEIL',
     rank: 'A',
     element: 'Fire',
     effect: 'INCINERATE',
     class: 'Attacker',
-    cardId: 'EMB-03-ZANE',
+    cardId: 'EMB-03-DARIO',
     image: require('../../assets/heroes/hero_007.webp'),
-    about: 'Champion of EMBERVEIL\'s warrior order. Zane\'s blade is perpetually wreathed in volcanic flame, cutting through armor as if it were paper. He hunts the corruption spreading from beyond the veil.',
+    about: 'Champion of EMBERVEIL\'s warrior order. Dario\'s blade is perpetually wreathed in volcanic flame, cutting through armor as if it were paper. He hunts the corruption spreading from beyond the veil.',
     hp: 4400, atk: 490, def: 260, crit: 420,
     skills: [
       { name: 'Flame Slash',     cost: 1, description: 'A searing sword strike igniting the target.', damage: 1.3 },
@@ -227,16 +227,16 @@ export const HEROES = [
   // ── hero_008 · VOIDMARK · S · Female ──────────────────────────────────────
   {
     id: 'hero_008',
-    name: 'Mira Dawn',
+    name: 'Mirei',
     frame: 'VOIDPHANTOM',
     faction: 'VOIDMARK',
     rank: 'S',
     element: 'Void',
     effect: 'CORRUPTION',
     class: 'Attacker',
-    cardId: 'VMK-01-MIRA',
+    cardId: 'VMK-01-MIREI',
     image: require('../../assets/heroes/hero_008.webp'),
-    about: 'Shadow phantom of VOIDMARK. Mira strikes before enemies can perceive her presence, vanishing into void space between hits. Her every movement tears small rifts in reality itself.',
+    about: 'Shadow phantom of VOIDMARK. Mirei strikes before enemies can perceive her presence, vanishing into void space between hits. Her every movement tears small rifts in reality itself.',
     hp: 3300, atk: 610, def: 180, crit: 590,
     skills: [
       { name: 'Void Strike',  cost: 1, description: 'A swift void-infused backstab dealing bonus damage.', damage: 1.6 },
@@ -253,16 +253,16 @@ export const HEROES = [
   // ── hero_009 · SUNSPIRE · B · Male ────────────────────────────────────────
   {
     id: 'hero_009',
-    name: 'Kane Light',
+    name: 'Marcus Aurelio',
     frame: 'IRONSPIRE',
     faction: 'SUNSPIRE',
     rank: 'B',
     element: 'Holy',
     effect: 'BLESSING',
     class: 'Defender',
-    cardId: 'SUN-02-KANE',
+    cardId: 'SUN-02-MARCUS',
     image: require('../../assets/heroes/hero_009.webp'),
-    about: 'Iron bulwark of SUNSPIRE. Kane\'s sacred armor has never been breached in over 300 battles. He stands between his allies and annihilation without flinching.',
+    about: 'Iron bulwark of SUNSPIRE. Marcus\'s sacred armor has never been breached in over 300 battles. He stands between his allies and annihilation without flinching.',
     hp: 8000, atk: 380, def: 620, crit: 220,
     skills: [
       { name: 'Holy Guard', cost: 1, description: 'Raises sacred defense reducing incoming damage.', damage: 0 },
@@ -279,16 +279,16 @@ export const HEROES = [
   // ── hero_010 · EMBERVEIL · A · Female ─────────────────────────────────────
   {
     id: 'hero_010',
-    name: 'Tara Wind',
+    name: 'Carmen Vidal',
     frame: 'EMBERDANCER',
     faction: 'EMBERVEIL',
     rank: 'A',
     element: 'Fire',
     effect: 'FLAMEDANCE',
     class: 'Support',
-    cardId: 'EMB-04-TARA',
+    cardId: 'EMB-04-CARMEN',
     image: require('../../assets/heroes/hero_010.webp'),
-    about: 'EMBERVEIL\'s fire-dancing sentinel. Tara amplifies her allies with volcanic energy while her own movements flow like living flame - impossible to track and lethal to approach.',
+    about: 'EMBERVEIL\'s fire-dancing sentinel. Carmen amplifies her allies with volcanic energy while her own movements flow like living flame - impossible to track and lethal to approach.',
     hp: 3300, atk: 320, def: 260, crit: 340,
     skills: [
       { name: 'Fire Waltz',   cost: 1, description: 'Dances through flames raising team attack power.', damage: 0.8 },
@@ -331,16 +331,16 @@ export const HEROES = [
   // ── hero_012 · SUNSPIRE · S · Female ──────────────────────────────────────
   {
     id: 'hero_012',
-    name: 'Aura Bloom',
+    name: 'Aurelia',
     frame: 'SOLARMAGE',
     faction: 'SUNSPIRE',
     rank: 'S',
     element: 'Holy',
     effect: 'RADIANCE',
     class: 'Mage',
-    cardId: 'SUN-03-AURA',
+    cardId: 'SUN-03-AURELIA',
     image: require('../../assets/heroes/hero_012.webp'),
-    about: 'The Radiant Sovereign of SUNSPIRE - chosen not by bloodline or election but by the light itself during the Ceremony of Ascension. Aura commands solar energy and sacred flame at a level no mage born of training can replicate. Her brilliance on the battlefield is not considered divine. It is.',
+    about: 'The Radiant Sovereign of SUNSPIRE - chosen not by bloodline or election but by the light itself during the Ceremony of Ascension. Aurelia commands solar energy and sacred flame at a level no mage born of training can replicate. Her brilliance on the battlefield is not considered divine. It is.',
     hp: 3400, atk: 760, def: 175, crit: 700, sovereign: true,
     skills: [
       { name: 'Solar Rend',   cost: 2, description: 'Channels concentrated sovereign solar energy that ignores elemental resistances.', damage: 2.6 },
@@ -357,16 +357,16 @@ export const HEROES = [
   // ── hero_013 · VOIDMARK · A · Female ──────────────────────────────────────
   {
     id: 'hero_013',
-    name: 'Omen Null',
+    name: 'Kaori Adachi',
     frame: 'VOIDOMEN',
     faction: 'VOIDMARK',
     rank: 'A',
     element: 'Void',
     effect: 'VOID_OMEN',
     class: 'Mage',
-    cardId: 'VMK-03-OMEN',
+    cardId: 'VMK-03-KAORI',
     image: require('../../assets/heroes/hero_013.webp'),
-    about: 'A void scholar who has spent decades studying entities older than recorded history. Omen perceives abyss energy the way others perceive sound - as constant, layered information. She left VOIDMARK\'s inner court when she realized the court feared what she knew more than they feared the void itself.',
+    about: 'A void scholar who has spent decades studying entities older than recorded history. Kaori perceives abyss energy the way others perceive sound - as constant, layered information. She left VOIDMARK\'s inner court when she realized the court feared what she knew more than they feared the void itself.',
     hp: 3000, atk: 580, def: 155, crit: 540,
     skills: [
       { name: 'Void Reading', cost: 2, description: 'Channels dimensional knowledge into a crushing void strike that bypasses barriers.', damage: 2.3 },
@@ -383,16 +383,16 @@ export const HEROES = [
   // ── hero_014 · VOIDMARK · B · Female ──────────────────────────────────────
   {
     id: 'hero_014',
-    name: 'Shade Vex',
+    name: 'Reika Kurosawa',
     frame: 'DARKSTEP',
     faction: 'VOIDMARK',
     rank: 'B',
     element: 'Void',
     effect: 'SHADOW',
     class: 'Attacker',
-    cardId: 'VMK-02-SHADE',
+    cardId: 'VMK-02-REIKA',
     image: require('../../assets/heroes/hero_014.webp'),
-    about: 'Assassin of the VOIDMARK faction. Shade strikes from angles that don\'t exist in normal space. Her targets are erased before they can register the attack.',
+    about: 'Assassin of the VOIDMARK faction. Reika strikes from angles that don\'t exist in normal space. Her targets are erased before they can register the attack.',
     hp: 3200, atk: 500, def: 175, crit: 490,
     skills: [
       { name: 'Shadow Strike', cost: 1, description: 'A void-infused backstab dealing bonus damage.', damage: 1.6 },
@@ -437,14 +437,14 @@ export const HEROES = [
 
   {
     id: 'hero_016',
-    name: 'Brant Forge',
+    name: 'Tomás Herrero',
     frame: 'EMBERWALL',
     faction: 'EMBERVEIL',
     rank: 'C',
     element: 'Fire',
     effect: 'HEATSHIELD',
     class: 'Defender',
-    cardId: 'EMB-05-BRANT',
+    cardId: 'EMB-05-TOMAS',
     image: require('../../assets/heroes/hero_016.webp'),
     about: 'A battle-hardened shield-bearer of EMBERVEIL who uses his body as a living wall, absorbing volcanic strikes and redirecting that raw heat into explosive counterattacks. He has survived more than any other soldier in the faction.',
     hp: 7200, atk: 350, def: 580, crit: 200,
@@ -524,7 +524,7 @@ export const HEROES = [
  
   {
     id: 'hero_019',
-    name: 'Bryn Thorn',
+    name: 'Bryn Gallagher',
     frame: 'THORNBLADE',
     faction: 'VERDANIA',
     rank: 'C',
@@ -553,7 +553,7 @@ export const HEROES = [
 
   {
     id: 'hero_020',
-    name: 'Kael Rift',
+    name: 'Kael Ashworth',
     frame: 'VOIDWEAVER',
     faction: 'VOIDMARK',
     rank: 'A',
@@ -582,16 +582,16 @@ export const HEROES = [
   
   {
     id: 'hero_021',
-    name: 'Nyx Flame',
+    name: 'Renata Ceniza',
     frame: 'ASHCALLER',
     faction: 'EMBERVEIL',
     rank: 'B',
     element: 'Fire',
     effect: 'SCORCH',
     class: 'Mage',
-    cardId: 'EMB-06-NYX',
+    cardId: 'EMB-06-RENATA',
     image: require('../../assets/heroes/hero_021.webp'),
-    about: 'A volatile mage of EMBERVEIL who weaponises wildfire in its purest form. Nyx refuses to contain her power - she simply feeds it. Enemies who survive her opening blast rarely last long enough to regret it.',
+    about: 'A volatile mage of EMBERVEIL who weaponises wildfire in its purest form. Renata refuses to contain her power - she simply feeds it. Enemies who survive her opening blast rarely last long enough to regret it.',
     hp: 2900, atk: 555, def: 155, crit: 510,
     skills: [
       { name: 'Scorch',      cost: 2, description: 'Ignites a target in uncontrolled wildfire dealing heavy damage.', damage: 1.8 },
@@ -611,16 +611,16 @@ export const HEROES = [
 
   {
     id: 'hero_022',
-    name: 'Rook Cinder',
+    name: 'Rubén Coraza',
     frame: 'IRONVEIL',
     faction: 'EMBERVEIL',
     rank: 'A',
     element: 'Fire',
     effect: 'FLAMEGUARD',
     class: 'Defender',
-    cardId: 'EMB-07-ROOK',
+    cardId: 'EMB-07-RUBEN',
     image: require('../../assets/heroes/hero_022.webp'),
-    about: 'Steel-willed guardian of EMBERVEIL\'s inner fortress. Rook\'s armour was forged in active volcanic vents and redirects incoming damage as superheated steam capable of blinding and burning attackers.',
+    about: 'Steel-willed guardian of EMBERVEIL\'s inner fortress. Rubén\'s armour was forged in active volcanic vents and redirects incoming damage as superheated steam capable of blinding and burning attackers.',
     hp: 6800, atk: 370, def: 560, crit: 210,
     skills: [
       { name: 'Cinder Guard',  cost: 1, description: 'Hardens volcanic armour, reducing the next hit taken.', damage: 0 },
@@ -638,14 +638,14 @@ export const HEROES = [
   // ── hero_023 · EMBERVEIL · C · Female · Support ────────────────────────────
   {
     id: 'hero_023',
-    name: 'Vel Spark',
+    name: 'Paloma Chispa',
     frame: 'SPARKWEAVE',
     faction: 'EMBERVEIL',
     rank: 'C',
     element: 'Lightning',
     effect: 'VOLTMEND',
     class: 'Support',
-    cardId: 'EMB-08-VEL',
+    cardId: 'EMB-08-PALOMA',
     image: require('../../assets/heroes/hero_023.webp'),
     about: 'A chaotic young field operative of EMBERVEIL who channels electrical surges to disrupt enemies and jolt fallen allies back into action. Her unpredictable energy is difficult to anticipate even for her own team.',
     hp: 3600, atk: 290, def: 230, crit: 240,
@@ -664,16 +664,16 @@ export const HEROES = [
 
   {
     id: 'hero_024',
-    name: 'Ivan Volkov',
+    name: 'Volkov',
     frame: 'GLACIALBLADE',
     faction: 'GLACIARA',
     rank: 'S',
     element: 'Ice',
     effect: 'SHATTER',
     class: 'Attacker',
-    cardId: 'GLA-05-IVAN',
+    cardId: 'GLA-05-VOLKOV',
     image: require('../../assets/heroes/hero_024.webp'),
-    about: 'The lone wolf hunter of GLACIARA - an anomaly among the faction\'s warrior elite. Ivan moves through frozen terrain like a living shadow, shattering targets with strikes that exploit the brittleness extreme cold creates in both armour and flesh.',
+    about: 'The lone wolf hunter of GLACIARA - an anomaly among the faction\'s warrior elite. Volkov moves through frozen terrain like a living shadow, shattering targets with strikes that exploit the brittleness extreme cold creates in both armour and flesh.',
     hp: 3400, atk: 620, def: 200, crit: 570,
     skills: [
       { name: 'Ice Shatter',   cost: 2, description: 'A devastating strike that shatters frozen targets for bonus damage.', damage: 2.1 },
@@ -748,16 +748,16 @@ export const HEROES = [
 
   {
     id: 'hero_027',
-    name: 'Cyren Halo',
+    name: 'Cassius Lux',
     frame: 'PRISMWEAVE',
     faction: 'SUNSPIRE',
     rank: 'A',
     element: 'Holy',
     effect: 'ILLUMINATE',
     class: 'Mage',
-    cardId: 'SUN-05-CYREN',
+    cardId: 'SUN-05-CASSIUS',
     image: require('../../assets/heroes/hero_027.webp'),
-    about: 'A prism mage of SUNSPIRE who treats combat as a geometry problem. Cyren refracts raw sunlight into precision arcane beams - find the correct angle and a single ray can pass through an entire enemy formation.',
+    about: 'A prism mage of SUNSPIRE who treats combat as a geometry problem. Cassius refracts raw sunlight into precision arcane beams - find the correct angle and a single ray can pass through an entire enemy formation.',
     hp: 3050, atk: 610, def: 160, crit: 560,
     skills: [
       { name: 'Prism Ray',     cost: 2, description: 'Refracts a solar beam through multiple enemies in a line.', damage: 2.2 },
@@ -776,16 +776,16 @@ export const HEROES = [
 
   {
     id: 'hero_028',
-    name: 'Wren Gild',
+    name: 'Livia Santoro',
     frame: 'HOLYMEND',
     faction: 'SUNSPIRE',
     rank: 'B',
     element: 'Holy',
     effect: 'SANCTIFY',
     class: 'Support',
-    cardId: 'SUN-06-WREN',
+    cardId: 'SUN-06-LIVIA',
     image: require('../../assets/heroes/hero_028.webp'),
-    about: 'A gentle but unyielding cleric of SUNSPIRE who channels divine light into restorative energy. Wren believes no wound is beyond healing and will exhaust herself entirely before allowing an ally to fall.',
+    about: 'A gentle but unyielding cleric of SUNSPIRE who channels divine light into restorative energy. Livia believes no wound is beyond healing and will exhaust herself entirely before allowing an ally to fall.',
     hp: 4000, atk: 260, def: 290, crit: 210,
     skills: [
       { name: 'Holy Mend',    cost: 1, description: 'Channels sacred light to restore a significant portion of an ally\'s HP.', damage: 0 },
@@ -805,16 +805,16 @@ export const HEROES = [
 
   {
     id: 'hero_029',
-    name: 'Cade Blaze',
+    name: 'Leona Solare',
     frame: 'SOLARSTRIKE',
     faction: 'SUNSPIRE',
     rank: 'C',
     element: 'Holy',
     effect: 'SMITE',
     class: 'Attacker',
-    cardId: 'SUN-07-CADE',
+    cardId: 'SUN-07-LEONA',
     image: require('../../assets/heroes/hero_029.webp'),
-    about: 'A young zealot of SUNSPIRE still proving herself on the battlefield. Cade\'s technique is raw and forward, compensating for inexperience with relentless aggression and an unshakeable conviction that sunlight favours the bold.',
+    about: 'A young zealot of SUNSPIRE still proving herself on the battlefield. Leona\'s technique is raw and forward, compensating for inexperience with relentless aggression and an unshakeable conviction that sunlight favours the bold.',
     hp: 3600, atk: 450, def: 195, crit: 390,
     skills: [
       { name: 'Holy Strike',   cost: 1, description: 'A direct holy-charged blow dealing solid single-target damage.', damage: 1.3 },
@@ -834,16 +834,16 @@ export const HEROES = [
   
   {
     id: 'hero_030',
-    name: 'Iris Vale',
+    name: 'Fiadh',
     frame: 'VERDANTFANG',
     faction: 'VERDANIA',
     rank: 'S',
     element: 'Nature',
     effect: 'THORNSTRIKE',
     class: 'Attacker',
-    cardId: 'VRD-05-IRIS',
+    cardId: 'VRD-05-FIADH',
     image: require('../../assets/heroes/hero_030.webp'),
-    about: 'The Thornborn Queen of VERDANIA - crowned by the jungle itself during the Night of Blossoming when the eldest trees flowered for the first time in a thousand years. Iris feels every wound dealt to her forest as if carved into her own skin. On the battlefield she is the forest: she does not hunt her targets, she becomes the terrain they are standing on.',
+    about: 'The Thornborn Queen of VERDANIA - crowned by the jungle itself during the Night of Blossoming when the eldest trees flowered for the first time in a thousand years. Fiadh feels every wound dealt to her forest as if carved into her own skin. On the battlefield she is the forest: she does not hunt her targets, she becomes the terrain they are standing on.',
     hp: 4000, atk: 780, def: 225, crit: 720, sovereign: true,
     skills: [
       { name: 'Thorn Blitz',      cost: 2, description: 'Launches a sovereign volley of tracking thorns that pierce through elemental defenses.', damage: 2.4 },
@@ -862,16 +862,16 @@ export const HEROES = [
 
   {
     id: 'hero_031',
-    name: 'Sage Burl',
+    name: 'Niamh Quinn',
     frame: 'BLOOMKEEP',
     faction: 'VERDANIA',
     rank: 'B',
     element: 'Nature',
     effect: 'REJUVENATE',
     class: 'Support',
-    cardId: 'VRD-06-SAGE',
+    cardId: 'VRD-06-NIAMH',
     image: require('../../assets/heroes/hero_031.webp'),
-    about: 'A wandering herbalist of VERDANIA carrying centuries of forest medicine. Sage can accelerate a fighter\'s natural healing to impossible rates, closing critical wounds mid-combat using only what grows underfoot.',
+    about: 'A wandering herbalist of VERDANIA carrying centuries of forest medicine. Niamh can accelerate a fighter\'s natural healing to impossible rates, closing critical wounds mid-combat using only what grows underfoot.',
     hp: 4200, atk: 270, def: 300, crit: 220,
     skills: [
       { name: 'Herbal Mend',      cost: 1, description: 'Applies a fast-acting herbal compress restoring ally HP over time.', damage: 0 },
@@ -889,16 +889,16 @@ export const HEROES = [
   
   {
     id: 'hero_032',
-    name: 'Rae Vine',
+    name: 'Rhona Byrne',
     frame: 'VERDANSHIELD',
     faction: 'VERDANIA',
     rank: 'A',
     element: 'Nature',
     effect: 'BARKSKIN',
     class: 'Defender',
-    cardId: 'VRD-07-RAE',
+    cardId: 'VRD-07-RHONA',
     image: require('../../assets/heroes/hero_032.webp'),
-    about: 'A sentinel of VERDANIA who has merged her body with living bark and vine. Rae\'s skin is reinforced by constantly regenerating plant-matter - the longer a fight lasts, the harder she becomes to damage.',
+    about: 'A sentinel of VERDANIA who has merged her body with living bark and vine. Rhona\'s skin is reinforced by constantly regenerating plant-matter - the longer a fight lasts, the harder she becomes to damage.',
     hp: 6500, atk: 330, def: 545, crit: 180,
     skills: [
       { name: 'Bark Shield',  cost: 1, description: 'Hardens bark armour around self or an ally absorbing the next attack.', damage: 0 },
@@ -917,16 +917,16 @@ export const HEROES = [
 
   {
     id: 'hero_033',
-    name: 'Nyx Vael',
+    name: 'Titania',
     frame: 'ABYSSALTHRONE',
     faction: 'VOIDMARK',
     rank: 'S',
     element: 'Void',
     effect: 'ABYSS',
     class: 'Defender',
-    cardId: 'VMK-04-NYX',
+    cardId: 'VMK-04-TITANIA',
     image: require('../../assets/heroes/hero_033.webp'),
-    about: 'The unopposed sovereign of VOIDMARK - a void-forged empress whose body has merged with the abyss itself and been reborn stronger. Nyx does not debate authority; in a realm where reality tears without warning, she is the only constant. Three challenger factions dissolved attempting to dethrone her. Their names are no longer spoken in VOIDMARK, which here is a fate more feared than death.',
+    about: 'The unopposed sovereign of VOIDMARK - a void-forged empress whose body has merged with the abyss itself and been reborn stronger. Titania does not debate authority; in a realm where reality tears without warning, she is the only constant. Three challenger factions dissolved attempting to dethrone her. Their names are no longer spoken in VOIDMARK, which here is a fate more feared than death.',
     hp: 9500, atk: 500, def: 800, crit: 300, sovereign: true,
     skills: [
       { name: 'Void Absorb',   cost: 1, description: 'Pulls an incoming attack into sovereign void space, nullifying damage and storing energy for a counter-burst.', damage: 0 },
@@ -944,16 +944,16 @@ export const HEROES = [
 
   {
     id: 'hero_034',
-    name: 'Nera Null',
+    name: 'Nerissa Marlowe',
     frame: 'SOULBIND',
     faction: 'VOIDMARK',
     rank: 'A',
     element: 'Void',
     effect: 'LIFEDRAIN',
     class: 'Support',
-    cardId: 'VMK-05-NERA',
+    cardId: 'VMK-05-NERISSA',
     image: require('../../assets/heroes/hero_034.webp'),
-    about: 'A void medium of VOIDMARK who siphons life force from the battlefield and redistributes it among her allies. Nera walks the thin line between healing and corruption - her methods work, and she stopped asking whether they should.',
+    about: 'A void medium of VOIDMARK who siphons life force from the battlefield and redistributes it among her allies. Nerissa walks the thin line between healing and corruption - her methods work, and she stopped asking whether they should.',
     hp: 3800, atk: 350, def: 250, crit: 300,
     skills: [
       { name: 'Life Siphon',   cost: 1, description: 'Drains life energy from an enemy, partially restoring an ally\'s HP.', damage: 0.8 },
@@ -970,7 +970,7 @@ export const HEROES = [
   // ── hero_036 · VOIDMARK · S · Female · Mage ───────────────────────────────
   {
     id: 'hero_036',
-    name: 'Vesper Hex',
+    name: 'Vesper',
     frame: 'SPIRITWEAVE',
     faction: 'VOIDMARK',
     rank: 'S',
@@ -997,16 +997,16 @@ export const HEROES = [
 
   {
     id: 'hero_035',
-    name: 'Flux Rend',
+    name: 'Davina Blackwood',
     frame: 'DARKBLADE',
     faction: 'VOIDMARK',
     rank: 'B',
     element: 'Void',
     effect: 'PHANTOMSTRIKE',
     class: 'Attacker',
-    cardId: 'VMK-06-FLUX',
+    cardId: 'VMK-06-DAVINA',
     image: require('../../assets/heroes/hero_035.webp'),
-    about: 'A reckless void-brawler who has partially phased herself into the void to strike from inside the space between moments. Flux hits targets from angles that do not exist, making her virtually impossible to guard against.',
+    about: 'A reckless void-brawler who has partially phased herself into the void to strike from inside the space between moments. Davina hits targets from angles that do not exist, making her virtually impossible to guard against.',
     hp: 3500, atk: 510, def: 180, crit: 470,
     skills: [
       { name: 'Phase Strike',    cost: 1, description: 'Attacks from within the void bypassing standard defences.', damage: 1.5 },
@@ -1049,7 +1049,7 @@ export const HEROES = [
   // ── hero_038 · VOIDMARK · A · Female · Mage ────────────────────────────────
   {
     id: 'hero_038',
-    name: 'Veyra Null',
+    name: 'Veyra Sorin',
     frame: 'VOIDWEAVE',
     faction: 'VOIDMARK',
     rank: 'A',
@@ -1075,16 +1075,16 @@ export const HEROES = [
   // ── hero_039 · SUNSPIRE · A · Male · Defender ──────────────────────────────
   {
     id: 'hero_039',
-    name: 'Caelum Vane',
+    name: 'Caelan Doria',
     frame: 'DAWNGUARD',
     faction: 'SUNSPIRE',
     rank: 'A',
     element: 'Holy',
     effect: 'DIVINE_SHIELD',
     class: 'Defender',
-    cardId: 'SUN-08-CAELUM',
+    cardId: 'SUN-08-CAELAN',
     image: require('../../assets/heroes/hero_039.webp'),
-    about: 'A veteran paladin of SUNSPIRE who has survived more campaigns than any other active knight on the line. Caelum fights from the front with practiced precision - his sacred shield has absorbed blows that would have ended entire battles, and he has never once lost a comrade under his watch.',
+    about: 'A veteran paladin of SUNSPIRE who has survived more campaigns than any other active knight on the line. Caelan fights from the front with practiced precision - his sacred shield has absorbed blows that would have ended entire battles, and he has never once lost a comrade under his watch.',
     hp: 6800, atk: 350, def: 580, crit: 220,
     skills: [
       { name: 'Sacred Guard',   cost: 1, description: 'Raises a divine barrier blocking the next attack targeting any ally.', damage: 0 },
@@ -1101,16 +1101,16 @@ export const HEROES = [
   // ── hero_041 · EMBERVEIL · S · Female · Mage · SOVEREIGN ──────────────────
   {
     id: 'hero_041',
-    name: 'Ravenna Blaze',
+    name: 'Fiorenza',
     frame: 'EMBRATHRONE',
     faction: 'EMBERVEIL',
     rank: 'S',
     element: 'Fire',
     effect: 'SOVEREIGN_FLAME',
     class: 'Mage',
-    cardId: 'EMB-09-RAVENNA',
+    cardId: 'EMB-09-FIORENZA',
     image: require('../../assets/heroes/hero_041.webp'),
-    about: 'The original sovereign of EMBERVEIL - swallowed by a dimensional rift three cycles of the volcanic moon ago while sealing a catastrophic breach in the realm. She has returned carrying fire from the other side of dimensions, fire that burns even those immune to ordinary flame. Kira Voltz surrendered the throne the moment Ravenna crossed the border. Neither of them had to say a word.',
+    about: 'The original sovereign of EMBERVEIL - swallowed by a dimensional rift three cycles of the volcanic moon ago while sealing a catastrophic breach in the realm. She has returned carrying fire from the other side of dimensions, fire that burns even those immune to ordinary flame. Marisol surrendered the throne the moment Fiorenza crossed the border. Neither of them had to say a word.',
     hp: 4200, atk: 820, def: 235, crit: 750, sovereign: true,
     skills: [
       { name: 'Sovereign Flame',   cost: 2, description: 'Channels fire from beyond dimensions - pierces all resistances and burns through elemental defenses.', damage: 2.6 },
@@ -1205,14 +1205,14 @@ export const HEROES = [
   // ── hero_044 · VERDANIA · A · Female · Mage · Fox Girl ─────────────────────
   {
     id: 'hero_044',
-    name: 'Fennara Gale',
+    name: 'Fenella Sloane',
     frame: 'WINDSPRITE',
     faction: 'VERDANIA',
     rank: 'A',
     element: 'Wind',
     effect: 'SHATTER',
     class: 'Mage',
-    cardId: 'VRD-08-FENN',
+    cardId: 'VRD-08-FENELLA',
     image: require('../../assets/heroes/hero_044.webp'),
     about: 'A fox-spirit mage from VERDANIA\'s windswept canopy who draws power from the boundary between forest gale and root-bound earth. Rivals claim she doesn\'t cast magic - she simply asks the forest and sky to agree, and they always do. Her spells cross wind and nature with a fluidity that feels less like power and more like the forest itself changing its mind at speed.',
     hp: 3000, atk: 535, def: 182, crit: 485,
@@ -1231,7 +1231,7 @@ export const HEROES = [
   // ── hero_045 · VOIDMARK · B · Female · Mage ────────────────────────────────
   {
     id: 'hero_045',
-    name: 'Umbra Shade',
+    name: 'Umbra Nightingale',
     frame: 'DARKWEAVE',
     faction: 'VOIDMARK',
     rank: 'B',
@@ -1257,16 +1257,16 @@ export const HEROES = [
   // ── hero_046 · VOIDMARK · A · Male · Attacker · Commander ──────────────────
   {
     id: 'hero_046',
-    name: 'Kaiden Rhayne',
+    name: 'Kaidan Voss',
     frame: 'VOIDCANNON',
     faction: 'VOIDMARK',
     rank: 'A',
     element: 'Void',
     effect: 'SHADOW',
     class: 'Attacker',
-    cardId: 'VMK-10-KAIDEN',
+    cardId: 'VMK-10-KAIDAN',
     image: require('../../assets/heroes/hero_046.webp'),
-    about: 'Commander of VOIDMARK\'s void-elite rapid response force - a unit that operates beyond formal orders, answering only to the sovereign\'s silence and its own doctrine of absolute superiority. Kaiden leads through example and ends debates with results. His void-enhanced firearms don\'t fire conventional rounds; they fire collapsed dimensional points that arrive before they are shot.',
+    about: 'Commander of VOIDMARK\'s void-elite rapid response force - a unit that operates beyond formal orders, answering only to the sovereign\'s silence and its own doctrine of absolute superiority. Kaidan leads through example and ends debates with results. His void-enhanced firearms don\'t fire conventional rounds; they fire collapsed dimensional points that arrive before they are shot.',
     hp: 4400, atk: 498, def: 258, crit: 445,
     skills: [
       { name: 'Void Round',          cost: 1, description: 'Fires a collapsed dimensional point that bypasses physical armour entirely.', damage: 1.5 },
@@ -1283,7 +1283,7 @@ export const HEROES = [
   // ── hero_047 · VOIDMARK · A · Male · Mage ──────────────────────────────────
   {
     id: 'hero_047',
-    name: 'Morvan Hex',
+    name: 'Morvan Delacroix',
     frame: 'ABYSSSCRIBE',
     faction: 'VOIDMARK',
     rank: 'A',
@@ -1309,7 +1309,7 @@ export const HEROES = [
   // ── hero_048 · SUNSPIRE · A · Male · Attacker · Dual Sword ─────────────────
   {
     id: 'hero_048',
-    name: 'Aeron Sunblade',
+    name: 'Aeron Lucente',
     frame: 'DAWNBLADE',
     faction: 'SUNSPIRE',
     rank: 'A',
@@ -1335,16 +1335,16 @@ export const HEROES = [
   // ── hero_049 · SUNSPIRE · B · Female · Support · Triplet Sister ─────────────
   {
     id: 'hero_049',
-    name: 'Lyra Flame',
+    name: 'Celia Faro',
     frame: 'HOLYFLAME',
     faction: 'SUNSPIRE',
     rank: 'B',
     element: 'Holy',
     effect: 'BLESSING',
     class: 'Support',
-    cardId: 'SUN-10-LYRA',
+    cardId: 'SUN-10-CELIA',
     image: require('../../assets/heroes/hero_049.webp'),
-    about: 'One of three Flame sisters - born beside Nyx Flame of EMBERVEIL and Terra Flame of VERDANIA, and uniquely blessed with holy light where her sisters carry fire and earth. Lyra joined SUNSPIRE not to leave her family behind but because the light pulled in a direction she could not ignore. She has spent years learning that illumination and fire have always had the same source, just different forms.',
+    about: 'One of three fire-born sisters - born beside Renata Ceniza of EMBERVEIL and Brigid Fallon of VERDANIA, and uniquely blessed with holy light where her sisters carry fire and earth. Celia joined SUNSPIRE not to leave her family behind but because the light pulled in a direction she could not ignore. She has spent years learning that illumination and fire have always had the same source, just different forms.',
     hp: 3500, atk: 345, def: 242, crit: 292,
     skills: [
       { name: 'Holy Warmth',    cost: 1, description: 'Channels holy light into the most wounded ally, restoring HP and granting brief damage resistance.', damage: 0 },
@@ -1361,16 +1361,16 @@ export const HEROES = [
   // ── hero_050 · VERDANIA · B · Female · Mage · Triplet Sister ───────────────
   {
     id: 'hero_050',
-    name: 'Terra Flame',
+    name: 'Brigid Fallon',
     frame: 'EARTHFLAME',
     faction: 'VERDANIA',
     rank: 'B',
     element: 'Nature',
     effect: 'TOXIN',
     class: 'Mage',
-    cardId: 'VRD-09-TERRA',
+    cardId: 'VRD-09-BRIGID',
     image: require('../../assets/heroes/hero_050.webp'),
-    about: 'One of three Flame sisters - born alongside Nyx Flame of EMBERVEIL and Lyra Flame of SUNSPIRE, and drawn from birth toward the root rather than the flame. Terra watched one sister burn everything she touches and another illuminate it, and chose instead to grow things. She is gentle in three languages and devastating in all of them.',
+    about: 'One of three fire-born sisters - born alongside Renata Ceniza of EMBERVEIL and Celia Faro of SUNSPIRE, and drawn from birth toward the root rather than the flame. Brigid watched one sister burn everything she touches and another illuminate it, and chose instead to grow things. She is gentle in three languages and devastating in all of them.',
     hp: 3700, atk: 435, def: 218, crit: 388,
     skills: [
       { name: 'Root Surge',    cost: 2, description: 'Calls roots from the earth to bind and poison a single target, draining their vitality into the soil.', damage: 1.8 },
@@ -1387,16 +1387,16 @@ export const HEROES = [
   // ── hero_051 · VOIDMARK · S · Female · Mage · Sovereign's Advisor ──────────
   {
     id: 'hero_051',
-    name: 'Mira Vael',
+    name: 'Corvina',
     frame: 'VOIDCOUNSEL',
     faction: 'VOIDMARK',
     rank: 'S',
     element: 'Void',
     effect: 'VOID_CURSE',
     class: 'Mage',
-    cardId: 'VMK-12-MIRA',
+    cardId: 'VMK-12-CORVINA',
     image: require('../../assets/heroes/hero_051.webp'),
-    about: 'VOIDMARK\'s sovereign Nyx Vael keeps no inner council - except one. Mira Vael is not royal by blood, not second in command, not a general; she is simply the one person in VOIDMARK whose counsel Nyx listens to without exception or question. No one knows what was said between them the day that arrangement began. No one has dared to ask. Mira\'s void magic is quiet and absolute - exactly like the trust that grants her access to the abyss throne.',
+    about: 'VOIDMARK\'s sovereign Titania keeps no inner council - except one. Corvina is not royal by blood, not second in command, not a general; she is simply the one person in VOIDMARK whose counsel Titania listens to without exception or question. No one knows what was said between them the day that arrangement began. No one has dared to ask. Corvina\'s void magic is quiet and absolute - exactly like the trust that grants her access to the abyss throne.',
     hp: 3400, atk: 640, def: 202, crit: 580,
     skills: [
       { name: 'Counsel of Void', cost: 2, description: 'Delivers a precise void curse drawn from sovereign-level void doctrine, reducing the target\'s power at its source.', damage: 2.1 },
@@ -1404,7 +1404,7 @@ export const HEROES = [
     ],
     trumpCard: {
       name: 'Sovereign\'s Will',
-      description: 'Channels the full weight of Nyx Vael\'s sovereign void authority - a devastating edict that stuns all enemies and restores the caster.',
+      description: 'Channels the full weight of Titania\'s sovereign void authority - a devastating edict that stuns all enemies and restores the caster.',
       damage: 5.2,
       effect: 'Stuns all enemies 2 turns; heals self 20% HP',
     },
@@ -1413,16 +1413,16 @@ export const HEROES = [
   // ── hero_052 · SUNSPIRE · B · Female · Mage ────────────────────────────────
   {
     id: 'hero_052',
-    name: 'Lumara Sol',
+    name: 'Lucia Solano',
     frame: 'SOLARWEAVE',
     faction: 'SUNSPIRE',
     rank: 'B',
     element: 'Holy',
     effect: 'BLESSING',
     class: 'Mage',
-    cardId: 'SUN-11-LUMARA',
+    cardId: 'SUN-11-LUCIA',
     image: require('../../assets/heroes/hero_052.webp'),
-    about: 'A solar-channeling mage of SUNSPIRE who built her entire magical vocabulary out of concentrated sunlight before she learned a single offensive spell. Lumara is an expert in the healing science of light frequency and a moderate expert in reducing everything that opposes her to ash. She is considerably more effective at the latter than her academic background suggests.',
+    about: 'A solar-channeling mage of SUNSPIRE who built her entire magical vocabulary out of concentrated sunlight before she learned a single offensive spell. Lucia is an expert in the healing science of light frequency and a moderate expert in reducing everything that opposes her to ash. She is considerably more effective at the latter than her academic background suggests.',
     hp: 3250, atk: 480, def: 185, crit: 432,
     skills: [
       { name: 'Solar Weave',   cost: 2, description: 'Channels precisely tuned sunlight frequency to damage enemies while restoring the most-injured ally.', damage: 1.8 },
@@ -1439,16 +1439,16 @@ export const HEROES = [
   // ── hero_053 · VERDANIA · A · Female · Mage · Bird Lover ───────────────────
   {
     id: 'hero_053',
-    name: 'Avara Plume',
+    name: 'Aveline Kerr',
     frame: 'PLUMEWARDEN',
     faction: 'VERDANIA',
     rank: 'A',
     element: 'Nature',
     effect: 'THORNSTRIKE',
     class: 'Mage',
-    cardId: 'VRD-10-AVARA',
+    cardId: 'VRD-10-AVELINE',
     image: require('../../assets/heroes/hero_053.webp'),
-    about: 'A nature mage of VERDANIA who arrived at her magical specialty by accident - she was trying to communicate with a wounded crow and ended up channeling the entire forest\'s awareness through the bird\'s dying perception. She has never been the same since. Avara\'s bird companions function as extensions of her senses, her range, and her power; every spell she casts arrives from an angle that shouldn\'t be possible.',
+    about: 'A nature mage of VERDANIA who arrived at her magical specialty by accident - she was trying to communicate with a wounded crow and ended up channeling the entire forest\'s awareness through the bird\'s dying perception. She has never been the same since. Aveline\'s bird companions function as extensions of her senses, her range, and her power; every spell she casts arrives from an angle that shouldn\'t be possible.',
     hp: 3200, atk: 542, def: 188, crit: 492,
     skills: [
       { name: 'Feather Storm', cost: 2, description: 'Sends a flock of nature-infused birds to strike from impossible angles no defence can anticipate.', damage: 1.9 },
@@ -1469,7 +1469,7 @@ export const HEROES = [
   // NOTE: hero_054.webp is currently a placeholder copy - swap in the real art.
   {
     id: 'hero_054',
-    name: 'Nefertari Shahrzad',
+    name: 'Nefertari',
     frame: 'MOONTHRONE',
     faction: 'KHEMARA',
     rank: 'S',
@@ -1651,14 +1651,14 @@ export const HEROES = [
   // ── hero_061 · VERDANIA · B · Female · Attacker · Thornvine duelist ─────────
   {
     id: 'hero_061',
-    name: 'Briala Fenwick',
+    name: 'Brianna Fenwick',
     frame: 'BRIARFANG',
     faction: 'VERDANIA',
     rank: 'B',
     element: 'Nature',
     effect: 'THORNSTRIKE',
     class: 'Attacker',
-    cardId: 'VRD-11-BRIALA',
+    cardId: 'VRD-11-BRIANNA',
     image: require('../../assets/heroes/hero_061.webp'),
     about: 'A vine-warrior of the deep VERDANIA thickets who fights with a whip of living briar that answers every strike with a hundred thorns of its own. She grew up wrestling brambles for territory before she ever held a blade, and the forest still remembers her as one of its own.',
     hp: 3450, atk: 520, def: 210, crit: 480,
@@ -1677,16 +1677,16 @@ export const HEROES = [
   // ── hero_062 · EMBERVEIL · A · Female · Mage · Spider lily witch ────────────
   {
     id: 'hero_062',
-    name: 'Higan Amarylle',
+    name: 'Amara Solís',
     frame: 'CRIMSONBLOOM',
     faction: 'EMBERVEIL',
     rank: 'A',
     element: 'Fire',
     effect: 'SCORCH',
     class: 'Mage',
-    cardId: 'EMB-11-HIGAN',
+    cardId: 'EMB-11-AMARA',
     image: require('../../assets/heroes/hero_062.webp'),
-    about: 'Named for the red spider lily that blooms only where the dead have passed, Higan carries that same quiet finality into battle - her flame doesn\'t rage, it simply arrives, and by the time it\'s noticed the outcome is already decided. EMBERVEIL keeps her at arm\'s length; even fire respects an ending.',
+    about: 'Named for the red spider lily that blooms only where the dead have passed, Amara carries that same quiet finality into battle - her flame doesn\'t rage, it simply arrives, and by the time it\'s noticed the outcome is already decided. EMBERVEIL keeps her at arm\'s length; even fire respects an ending.',
     hp: 3150, atk: 565, def: 180, crit: 525,
     skills: [
       { name: 'Higanbana Bloom', cost: 2, description: 'Unfurls a blossom of scorching petals across a single target.', damage: 1.8 },
@@ -1703,7 +1703,7 @@ export const HEROES = [
   // ── hero_063 · SUNSPIRE · A · Female · Attacker · Cathedral lancer ──────────
   {
     id: 'hero_063',
-    name: 'Solenne Vashti',
+    name: 'Solenne Marchetti',
     frame: 'SOLARLANCE',
     faction: 'SUNSPIRE',
     rank: 'A',
@@ -1755,14 +1755,14 @@ export const HEROES = [
   // ── hero_065 · VERDANIA · B · Female · Attacker · Wandering katana duelist ──
   {
     id: 'hero_065',
-    name: 'Rin Hollowleaf',
+    name: 'Roisin Leary',
     frame: 'BLOSSOMBLADE',
     faction: 'VERDANIA',
     rank: 'B',
     element: 'Nature',
     effect: 'SHATTER',
     class: 'Attacker',
-    cardId: 'VRD-12-RIN',
+    cardId: 'VRD-12-ROISIN',
     image: require('../../assets/heroes/hero_065.webp'),
     about: 'A wandering swordswoman who fell in love with her katana before she ever fell in love with a person, and VERDANIA\'s groves taught her to carve through wood, stone, and armor alike with the same unhurried grace. She sharpens the blade with river stones and nothing else.',
     hp: 3600, atk: 505, def: 225, crit: 460,
@@ -1833,16 +1833,16 @@ export const HEROES = [
   // ── hero_068 · EMBERVEIL · B · Female · Mage · Flame-rite priestess ─────────
   {
     id: 'hero_068',
-    name: 'Anala Devri',
+    name: 'Inés Flores',
     frame: 'SINDOORFLAME',
     faction: 'EMBERVEIL',
     rank: 'B',
     element: 'Fire',
     effect: 'BURN',
     class: 'Mage',
-    cardId: 'EMB-12-ANALA',
+    cardId: 'EMB-12-INES',
     image: require('../../assets/heroes/hero_068.webp'),
-    about: 'Named for the Sanskrit word for fire, Anala carries the sacred flame-craft of her homeland into EMBERVEIL\'s ranks, painting sigils of living ember across the air with a fingertip. The old rites she was taught as a child still hold - the flame answers her like family.',
+    about: 'Named for the Sanskrit word for fire, Inés carries the sacred flame-craft of her homeland into EMBERVEIL\'s ranks, painting sigils of living ember across the air with a fingertip. The old rites she was taught as a child still hold - the flame answers her like family.',
     hp: 3100, atk: 515, def: 168, crit: 470,
     skills: [
       { name: 'Ember Sigil',       cost: 1, description: 'Draws a burning sigil that scorches a single enemy.', damage: 1.4 },
@@ -1911,7 +1911,7 @@ export const HEROES = [
   // ── hero_071 · VOIDMARK · B · Female · Support · Blindfolded oracle ─────────
   {
     id: 'hero_071',
-    name: 'Nyxa Veilborn',
+    name: 'Nyxa Hollis',
     frame: 'BLINDSEER',
     faction: 'VOIDMARK',
     rank: 'B',
@@ -1937,7 +1937,7 @@ export const HEROES = [
   // ── hero_072 · VOIDMARK · B · Female · Mage · Silver-haired rift mage ───────
   {
     id: 'hero_072',
-    name: 'Selvira Duskharrow',
+    name: 'Selvira Marrow',
     frame: 'SILVERVEIL',
     faction: 'VOIDMARK',
     rank: 'B',
@@ -2015,14 +2015,14 @@ export const HEROES = [
   // ── hero_075 · VERDANIA · B · Female · Support · Flower maid healer ─────────
   {
     id: 'hero_075',
-    name: 'Sorel Petallyn',
+    name: 'Sorcha Fitzgerald',
     frame: 'PETALKEEPER',
     faction: 'VERDANIA',
     rank: 'B',
     element: 'Nature',
     effect: 'BLOOM',
     class: 'Support',
-    cardId: 'VRD-13-SOREL',
+    cardId: 'VRD-13-SORCHA',
     image: require('../../assets/heroes/hero_075.webp'),
     about: 'A flower-tender from VERDANIA\'s terraced gardens who learned that the right bloom, pressed to a wound at the right moment, heals faster than any potion. She still wears fresh petals in her hair, even into battle.',
     hp: 3700, atk: 355, def: 245, crit: 305,
@@ -2041,14 +2041,14 @@ export const HEROES = [
   // ── hero_076 · VERDANIA · A · Female · Mage · Court illusionist ─────────────
   {
     id: 'hero_076',
-    name: 'Wisp Faelira',
+    name: 'Fiona Blake',
     frame: 'MIRAGEBLOOM',
     faction: 'VERDANIA',
     rank: 'A',
     element: 'Nature',
     effect: 'ENTANGLEMENT',
     class: 'Mage',
-    cardId: 'VRD-14-WISP',
+    cardId: 'VRD-14-FIONA',
     image: require('../../assets/heroes/hero_076.webp'),
     about: 'VERDANIA\'s court illusionist, Faelira weaves living vines and false light so seamlessly that even she sometimes loses track of which grove is real. Enemies who chase her mirages usually find the vines were never an illusion at all.',
     hp: 3200, atk: 550, def: 185, crit: 505,
@@ -2067,7 +2067,7 @@ export const HEROES = [
   // ── hero_077 · VOIDMARK · A · Female · Attacker · Shadow walker ─────────────
   {
     id: 'hero_077',
-    name: 'Noctura Veilshade',
+    name: 'Noctura Ashby',
     frame: 'SHADOWTREAD',
     faction: 'VOIDMARK',
     rank: 'A',
@@ -2119,7 +2119,7 @@ export const HEROES = [
   // ── hero_079 · VOIDMARK · S · Male · Mage · Underworld syndicate boss ───────
   {
     id: 'hero_079',
-    name: 'Varek Duskbane',
+    name: 'Varek',
     frame: 'DUSKSYNDICATE',
     faction: 'VOIDMARK',
     rank: 'S',
@@ -2154,7 +2154,7 @@ export const HEROES = [
     class: 'Mage',
     cardId: 'VMK-18-SELENE',
     image: require('../../assets/heroes/hero_080.webp'),
-    about: 'Selene brews her curses in the same kitchen where she cooks dinner for Varek Duskbane, the two of them splitting VOIDMARK\'s underworld between his contracts and her hexes without ever needing to argue about it. She jokes that she fell for him the moment he didn\'t flinch at one of her poisons.',
+    about: 'Selene brews her curses in the same kitchen where she cooks dinner for Varek, the two of them splitting VOIDMARK\'s underworld between his contracts and her hexes without ever needing to argue about it. She jokes that she fell for him the moment he didn\'t flinch at one of her poisons.',
     hp: 3050, atk: 585, def: 170, crit: 545,
     skills: [
       { name: 'Cursed Sip',    cost: 1, description: 'Slips a bitter hex into a single enemy, poisoning them from the inside out.', damage: 1.4 },
@@ -2171,16 +2171,16 @@ export const HEROES = [
   // ── hero_081 · EMBERVEIL · A · Male · Attacker · Heavy sword ────────────────
   {
     id: 'hero_081',
-    name: 'Kael Infernos',
+    name: 'Rafael Infierno',
     frame: 'INFERNOBLADE',
     faction: 'EMBERVEIL',
     rank: 'A',
     element: 'Fire',
     effect: 'INFERNOEDGE',
     class: 'Attacker',
-    cardId: 'EMB-13-KAEL',
+    cardId: 'EMB-13-RAFAEL',
     image: require('../../assets/heroes/hero_081.webp'),
-    about: 'Kael carries a greatsword too heavy for most EMBERVEIL warriors to lift, tempered in a forge fire that has never once been allowed to go out. He measures a fight\'s difficulty by how many strikes it takes before the blade starts to glow.',
+    about: 'Rafael carries a greatsword too heavy for most EMBERVEIL warriors to lift, tempered in a forge fire that has never once been allowed to go out. He measures a fight\'s difficulty by how many strikes it takes before the blade starts to glow.',
     hp: 3400, atk: 605, def: 205, crit: 500,
     skills: [
       { name: 'Cleaving Ember', cost: 1, description: 'A heavy, sweeping slash that leaves a trail of embers burning across the target.', damage: 1.5 },
@@ -2197,14 +2197,14 @@ export const HEROES = [
   // ── hero_082 · VERDANIA · A · Male · Defender · Living oak tank ─────────────
   {
     id: 'hero_082',
-    name: 'Thorne Oakshield',
+    name: 'Eamon Thorne',
     frame: 'OAKWARDEN',
     faction: 'VERDANIA',
     rank: 'A',
     element: 'Wood',
     effect: 'OAKWARD',
     class: 'Defender',
-    cardId: 'VRD-15-THORNE',
+    cardId: 'VRD-15-EAMON',
     image: require('../../assets/heroes/hero_082.webp'),
     about: 'Thorne planted himself between VERDANIA\'s oldest grove and every threat that has come for it, and centuries of bark have grown over the scars to prove he never once stepped aside. Enemies describe hitting him as swinging at a mountain that remembers being a tree.',
     hp: 6900, atk: 350, def: 565, crit: 195,
@@ -2223,7 +2223,7 @@ export const HEROES = [
   // ── hero_083 · VOIDMARK · A · Male · Attacker · Swordmaster ─────────────────
   {
     id: 'hero_083',
-    name: 'Riven Abyssblade',
+    name: 'Riven Castellane',
     frame: 'VOIDREAVER',
     faction: 'VOIDMARK',
     rank: 'A',
@@ -2249,7 +2249,7 @@ export const HEROES = [
   // ── hero_084 · KHEMARA · S · Male · Mage · Chronomancer ─────────────────────
   {
     id: 'hero_084',
-    name: 'Thutmose Noor',
+    name: 'Thutmose',
     frame: 'CHRONOVEIL',
     faction: 'KHEMARA',
     rank: 'S',
@@ -2353,16 +2353,16 @@ export const HEROES = [
   // ── hero_088 · VERDANIA · A · Male · Attacker · Dagger master ───────────────
   {
     id: 'hero_088',
-    name: 'Lorian Swiftleaf',
+    name: 'Lorcan Quill',
     frame: 'SWIFTFANG',
     faction: 'VERDANIA',
     rank: 'A',
     element: 'Wind',
     effect: 'SWIFTTHORN',
     class: 'Attacker',
-    cardId: 'VRD-16-LORIAN',
+    cardId: 'VRD-16-LORCAN',
     image: require('../../assets/heroes/hero_088.webp'),
-    about: 'Lorian carries a dagger for every leaf that ever fell in his corner of VERDANIA\'s forest, or so the story goes - no one has ever moved fast enough to count him drawing them. He treats a duel as a conversation best finished before the other side realizes it started.',
+    about: 'Lorcan carries a dagger for every leaf that ever fell in his corner of VERDANIA\'s forest, or so the story goes - no one has ever moved fast enough to count him drawing them. He treats a duel as a conversation best finished before the other side realizes it started.',
     hp: 3050, atk: 600, def: 170, crit: 555,
     skills: [
       { name: 'Falling Leaf Strike',  cost: 1, description: 'A quick dagger flick timed to a falling leaf, striking a single enemy before it hits the ground.', damage: 1.5 },
@@ -2379,16 +2379,16 @@ export const HEROES = [
   // ── hero_089 · VERDANIA · B · Female · Support · Healer ─────────────────────
   {
     id: 'hero_089',
-    name: 'Elaria Bloomheart',
+    name: 'Elowen Doherty',
     frame: 'BLOOMWARDEN',
     faction: 'VERDANIA',
     rank: 'B',
     element: 'Nature',
     effect: 'HEARTBLOOM',
     class: 'Support',
-    cardId: 'VRD-17-ELARIA',
+    cardId: 'VRD-17-ELOWEN',
     image: require('../../assets/heroes/hero_089.webp'),
-    about: 'Elaria tends VERDANIA\'s wounded the way she tends her garden, patient enough to coax life back into anything that still has a single green shoot left in it. Soldiers say her hands smell like spring no matter the season.',
+    about: 'Elowen tends VERDANIA\'s wounded the way she tends her garden, patient enough to coax life back into anything that still has a single green shoot left in it. Soldiers say her hands smell like spring no matter the season.',
     hp: 4050, atk: 275, def: 295, crit: 215,
     skills: [
       { name: 'Petal Mend',    cost: 1, description: 'Coaxes a bloom of healing petals over the lowest-HP ally.', damage: 0 },
@@ -2405,7 +2405,7 @@ export const HEROES = [
   // ── hero_090 · VOIDMARK · S · Male · Attacker · The Last Child of the Rift ──
   {
     id: 'hero_090',
-    name: 'Valen Riftwalker',
+    name: 'Valen',
     frame: 'RIFTWALKER',
     faction: 'VOIDMARK',
     rank: 'S',
@@ -2425,6 +2425,448 @@ export const HEROES = [
       description: 'Every crack in the Eclipsed Edge opens at once - a single riftwalking strike across all enemies, answering for everything he has ever protected.',
       damage: 5.0,
       effect: 'Stuns all enemies 1 turn; heals all allies 25% HP',
+    },
+  },
+
+  // ── hero_091 · VOIDMARK · A · Female · Attacker ────────────────────────────
+  {
+    id: 'hero_091',
+    name: 'Kessa Renfield',
+    frame: 'CIRCUITFANG',
+    faction: 'VOIDMARK',
+    rank: 'A',
+    element: 'Void',
+    effect: 'CIRCUIT_RIP',
+    class: 'Attacker',
+    cardId: 'VMK-22-KESSA',
+    image: require('../../assets/heroes/hero_091.webp'),
+    about: 'Rebuilt from the wreckage of a VOIDMARK research accident that should have killed her twice, Kessa\'s arm was replaced with a rift-forged blade limb that cuts along fault lines invisible to the naked eye. She remembers neither her old name nor her old face, only the sister who still calls her by both.',
+    hp: 4300, atk: 545, def: 235, crit: 475,
+    skills: [
+      { name: 'Fault Cut',  cost: 1, description: 'A precise rift-blade slash that finds structural weak points in armor.', damage: 1.4 },
+      { name: 'Sheer Line', cost: 3, description: 'Drives her blade along an invisible fault line, rending defenses wide open.', damage: 2.5 },
+    ],
+    trumpCard: {
+      name: 'Absolute Fracture',
+      description: 'Channels her full rift-forged limb into one line that splits every enemy formation at once.',
+      damage: 4.6,
+      effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_092 · VOIDMARK · A · Female · Mage ────────────────────────────────
+  {
+    id: 'hero_092',
+    name: 'Vhalla Corvane',
+    frame: 'HELLWEAVE',
+    faction: 'VOIDMARK',
+    rank: 'A',
+    element: 'Void',
+    effect: 'DEMON_BRAND',
+    class: 'Mage',
+    cardId: 'VMK-23-VHALLA',
+    image: require('../../assets/heroes/hero_092.webp'),
+    about: 'A demon-blooded conjurer born in the collapsed sublevels beneath VOIDMARK\'s capital, Vhalla treats every curse as a conversation and every enemy as an argument she intends to win. Her horns hum faintly whenever a lie is spoken nearby - which, in VOIDMARK, is often.',
+    hp: 2950, atk: 600, def: 160, crit: 545,
+    skills: [
+      { name: 'Brand of Ruin',     cost: 2, description: 'Marks an enemy with a demonic sigil that saps their strength.', damage: 2.0 },
+      { name: 'Infernal Verdict',  cost: 3, description: 'Passes demonic judgment on a target in a burst of hellfire-void energy.', damage: 2.5 },
+    ],
+    trumpCard: {
+      name: 'Grimhorn\'s Reckoning',
+      description: 'Opens a chorus of demonic voices that curse every enemy on the field at once.',
+      damage: 4.8,
+      effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_093 · VOIDMARK · A · Male · Mage ──────────────────────────────────
+  {
+    id: 'hero_093',
+    name: 'Emeric Thurstan',
+    frame: 'DREAMWALKER',
+    faction: 'VOIDMARK',
+    rank: 'A',
+    element: 'Void',
+    effect: 'DREAM_SNARE',
+    class: 'Mage',
+    cardId: 'VMK-24-EMERIC',
+    image: require('../../assets/heroes/hero_093.webp'),
+    about: 'A dream walker who slips into enemy minds mid-battle, planting nightmares that lag a heartbeat behind reality. Emeric has not slept in his own dreams for years, preferring to wander other people\'s instead.',
+    hp: 3000, atk: 585, def: 158, crit: 535,
+    skills: [
+      { name: 'Nightmare Seed', cost: 2, description: 'Plants a waking nightmare in the target\'s mind.', damage: 1.9 },
+      { name: 'Dream Collapse', cost: 3, description: 'Collapses a fabricated dreamscape onto the enemy all at once.', damage: 2.4 },
+    ],
+    trumpCard: {
+      name: 'The Unwaking Hour',
+      description: 'Draws every enemy into one shared nightmare that refuses to end.',
+      damage: 4.5,
+      effect: 'Stuns all enemies 2 turns; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_094 · VERDANIA · A · Female · Support ─────────────────────────────
+  {
+    id: 'hero_094',
+    name: 'Saoirse Kavanagh',
+    frame: 'WILDFLARE',
+    faction: 'VERDANIA',
+    rank: 'A',
+    element: 'Nature',
+    effect: 'SPRING_ZEAL',
+    class: 'Support',
+    cardId: 'VRD-18-SAOIRSE',
+    image: require('../../assets/heroes/hero_094.webp'),
+    about: 'An elf of VERDANIA\'s outer canopy whose temperament runs hotter than her forest kin ever expected from something bound to root and leaf. She mends wounds the way she argues - fast, fierce, and impossible to refuse.',
+    hp: 3900, atk: 305, def: 265, crit: 285,
+    skills: [
+      { name: 'Kindled Bloom',   cost: 1, description: 'A flare of restorative warmth mends an ally\'s wounds.', damage: 0 },
+      { name: 'Wildheart Surge', cost: 2, description: 'Fans an ember of vitality through an ally, boosting their resilience.', damage: 0 },
+    ],
+    trumpCard: {
+      name: 'Everbloom Wildfire',
+      description: 'Releases a surge of fierce, life-giving warmth across the whole team.',
+      damage: 0,
+      effect: 'Heals all allies 35% HP; shields team against next 1 hit each',
+    },
+  },
+
+  // ── hero_095 · VOIDMARK · A · Female · Mage · Kessa Renfield's sister ───────
+  {
+    id: 'hero_095',
+    name: 'Aiko Shiraishi',
+    frame: 'NEUROSPARK',
+    faction: 'VOIDMARK',
+    rank: 'A',
+    element: 'Void',
+    effect: 'NEURAL_OVERLOAD',
+    class: 'Mage',
+    cardId: 'VMK-25-AIKO',
+    image: require('../../assets/heroes/hero_095.webp'),
+    about: 'The other survivor of the same VOIDMARK lab accident that remade her sister Kessa, Aiko\'s mind was rewired instead of her body - she now perceives probability the way others perceive color. She keeps a countdown of every day since the lab burned; she has never told anyone what number it is on.',
+    hp: 2950, atk: 590, def: 155, crit: 540,
+    skills: [
+      { name: 'Probability Snap', cost: 2, description: 'Overloads a target\'s reactions with cascading calculated feedback.', damage: 1.9 },
+      { name: 'Cascade Fault',    cost: 3, description: 'Forces an error-cascade through the enemy\'s every function.', damage: 2.4 },
+    ],
+    trumpCard: {
+      name: 'Full System Overload',
+      description: 'Floods every enemy\'s mind with impossible calculations all at once.',
+      damage: 4.6,
+      effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_096 · KHEMARA · A · Female · Mage ─────────────────────────────────
+  {
+    id: 'hero_096',
+    name: 'Kaia Nasser',
+    frame: 'MOONHOWL',
+    faction: 'KHEMARA',
+    rank: 'A',
+    element: 'Moon',
+    effect: 'MOON_HOWL',
+    class: 'Mage',
+    cardId: 'KHE-15-KAIA',
+    image: require('../../assets/heroes/hero_096.webp'),
+    about: 'Queen of the beastman White Fang clan and KHEMARA\'s most feared war-caster, Kaia calls down the hunting moon itself to freeze her enemies mid-stride. Her tribe has not lost a border skirmish since she took the crown from her own mother in single combat.',
+    hp: 3050, atk: 605, def: 165, crit: 545,
+    skills: [
+      { name: 'Lunar Cry',     cost: 2, description: 'A tribal howl amplified by moonlight that freezes enemies in place.', damage: 1.9 },
+      { name: 'Fangmoon Rite', cost: 3, description: 'Calls the full hunting moon down upon a single target.', damage: 2.5 },
+    ],
+    trumpCard: {
+      name: 'White Fang Ascendant',
+      description: 'Summons her entire clan\'s ancestral howl beneath a blood moon, binding every enemy at once.',
+      damage: 4.7,
+      effect: 'Stuns all enemies 2 turns; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_097 · SUNSPIRE · B · Female · Mage ────────────────────────────────
+  {
+    id: 'hero_097',
+    name: 'Marielle Alba',
+    frame: 'ARCHIVEMAGE',
+    faction: 'SUNSPIRE',
+    rank: 'B',
+    element: 'Holy',
+    effect: 'SCRIPTBIND',
+    class: 'Mage',
+    cardId: 'SUN-14-MARIELLE',
+    image: require('../../assets/heroes/hero_097.webp'),
+    about: 'Keeper of SUNSPIRE\'s forbidden archive wing, Marielle weaponises knowledge nobody else was brave enough to read. Her spells are recitations - every incantation quoted word-for-word from a text she alone remembers correctly.',
+    hp: 2950, atk: 560, def: 162, crit: 515,
+    skills: [
+      { name: 'Forbidden Verse', cost: 2, description: 'Recites a passage that unravels an enemy\'s resolve.', damage: 1.7 },
+      { name: 'Bound Chapter',   cost: 3, description: 'Seals a target within a passage of binding script.', damage: 2.1 },
+    ],
+    trumpCard: {
+      name: 'The Last Unread Page',
+      description: 'Recites the archive\'s final forbidden chapter over the entire enemy line.',
+      damage: 4.0,
+      effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_098 · EMBERVEIL · B · Female · Mage ───────────────────────────────
+  {
+    id: 'hero_098',
+    name: 'Morgaine',
+    frame: 'CINDERWITCH',
+    faction: 'EMBERVEIL',
+    rank: 'B',
+    element: 'Fire',
+    effect: 'HEXFLAME',
+    class: 'Mage',
+    cardId: 'EMB-14-MORGAINE',
+    image: require('../../assets/heroes/hero_098.webp'),
+    about: 'A hedge-witch who wandered into EMBERVEIL territory chasing a rumor of a flame that burns backward through time, and stayed once she found it. Morgaine\'s hexes smell faintly of woodsmoke and old regret.',
+    hp: 3000, atk: 548, def: 168, crit: 500,
+    skills: [
+      { name: 'Cinder Hex',      cost: 2, description: 'A backward-burning curse that smolders long after contact.', damage: 1.7 },
+      { name: 'Woodsmoke Curse', cost: 3, description: 'Wreathes a target in smoke that ignites from the inside out.', damage: 2.1 },
+    ],
+    trumpCard: {
+      name: 'Backward Blaze',
+      description: 'Unleashes flame that burns against time itself, consuming every enemy at once.',
+      damage: 4.1,
+      effect: 'Burns all enemies 2 turns; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_099 · GLACIARA · B · Female · Mage ────────────────────────────────
+  {
+    id: 'hero_099',
+    name: 'Zoya Ledovska',
+    frame: 'RIMEWEAVE',
+    faction: 'GLACIARA',
+    rank: 'B',
+    element: 'Ice',
+    effect: 'RIME_TOUCH',
+    class: 'Mage',
+    cardId: 'GLA-13-ZOYA',
+    image: require('../../assets/heroes/hero_099.webp'),
+    about: 'A GLACIARA mage who learned her craft from ice that predates the faction itself, Zoya speaks to glaciers the way others speak to old friends. She is in no hurry - the cold, she says, always wins eventually.',
+    hp: 3000, atk: 558, def: 165, crit: 505,
+    skills: [
+      { name: 'Rime Whisper',      cost: 2, description: 'A touch of ancient frost slows a target to a crawl.', damage: 1.7 },
+      { name: 'Glacier\'s Patience', cost: 3, description: 'Calls down the weight of a slow-moving glacier.', damage: 2.2 },
+    ],
+    trumpCard: {
+      name: 'The Cold Always Wins',
+      description: 'Lets the ancient ice have its way with the entire enemy line.',
+      damage: 4.2,
+      effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_100 · VOIDMARK · A · Female · Attacker ────────────────────────────
+  {
+    id: 'hero_100',
+    name: 'Morrigan Sorrel',
+    frame: 'VOIDSCYTHE',
+    faction: 'VOIDMARK',
+    rank: 'A',
+    element: 'Void',
+    effect: 'SOULREAP',
+    class: 'Attacker',
+    cardId: 'VMK-26-MORRIGAN',
+    image: require('../../assets/heroes/hero_100.webp'),
+    about: 'A scythe-wielding reaper who serves no banner but her own ledger, tallying debts in VOIDMARK\'s name and collecting them personally. Nothing she has ever marked for collection has escaped.',
+    hp: 3600, atk: 545, def: 205, crit: 500,
+    skills: [
+      { name: 'Ledger Cut',     cost: 1, description: 'A scythe strike that marks the target\'s debt in void ink.', damage: 1.5 },
+      { name: 'Collection Due', cost: 3, description: 'Collects on every debt owed with one sweeping reap.', damage: 2.6 },
+    ],
+    trumpCard: {
+      name: 'Final Tally',
+      description: 'Closes every open ledger on the battlefield in a single void-scythe arc.',
+      damage: 4.9,
+      effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_101 · VERDANIA · B · Male · Attacker ──────────────────────────────
+  {
+    id: 'hero_101',
+    name: 'Garrick Boland',
+    frame: 'WILDHALBERD',
+    faction: 'VERDANIA',
+    rank: 'B',
+    element: 'Nature',
+    effect: 'BRAMBLE_REND',
+    class: 'Attacker',
+    cardId: 'VRD-19-GARRICK',
+    image: require('../../assets/heroes/hero_101.webp'),
+    about: 'A VERDANIA halberdier who trained his weapon-arm by clearing deadfall in the deep wilds before he ever swung it at a person. Garrick fights the way he chops wood - patient, exact, and utterly without mercy on the follow-through.',
+    hp: 3700, atk: 495, def: 200, crit: 440,
+    skills: [
+      { name: 'Deadfall Swing', cost: 1, description: 'A heavy halberd arc that leaves thorned splinters in the wound.', damage: 1.4 },
+      { name: 'Thicket Cleave', cost: 2, description: 'Clears a wide arc of enemies like brush, leaving festering wounds.', damage: 1.8 },
+    ],
+    trumpCard: {
+      name: 'The Deep Wilds\' Due',
+      description: 'Fells everything in reach with one patient, exact swing.',
+      damage: 3.8,
+      effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_102 · GLACIARA · A · Male · Attacker ──────────────────────────────
+  {
+    id: 'hero_102',
+    name: 'Dmitri',
+    frame: 'GLACIALGAUNTLET',
+    faction: 'GLACIARA',
+    rank: 'A',
+    element: 'Ice',
+    effect: 'PERMAFROST_FIST',
+    class: 'Attacker',
+    cardId: 'GLA-14-DMITRI',
+    image: require('../../assets/heroes/hero_102.webp'),
+    about: 'A GLACIARA brawler whose gauntlets were forged in a glacier crevasse and have never fully thawed since. Dmitri doesn\'t block hits so much as absorb them personally, then return the favor with interest.',
+    hp: 4500, atk: 520, def: 255, crit: 440,
+    skills: [
+      { name: 'Glacier Jab',   cost: 1, description: 'A crushing gauntlet strike that cracks frozen armor.', damage: 1.4 },
+      { name: 'Crevasse Hook', cost: 3, description: 'A brutal uppercut that shatters whatever it connects with.', damage: 2.7 },
+    ],
+    trumpCard: {
+      name: 'Absolute Thaw',
+      description: 'Releases every ounce of banked cold in one earth-shaking flurry of blows.',
+      damage: 5.0,
+      effect: 'Stuns all enemies 2 turns; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_103 · VOIDMARK · B · Female · Mage · The Tech-Shaman Catalyst ─────
+  {
+    id: 'hero_103',
+    name: 'Yuna Kitagawa',
+    frame: 'TECHSHAMAN',
+    faction: 'VOIDMARK',
+    rank: 'B',
+    element: 'Lightning',
+    effect: 'CIRCUIT_CURSE',
+    class: 'Mage',
+    cardId: 'VMK-27-YUNA',
+    image: require('../../assets/heroes/hero_103.webp'),
+    about: 'VOIDMARK\'s Tech-Shaman Catalyst, Yuna fuses salvaged circuitry with old rite-magic that predates the faction\'s written history. Her constructs spark and chant in the same breath, and nobody has fully explained why that works.',
+    hp: 2950, atk: 552, def: 160, crit: 505,
+    skills: [
+      { name: 'Rite of Sparks',  cost: 2, description: 'A chanted circuit-rune that shorts out an enemy\'s defenses.', damage: 1.7 },
+      { name: 'Salvage Surge',   cost: 3, description: 'Overdrives a jury-rigged construct into a single devastating discharge.', damage: 2.2 },
+    ],
+    trumpCard: {
+      name: 'Old Rite, New Circuit',
+      description: 'Fuses chant and current into one field-wide discharge that shorts out every enemy at once.',
+      damage: 4.1,
+      effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_104 · EMBERVEIL · S · Male · Attacker · The Havoc Specter ─────────
+  {
+    id: 'hero_104',
+    name: 'Salvador',
+    frame: 'HAVOCSPECTER',
+    faction: 'EMBERVEIL',
+    rank: 'S',
+    element: 'Fire',
+    effect: 'SPECTERFLAME',
+    class: 'Attacker',
+    cardId: 'EMB-15-SALVADOR',
+    image: require('../../assets/heroes/hero_104.webp'),
+    about: 'Known across EMBERVEIL only as the Havoc Specter, Salvador appears in the worst moment of a battle and leaves nothing standing behind him. Soldiers on both sides have learned not to look directly at the flame trailing his blade.',
+    hp: 3650, atk: 665, def: 205, crit: 605,
+    skills: [
+      { name: 'Specter Slash', cost: 2, description: 'A blurring strike trailing spectral flame.', damage: 2.0 },
+      { name: 'Havoc\'s Wake', cost: 3, description: 'Leaves a trail of devastation through everything in his path.', damage: 2.8 },
+    ],
+    trumpCard: {
+      name: 'The Worst Moment',
+      description: 'Appears at the exact worst possible instant and ends the fight before anyone can react.',
+      damage: 5.2,
+      effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_105 · VERDANIA · S · Female · Support · Tech-Botanist Support ─────
+  {
+    id: 'hero_105',
+    name: 'Wisteria',
+    frame: 'TECHBOTANIST',
+    faction: 'VERDANIA',
+    rank: 'S',
+    element: 'Nature',
+    effect: 'BIOSYNTH_BLOOM',
+    class: 'Support',
+    cardId: 'VRD-20-WISTERIA',
+    image: require('../../assets/heroes/hero_105.webp'),
+    about: 'VERDANIA\'s Tech-Botanist Support, Wisteria grafts living circuitry into vine and root systems, letting the forest itself route her healing energy across the battlefield. She insists the plants she augments are happier for it; nobody has found a way to ask them.',
+    hp: 4200, atk: 420, def: 285, crit: 380,
+    skills: [
+      { name: 'Circuit Graft',    cost: 1, description: 'Threads living current through root and vine to mend an ally.', damage: 0 },
+      { name: 'Photosynth Pulse', cost: 2, description: 'Channels a burst of engineered growth-energy through the team.', damage: 0 },
+    ],
+    trumpCard: {
+      name: 'Full Canopy Bloom',
+      description: 'Routes every root and wire on the field into one field-wide surge of restoration.',
+      damage: 0,
+      effect: 'Heals all allies 40% HP; shields team against next 1 hit each',
+    },
+  },
+
+  // ── hero_106 · VOIDMARK · A · Female · Attacker · Echo-Mimic Assassin ──────
+  {
+    id: 'hero_106',
+    name: 'Sable Renwick',
+    frame: 'ECHOMIMIC',
+    faction: 'VOIDMARK',
+    rank: 'A',
+    element: 'Void',
+    effect: 'MIRRORSTEP',
+    class: 'Attacker',
+    cardId: 'VMK-28-SABLE',
+    image: require('../../assets/heroes/hero_106.webp'),
+    about: 'An Echo-Mimic Assassin of VOIDMARK, Sable copies the last motion an enemy made a half-second before striking with it herself, turning a foe\'s own technique back on them. She has never needed a signature move - she simply borrows everyone else\'s.',
+    hp: 3700, atk: 535, def: 215, crit: 495,
+    skills: [
+      { name: 'Borrowed Step', cost: 1, description: 'Mimics an enemy\'s last motion and strikes with it first.', damage: 1.5 },
+      { name: 'Echo Flurry',   cost: 2, description: 'Repeats a stolen technique in rapid succession.', damage: 2.0 },
+    ],
+    trumpCard: {
+      name: 'Every Move At Once',
+      description: 'Mimics every technique she has ever copied in one overwhelming barrage.',
+      damage: 4.4,
+      effect: 'Stuns all enemies 1 turn; heals all allies 20% HP',
+    },
+  },
+
+  // ── hero_107 · VOIDMARK · A · Female · Attacker · Glitch Master Assassin ───
+  {
+    id: 'hero_107',
+    name: 'Ryna Ashcombe',
+    frame: 'GLITCHMASTER',
+    faction: 'VOIDMARK',
+    rank: 'A',
+    element: 'Void',
+    effect: 'SYSTEM_FREEZE',
+    class: 'Attacker',
+    cardId: 'VMK-29-RYNA',
+    image: require('../../assets/heroes/hero_107.webp'),
+    about: 'A glitch-master infiltrator who treats reality\'s rendering errors as tools rather than flaws, Ryna freezes enemies mid-frame and slips past them before the world finishes loading. VOIDMARK\'s engineers still don\'t know if she\'s found a bug or become one.',
+    hp: 3550, atk: 540, def: 200, crit: 510,
+    skills: [
+      { name: 'Frame Skip',        cost: 1, description: 'Slips between rendered frames to land an impossible strike.', damage: 1.5 },
+      { name: 'Corrupted Packet',  cost: 3, description: 'Force-feeds a target a burst of malformed reality data.', damage: 2.6 },
+    ],
+    trumpCard: {
+      name: 'World Still Loading',
+      description: 'Freezes every enemy mid-frame while she moves through the gaps.',
+      damage: 4.7,
+      effect: 'Stuns all enemies 2 turns; heals all allies 20% HP',
     },
   },
 ];

@@ -82,7 +82,7 @@ export const BANNER_POOL = [
   },
   // ── Next rotation - 8 events, back-to-back, 20 days each ────────────────────
   // Order: non-sovereign, non-sovereign, SOVEREIGN, repeat.
-  // Khemara's sovereign (hero_054, Nefertari Shahrzad) is shop-exclusive - excluded.
+  // Khemara's sovereign (hero_054, Nefertari) is shop-exclusive - excluded.
   // Dates shifted +4 days (2026-07-05 audit) - the original start (07-16) overlapped
   // event_shadow_descent (ends 07-19) by 4 days; this chain now starts the day
   // after shadow_descent ends and keeps every other gap/overlap at zero.
