@@ -265,7 +265,10 @@
       "Bash(timeout 20 ffmpeg -y -v error -nostdin -i \"assets/audio/Collection/reward-claim.mp3\" -c:a libmp3lame -b:a 128k /tmp/test_out.mp3)",
       "Bash(ffmpeg -y -v error -nostdin -i \"assets/audio/Collection/reward-claim.mp3\" -c:a libmp3lame -b:a 128k /tmp/test_out.mp3)",
       "Bash(echo \"started with pid $!\")",
-      "Bash(wait 68508)"
+      "Bash(wait 68508)",
+      "Bash(NODE_PATH=\"/Users/codeclouds-mdalisherali/Trump-Card-game/node_modules\" node /private/tmp/claude-503/-Users-codeclouds-mdalisherali-Trump-Card-game/e9688dda-070e-4c80-9e25-d77870e953e3/scratchpad/inspect_collection.js)",
+      "Bash(pkill -f \"expo start --web\")",
+      "Bash(pkill -f metro)"
     ],
     "additionalDirectories": [
       "/private/tmp/expo-export-test"

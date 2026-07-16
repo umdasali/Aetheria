@@ -98,17 +98,28 @@ export default function CollectionScreen({ navigation }) {
     navigation.navigate('HeroDetail', { heroId });
   }, [navigation]);
 
-  // Stable renderItem - only re-created when the dependencies that affect card rendering change.
-  const renderItem = useCallback(({ item: hero }) => (
-    <HeroGridCard
-      hero={hero}
-      owned={isOwned(hero.id)}
-      onTeam={inTeam(hero.id)}
-      effectiveRank={heroCollection[hero.id]?.effectiveRank ?? hero.rank}
-      onPress={handleHeroPress}
-      cardW={cardW}
-      cardH={cardH}
-    />
+  // Pre-chunked into rows of COLS so the FlatList itself stays single-column
+  // (numColumns=1) — a numColumns>1 FlatList is the thing that produced blank
+  // row gaps on Android; a plain vertical list of pre-built rows sidesteps
+  // that bug entirely while keeping virtualization (only nearby rows mount,
+  // so hero portraits load progressively instead of all 107 at once).
+  const rows = useMemo(() => chunk(filtered, COLS), [filtered]);
+
+  const renderRow = useCallback(({ item: row }) => (
+    <View style={styles.gridRow}>
+      {row.map((hero) => (
+        <HeroGridCard
+          key={hero.id}
+          hero={hero}
+          owned={isOwned(hero.id)}
+          onTeam={inTeam(hero.id)}
+          effectiveRank={heroCollection[hero.id]?.effectiveRank ?? hero.rank}
+          onPress={handleHeroPress}
+          cardW={cardW}
+          cardH={cardH}
+        />
+      ))}
+    </View>
   ), [isOwned, inTeam, handleHeroPress, heroCollection, cardW, cardH]);
 
   return (
@@ -152,7 +163,7 @@ export default function CollectionScreen({ navigation }) {
         {/* ══ BODY ══ */}
         <View style={styles.body}>
 
-          {/* Faction sidebar - zIndex: 2 ensures sort dropdown floats above FlatList */}
+          {/* Faction sidebar - zIndex: 2 ensures sort dropdown floats above the hero grid */}
           <View style={styles.sidebar}>
             <View style={styles.sideList}>
               {FACTION_FILTERS.map((f) => {
@@ -218,27 +229,24 @@ export default function CollectionScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Hero grid
-              extraData={team} - when team changes FlatList forces item re-renders
-              even if `filtered` (the data array) didn't change.             */}
+          {/* Hero grid — single-column FlatList of pre-chunked rows (never
+              numColumns>1 on the FlatList itself, which is what produced
+              blank row gaps on Android). Virtualized, so only rows near the
+              viewport mount and hero portraits load progressively.        */}
           <FlatList
-            data={filtered}
-            numColumns={COLS}
-            key={`${filter}-${COLS}`}
-            keyExtractor={(h) => h.id}
-            contentContainerStyle={[styles.grid, { paddingBottom: GRID_PAD }]}
-            columnWrapperStyle={styles.gridRow}
-            showsVerticalScrollIndicator={false}
+            data={rows}
+            keyExtractor={(_row, i) => `row-${i}`}
+            renderItem={renderRow}
             extraData={team}
-            renderItem={renderItem}
-            // Performance props
-            initialNumToRender={10}
-            maxToRenderPerBatch={10}
-            windowSize={5}
-            removeClippedSubviews
+            contentContainerStyle={[styles.grid, { paddingBottom: GRID_PAD }]}
+            showsVerticalScrollIndicator={false}
+            initialNumToRender={4}
+            maxToRenderPerBatch={3}
+            windowSize={7}
+            updateCellsBatchingPeriod={50}
             getItemLayout={(_data, index) => ({
-              length: cardH,
-              offset: Math.floor(index / COLS) * (cardH + GAP) + GRID_PAD,
+              length: cardH + GAP,
+              offset: (cardH + GAP) * index + GRID_PAD,
               index,
             })}
           />
@@ -246,6 +254,12 @@ export default function CollectionScreen({ navigation }) {
       </View>
     </View>
   );
+}
+
+function chunk(list, size) {
+  const rows = [];
+  for (let i = 0; i < list.length; i += size) rows.push(list.slice(i, i + size));
+  return rows;
 }
 
 // ─── HeroGridCard ─────────────────────────────────────────────────────────────
@@ -341,7 +355,7 @@ const styles = StyleSheet.create({
   // ── Body ───────────────────────────────────────────────────────────────────
   body: { flex: 1, flexDirection: 'row' },
 
-  // Sidebar - zIndex: 2 ensures sort dropdown appears above the FlatList
+  // Sidebar - zIndex: 2 ensures sort dropdown appears above the hero grid
   sidebar: {
     width: SIDEBAR_W,
     backgroundColor: C.BG_BASE+'30',
@@ -363,7 +377,7 @@ const styles = StyleSheet.create({
   sideCountBadge:  { marginRight: rs(8), paddingHorizontal: rs(6), paddingVertical: rs(2), borderRadius: rs(8) },
   sideCountText:   { fontSize: rf(12), fontWeight: '800' },
 
-  // Sort - elevated above sibling FlatList so dropdown is never clipped
+  // Sort - elevated above sibling grid so dropdown is never clipped
   sortArea: { paddingBottom: rs(6), zIndex: 10, elevation: 10 },
   sortSep:  { height: 1, backgroundColor: C.BORDER_SUBTLE, marginBottom: 2 },
   sortBtn:  { flexDirection: 'row', alignItems: 'center', gap: rs(5), paddingHorizontal: rs(12), paddingVertical: rs(8) },
@@ -383,7 +397,7 @@ const styles = StyleSheet.create({
 
   // Grid
   grid:    { padding: GRID_PAD },
-  gridRow: { gap: GAP, marginBottom: GAP },
+  gridRow: { flexDirection: 'row', gap: GAP, marginBottom: GAP },
 
   // Grid card
   gridCard: {
