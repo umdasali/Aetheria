@@ -9,7 +9,7 @@ import useGameStore from '../store/gameStore';
 import { GEM_PACKS, BUNDLES, HERO_PACKS, IAP_ENABLED } from '../data/shopPacks';
 import { resolvePurchase } from '../shop/purchaseHandler';
 import { isSignedIn } from '../cloud/auth';
-import { restorePurchases, getLivePrices } from '../utils/RevenueCatManager';
+import { restorePurchases, getLiveCatalog } from '../utils/RevenueCatManager';
 import { getHeroById } from '../data/heroes';
 import { getAscensionItemById } from '../data/ascensionItems';
 import HeroCard from '../components/HeroCard';
@@ -237,11 +237,33 @@ export default function ShopScreen({ navigation }) {
   const purchasingRef = useRef(false);
   const [purchasing, setPurchasing] = useState(false);
   const [livePrices, setLivePrices] = useState({});
+  // productIds actually live in RevenueCat's current Offering right now, or
+  // null if that couldn't be determined (not configured/offline). null (or an
+  // empty Set — see getLiveCatalog) means "fail open": show every local pack
+  // rather than hide the whole tab because of a network hiccup.
+  const [liveAvailableIds, setLiveAvailableIds] = useState(null);
 
   useEffect(() => {
     if (!IAP_ENABLED) return;
-    getLivePrices().then(setLivePrices);
+    getLiveCatalog().then(({ prices, availableIds }) => {
+      setLivePrices(prices);
+      setLiveAvailableIds(availableIds && availableIds.size > 0 ? availableIds : null);
+    });
   }, []);
+
+  // Filters a local pack list down to what's live in the current Offering,
+  // and reorders it to match RevenueCat's serving order — the only two
+  // things a real-money catalog can be dynamic about without an app update,
+  // since grant contents (gems/gold amounts) live in shopPacks.js and aren't
+  // known to RevenueCat. Fails open (returns `packs` unchanged) whenever live
+  // availability is unknown, so this can never make the shop show zero packs.
+  const liveFilterSort = (packs, availableIds) => {
+    if (!availableIds) return packs;
+    const filtered = packs.filter(p => availableIds.has(p.productId));
+    if (!filtered.length) return packs;
+    const order = [...availableIds];
+    return filtered.sort((a, b) => order.indexOf(a.productId) - order.indexOf(b.productId));
+  };
 
   const toastAnim = useRef(new Animated.Value(0)).current;
   const [toastMsg,  setToastMsg]  = useState('');
@@ -437,7 +459,7 @@ export default function ShopScreen({ navigation }) {
               ))
             ) : (
               <View style={s.cardsRow}>
-                {(activeTab === 'gems' ? GEM_PACKS : BUNDLES).map(pack => (
+                {liveFilterSort(activeTab === 'gems' ? GEM_PACKS : BUNDLES, liveAvailableIds).map(pack => (
                   <PackCard
                     key={pack.id}
                     pack={pack}

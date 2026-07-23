@@ -47,19 +47,30 @@ export async function logOut() {
   }
 }
 
-// Finds the package matching productId across all RevenueCat offerings and
-// initiates the native purchase sheet.
+// Packages actually being served to this customer right now. Prefers
+// offerings.current — the Offering RevenueCat Targeting/experiments resolve
+// for this specific customer — over flattening every offering together,
+// which would make price/availability nondeterministic if the dashboard ever
+// has two offerings sharing a product id (e.g. an experiment group). Falls
+// back to every offering combined only when no current Offering is
+// configured, so a dashboard mis-set doesn't take purchasing/pricing down.
+async function getDisplayPackages(offerings) {
+  const current = offerings.current?.availablePackages || [];
+  if (current.length) return current;
+  if (__DEV__ && offerings.current === null) {
+    console.warn('[RevenueCat] no current Offering configured on the dashboard — falling back to all offerings combined');
+  }
+  return Object.values(offerings.all).flatMap(o => o.availablePackages);
+}
+
+// Finds the package matching productId in the live current Offering (see
+// getDisplayPackages) and initiates the native purchase sheet.
 export async function purchase(productId) {
   if (!_ready) return { ok: false, reason: 'not_configured' };
   try {
     const offerings = await Purchases.getOfferings();
-    let pkg = null;
-    for (const offering of Object.values(offerings.all)) {
-      for (const p of offering.availablePackages) {
-        if (p.product.identifier === productId) { pkg = p; break; }
-      }
-      if (pkg) break;
-    }
+    const packages = await getDisplayPackages(offerings);
+    const pkg = packages.find(p => p.product.identifier === productId) || null;
     if (!pkg) return { ok: false, reason: 'product_not_found' };
     await Purchases.purchasePackage(pkg);
     return { ok: true };
@@ -97,25 +108,34 @@ export function stopTransactionListener() {
   }
 }
 
-// Returns { [productId]: localizedPriceString } from the store's live offerings
-// (e.g. "$1.99"). Shop UI should prefer this over any hardcoded priceLabel —
-// a price baked into shopPacks.js can silently drift from what the platform
-// actually charges (currency, regional pricing, a price change in the store).
-// Falls back to {} (caller keeps its hardcoded label) if not configured/offline.
-export async function getLivePrices() {
-  if (!_ready) return {};
+// Returns { prices: { [productId]: localizedPriceString }, availableIds: Set<productId> | null }
+// from the store's live current Offering (see getDisplayPackages).
+//   - prices: Shop UI should prefer this over any hardcoded priceLabel — a
+//     price baked into shopPacks.js can silently drift from what the platform
+//     actually charges (currency, regional pricing, a price change in the store).
+//   - availableIds: which productIds are actually live right now, in the
+//     order RevenueCat is serving them. `null` means the check itself failed
+//     (not configured/offline) — callers should fail OPEN (show every local
+//     pack) in that case, since a network hiccup isn't evidence a product was
+//     pulled. An empty-but-non-null Set is likewise treated as "couldn't
+//     determine availability" by getDisplayPackages' own fallback, so in
+//     practice this is only empty when nothing is configured anywhere on the
+//     dashboard — callers should still fail open rather than show zero packs.
+export async function getLiveCatalog() {
+  if (!_ready) return { prices: {}, availableIds: null };
   try {
     const offerings = await Purchases.getOfferings();
+    const packages = await getDisplayPackages(offerings);
     const prices = {};
-    for (const offering of Object.values(offerings.all)) {
-      for (const p of offering.availablePackages) {
-        prices[p.product.identifier] = p.product.priceString;
-      }
+    const availableIds = new Set();
+    for (const p of packages) {
+      prices[p.product.identifier] = p.product.priceString;
+      availableIds.add(p.product.identifier);
     }
-    return prices;
+    return { prices, availableIds };
   } catch (e) {
-    if (__DEV__) console.warn('[RevenueCat] getLivePrices failed:', e.message);
-    return {};
+    if (__DEV__) console.warn('[RevenueCat] getLiveCatalog failed:', e.message);
+    return { prices: {}, availableIds: null };
   }
 }
 
